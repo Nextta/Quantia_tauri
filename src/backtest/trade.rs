@@ -4,11 +4,12 @@ use crate::backtest::dias::Dias;
 use crate::backtest::symbol::SymbolInfoCFD;
 use crate::utils::tools::truncate_decimal;
 use rand::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use chrono::{Datelike, NaiveDateTime, Weekday}; // Utc, Month, DateTime,
 use rust_decimal::Decimal;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Trade {
     id: i32, // id del Backtest
     id_backtest: i32,

@@ -1,0 +1,14 @@
+Terminadas:
+-Crear funcionalidad para usar spread variable en el backtest.
+-Añadir que se registre el precio maximo y minimo en el que ha estado un trade.
+-Añadir a cargo todas las librerías necesarias para el nuevo proyecto de tauri.
+
+TODO:
+-Migrar la base de datos a Turso.
+-Crear la forma para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
+-Añadir a la api la funciones para almacenar las estrategias que se usarán en la plantilla de backtest.
+-Crear funcionalidad para hacer que los backtest se hagan con ticks.
+-Crear plantillas para que genere el código en MQL5.
+-Crear un proyecto de tauri para iniciar a crear la interfaz grafica.
+-Crear la interface y las funcionalidades para crear de forma visual estrategias con workflows.
+-Leer un trackrecord de Metatrader 5 y guardar los datos en la base de datos.
