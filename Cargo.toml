@@ -23,3 +23,30 @@ serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 tauri = { version = "2.9.5", features = [] }
 tauri-plugin-log = "2"
+tokio = { version = "1.50.0", features = ["full"] }
+polars = { version = "0.53.0", features = [
+"lazy",
+"timezones",
+"temporal",
+"dynamic_group_by",
+"dtype-date",
+"dtype-datetime",
+"dtype-time",
+"dtype-duration",
+"dtype-i8",
+"dtype-i16",
+"dtype-u8",
+"dtype-u16",
+"dtype-categorical",
+"dtype-struct",
+"parquet",
+"csv",
+"json",
+"semi_anti_join",
+"rows"
+] }
+chrono = { version = "0.4.41", features = ["std"] }
+rust_decimal = { version = "1.40.0", features = ["macros"] }
+rust_decimal_macros = "1.40.0"
+rand = "0.9.2"
+sqlx = "0.8.6"
