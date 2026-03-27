@@ -1,84 +1,89 @@
-use crate::api::dbsqlite::DbSqlite;
+use crate::api::resultados::{insert_resultados, table_resultados};
 use crate::backtest::trade::Trade;
-
 use chrono::{Datelike, NaiveDateTime}; // Utc, Month, DateTime
 
+#[derive(Debug, Clone)]
 pub struct Resultados {
-    id: i32,
-    id_backtest: i32,
-    retorno: f64,
-    return_percent: f64,
-    cagr: f64,
-    sharpe_ratio: f64,
-    sortino_ratio: f64,
-    omega_ratio: f64,
-    expected_daily: f64,
-    expected_monthly: f64,
-    expected_yearly: f64,
-    best_day: f64,
-    worst_day: f64,
-    best_month: f64,
-    worst_month: f64,
-    best_year: f64,
-    worst_year: f64,
-    time_in_market: f64,
-    max_drawdown: f64,
-    max_drawdown_divisa: f64,
-    max_drawdown_duration: u64,
-    avg_drawdown_duration: f64,
-    max_drawdown_avg: f64,
-    avg_drawdown: f64,
-    ulcer_index: f64,
-    serenity_index: f64,
-    daily_var: f64,
-    daily_var_95: f64,
-    daily_var_99: f64,
-    cvar: f64,
-    risk_of_ruin: f64,
-    volatility_ann: f64,
-    calmar_ratio: f64,
-    skew_ratio: f64,
-    kurtosis_ratio: f64,
-    tail_ratio: f64,
-    outlier_win: f64,
-    outlier_loss: f64,
-    payoff_ratio: f64,
-    profit_factor: f64,
-    gain_pain_ratio: f64,
-    common_sense_ratio: f64,
-    cpc_index: f64,
-    kelly_criterion: f64,
-    win_days: f64,
-    win_months: f64,
-    win_quarters: f64,
-    win_years: f64,
-    beta: f64,
-    alpha: f64,
-    correlation: f64,
-    information_ratio: f64,
-    recovery_factor: f64,
-    n_trades: u64,
-    return_drawdown_ratio: f64,
-    wins_percentage: f64,
-    avg_trade_return: f64,
-    avg_win_return: f64,
-    avg_loss_return: f64,
-    avg_win_loss_ratio: f64,
-    r_expectancy: f64,
-    r_exp_score: f64,
-    z_score: f64,
-    z_probability: f64,
-    n_wins: u64,
-    n_losses: u64,
-    avg_bars_win: f64,
-    avg_bars_loss: f64,
+    pub id: i32,
+    pub id_backtest: i32,
+    pub retorno: f64,
+    pub return_percent: f64,
+    pub cagr: f64,
+    pub sharpe_ratio: f64,
+    pub sortino_ratio: f64,
+    pub omega_ratio: f64,
+    pub expected_daily: f64,
+    pub expected_monthly: f64,
+    pub expected_yearly: f64,
+    pub best_day: f64,
+    pub worst_day: f64,
+    pub best_month: f64,
+    pub worst_month: f64,
+    pub best_year: f64,
+    pub worst_year: f64,
+    pub time_in_market: f64,
+    pub max_drawdown: f64,
+    pub max_drawdown_divisa: f64,
+    pub max_drawdown_duration: u64,
+    pub avg_drawdown_duration: f64,
+    pub max_drawdown_avg: f64,
+    pub avg_drawdown: f64,
+    pub ulcer_index: f64,
+    pub serenity_index: f64,
+    pub daily_var: f64,
+    pub daily_var_95: f64,
+    pub daily_var_99: f64,
+    pub cvar: f64,
+    pub risk_of_ruin: f64,
+    pub volatility_ann: f64,
+    pub calmar_ratio: f64,
+    pub skew_ratio: f64,
+    pub kurtosis_ratio: f64,
+    pub tail_ratio: f64,
+    pub outlier_win: f64,
+    pub outlier_loss: f64,
+    pub payoff_ratio: f64,
+    pub profit_factor: f64,
+    pub gain_pain_ratio: f64,
+    pub common_sense_ratio: f64,
+    pub cpc_index: f64,
+    pub kelly_criterion: f64,
+    pub win_days: f64,
+    pub win_months: f64,
+    pub win_quarters: f64,
+    pub win_years: f64,
+    pub beta: f64,
+    pub alpha: f64,
+    pub correlation: f64,
+    pub information_ratio: f64,
+    pub recovery_factor: f64,
+    pub n_trades: u64,
+    pub return_drawdown_ratio: f64,
+    pub wins_percentage: f64,
+    pub avg_trade_return: f64,
+    pub avg_win_return: f64,
+    pub avg_loss_return: f64,
+    pub avg_win_loss_ratio: f64,
+    pub r_expectancy: f64,
+    pub r_exp_score: f64,
+    pub z_score: f64,
+    pub z_probability: f64,
+    pub n_wins: u64,
+    pub n_losses: u64,
+    pub avg_bars_win: f64,
+    pub avg_bars_loss: f64,
 }
 
 impl Resultados {
     pub async fn new(id_backtest: i32) -> Self {
-        let db: DbSqlite = DbSqlite::new("sqlite:db/quantia_db.sqlite3").await.unwrap();
+        let tabla = table_resultados().await;
 
-        let _ = db.table_resultados().await;
+        match tabla {
+            Ok(_) => {}
+            Err(e) => {
+                println!("Error al obtener tabla de resultados: {:?}", e);
+            }
+        }
 
         Self {
             id: 0,
@@ -677,7 +682,11 @@ impl Resultados {
                 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
         let pdf = (-x * x / 2.0).exp() / (2.0 * std::f64::consts::PI).sqrt();
         let cdf = 1.0 - pdf * poly;
-        if x >= 0.0 { cdf } else { 1.0 - cdf }
+        if x >= 0.0 {
+            cdf
+        } else {
+            1.0 - cdf
+        }
     }
 
     fn calcular_carg(&self, t0: String, t1: String, capital_inicial: f64) -> f64 {
@@ -1236,8 +1245,12 @@ impl Resultados {
 
     //FUNCIONES
     pub async fn guardar_resultados(&self) {
-        let db: DbSqlite = DbSqlite::new("sqlite:db/quantia_db.sqlite3").await.unwrap();
-
-        let _ = db.insert_resultados(self).await;
+        let result = insert_resultados(self.clone()).await;
+        match result {
+            Ok(_) => {}
+            Err(e) => {
+                println!("Error al guardar resultados: {:?}", e);
+            }
+        }
     }
 }

@@ -1,21 +1,22 @@
-use crate::api::dbsqlite::DbSqlite;
+use crate::api::symbols::{insert_symbol_cfd, table_symbols_cfd};
 use crate::backtest::dias::Dias;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct SymbolInfoCFD {
-    id: i32,
-    broker_id: i32,
-    name: String,
-    valor_contrato: f64,
-    comision_lote: f64,
-    swap_long: f64,
-    swap_short: f64,
-    dia_triple_swap: Dias,
-    lotaje_minimo: f64,
-    lotaje_maximo: f64,
-    digitos: u8,
-    spread: f64,
-    open_weekend: bool,
+    pub id: i32,
+    pub broker_id: i32,
+    pub name: String,
+    pub valor_contrato: f64,
+    pub comision_lote: f64,
+    pub swap_long: f64,
+    pub swap_short: f64,
+    pub dia_triple_swap: Dias,
+    pub lotaje_minimo: f64,
+    pub lotaje_maximo: f64,
+    pub digitos: u32,
+    pub spread: f64,
+    pub open_weekend: bool,
 }
 
 impl SymbolInfoCFD {
@@ -30,12 +31,11 @@ impl SymbolInfoCFD {
         dia_triple_swap: Dias,
         lotaje_minimo: f64,
         lotaje_maximo: f64,
-        digitos: u8,
+        digitos: u32,
         spread: f64,
         open_weekend: bool,
     ) -> Self {
-        let db: DbSqlite = DbSqlite::new("sqlite:db/quantia_db.sqlite3").await.unwrap();
-        let table = db.table_symbol_cfd().await;
+        let table = table_symbols_cfd().await;
 
         let symbol: SymbolInfoCFD = SymbolInfoCFD {
             id,
@@ -57,15 +57,14 @@ impl SymbolInfoCFD {
                 //symbol.id = db.insert_symbol_cfd(symbol.clone()).await.unwrap();
                 println!("Symbol creado: {:?}", symbol);
             }
-            Err(e) => println!("Error al crear symbol: {}", e),
+            Err(e) => println!("Error al crear symbol: {:?}", e),
         }
 
         symbol
     }
 
     pub async fn create_symbol(&mut self) {
-        let db: DbSqlite = DbSqlite::new("sqlite:db/quantia_db.sqlite3").await.unwrap();
-        self.id = db.insert_symbol_cfd(self.clone()).await.unwrap();
+        self.id = insert_symbol_cfd(self.clone()).await.unwrap();
     }
 
     ///Getters
@@ -113,7 +112,7 @@ impl SymbolInfoCFD {
         self.lotaje_maximo
     }
 
-    pub fn get_digitos(&self) -> u8 {
+    pub fn get_digitos(&self) -> u32 {
         self.digitos
     }
 
@@ -162,7 +161,7 @@ impl SymbolInfoCFD {
         self.lotaje_maximo = lotaje_maximo;
     }
 
-    pub fn set_digitos(&mut self, digitos: u8) {
+    pub fn set_digitos(&mut self, digitos: u32) {
         self.digitos = digitos;
     }
 

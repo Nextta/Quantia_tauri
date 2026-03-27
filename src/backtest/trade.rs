@@ -1,4 +1,4 @@
-use crate::api::dbsqlite::DbSqlite;
+use crate::api::trades::{insert_trades, table_trades};
 use crate::backtest::backtest::Backtest;
 use crate::backtest::dias::Dias;
 use crate::backtest::symbol::SymbolInfoCFD;
@@ -11,35 +11,39 @@ use rust_decimal::Decimal;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Trade {
-    id: i32, // id del Backtest
-    id_backtest: i32,
-    id_symbol: i32,
-    symbol: SymbolInfoCFD,
-    tipo: String, // tipo = Tipo de operación (buy/sell)
-    lotaje: f64,
-    multiplicador: f64, // Multiplicador del lotaje por operación.
-    t0: String,         // t0 = Fecha y hora de entrada
-    precio_entrada: f64,
-    tp: f64,
-    sl: f64,
-    t1: String, // t1 = Fecha y hora de cierre
-    precio_cierre: f64,
-    precio_maximo: f64, // precioMaximo = Precio máximo alcanzado durante la operación
-    precio_minimo: f64, // precioMinimo = Precio mínimo alcanzado durante la operación
-    duracion_segundos: String, // duracionSegundos = Duración en segundos de la operación
-    duracion_minutos: String, // duracionMinutos = Duración en minutos de la operación
-    duracion_horas: String, // duracionHoras = Duración en horas de la operación
-    duracion_dias: String, // duracionDias = Duración en días de la operación
-    label: u8,          // label = Etiqueta de la operación 1 ganada, 0 perdida
-    pl: f64,            // pl = Ganancia o pérdida de la operación con comisión
-    plsc: f64,          // plsc = Ganancia o pérdida de la operación sin comisiones
-    pips_pl: f64,       // pipsPL = Ganancia o pérdida de la operación en pips
+    pub id: i32, // id del Backtest
+    pub id_backtest: i32,
+    pub id_symbol: i32,
+    pub symbol: SymbolInfoCFD,
+    pub tipo: String, // tipo = Tipo de operación (buy/sell)
+    pub lotaje: f64,
+    pub multiplicador: f64, // Multiplicador del lotaje por operación.
+    pub t0: String,         // t0 = Fecha y hora de entrada
+    pub precio_entrada: f64,
+    pub tp: f64,
+    pub sl: f64,
+    pub t1: String, // t1 = Fecha y hora de cierre
+    pub precio_cierre: f64,
+    pub precio_maximo: f64, // precioMaximo = Precio máximo alcanzado durante la operación
+    pub precio_minimo: f64, // precioMinimo = Precio mínimo alcanzado durante la operación
+    pub duracion_segundos: String, // duracionSegundos = Duración en segundos de la operación
+    pub duracion_minutos: String, // duracionMinutos = Duración en minutos de la operación
+    pub duracion_horas: String, // duracionHoras = Duración en horas de la operación
+    pub duracion_dias: String, // duracionDias = Duración en días de la operación
+    pub label: u32,         // label = Etiqueta de la operación 1 ganada, 0 perdida
+    pub pl: f64,            // pl = Ganancia o pérdida de la operación con comisión
+    pub plsc: f64,          // plsc = Ganancia o pérdida de la operación sin comisiones
+    pub pips_pl: f64,       // pipsPL = Ganancia o pérdida de la operación en pips
 }
 
 impl Trade {
     pub async fn new(id_backtest: i32, symbol: SymbolInfoCFD) -> Self {
-        let db: DbSqlite = DbSqlite::new("sqlite:db/quantia_db.sqlite3").await.unwrap();
-        db.table_trades().await;
+        let table = table_trades().await;
+
+        match table {
+            Ok(_) => {}
+            Err(e) => println!("Error al obtener la tabla de trades: {:?}", e),
+        }
 
         Trade {
             id: 0,
@@ -145,7 +149,7 @@ impl Trade {
         &self.duracion_dias
     }
 
-    pub fn get_label(&self) -> u8 {
+    pub fn get_label(&self) -> u32 {
         self.label
     }
 
@@ -168,6 +172,10 @@ impl Trade {
 
     pub fn set_id_backtest(&mut self, id_backtest: i32) {
         self.id_backtest = id_backtest;
+    }
+
+    pub fn set_id_symbol(&mut self, id_symbol: i32) {
+        self.id_symbol = id_symbol;
     }
 
     pub fn set_multiplicador(&mut self, multiplicador: f64) {
@@ -256,7 +264,7 @@ impl Trade {
         self.duracion_dias = duracion;
     }
 
-    pub fn set_label(&mut self, label: u8) {
+    pub fn set_label(&mut self, label: u32) {
         self.label = label;
     }
 

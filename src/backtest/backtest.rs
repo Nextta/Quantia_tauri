@@ -1,4 +1,5 @@
-use crate::api::dbsqlite::DbSqlite;
+use crate::api::backtests::{insert_backtest_cfd, table_backtests_cfd};
+use crate::api::trades::insert_trades;
 use crate::backtest::datos::Datos;
 use crate::backtest::trade::Trade;
 
@@ -6,19 +7,17 @@ use polars::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct Backtest {
-    id: i32,
-    titulo: String,
-    balance: f64,
-    tipo: String, // Tipo de activo ej: Forex, Crypto, Futuros...etc
-    trades: Vec<Trade>,
-    datos: Vec<Datos>,
+    pub id: i32,
+    pub titulo: String,
+    pub balance: f64,
+    pub tipo: String, // Tipo de activo ej: Forex, Crypto, Futuros...etc
+    pub trades: Vec<Trade>,
+    pub datos: Vec<Datos>,
 }
 
 impl Backtest {
     pub async fn new(titulo: String, balance: f64, tipo: String) -> Self {
-        let db: DbSqlite = DbSqlite::new("sqlite:db/quantia_db.sqlite3").await.unwrap();
-
-        let table = db.table_backtest().await;
+        let table = table_backtests_cfd().await;
 
         let mut backtest: Backtest = Backtest {
             id: 0,
@@ -31,9 +30,9 @@ impl Backtest {
 
         match table {
             Ok(_) => {
-                backtest.id = db.insert_backtest(&backtest).await.unwrap();
+                backtest.id = insert_backtest_cfd(backtest.clone()).await.unwrap();
             }
-            Err(e) => println!("TABLE: backtest error: {}", e),
+            Err(e) => println!("TABLE: backtest error: {:?}", e),
         }
 
         backtest
@@ -122,10 +121,8 @@ impl Backtest {
     }
 
     pub async fn guardar_trades(&self) {
-        let db: DbSqlite = DbSqlite::new("sqlite:db/quantia_db.sqlite3").await.unwrap();
-
         for trade in &self.trades {
-            db.insert_trades(self.id, trade).await.unwrap();
+            insert_trades(self.id, trade).await.unwrap();
         }
     }
 }
