@@ -7,3 +7,23 @@ pub struct Strategy {
     pub activa: bool,
     pub creada_en: String,
 }
+
+impl Strategy {
+    pub fn new(
+        id: i32,
+        id_user: i32,
+        nombre: String,
+        descripcion: Option<String>,
+        activa: bool,
+        creada_en: String,
+    ) -> Self {
+        Self {
+            id,
+            id_user,
+            nombre,
+            descripcion,
+            activa,
+            creada_en,
+        }
+    }
+}

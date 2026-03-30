@@ -57,6 +57,33 @@ pub async fn table_strategies() -> Result<String> {
 }
 
 #[tauri::command]
+pub async fn insert_strategies(strategy: Strategy) -> Result<i32> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![
+        strategy.id_user,
+        strategy.nombre,
+        strategy.descripcion,
+        strategy.activa,
+        strategy.creada_en
+    ];
+    conn.query(
+        "INSERT INTO strategies (id_user, nombre, descripcion, activa, creada_en) VALUES (?, ?, ?, ?, ?) RETURNING id",
+        parametros,
+    )
+    .await?;
+
+    let id = conn.last_insert_rowid() as i32;
+    Ok(id)
+}
+
+#[tauri::command]
 pub async fn get_strategies() -> Result<Vec<Strategy>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
