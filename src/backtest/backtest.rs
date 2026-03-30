@@ -38,44 +38,6 @@ impl Backtest {
         backtest
     }
 
-    ///Getters
-    pub fn get_id(&self) -> i32 {
-        self.id
-    }
-
-    pub fn get_titulo(&self) -> &str {
-        &self.titulo
-    }
-
-    pub fn get_balance(&self) -> f64 {
-        self.balance
-    }
-
-    pub fn get_tipo(&self) -> &str {
-        &self.tipo
-    }
-
-    pub fn get_trades(&self) -> &Vec<Trade> {
-        &self.trades
-    }
-
-    pub fn get_datos(&self) -> &Vec<Datos> {
-        &self.datos
-    }
-
-    /// Setters
-    pub fn set_id(&mut self, id: i32) {
-        self.id = id;
-    }
-
-    pub fn set_balance(&mut self, balance: f64) {
-        self.balance = balance;
-    }
-
-    pub fn set_tipo(&mut self, tipo: String) {
-        self.tipo = tipo;
-    }
-
     /// Funciones Core Backtest
     pub fn add_datos(&mut self, ruta: &str) -> Result<Datos, Box<dyn std::error::Error>> {
         let df: DataFrame = CsvReadOptions::default()

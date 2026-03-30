@@ -95,7 +95,7 @@ pub async fn run_backtest(
     };
 
     // Creamos el struct de trade para realizar las operaciones
-    let mut trade: Trade = Trade::new(backtest.get_id(), symbol).await;
+    let mut trade: Trade = Trade::new(backtest.id, symbol).await;
 
     println!("Iniciando Backtest...");
     let inicio = Instant::now();
@@ -183,8 +183,8 @@ pub async fn run_backtest(
     backtest.guardar_trades().await;
 
     // Creamos los resultados
-    let mut resultados: Resultados = Resultados::new(backtest.get_id()).await;
-    resultados.calcular_resultados(backtest.get_trades().clone(), backtest.get_balance());
+    let mut resultados: Resultados = Resultados::new(backtest.id).await;
+    resultados.calcular_resultados(backtest.trades.clone(), backtest.balance);
     resultados.guardar_resultados().await;
 
     Ok(())

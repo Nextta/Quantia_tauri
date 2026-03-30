@@ -1,4 +1,4 @@
-use crate::api::trades::{insert_trades, table_trades};
+use crate::api::trades::table_trades;
 use crate::backtest::backtest::Backtest;
 use crate::backtest::dias::Dias;
 use crate::backtest::symbol::SymbolInfoCFD;
@@ -48,7 +48,7 @@ impl Trade {
         Trade {
             id: 0,
             id_backtest,
-            id_symbol: symbol.get_id(),
+            id_symbol: symbol.id,
             symbol,
             tipo: "none".to_string(),
             lotaje: 0.0,
@@ -72,132 +72,6 @@ impl Trade {
         }
     }
 
-    ///Getters
-    pub fn get_id(&self) -> i32 {
-        self.id
-    }
-
-    pub fn get_id_backtest(&self) -> i32 {
-        self.id_backtest
-    }
-
-    pub fn get_id_symbol(&self) -> i32 {
-        self.id_symbol
-    }
-
-    pub fn get_symbol(&self) -> &SymbolInfoCFD {
-        &self.symbol
-    }
-
-    pub fn get_tipo(&self) -> &String {
-        &self.tipo
-    }
-
-    pub fn get_lotaje(&self) -> f64 {
-        self.lotaje
-    }
-
-    pub fn get_multiplier(&self) -> f64 {
-        self.multiplicador
-    }
-
-    pub fn get_t0(&self) -> String {
-        self.t0.clone()
-    }
-
-    pub fn get_precio_entrada(&self) -> f64 {
-        self.precio_entrada
-    }
-
-    pub fn get_tp(&self) -> f64 {
-        self.tp
-    }
-
-    pub fn get_sl(&self) -> f64 {
-        self.sl
-    }
-
-    pub fn get_t1(&self) -> String {
-        self.t1.clone()
-    }
-
-    pub fn get_precio_cierre(&self) -> f64 {
-        self.precio_cierre
-    }
-
-    pub fn get_precio_maximo(&self) -> f64 {
-        self.precio_maximo
-    }
-
-    pub fn get_precio_minimo(&self) -> f64 {
-        self.precio_minimo
-    }
-
-    pub fn get_duracion_segundos(&self) -> &String {
-        &self.duracion_segundos
-    }
-
-    pub fn get_duracion_minutos(&self) -> &String {
-        &self.duracion_minutos
-    }
-
-    pub fn get_duracion_horas(&self) -> &String {
-        &self.duracion_horas
-    }
-
-    pub fn get_duracion_dias(&self) -> &String {
-        &self.duracion_dias
-    }
-
-    pub fn get_label(&self) -> u32 {
-        self.label
-    }
-
-    pub fn get_pl(&self) -> f64 {
-        self.pl
-    }
-
-    pub fn get_plsc(&self) -> f64 {
-        self.plsc
-    }
-
-    pub fn get_pip_pl(&self) -> f64 {
-        self.pips_pl
-    }
-
-    /// Setters
-    pub fn set_id(&mut self, id: i32) {
-        self.id = id;
-    }
-
-    pub fn set_id_backtest(&mut self, id_backtest: i32) {
-        self.id_backtest = id_backtest;
-    }
-
-    pub fn set_id_symbol(&mut self, id_symbol: i32) {
-        self.id_symbol = id_symbol;
-    }
-
-    pub fn set_multiplicador(&mut self, multiplicador: f64) {
-        self.multiplicador = multiplicador;
-    }
-
-    pub fn set_pips_pl(&mut self, pips_pl: f64) {
-        self.pips_pl = pips_pl;
-    }
-
-    pub fn set_symbol(&mut self, symbol: SymbolInfoCFD) {
-        self.symbol = symbol;
-    }
-
-    pub fn set_tipo(&mut self, tipo: String) {
-        self.tipo = tipo;
-    }
-
-    pub fn set_t0(&mut self, t0: String) {
-        self.t0 = t0;
-    }
-
     pub fn set_lotaje(&mut self, lotaje: f64, precio: f64, backtest: &Backtest) {
         if lotaje <= 0.0 {
             let m_lote = self.lotaje_quantia(precio, backtest);
@@ -212,87 +86,17 @@ impl Trade {
         };
     }
 
-    pub fn set_lotaje_fijo(&mut self, lotaje: f64) {
-        self.lotaje = lotaje;
-    }
-
-    pub fn set_multiplier(&mut self, multiplier: f64) {
-        self.multiplicador = multiplier;
-    }
-
-    pub fn set_precio_entrada(&mut self, precio_entrada: f64) {
-        self.precio_entrada = precio_entrada;
-    }
-
-    pub fn set_tp(&mut self, tp: f64) {
-        self.tp = tp;
-    }
-
-    pub fn set_sl(&mut self, sl: f64) {
-        self.sl = sl;
-    }
-
-    pub fn set_t1(&mut self, t1: String) {
-        self.t1 = t1;
-    }
-
-    pub fn set_precio_cierre(&mut self, precio_cierre: f64) {
-        self.precio_cierre = precio_cierre;
-    }
-
-    pub fn set_precio_maximo(&mut self, precio_maximo: f64) {
-        self.precio_maximo = precio_maximo;
-    }
-
-    pub fn set_precio_minimo(&mut self, precio_minimo: f64) {
-        self.precio_minimo = precio_minimo;
-    }
-
-    pub fn set_duracion_segundos(&mut self, duracion: String) {
-        self.duracion_segundos = duracion;
-    }
-
-    pub fn set_duracion_minutos(&mut self, duracion: String) {
-        self.duracion_minutos = duracion;
-    }
-
-    pub fn set_duracion_horas(&mut self, duracion: String) {
-        self.duracion_horas = duracion;
-    }
-
-    pub fn set_duracion_dias(&mut self, duracion: String) {
-        self.duracion_dias = duracion;
-    }
-
-    pub fn set_label(&mut self, label: u32) {
-        self.label = label;
-    }
-
-    pub fn set_pl(&mut self, pl: f64) {
-        self.pl = pl;
-    }
-
-    pub fn set_plsc(&mut self, plsc: f64) {
-        self.plsc = plsc;
-    }
-
-    pub fn set_pip_pl(&mut self, pip_pl: f64) {
-        self.pips_pl = pip_pl;
-    }
-
     /// Funciones
-    fn random_spread(&self, precio_entrada: f64) -> f64 {
+    fn random_spread(&self) -> f64 {
         let mut rng = rand::rng();
-        let spread = self.symbol.get_spread();
+        let spread = self.symbol.spread;
         let mut numero: f64 = rng.random_range((spread / 2.0)..=spread);
 
         let numero_truncado: Decimal = truncate_decimal(
             numero.to_string().parse().unwrap(),
-            self.symbol.get_digitos() as u32,
+            self.symbol.digitos as u32,
         );
-        // println!("{}", numero_truncado);
         numero = numero_truncado.to_string().parse().unwrap();
-        // println!("{}", numero);
         numero
     }
 
@@ -309,7 +113,7 @@ impl Trade {
         self.tipo = "Buy".to_string();
         self.multiplicador = multiplicador;
         self.t0 = t0;
-        self.precio_entrada = precio_entrada + self.random_spread(precio_entrada);
+        self.precio_entrada = precio_entrada + self.random_spread();
         self.tp = tp;
         self.sl = sl;
 
@@ -365,15 +169,15 @@ impl Trade {
     ///Returns:
     ///    float: El lotaje calculado, ajustado a los límites y redondeado a dos decimales.
     pub fn lotaje_quantia(&self, precio: f64, backtest: &Backtest) -> f64 {
-        let mut lotaje = (backtest.get_balance() / (precio * self.symbol.get_valor_contrato()))
-            * self.multiplicador;
+        let mut lotaje =
+            (backtest.balance / (precio * self.symbol.valor_contrato)) * self.multiplicador;
 
-        if self.symbol.get_lotaje_maximo() < lotaje {
-            lotaje = self.symbol.get_lotaje_maximo();
+        if self.symbol.lotaje_maximo < lotaje {
+            lotaje = self.symbol.lotaje_maximo;
         }
 
-        if lotaje < self.symbol.get_lotaje_minimo() {
-            lotaje = self.symbol.get_lotaje_minimo()
+        if lotaje < self.symbol.lotaje_minimo {
+            lotaje = self.symbol.lotaje_minimo
         }
 
         lotaje
@@ -393,16 +197,16 @@ impl Trade {
         if self.tipo == "Sell" {
             self.plsc = (self.precio_entrada - self.precio_cierre)
                 * self.lotaje
-                * self.symbol.get_valor_contrato();
+                * self.symbol.valor_contrato;
             self.pips_pl = (self.precio_entrada - self.precio_cierre) * 10000.0;
-            self.pl = (self.plsc + (self.symbol.get_comision_lote() * self.lotaje))
+            self.pl = (self.plsc + (self.symbol.comision_lote * self.lotaje))
                 + self.calcular_comision_swap();
         } else if self.tipo == "Buy" {
             self.plsc = (self.precio_cierre - self.precio_entrada)
                 * self.lotaje
-                * self.symbol.get_valor_contrato();
+                * self.symbol.valor_contrato;
             self.pips_pl = (self.precio_cierre - self.precio_entrada) * 10000.0;
-            self.pl = (self.plsc + (self.symbol.get_comision_lote() * self.lotaje))
+            self.pl = (self.plsc + (self.symbol.comision_lote * self.lotaje))
                 + self.calcular_comision_swap();
         }
     }
@@ -418,8 +222,8 @@ impl Trade {
         let t1 = NaiveDateTime::parse_from_str(&self.t1, "%Y-%m-%d %H:%M:%S").unwrap();
 
         let swap_diario = match self.tipo.as_str() {
-            "Buy" => self.symbol.get_swap_long() * self.lotaje,
-            "Sell" => self.symbol.get_swap_short() * self.lotaje,
+            "Buy" => self.symbol.swap_long * self.lotaje,
+            "Sell" => self.symbol.swap_short * self.lotaje,
             _ => return 0.0,
         };
 
@@ -437,14 +241,14 @@ impl Trade {
                 Weekday::Sun => Dias::Do,
             };
 
-            let multiplicador = if dia_semana == self.symbol.get_dia_triple_swap() {
+            let multiplicador = if dia_semana == self.symbol.dia_triple_swap {
                 3
             } else {
                 1
             };
 
             if dia_semana == Dias::Do || dia_semana == Dias::Sa {
-                if self.symbol.get_open_weekend() {
+                if self.symbol.open_weekend {
                     comision_swap += swap_diario * multiplicador as f64;
                 }
             } else {

@@ -31,24 +31,6 @@ impl BrokerCFD {
         self.id = insert_broker_cfd(self.clone()).await.unwrap();
     }
 
-    ///Getters
-    pub fn get_id(&self) -> i32 {
-        self.id
-    }
-
-    pub fn get_name(&self) -> &String {
-        &self.name
-    }
-
-    pub fn get_symbol_info(&self) -> &Vec<SymbolInfoCFD> {
-        &self.symbol_info
-    }
-
-    ///Setters
-    pub fn set_name(&mut self, name: String) {
-        self.name = name;
-    }
-
     ///Funciones
 
     pub fn add_symbol_info(&mut self, symbol_info: SymbolInfoCFD) {

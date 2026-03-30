@@ -95,7 +95,7 @@ pub async fn run_backtest(
     };
 
     // Creamos el struct de trade para realizar las operaciones
-    let mut trade: Trade = Trade::new(backtest.get_id(), symbol).await;
+    let mut trade: Trade = Trade::new(backtest.id, symbol).await;
 
     println!("Iniciando Backtest...");
     let inicio = Instant::now();
@@ -134,8 +134,8 @@ pub async fn run_backtest(
                     &backtest,
                 );
 
-                trade.set_precio_maximo(low);
-                trade.set_precio_minimo(high);
+                trade.precio_maximo = low;
+                trade.precio_minimo = high;
                 // println!("Operación en Short abierta");
             } else if data.close[i - 1] < data.low[i - 2]
                 && close > data.high[i - 1]
@@ -158,18 +158,18 @@ pub async fn run_backtest(
                     &backtest,
                 );
                 // println!("Operación en Long abierta");
-                trade.set_precio_maximo(high);
-                trade.set_precio_minimo(low);
+                trade.precio_maximo = high;
+                trade.precio_minimo = low;
             }
         } else if state.in_position {
             // Control de SL/TP usando data.high[i] y data.low[i]
             if state.trade_type == "Sell" {
-                if trade.get_precio_maximo() > low {
-                    trade.set_precio_maximo(low);
+                if trade.precio_maximo > low {
+                    trade.precio_maximo = low;
                 }
 
-                if trade.get_precio_minimo() < high {
-                    trade.set_precio_minimo(high);
+                if trade.precio_minimo < high {
+                    trade.precio_minimo = high;
                 }
 
                 if state.contador_belas == state.vertical_barrier {
@@ -180,12 +180,12 @@ pub async fn run_backtest(
                     state.trade_type = "None".to_string();
                 }
             } else if state.trade_type == "Buy" {
-                if trade.get_precio_maximo() < high {
-                    trade.set_precio_maximo(high);
+                if trade.precio_maximo < high {
+                    trade.precio_maximo = high;
                 }
 
-                if trade.get_precio_minimo() > low {
-                    trade.set_precio_minimo(low);
+                if trade.precio_minimo > low {
+                    trade.precio_minimo = low;
                 }
 
                 if state.contador_belas == state.vertical_barrier {
@@ -206,8 +206,8 @@ pub async fn run_backtest(
     backtest.guardar_trades().await;
 
     // Creamos los resultados
-    let mut resultados: Resultados = Resultados::new(backtest.get_id()).await;
-    resultados.calcular_resultados(backtest.get_trades().clone(), backtest.get_balance());
+    let mut resultados: Resultados = Resultados::new(backtest.id).await;
+    resultados.calcular_resultados(backtest.trades.clone(), backtest.balance);
     resultados.guardar_resultados().await;
 
     Ok(())

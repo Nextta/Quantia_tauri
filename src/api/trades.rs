@@ -88,30 +88,30 @@ pub async fn insert_trades(id_backtest: i32, trade: &Trade) -> Result<i32> {
 
     let conn = db.connect()?;
 
-    let pl: Decimal = trade.get_pl().to_string().parse().unwrap();
-    let plsc: Decimal = trade.get_plsc().to_string().parse().unwrap();
-    let pips_pl: Decimal = trade.get_pip_pl().to_string().parse().unwrap();
+    let pl: Decimal = trade.pl.to_string().parse().unwrap();
+    let plsc: Decimal = trade.plsc.to_string().parse().unwrap();
+    let pips_pl: Decimal = trade.pips_pl.to_string().parse().unwrap();
 
     let parametros = params![
         id_backtest,
-        trade.get_symbol().get_id(),
-        trade.get_symbol().get_name().clone(),
-        trade.get_tipo().clone(),
-        trade.get_lotaje(),
-        trade.get_multiplier(),
-        trade.get_t0(),
-        trade.get_precio_entrada(),
-        trade.get_tp(),
-        trade.get_sl(),
-        trade.get_t1(),
-        trade.get_precio_cierre(),
-        trade.get_precio_maximo(),
-        trade.get_precio_minimo(),
-        trade.get_duracion_segundos().clone(),
-        trade.get_duracion_minutos().clone(),
-        trade.get_duracion_horas().clone(),
-        trade.get_duracion_dias().clone(),
-        trade.get_label(),
+        trade.symbol.id,
+        trade.symbol.name.clone(),
+        trade.tipo.clone(),
+        trade.lotaje,
+        trade.multiplicador,
+        trade.t0.clone(),
+        trade.precio_entrada,
+        trade.tp,
+        trade.sl,
+        trade.t1.clone(),
+        trade.precio_cierre,
+        trade.precio_maximo,
+        trade.precio_minimo,
+        trade.duracion_segundos.clone(),
+        trade.duracion_minutos.clone(),
+        trade.duracion_horas.clone(),
+        trade.duracion_dias.clone(),
+        trade.label,
         truncate_decimal(pl, 2).to_string().parse::<f64>().unwrap(),
         truncate_decimal(plsc, 2)
             .to_string()
