@@ -44,7 +44,7 @@ pub async fn table_resultados() -> Result<String> {
         "CREATE TABLE IF NOT EXISTS resultados
                     (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    id_backtest INTEGER NOT NULL,
+                    id_backtest INTEGER NOT NULL REFERENCES backtests(id),
                     return REAL NOT NULL,
                     return_percent REAL NOT NULL,
                     cagr REAL NOT NULL,

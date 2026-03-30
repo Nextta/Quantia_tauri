@@ -7,8 +7,9 @@ Terminadas:
 -Quitar los getters y setters de los struct de backtets.
 
 TODO:
--Crear la forma para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
 -Añadir a la api la funciones para almacenar las estrategias que se usarán en la plantilla de backtest.
+-Crear los test para la funcionalidad de la api de las plantillas de backtest.
+-Crear la logica para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.
 -Crear plantillas para que genere el código en MQL5.
 -Crear un proyecto de tauri para iniciar a crear la interfaz grafica.

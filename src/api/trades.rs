@@ -48,8 +48,8 @@ pub async fn table_trades() -> Result<String> {
         "CREATE TABLE IF NOT EXISTS trades
                 (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                id_backtest INTEGER NOT NULL,
-                id_symbol INTEGER NOT NULL,
+                id_backtest INTEGER NOT NULL REFERENCES backtests(id),
+                id_symbol INTEGER NOT NULL REFERENCES symbol_cfd(id),
                 symbol TEXT NOT NULL,
                 tipo TEXT NOT NULL,
                 lotaje REAL NOT NULL,

@@ -72,6 +72,7 @@ pub fn crear_esquema(conn: &Connection) -> SqliteResult<()> {
         "
         CREATE TABLE IF NOT EXISTS strategies (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            id_user     INTEGER NOT NULL,
             nombre      TEXT NOT NULL,
             descripcion TEXT,
             activa      INTEGER DEFAULT 1,
@@ -86,23 +87,23 @@ pub fn crear_esquema(conn: &Connection) -> SqliteResult<()> {
             parametros   TEXT NOT NULL   -- JSON: '{\"period\": 20}'
         );
 
-        CREATE TABLE IF NOT EXISTS strategy_conditions (
-            id           INTEGER PRIMARY KEY AUTOINCREMENT,
-            strategy_id  INTEGER NOT NULL REFERENCES strategies(id),
-            tipo         TEXT NOT NULL,  -- 'entry' | 'exit'
-            campo_a      TEXT NOT NULL,  -- 'close', 'sma_20', 'rsi'
-            operador     TEXT NOT NULL,  -- '>', '<', '>=', '<=', '==', 'cross_above', 'cross_below'
-            campo_b      TEXT NOT NULL,  -- 'sma_50' o valor literal '30.0'
-            logica       TEXT DEFAULT 'AND',
-            orden        INTEGER DEFAULT 0
-        );
-
         CREATE TABLE IF NOT EXISTS strategy_actions (
             id           INTEGER PRIMARY KEY AUTOINCREMENT,
             strategy_id  INTEGER NOT NULL REFERENCES strategies(id),
             tipo_signal  TEXT NOT NULL,  -- 'entry' | 'exit'
             tipo         TEXT NOT NULL,  -- 'buy', 'sell', 'close', 'set_sl', 'set_tp'
             parametro    TEXT DEFAULT '{}'  -- JSON con parámetros extra
+        );
+
+        CREATE TABLE IF NOT EXISTS strategy_conditions (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            strategy_id  INTEGER NOT NULL REFERENCES strategies(id),
+            action_id    INTEGER NOT NULL REFERENCES strategy_actions(id),
+            campo_a      TEXT NOT NULL,  -- 'close', 'sma_20', 'rsi'
+            operador     TEXT NOT NULL,  -- '>', '<', '>=', '<=', '==', 'cross_above', 'cross_below'
+            campo_b      TEXT NOT NULL,  -- 'sma_50' o valor literal '30.0'
+            logica       TEXT DEFAULT 'NULL',
+            orden        INTEGER DEFAULT 0
         );
     ",
     )

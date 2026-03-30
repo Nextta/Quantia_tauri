@@ -45,7 +45,7 @@ pub async fn table_symbols_cfd() -> Result<String> {
         "CREATE TABLE IF NOT EXISTS symbol_cfd
                     (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    broker_id INTEGER NOT NULL,
+                    broker_id INTEGER NOT NULL REFERENCES brokers(id),
                     name TEXT NOT NULL,
                     valor_contrato REAL NOT NULL,
                     comision_lote REAL NOT NULL,
