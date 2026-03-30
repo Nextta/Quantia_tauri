@@ -67,7 +67,7 @@ pub async fn insert_broker_cfd(broker: BrokerCFD) -> Result<i32> {
     let parametros = params![broker.name];
 
     conn.query(
-        "INSERT INTO broker_cfd (name) VALUES ('?') RETURNING id",
+        "INSERT INTO broker_cfd (name) VALUES (?) RETURNING id",
         parametros,
     )
     .await?;
@@ -158,4 +158,44 @@ pub async fn get_broker_cfd_by_id(id: i32) -> Result<BrokerCFD> {
     };
 
     Ok(broker)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_get_brokers_cfd() -> Result<()> {
+        let _ = get_brokers_cfd().await?;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_get_broker_cfd_by_id() -> Result<()> {
+        let _ = get_broker_cfd_by_id(1).await?;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_table_brokers_cfd() -> Result<()> {
+        let _ = table_brokers_cfd().await?;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_get_brokers_cfd_by_name() -> Result<()> {
+        let _ = get_brokers_cfd_by_name("Axen").await?;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_insert_broker_cfd() -> Result<()> {
+        let _ = insert_broker_cfd(BrokerCFD {
+            id: 2,
+            name: "Darwinex".to_string(),
+            symbol_info: Vec::new(),
+        })
+        .await?;
+        Ok(())
+    }
 }

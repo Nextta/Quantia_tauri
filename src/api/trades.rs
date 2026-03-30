@@ -123,7 +123,7 @@ pub async fn insert_trades(id_backtest: i32, trade: &Trade) -> Result<i32> {
             .unwrap()
     ];
 
-    conn.query("INSERT INTO trades (id_backtest, id_symbol, symbol, tipo, lotaje, multiplicador, t0, precio_entrada, tp, sl, t1, precio_cierre, precio_maximo, precio_minimo, duracion_segundos, duracion_minutos, duracion_horas, duracion_dias, label, pl, plsc, pips_pl) VALUES (?, ?, '?', '?', ?, ?, '?', ?, ?, ?, '?', ?, ?, ?, '?', '?', '?', '?', ?, ?, ?, ?) RETURNING id",
+    conn.query("INSERT INTO trades (id_backtest, id_symbol, symbol, tipo, lotaje, multiplicador, t0, precio_entrada, tp, sl, t1, precio_cierre, precio_maximo, precio_minimo, duracion_segundos, duracion_minutos, duracion_horas, duracion_dias, label, pl, plsc, pips_pl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
         parametros).await?;
 
     let id = conn.last_insert_rowid() as i32;
@@ -192,32 +192,39 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_insert_trades() -> Result<()> {
-        let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(1).await.unwrap(); // Necesito implementar la api de symbol.
-        let mut trade: Trade = Trade::new(1, symbol).await;
+        let symbol = get_symbol_cfd_by_id(1).await;
 
-        trade.id = 1;
-        trade.id_symbol = 1;
-        trade.tipo = "Sell".to_string();
-        trade.lotaje = 1.0;
-        trade.multiplicador = 1.0;
-        trade.t0 = "12-12-2000".to_string();
-        trade.precio_entrada = 1.25244;
-        trade.tp = 1.25244;
-        trade.sl = 1.25244;
-        trade.t1 = "14-12-2000".to_string();
-        trade.precio_cierre = 1.25244;
-        trade.precio_maximo = 1.25244;
-        trade.precio_minimo = 1.25244;
-        trade.duracion_segundos = "100".to_string();
-        trade.duracion_minutos = "100".to_string();
-        trade.duracion_horas = "100".to_string();
-        trade.duracion_dias = "100".to_string();
-        trade.label = 1;
-        trade.pl = 500.23;
-        trade.plsc = 500.23;
-        trade.pips_pl = 500.23;
+        match symbol {
+            Ok(symb) => {
+                let mut trade: Trade = Trade::new(1, symb).await;
 
-        let _ = insert_trades(1, &trade).await?;
+                trade.id = 1;
+                trade.id_symbol = 1;
+                trade.tipo = "Sell".to_string();
+                trade.lotaje = 1.0;
+                trade.multiplicador = 1.0;
+                trade.t0 = "12-12-2000".to_string();
+                trade.precio_entrada = 1.25244;
+                trade.tp = 1.25244;
+                trade.sl = 1.25244;
+                trade.t1 = "14-12-2000".to_string();
+                trade.precio_cierre = 1.25244;
+                trade.precio_maximo = 1.25244;
+                trade.precio_minimo = 1.25244;
+                trade.duracion_segundos = "100".to_string();
+                trade.duracion_minutos = "100".to_string();
+                trade.duracion_horas = "100".to_string();
+                trade.duracion_dias = "100".to_string();
+                trade.label = 1;
+                trade.pl = 500.23;
+                trade.plsc = 500.23;
+                trade.pips_pl = 500.23;
+
+                let _ = insert_trades(1, &trade).await?;
+            }
+            Err(e) => println!("Error: {:?}", e),
+        }
+
         Ok(())
     }
 

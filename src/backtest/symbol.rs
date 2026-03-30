@@ -15,8 +15,8 @@ pub struct SymbolInfoCFD {
     pub lotaje_minimo: f64,
     pub lotaje_maximo: f64,
     pub digitos: u32,
-    pub spread: f64,
     pub open_weekend: bool,
+    pub spread: f64,
 }
 
 impl SymbolInfoCFD {
@@ -32,8 +32,8 @@ impl SymbolInfoCFD {
         lotaje_minimo: f64,
         lotaje_maximo: f64,
         digitos: u32,
-        spread: f64,
         open_weekend: bool,
+        spread: f64,
     ) -> Self {
         let table = table_symbols_cfd().await;
 
@@ -43,13 +43,13 @@ impl SymbolInfoCFD {
             name,
             valor_contrato,
             comision_lote,
-            open_weekend,
             swap_long,
             swap_short,
             dia_triple_swap,
             lotaje_minimo,
             lotaje_maximo,
             digitos,
+            open_weekend,
             spread,
         };
         match table {

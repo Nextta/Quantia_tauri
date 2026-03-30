@@ -3,8 +3,10 @@ Terminadas:
 -Añadir que se registre el precio maximo y minimo en el que ha estado un trade.
 -Añadir a cargo todas las librerías necesarias para el nuevo proyecto de tauri.
 -Migrar la base de datos a Turso.
+-Crear los test de la api.
 
 TODO:
+-Quitar los getters y setters de los struct de backtets.
 -Crear la forma para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
 -Añadir a la api la funciones para almacenar las estrategias que se usarán en la plantilla de backtest.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.

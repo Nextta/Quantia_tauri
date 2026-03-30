@@ -76,7 +76,7 @@ pub async fn get_symbol_cfd_by_id(id: i64) -> Result<SymbolInfoCFD> {
     let conn = db.connect()?;
 
     let mut rows = conn
-        .query("SELECT * FROM symbol_cfd WHERE id = ?", params![id])
+        .query("SELECT * FROM symbol_cfd WHERE id = ?", [id])
         .await?;
 
     let row = rows.next().await?.unwrap();
@@ -91,6 +91,11 @@ pub async fn get_symbol_cfd_by_id(id: i64) -> Result<SymbolInfoCFD> {
         "Do" => Dias::Do,
         _ => Dias::Vi,
     };
+
+    let mut open_weekend = false;
+    if row.get::<i32>(11)? != 0 {
+        open_weekend = true;
+    }
     let symbol: SymbolInfoCFD = SymbolInfoCFD::new(
         row.get::<i32>(0)?,
         row.get::<i32>(1)?,
@@ -103,8 +108,8 @@ pub async fn get_symbol_cfd_by_id(id: i64) -> Result<SymbolInfoCFD> {
         row.get::<f64>(8)?,
         row.get::<f64>(9)?,
         row.get::<u32>(10)?,
-        row.get::<f64>(11)?,
-        row.get::<bool>(12)?,
+        open_weekend,
+        row.get::<f64>(12)?,
     )
     .await;
     Ok(symbol)
@@ -135,7 +140,7 @@ pub async fn insert_symbol_cfd(symbol: SymbolInfoCFD) -> Result<i32> {
         symbol.spread,
     ];
 
-    conn.query("INSERT INTO symbol_cfd (broker_id, name, valor_contrato, comision_lote, swap_long, swap_short, dia_triple_swap, lotaje_minimo, lotaje_maximo, digitos, open_weekend, spread) VALUES (?, '?', ?, ?, ?, ?, '?', ?, ?, ?, ?, ?) RETURNING id", params).await?;
+    conn.query("INSERT INTO symbol_cfd (broker_id, name, valor_contrato, comision_lote, swap_long, swap_short, dia_triple_swap, lotaje_minimo, lotaje_maximo, digitos, open_weekend, spread) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id", params).await?;
 
     let id = conn.last_insert_rowid() as i32;
     Ok(id)
@@ -167,6 +172,11 @@ pub async fn get_symbols_cfd() -> Result<Vec<SymbolInfoCFD>> {
             _ => Dias::Vi,
         };
 
+        let mut open_weekend = false;
+        if row.get::<i32>(11)? != 0 {
+            open_weekend = true;
+        }
+
         let symbol = SymbolInfoCFD {
             id: row.get::<i32>(0)?,
             broker_id: row.get::<i32>(1)?,
@@ -179,7 +189,7 @@ pub async fn get_symbols_cfd() -> Result<Vec<SymbolInfoCFD>> {
             lotaje_minimo: row.get::<f64>(8)?,
             lotaje_maximo: row.get::<f64>(9)?,
             digitos: row.get::<u32>(10)?,
-            open_weekend: row.get::<bool>(11)?,
+            open_weekend: open_weekend,
             spread: row.get::<f64>(12)?,
         };
         symbols.push(symbol);
@@ -215,6 +225,11 @@ pub async fn get_symbols_cfd_by_name(name: &str) -> Result<Vec<SymbolInfoCFD>> {
             _ => Dias::Vi,
         };
 
+        let mut open_weekend = false;
+        if row.get::<i32>(11)? != 0 {
+            open_weekend = true;
+        }
+
         let symbol = SymbolInfoCFD {
             id: row.get::<i32>(0)?,
             broker_id: row.get::<i32>(1)?,
@@ -227,7 +242,7 @@ pub async fn get_symbols_cfd_by_name(name: &str) -> Result<Vec<SymbolInfoCFD>> {
             lotaje_minimo: row.get::<f64>(8)?,
             lotaje_maximo: row.get::<f64>(9)?,
             digitos: row.get::<u32>(10)?,
-            open_weekend: row.get::<bool>(11)?,
+            open_weekend: open_weekend,
             spread: row.get::<f64>(12)?,
         };
         symbols.push(symbol);
@@ -263,6 +278,11 @@ pub async fn get_symbols_cfd_by_broker(broker_id: i32) -> Result<Vec<SymbolInfoC
             _ => Dias::Vi,
         };
 
+        let mut open_weekend = false;
+        if row.get::<i32>(11)? != 0 {
+            open_weekend = true;
+        }
+
         let symbol = SymbolInfoCFD {
             id: row.get::<i32>(0)?,
             broker_id: row.get::<i32>(1)?,
@@ -275,10 +295,66 @@ pub async fn get_symbols_cfd_by_broker(broker_id: i32) -> Result<Vec<SymbolInfoC
             lotaje_minimo: row.get::<f64>(8)?,
             lotaje_maximo: row.get::<f64>(9)?,
             digitos: row.get::<u32>(10)?,
-            open_weekend: row.get::<bool>(11)?,
+            open_weekend: open_weekend,
             spread: row.get::<f64>(12)?,
         };
         symbols.push(symbol);
     }
     Ok(symbols)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_get_symbol_cfd_by_id() -> Result<()> {
+        let _ = get_symbol_cfd_by_id(1).await?;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_get_symbols_cfd() -> Result<()> {
+        let _ = get_symbols_cfd().await?;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_get_symbols_cfd_by_broker() -> Result<()> {
+        let _ = get_symbols_cfd_by_broker(1).await?;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_get_symbols_cfd_by_name() -> Result<()> {
+        let _ = get_symbols_cfd_by_name("XAUUSD").await?;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_insert_symbols_cfd() -> Result<()> {
+        let _ = insert_symbol_cfd(SymbolInfoCFD {
+            id: 0,
+            broker_id: 1,
+            name: "XAGUSD".to_string(),
+            valor_contrato: 1.0,
+            comision_lote: 0.0,
+            swap_long: 0.0,
+            swap_short: 0.0,
+            dia_triple_swap: Dias::Vi,
+            lotaje_minimo: 1.0,
+            lotaje_maximo: 1.0,
+            digitos: 0,
+            open_weekend: false,
+            spread: 0.0,
+        })
+        .await?;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_table_symbols_cfd() -> Result<()> {
+        let _ = table_symbols_cfd().await?;
+        Ok(())
+    }
 }
