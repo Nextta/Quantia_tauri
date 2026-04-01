@@ -1,6 +1,7 @@
 pub mod api;
 pub mod backtest;
 pub mod estrategias;
+pub mod strategy;
 pub mod utils;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

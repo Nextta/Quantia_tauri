@@ -1,4 +1,4 @@
-use crate::backtest::strategy::Strategy;
+use crate::strategy::strategy::Strategy;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
 use serde::Serialize;
@@ -421,7 +421,7 @@ pub async fn table_strategy_indicators() -> Result<String> {
             strategy_id  INTEGER NOT NULL REFERENCES strategies(id),
             nombre       TEXT NOT NULL,  -- nombre del campo: 'sma_20'
             tipo         TEXT NOT NULL,  -- 'SMA', 'EMA', 'RSI', 'MACD', 'BB'
-            parametros   TEXT NOT NULL   -- JSON: '{\"period\": 20}'
+            parametros   TEXT DEFAULT '{}'   -- JSON: '{\"period\": 20}'
         )",
         (),
     )
@@ -447,7 +447,7 @@ pub async fn table_strategy_actions() -> Result<String> {
             strategy_id  INTEGER NOT NULL REFERENCES strategies(id),
             tipo_signal  TEXT NOT NULL,  -- 'entry' | 'exit'
             tipo         TEXT NOT NULL,  -- 'buy', 'sell', 'close', 'set_sl', 'set_tp'
-            parametro    TEXT DEFAULT '{}'  -- JSON con parámetros extra
+            parametros    TEXT DEFAULT '{}'  -- JSON con parámetros extra
         )",
         (),
     )
