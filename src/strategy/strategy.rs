@@ -10,6 +10,9 @@ pub struct Strategy {
     pub descripcion: Option<String>,
     pub activa: bool,
     pub creada_en: String,
+    pub indicadores: Vec<StrategyIndicator>,
+    pub condiciones: Vec<StrategyCondition>,
+    pub acciones: Vec<StrategyAction>,
 }
 
 impl Strategy {
@@ -28,6 +31,9 @@ impl Strategy {
             descripcion,
             activa,
             creada_en,
+            indicadores: Vec::<StrategyIndicator>::new(),
+            condiciones: Vec::<StrategyCondition>::new(),
+            acciones: Vec::<StrategyAction>::new(),
         }
     }
 }

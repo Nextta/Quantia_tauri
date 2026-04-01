@@ -1,4 +1,7 @@
 use crate::strategy::strategy::Strategy;
+use crate::strategy::strategy_action::StrategyAction;
+use crate::strategy::strategy_condition::StrategyCondition;
+use crate::strategy::strategy_indicator::StrategyIndicator;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
 use serde::Serialize;
@@ -430,6 +433,94 @@ pub async fn table_strategy_indicators() -> Result<String> {
     Ok("Tabla strategy_indicators is ok.".to_string())
 }
 
+#[tauri::command]
+pub async fn insert_strategies_indicator(indicator: StrategyIndicator) -> Result<i32> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![
+        indicator.strategy_id,
+        indicator.nombre,
+        indicator.tipo,
+        indicator.parametros.to_string()
+    ];
+    conn.query(
+        "INSERT INTO strategy_indicators (strategy_id, nombre, tipo, parametros) VALUES (?, ?, ?, ?) RETURNING id",
+        parametros,
+    )
+    .await?;
+
+    let id = conn.last_insert_rowid() as i32;
+    Ok(id)
+}
+
+#[tauri::command]
+pub async fn get_strategy_indicator_by_id(id: i32) -> Result<StrategyIndicator> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let sql = "SELECT * FROM strategy_indicators WHERE id = ?";
+
+    let parametros = params![id];
+
+    let mut result = conn.query(sql, parametros).await?;
+
+    let row = result.next().await?.unwrap();
+
+    let indicator = StrategyIndicator {
+        id: row.get::<i32>(0)?,
+        strategy_id: row.get::<i32>(1)?,
+        nombre: row.get::<String>(2)?,
+        tipo: row.get::<String>(3)?,
+        parametros: serde_json::from_str(&row.get::<String>(4)?).unwrap(),
+    };
+
+    Ok(indicator)
+}
+
+#[tauri::command]
+pub async fn get_strategies_indicatros_by_strategy_id(
+    startegy_id: i32,
+) -> Result<Vec<StrategyIndicator>> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![startegy_id];
+
+    let sql = "SELECT * FROM strategy_indicators WHERE strategy_id = ?";
+
+    let mut result = conn.query(sql, parametros).await?;
+
+    let mut indicators = Vec::new();
+    while let Some(row) = result.next().await? {
+        let indicator = StrategyIndicator {
+            id: row.get::<i32>(0)?,
+            strategy_id: row.get::<i32>(1)?,
+            nombre: row.get::<String>(2)?,
+            tipo: row.get::<String>(3)?,
+            parametros: serde_json::from_str(&row.get::<String>(4)?).unwrap(),
+        };
+        indicators.push(indicator);
+    }
+
+    Ok(indicators)
+}
+
 //================================Actions================================
 #[tauri::command]
 pub async fn table_strategy_actions() -> Result<String> {
@@ -456,6 +547,93 @@ pub async fn table_strategy_actions() -> Result<String> {
     Ok("Tabla strategy_actions is ok.".to_string())
 }
 
+#[tauri::command]
+pub async fn insert_strategies_action(action: StrategyAction) -> Result<i32> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![
+        action.strategy_id,
+        action.tipo_signal,
+        action.tipo,
+        action.parametros.to_string()
+    ];
+    conn.query(
+        "INSERT INTO strategy_actions (strategy_id, tipo_signal, tipo, parametros) VALUES (?, ?, ?, ?) RETURNING id",
+        parametros,
+    )
+    .await?;
+
+    let id = conn.last_insert_rowid() as i32;
+    Ok(id)
+}
+
+#[tauri::command]
+pub async fn get_strategy_action_by_id(id: i32) -> Result<StrategyAction> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let sql = "SELECT * FROM strategy_actions WHERE id = ?";
+
+    let parametros = params![id];
+
+    let mut result = conn.query(sql, parametros).await?;
+
+    let row = result.next().await?.unwrap();
+
+    let action = StrategyAction {
+        id: row.get::<i32>(0)?,
+        strategy_id: row.get::<i32>(1)?,
+        tipo_signal: row.get::<String>(2)?,
+        tipo: row.get::<String>(3)?,
+        parametros: serde_json::from_str(&row.get::<String>(4)?).unwrap(),
+    };
+
+    Ok(action)
+}
+
+#[tauri::command]
+pub async fn get_strategies_actions_by_strategy_id(
+    startegy_id: i32,
+) -> Result<Vec<StrategyAction>> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![startegy_id];
+
+    let sql = "SELECT * FROM strategy_actions WHERE strategy_id = ?";
+
+    let mut result = conn.query(sql, parametros).await?;
+
+    let mut actions = Vec::new();
+    while let Some(row) = result.next().await? {
+        let action = StrategyAction {
+            id: row.get::<i32>(0)?,
+            strategy_id: row.get::<i32>(1)?,
+            tipo_signal: row.get::<String>(2)?,
+            tipo: row.get::<String>(3)?,
+            parametros: serde_json::from_str(&row.get::<String>(4)?).unwrap(),
+        };
+        actions.push(action);
+    }
+
+    Ok(actions)
+}
 //================================Conditions================================
 #[tauri::command]
 pub async fn table_strategy_conditions() -> Result<String> {
@@ -483,6 +661,103 @@ pub async fn table_strategy_conditions() -> Result<String> {
     .await?;
 
     Ok("Tabla strategy_conditions is ok.".to_string())
+}
+
+#[tauri::command]
+pub async fn insert_strategy_condition(condition: StrategyCondition) -> Result<i32> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![
+        condition.strategy_id,
+        condition.action_id,
+        condition.campo_a,
+        condition.operador,
+        condition.campo_b,
+        condition.logica,
+        condition.orden
+    ];
+    conn.query(
+        "INSERT INTO strategy_conditions (strategy_id, action_id, campo_a, operador, campo_b, logica, orden) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id",
+        parametros,
+    )
+    .await?;
+
+    let id = conn.last_insert_rowid() as i32;
+    Ok(id)
+}
+
+#[tauri::command]
+pub async fn get_strategy_condition_by_id(id: i32) -> Result<StrategyCondition> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let sql = "SELECT * FROM strategy_conditions WHERE id = ?";
+
+    let parametros = params![id];
+
+    let mut result = conn.query(sql, parametros).await?;
+
+    let row = result.next().await?.unwrap();
+
+    let condition = StrategyCondition {
+        id: row.get::<i32>(0)?,
+        strategy_id: row.get::<i32>(1)?,
+        action_id: row.get::<i32>(2)?,
+        campo_a: row.get::<String>(3)?,
+        operador: row.get::<String>(4)?,
+        campo_b: row.get::<String>(5)?,
+        logica: row.get::<String>(6)?,
+        orden: row.get::<i32>(7)?,
+    };
+
+    Ok(condition)
+}
+
+#[tauri::command]
+pub async fn get_strategies_conditions_by_strategy_id(
+    startegy_id: i32,
+) -> Result<Vec<StrategyCondition>> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![startegy_id];
+
+    let sql = "SELECT * FROM strategy_conditions WHERE strategy_id = ?";
+
+    let mut result = conn.query(sql, parametros).await?;
+
+    let mut conditions = Vec::new();
+    while let Some(row) = result.next().await? {
+        let condition = StrategyCondition {
+            id: row.get::<i32>(0)?,
+            strategy_id: row.get::<i32>(1)?,
+            action_id: row.get::<i32>(2)?,
+            campo_a: row.get::<String>(3)?,
+            operador: row.get::<String>(4)?,
+            campo_b: row.get::<String>(5)?,
+            logica: row.get::<String>(6)?,
+            orden: row.get::<i32>(7)?,
+        };
+        conditions.push(condition);
+    }
+
+    Ok(conditions)
 }
 
 #[cfg(test)]
