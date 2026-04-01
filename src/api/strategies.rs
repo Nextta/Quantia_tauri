@@ -407,6 +407,27 @@ pub async fn get_desactive_strategies_by_date(fecha: &str) -> Result<Vec<Strateg
     Ok(strategies)
 }
 
+#[tauri::command]
+pub async fn delete_strategy(id: i32) -> Result<String> {
+    let _ = delete_strategy_condition_by_strategy(id).await;
+    let _ = delete_strategy_indicator_by_strategy(id).await;
+    let _ = delete_strategy_action_by_strategy(id).await;
+
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![id];
+
+    conn.query("DELETE FROM strategies WHERE id = ?", parametros)
+        .await?;
+
+    Ok("Condition eliminado con exito!".to_string())
+}
 //================================Indicators================================
 #[tauri::command]
 pub async fn table_strategy_indicators() -> Result<String> {
@@ -489,7 +510,7 @@ pub async fn get_strategy_indicator_by_id(id: i32) -> Result<StrategyIndicator> 
 }
 
 #[tauri::command]
-pub async fn get_strategies_indicatros_by_strategy_id(
+pub async fn get_strategies_indicators_by_strategy_id(
     startegy_id: i32,
 ) -> Result<Vec<StrategyIndicator>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -519,6 +540,45 @@ pub async fn get_strategies_indicatros_by_strategy_id(
     }
 
     Ok(indicators)
+}
+
+#[tauri::command]
+pub async fn delete_strategy_indicator(id: i32) -> Result<String> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![id];
+
+    conn.query("DELETE FROM strategy_indicators WHERE id = ?", parametros)
+        .await?;
+
+    Ok("Indicador eliminado con exito!".to_string())
+}
+
+#[tauri::command]
+pub async fn delete_strategy_indicator_by_strategy(strategy_id: i32) -> Result<String> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![strategy_id];
+
+    conn.query(
+        "DELETE FROM strategy_indicators WHERE strategy_id = ?",
+        parametros,
+    )
+    .await?;
+
+    Ok("Indicadores eliminados con exito!".to_string())
 }
 
 //================================Actions================================
@@ -633,6 +693,45 @@ pub async fn get_strategies_actions_by_strategy_id(
     }
 
     Ok(actions)
+}
+
+#[tauri::command]
+pub async fn delete_strategy_action(id: i32) -> Result<String> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![id];
+
+    conn.query("DELETE FROM strategy_actions WHERE id = ?", parametros)
+        .await?;
+
+    Ok("Action eliminado con exito!".to_string())
+}
+
+#[tauri::command]
+pub async fn delete_strategy_action_by_strategy(strategy_id: i32) -> Result<String> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![strategy_id];
+
+    conn.query(
+        "DELETE FROM strategy_actions WHERE strategy_id = ?",
+        parametros,
+    )
+    .await?;
+
+    Ok("Actions eliminados con exito!".to_string())
 }
 //================================Conditions================================
 #[tauri::command]
@@ -758,6 +857,45 @@ pub async fn get_strategies_conditions_by_strategy_id(
     }
 
     Ok(conditions)
+}
+
+#[tauri::command]
+pub async fn delete_strategy_condition(id: i32) -> Result<String> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![id];
+
+    conn.query("DELETE FROM strategy_conditions WHERE id = ?", parametros)
+        .await?;
+
+    Ok("Condition eliminado con exito!".to_string())
+}
+
+#[tauri::command]
+pub async fn delete_strategy_condition_by_strategy(strategy_id: i32) -> Result<String> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![strategy_id];
+
+    conn.query(
+        "DELETE FROM strategy_conditions WHERE strategy_id = ?",
+        parametros,
+    )
+    .await?;
+
+    Ok("Conditions eliminados con exito!".to_string())
 }
 
 #[cfg(test)]
