@@ -635,7 +635,7 @@ pub async fn get_all_desactive_strategies() -> Result<Vec<Strategy>> {
 }
 
 #[tauri::command]
-pub async fn get_desactive_strategies_by_date(fecha: &str) -> Result<Vec<Strategy>> {
+pub async fn get_active_strategies_by_date(fecha: &str) -> Result<Vec<Strategy>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
@@ -1198,6 +1198,25 @@ pub async fn delete_strategy_condition_by_strategy(strategy_id: i32) -> Result<S
 mod tests {
     use super::*;
 
+    async fn create_strategy(id_user: i32, nombre: &str, activa: bool, fecha: &str) -> i32 {
+        let estrategia: Strategy = Strategy {
+            id: 1,
+            id_user: id_user,
+            nombre: nombre.to_string(),
+            descripcion: Some("Cruce de 3 emas".to_string()),
+            activa: activa,
+            creada_en: fecha.to_string(),
+            indicadores: Vec::<StrategyIndicator>::new(),
+            condiciones: Vec::<StrategyCondition>::new(),
+            acciones: Vec::<StrategyAction>::new(),
+        };
+
+        let id = insert_strategies(estrategia).await.unwrap();
+
+        id
+    }
+
+    //================================TEST: Strategies================================
     #[tokio::test(flavor = "multi_thread")]
     async fn test_table_strategies() -> Result<()> {
         let _ = table_strategies().await?;
@@ -1205,17 +1224,121 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread")]
+    async fn test_insert_strategies() -> Result<()> {
+        let estrategia: Strategy = Strategy {
+            id: 1,
+            id_user: 1,
+            nombre: "Ema_tres".to_string(),
+            descripcion: Some("Cruce de 3 emas".to_string()),
+            activa: true,
+            creada_en: "01-04-2026".to_string(),
+            indicadores: Vec::<StrategyIndicator>::new(),
+            condiciones: Vec::<StrategyCondition>::new(),
+            acciones: Vec::<StrategyAction>::new(),
+        };
+
+        let id = insert_strategies(estrategia).await.unwrap();
+
+        let _ = delete_strategy(id).await;
+
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_get_strategies() -> Result<()> {
+        let id = create_strategy(1, "Test", true, "01-04-2026").await;
+        let _ = get_strategies().await;
+        let _ = delete_strategy(id).await;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_get_strategies_by_id() -> Result<()> {
+        let id = create_strategy(1, "Test", true, "01-04-2026").await;
+        let _ = get_strategies_by_id(id).await;
+        let _ = delete_strategy(id).await;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_get_strategies_by_id_user() -> Result<()> {
+        let id = create_strategy(1, "Test", true, "01-04-2026").await;
+        let _ = get_strategies_by_id_user(1).await;
+        let _ = delete_strategy(id).await;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_get_strategies_by_nombre() -> Result<()> {
+        let id = create_strategy(1, "Test", true, "01-04-2026").await;
+        let _ = get_strategies_by_nombre("Test").await;
+        let _ = delete_strategy(id).await;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_get_active_strategies_by_user() -> Result<()> {
+        let id = create_strategy(1, "Test", true, "01-04-2026").await;
+        let _ = get_active_strategies_by_user(1).await;
+        let _ = delete_strategy(id).await;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_get_all_active_strategies() -> Result<()> {
+        let id = create_strategy(1, "Test", true, "01-04-2026").await;
+        let _ = get_all_active_strategies().await;
+        let _ = delete_strategy(id).await;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_get_desactive_strategies_by_user() -> Result<()> {
+        let id = create_strategy(1, "Test", true, "01-04-2026").await;
+        let _ = get_desactive_strategies_by_user(1).await;
+        let _ = delete_strategy(id).await;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_get_all_desactive_strategies() -> Result<()> {
+        let id = create_strategy(1, "Test", true, "01-04-2026").await;
+        let _ = get_all_desactive_strategies().await;
+        let _ = delete_strategy(id).await;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_get_active_strategies_by_date() -> Result<()> {
+        let id = create_strategy(1, "Test", true, "01-04-2026").await;
+        let _ = get_active_strategies_by_date("01-04-2026").await;
+        let _ = delete_strategy(id).await;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_delete_strategy() -> Result<()> {
+        let id = create_strategy(1, "Test", true, "01-04-2026").await;
+        let _ = delete_strategy(id).await;
+
+        Ok(())
+    }
+
+    //================================TEST: Indicators================================
+    #[tokio::test(flavor = "multi_thread")]
     async fn test_table_strategy_indicators() -> Result<()> {
         let _ = table_strategy_indicators().await?;
         Ok(())
     }
 
+    //================================TEST: Actions================================
     #[tokio::test(flavor = "multi_thread")]
     async fn test_table_strategy_actions() -> Result<()> {
         let _ = table_strategy_actions().await?;
         Ok(())
     }
 
+    //================================TEST: Conditions================================
     #[tokio::test(flavor = "multi_thread")]
     async fn test_table_strategy_conditions() -> Result<()> {
         let _ = table_strategy_conditions().await?;
