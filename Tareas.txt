@@ -6,9 +6,10 @@ Terminadas:
 -Crear los test de la api.
 -Quitar los getters y setters de los struct de backtets.
 -Añadir a la api la funciones para almacenar las estrategias que se usarán en la plantilla de backtest.
+-Crear los test para la funcionalidad de la api de las plantillas de backtest.
 
 TODO:
--Crear los test para la funcionalidad de la api de las plantillas de backtest.
+-Repasar todos los test y mejorarlos antes de continuar con todas las demas tareas.
 -Crear la logica para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.
 -Crear plantillas para que genere el código en MQL5.

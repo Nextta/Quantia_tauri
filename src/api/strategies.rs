@@ -33,6 +33,14 @@ fn get_db_config() -> Result<(String, String, String)> {
     Ok((db_path, sync_url, auth_token))
 }
 //================================Strategies================================
+
+/// Crea la tabla de estrategias en la base de datos.
+///
+/// # Returns
+/// * `Result<String>` - Mensaje de éxito si la tabla se crea correctamente.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_strategies() -> Result<String> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -59,6 +67,16 @@ pub async fn table_strategies() -> Result<String> {
     Ok("Tabla strategies is ok.".to_string())
 }
 
+/// Inserta una nueva estrategia en la base de datos.
+///
+/// # Parámetros
+/// * `strategy`: Objeto Strategy con los datos de la estrategia a insertar.
+///
+/// # Returns
+/// * `Result<i32>` - ID de la estrategia insertada.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
 pub async fn insert_strategies(strategy: Strategy) -> Result<i32> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -86,6 +104,13 @@ pub async fn insert_strategies(strategy: Strategy) -> Result<i32> {
     Ok(id)
 }
 
+/// Obtiene todas las estrategias de la base de datos, incluyendo sus indicadores, condiciones y acciones.
+///
+/// # Returns
+/// * `Result<Vec<Strategy>>` - Vector de estrategias con todos sus componentes.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_strategies() -> Result<Vec<Strategy>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -153,6 +178,16 @@ pub async fn get_strategies() -> Result<Vec<Strategy>> {
     Ok(strategies)
 }
 
+/// Obtiene una estrategia específica por su ID.
+///
+/// # Parámetros
+/// * `id`: ID de la estrategia a buscar.
+///
+/// # Returns
+/// * `Result<Strategy>` - Estrategia encontrada con todos sus componentes.
+///
+/// # Errores
+/// Retorna error si no se encuentra la estrategia o falla la conexión.
 #[tauri::command]
 pub async fn get_strategies_by_id(id: i32) -> Result<Strategy> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -220,6 +255,16 @@ pub async fn get_strategies_by_id(id: i32) -> Result<Strategy> {
     Ok(strategy)
 }
 
+/// Obtiene todas las estrategias activas de un usuario específico.
+///
+/// # Parámetros
+/// * `id_user`: ID del usuario propietario de las estrategias.
+///
+/// # Returns
+/// * `Result<Vec<Strategy>>` - Vector de estrategias activas del usuario.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -289,6 +334,16 @@ pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>> {
     Ok(strategies)
 }
 
+/// Obtiene estrategias por nombre que estén activas.
+///
+/// # Parámetros
+/// * `nombre`: Nombre de la estrategia a buscar.
+///
+/// # Returns
+/// * `Result<Vec<Strategy>>` - Vector de estrategias que coinciden con el nombre.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_strategies_by_nombre(nombre: &str) -> Result<Vec<Strategy>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -358,6 +413,16 @@ pub async fn get_strategies_by_nombre(nombre: &str) -> Result<Vec<Strategy>> {
     Ok(strategies)
 }
 
+/// Obtiene todas las estrategias activas de un usuario específico.
+///
+/// # Parámetros
+/// * `id_user`: ID del usuario propietario de las estrategias.
+///
+/// # Returns
+/// * `Result<Vec<Strategy>>` - Vector de estrategias activas del usuario.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_active_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -427,6 +492,13 @@ pub async fn get_active_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>
     Ok(strategies)
 }
 
+/// Obtiene todas las estrategias activas de la base de datos.
+///
+/// # Returns
+/// * `Result<Vec<Strategy>>` - Vector de todas las estrategias activas.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_all_active_strategies() -> Result<Vec<Strategy>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -496,6 +568,16 @@ pub async fn get_all_active_strategies() -> Result<Vec<Strategy>> {
     Ok(strategies)
 }
 
+/// Obtiene todas las estrategias desactivadas de un usuario específico.
+///
+/// # Parámetros
+/// * `id_user`: ID del usuario propietario de las estrategias.
+///
+/// # Returns
+/// * `Result<Vec<Strategy>>` - Vector de estrategias desactivadas del usuario.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_desactive_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -565,6 +647,13 @@ pub async fn get_desactive_strategies_by_user(id_user: i32) -> Result<Vec<Strate
     Ok(strategies)
 }
 
+/// Obtiene todas las estrategias desactivadas de la base de datos.
+///
+/// # Returns
+/// * `Result<Vec<Strategy>>` - Vector de todas las estrategias desactivadas.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_all_desactive_strategies() -> Result<Vec<Strategy>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -634,6 +723,16 @@ pub async fn get_all_desactive_strategies() -> Result<Vec<Strategy>> {
     Ok(strategies)
 }
 
+/// Obtiene estrategias activas por fecha de creación.
+///
+/// # Parámetros
+/// * `fecha`: Fecha de creación en formato texto.
+///
+/// # Returns
+/// * `Result<Vec<Strategy>>` - Vector de estrategias activas creadas en esa fecha.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_active_strategies_by_date(fecha: &str) -> Result<Vec<Strategy>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -703,6 +802,19 @@ pub async fn get_active_strategies_by_date(fecha: &str) -> Result<Vec<Strategy>>
     Ok(strategies)
 }
 
+/// Elimina una estrategia y todos sus elementos relacionados (indicadores, acciones y condiciones).
+///
+/// # Parámetros
+/// * `id`: ID de la estrategia a eliminar.
+///
+/// # Returns
+/// * `Result<String>` - Mensaje de éxito si la eliminación es correcta.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la eliminación.
+///
+/// # Nota
+/// Esta función elimina en cascada los indicadores, acciones y condiciones asociados a la estrategia.
 #[tauri::command]
 pub async fn delete_strategy(id: i32) -> Result<String> {
     let _ = delete_strategy_condition_by_strategy(id).await;
@@ -725,6 +837,14 @@ pub async fn delete_strategy(id: i32) -> Result<String> {
     Ok("Condition eliminado con exito!".to_string())
 }
 //================================Indicators================================
+
+/// Crea la tabla de indicadores de estrategias en la base de datos.
+///
+/// # Returns
+/// * `Result<String>` - Mensaje de éxito si la tabla se crea correctamente.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_strategy_indicators() -> Result<String> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -750,6 +870,16 @@ pub async fn table_strategy_indicators() -> Result<String> {
     Ok("Tabla strategy_indicators is ok.".to_string())
 }
 
+/// Inserta un nuevo indicador en la base de datos.
+///
+/// # Parámetros
+/// * `indicator`: Objeto StrategyIndicator con los datos del indicador a insertar.
+///
+/// # Returns
+/// * `Result<i32>` - ID del indicador insertado.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
 pub async fn insert_strategies_indicator(indicator: StrategyIndicator) -> Result<i32> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -776,6 +906,16 @@ pub async fn insert_strategies_indicator(indicator: StrategyIndicator) -> Result
     Ok(id)
 }
 
+/// Obtiene un indicador específico por su ID.
+///
+/// # Parámetros
+/// * `id`: ID del indicador a buscar.
+///
+/// # Returns
+/// * `Result<StrategyIndicator>` - Indicador encontrado.
+///
+/// # Errores
+/// Retorna error si no se encuentra el indicador o falla la conexión.
 #[tauri::command]
 pub async fn get_strategy_indicator_by_id(id: i32) -> Result<StrategyIndicator> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -805,6 +945,16 @@ pub async fn get_strategy_indicator_by_id(id: i32) -> Result<StrategyIndicator> 
     Ok(indicator)
 }
 
+/// Obtiene todos los indicadores asociados a una estrategia.
+///
+/// # Parámetros
+/// * `startegy_id`: ID de la estrategia cuyos indicadores se obtendrán.
+///
+/// # Returns
+/// * `Result<Vec<StrategyIndicator>>` - Vector de indicadores de la estrategia.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_strategies_indicators_by_strategy_id(
     startegy_id: i32,
@@ -838,6 +988,16 @@ pub async fn get_strategies_indicators_by_strategy_id(
     Ok(indicators)
 }
 
+/// Elimina un indicador específico por su ID.
+///
+/// # Parámetros
+/// * `id`: ID del indicador a eliminar.
+///
+/// # Returns
+/// * `Result<String>` - Mensaje de éxito si la eliminación es correcta.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_indicator(id: i32) -> Result<String> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -856,6 +1016,16 @@ pub async fn delete_strategy_indicator(id: i32) -> Result<String> {
     Ok("Indicador eliminado con exito!".to_string())
 }
 
+/// Elimina todos los indicadores asociados a una estrategia.
+///
+/// # Parámetros
+/// * `strategy_id`: ID de la estrategia cuyos indicadores se eliminarán.
+///
+/// # Returns
+/// * `Result<String>` - Mensaje de éxito si la eliminación es correcta.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_indicator_by_strategy(strategy_id: i32) -> Result<String> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -878,6 +1048,14 @@ pub async fn delete_strategy_indicator_by_strategy(strategy_id: i32) -> Result<S
 }
 
 //================================Actions================================
+
+/// Crea la tabla de acciones de estrategias en la base de datos.
+///
+/// # Returns
+/// * `Result<String>` - Mensaje de éxito si la tabla se crea correctamente.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_strategy_actions() -> Result<String> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -903,6 +1081,16 @@ pub async fn table_strategy_actions() -> Result<String> {
     Ok("Tabla strategy_actions is ok.".to_string())
 }
 
+/// Inserta una nueva acción en la base de datos.
+///
+/// # Parámetros
+/// * `action`: Objeto StrategyAction con los datos de la acción a insertar.
+///
+/// # Returns
+/// * `Result<i32>` - ID de la acción insertada.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
 pub async fn insert_strategies_action(action: StrategyAction) -> Result<i32> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -929,6 +1117,16 @@ pub async fn insert_strategies_action(action: StrategyAction) -> Result<i32> {
     Ok(id)
 }
 
+/// Obtiene una acción específica por su ID.
+///
+/// # Parámetros
+/// * `id`: ID de la acción a buscar.
+///
+/// # Returns
+/// * `Result<StrategyAction>` - Acción encontrada.
+///
+/// # Errores
+/// Retorna error si no se encuentra la acción o falla la conexión.
 #[tauri::command]
 pub async fn get_strategy_action_by_id(id: i32) -> Result<StrategyAction> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -958,6 +1156,16 @@ pub async fn get_strategy_action_by_id(id: i32) -> Result<StrategyAction> {
     Ok(action)
 }
 
+/// Obtiene todas las acciones asociadas a una estrategia.
+///
+/// # Parámetros
+/// * `startegy_id`: ID de la estrategia cuyas acciones se obtendrán.
+///
+/// # Returns
+/// * `Result<Vec<StrategyAction>>` - Vector de acciones de la estrategia.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_strategies_actions_by_strategy_id(
     startegy_id: i32,
@@ -991,6 +1199,16 @@ pub async fn get_strategies_actions_by_strategy_id(
     Ok(actions)
 }
 
+/// Elimina una acción específica por su ID.
+///
+/// # Parámetros
+/// * `id`: ID de la acción a eliminar.
+///
+/// # Returns
+/// * `Result<String>` - Mensaje de éxito si la eliminación es correcta.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_action(id: i32) -> Result<String> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -1009,6 +1227,16 @@ pub async fn delete_strategy_action(id: i32) -> Result<String> {
     Ok("Action eliminado con exito!".to_string())
 }
 
+/// Elimina todas las acciones asociadas a una estrategia.
+///
+/// # Parámetros
+/// * `strategy_id`: ID de la estrategia cuyas acciones se eliminarán.
+///
+/// # Returns
+/// * `Result<String>` - Mensaje de éxito si la eliminación es correcta.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_action_by_strategy(strategy_id: i32) -> Result<String> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -1030,6 +1258,14 @@ pub async fn delete_strategy_action_by_strategy(strategy_id: i32) -> Result<Stri
     Ok("Actions eliminados con exito!".to_string())
 }
 //================================Conditions================================
+
+/// Crea la tabla de condiciones de estrategias en la base de datos.
+///
+/// # Returns
+/// * `Result<String>` - Mensaje de éxito si la tabla se crea correctamente.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_strategy_conditions() -> Result<String> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -1058,6 +1294,16 @@ pub async fn table_strategy_conditions() -> Result<String> {
     Ok("Tabla strategy_conditions is ok.".to_string())
 }
 
+/// Inserta una nueva condición en la base de datos.
+///
+/// # Parámetros
+/// * `condition`: Objeto StrategyCondition con los datos de la condición a insertar.
+///
+/// # Returns
+/// * `Result<i32>` - ID de la condición insertada.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
 pub async fn insert_strategy_condition(condition: StrategyCondition) -> Result<i32> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -1087,6 +1333,16 @@ pub async fn insert_strategy_condition(condition: StrategyCondition) -> Result<i
     Ok(id)
 }
 
+/// Obtiene una condición específica por su ID.
+///
+/// # Parámetros
+/// * `id`: ID de la condición a buscar.
+///
+/// # Returns
+/// * `Result<StrategyCondition>` - Condición encontrada.
+///
+/// # Errores
+/// Retorna error si no se encuentra la condición o falla la conexión.
 #[tauri::command]
 pub async fn get_strategy_condition_by_id(id: i32) -> Result<StrategyCondition> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -1119,6 +1375,16 @@ pub async fn get_strategy_condition_by_id(id: i32) -> Result<StrategyCondition> 
     Ok(condition)
 }
 
+/// Obtiene todas las condiciones asociadas a una estrategia.
+///
+/// # Parámetros
+/// * `startegy_id`: ID de la estrategia cuyas condiciones se obtendrán.
+///
+/// # Returns
+/// * `Result<Vec<StrategyCondition>>` - Vector de condiciones de la estrategia.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_strategies_conditions_by_strategy_id(
     startegy_id: i32,
@@ -1155,6 +1421,16 @@ pub async fn get_strategies_conditions_by_strategy_id(
     Ok(conditions)
 }
 
+/// Elimina una condición específica por su ID.
+///
+/// # Parámetros
+/// * `id`: ID de la condición a eliminar.
+///
+/// # Returns
+/// * `Result<String>` - Mensaje de éxito si la eliminación es correcta.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_condition(id: i32) -> Result<String> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -1173,6 +1449,16 @@ pub async fn delete_strategy_condition(id: i32) -> Result<String> {
     Ok("Condition eliminado con exito!".to_string())
 }
 
+/// Elimina todas las condiciones asociadas a una estrategia.
+///
+/// # Parámetros
+/// * `strategy_id`: ID de la estrategia cuyas condiciones se eliminarán.
+///
+/// # Returns
+/// * `Result<String>` - Mensaje de éxito si la eliminación es correcta.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_condition_by_strategy(strategy_id: i32) -> Result<String> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -1331,6 +1617,39 @@ mod tests {
         Ok(())
     }
 
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_crud_strategy_indicators() -> Result<()> {
+        let indicator = StrategyIndicator {
+            id: 1,
+            strategy_id: 1,
+            nombre: "SMA_20".to_string(),
+            tipo: "SMA".to_string(),
+            parametros: serde_json::Value::String(
+                "{
+                period: 20
+                }"
+                .to_string(),
+            ),
+        };
+
+        let id: i32 = insert_strategies_indicator(indicator.clone())
+            .await
+            .unwrap();
+
+        let _ = get_strategy_indicator_by_id(id).await;
+
+        let _ = get_strategies_indicators_by_strategy_id(indicator.strategy_id.clone()).await;
+
+        let _ = delete_strategy_indicator(id).await;
+
+        let _ = insert_strategies_indicator(indicator.clone())
+            .await
+            .unwrap();
+
+        let _ = delete_strategy_indicator_by_strategy(indicator.strategy_id.clone()).await;
+
+        Ok(())
+    }
     //================================TEST: Actions================================
     #[tokio::test(flavor = "multi_thread")]
     async fn test_table_strategy_actions() -> Result<()> {
@@ -1338,10 +1657,63 @@ mod tests {
         Ok(())
     }
 
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_crud_startegy_actions() -> Result<()> {
+        let action: StrategyAction = StrategyAction {
+            id: 1,
+            strategy_id: 1,
+            tipo_signal: "Buy".to_string(),
+            tipo: "Close".to_string(),
+            parametros: serde_json::Value::String("{parametro:20}".to_string()),
+        };
+
+        let id: i32 = insert_strategies_action(action.clone()).await.unwrap();
+
+        let _ = get_strategy_action_by_id(id).await;
+
+        let _ = get_strategies_actions_by_strategy_id(action.strategy_id.clone()).await;
+
+        let _ = delete_strategy_action(id).await;
+
+        let _ = insert_strategies_action(action.clone()).await.unwrap();
+
+        let _ = delete_strategy_action_by_strategy(action.strategy_id).await;
+
+        Ok(())
+    }
+
     //================================TEST: Conditions================================
     #[tokio::test(flavor = "multi_thread")]
     async fn test_table_strategy_conditions() -> Result<()> {
         let _ = table_strategy_conditions().await?;
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_crud_strategy_conditions() -> Result<()> {
+        let condition: StrategyCondition = StrategyCondition {
+            id: 1,
+            strategy_id: 1,
+            action_id: 1,
+            campo_a: "SMA_20".to_string(),
+            operador: ">".to_string(),
+            campo_b: "SMA_ 50".to_string(),
+            logica: "AND".to_string(),
+            orden: 0,
+        };
+
+        let id: i32 = insert_strategy_condition(condition.clone()).await.unwrap();
+
+        let _ = get_strategy_condition_by_id(id).await;
+
+        let _ = get_strategies_conditions_by_strategy_id(condition.strategy_id.clone()).await;
+
+        let _ = delete_strategy_condition(id).await;
+
+        let _ = insert_strategy_condition(condition.clone()).await.unwrap();
+
+        let _ = delete_strategy_condition_by_strategy(condition.strategy_id).await;
+
         Ok(())
     }
 }
