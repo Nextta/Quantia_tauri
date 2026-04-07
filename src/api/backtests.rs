@@ -31,6 +31,13 @@ fn get_db_config() -> Result<(String, String, String)> {
     Ok((db_path, sync_url, auth_token))
 }
 
+/// Crea la tabla de backtests en la base de datos.
+///
+/// # Returns
+/// * `Result<String>` - Mensaje de éxito si la tabla se crea correctamente.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_backtests_cfd() -> Result<String> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -56,6 +63,16 @@ pub async fn table_backtests_cfd() -> Result<String> {
     Ok("Tabla backtests is ok.".to_string())
 }
 
+/// Inserta un nuevo backtest en la base de datos.
+///
+/// # Parámetros
+/// * `backtest`: Objeto Backtest con los datos del backtest a insertar.
+///
+/// # Returns
+/// * `Result<i32>` - ID del backtest insertado.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
 pub async fn insert_backtest_cfd(backtest: Backtest) -> Result<i32> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -76,6 +93,13 @@ pub async fn insert_backtest_cfd(backtest: Backtest) -> Result<i32> {
     Ok(id)
 }
 
+/// Obtiene todos los backtests de la base de datos, incluyendo sus trades asociados.
+///
+/// # Returns
+/// * `Result<Vec<Backtest>>` - Vector de backtests con todos sus componentes.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_backtests() -> Result<Vec<Backtest>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -106,6 +130,16 @@ pub async fn get_backtests() -> Result<Vec<Backtest>> {
     Ok(backtests)
 }
 
+/// Obtiene un backtest específico por su ID.
+///
+/// # Parámetros
+/// * `id`: ID del backtest a buscar.
+///
+/// # Returns
+/// * `Result<Vec<Backtest>>` - Vector con el backtest encontrado (vacío si no existe).
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -138,6 +172,16 @@ pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>> {
     Ok(backtests)
 }
 
+/// Obtiene backtests por título.
+///
+/// # Parámetros
+/// * `titulo`: Título del backtest a buscar.
+///
+/// # Returns
+/// * `Result<Vec<Backtest>>` - Vector de backtests que coinciden con el título.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -170,6 +214,16 @@ pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
     Ok(backtests)
 }
 
+/// Obtiene backtests por tipo.
+///
+/// # Parámetros
+/// * `tipo`: Tipo de backtest a buscar (ej: "CFD", "Forex", etc.).
+///
+/// # Returns
+/// * `Result<Vec<Backtest>>` - Vector de backtests que coinciden con el tipo.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_backtests_by_tipo(tipo: String) -> Result<Vec<Backtest>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -202,51 +256,65 @@ pub async fn get_backtests_by_tipo(tipo: String) -> Result<Vec<Backtest>> {
     Ok(backtests)
 }
 
+/// Elimina un backtest por su ID.
+///
+/// # Parámetros
+/// * `id`: ID del backtest a eliminar.
+///
+/// # Returns
+/// * `Result<()>` - Ok si la eliminación es correcta.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la eliminación.
+#[tauri::command]
+pub async fn delete_backtest(id: i32) -> Result<()> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    conn.execute("DELETE FROM backtests WHERE id = ?", [id])
+        .await?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_backtests() -> Result<()> {
-        let _ = get_backtests().await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_backtests_by_tipo() -> Result<()> {
-        let _ = get_backtests_by_tipo("CFD".to_string()).await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_backtest_by_id() -> Result<()> {
-        let _ = get_backtest_by_id(1).await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_backtests_by_titulo() -> Result<()> {
-        let _ = get_backtests_by_titulo("Tests".to_string()).await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_table_backtests_cfd() -> Result<()> {
-        let _ = table_backtests_cfd().await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_insert_backtest_cfd() -> Result<()> {
-        let _ = insert_backtest_cfd(Backtest {
+    async fn test_crud_backtest_cfd() -> Result<()> {
+        let backtest: Backtest = Backtest {
             id: 0,
             titulo: "Test".to_string(),
             balance: 100.0,
             tipo: "CFD".to_string(),
             trades: Vec::new(),
             datos: Vec::new(),
-        })
-        .await?;
+        };
+
+        let id: i32 = insert_backtest_cfd(backtest.clone()).await?;
+
+        let _ = get_backtests().await?;
+
+        let _ = get_backtests_by_tipo(backtest.tipo.clone()).await?;
+
+        let _ = get_backtest_by_id(id).await?;
+
+        let _ = get_backtests_by_titulo(backtest.titulo.clone()).await?;
+
+        let _ = delete_backtest(id).await?;
+
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_table_backtests_cfd() -> Result<()> {
+        let _ = table_backtests_cfd().await?;
         Ok(())
     }
 }
