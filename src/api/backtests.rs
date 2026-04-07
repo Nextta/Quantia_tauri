@@ -277,12 +277,18 @@ pub async fn delete_backtest(id: i32) -> Result<()> {
 
     let conn = db.connect()?;
 
-    let _ = delete_resultados_by_backtest(id).await;
-
-    let _ = delete_trades_by_backtest(id).await;
-
-    conn.execute("DELETE FROM backtests WHERE id = ?", [id])
-        .await?;
+    match delete_resultados_by_backtest(id).await {
+        Ok(_) => {
+            match delete_trades_by_backtest(id).await {
+                Ok(_) => {
+                    conn.execute("DELETE FROM backtests WHERE id = ?", [id])
+                        .await?;
+                }
+                Err(e) => println!("{:?}", e),
+            };
+        }
+        Err(e) => println!("{:?}", e),
+    };
 
     Ok(())
 }
