@@ -31,6 +31,13 @@ fn get_db_config() -> Result<(String, String, String)> {
     Ok((db_path, sync_url, auth_token))
 }
 
+/// Crea la tabla de brokers CFD en la base de datos.
+///
+/// # Returns
+/// * `Result<String>` - Mensaje de éxito si la tabla se crea correctamente.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_brokers_cfd() -> Result<String> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -54,6 +61,16 @@ pub async fn table_brokers_cfd() -> Result<String> {
     Ok("Tabla brokers is ok.".to_string())
 }
 
+/// Inserta un nuevo broker CFD en la base de datos.
+///
+/// # Parámetros
+/// * `broker`: Objeto BrokerCFD con los datos del broker a insertar.
+///
+/// # Returns
+/// * `Result<i32>` - ID del broker insertado.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
 pub async fn insert_broker_cfd(broker: BrokerCFD) -> Result<i32> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -76,6 +93,13 @@ pub async fn insert_broker_cfd(broker: BrokerCFD) -> Result<i32> {
     Ok(id)
 }
 
+/// Obtiene todos los brokers CFD de la base de datos, incluyendo sus símbolos asociados.
+///
+/// # Returns
+/// * `Result<Vec<BrokerCFD>>` - Vector de brokers con todos sus componentes.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_brokers_cfd() -> Result<Vec<BrokerCFD>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -104,6 +128,16 @@ pub async fn get_brokers_cfd() -> Result<Vec<BrokerCFD>> {
     Ok(brokers)
 }
 
+/// Obtiene brokers CFD por nombre.
+///
+/// # Parámetros
+/// * `name`: Nombre del broker a buscar.
+///
+/// # Returns
+/// * `Result<Vec<BrokerCFD>>` - Vector de brokers que coinciden con el nombre.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_brokers_cfd_by_name(name: &str) -> Result<Vec<BrokerCFD>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -133,6 +167,16 @@ pub async fn get_brokers_cfd_by_name(name: &str) -> Result<Vec<BrokerCFD>> {
     Ok(brokers)
 }
 
+/// Obtiene un broker CFD específico por su ID.
+///
+/// # Parámetros
+/// * `id`: ID del broker a buscar.
+///
+/// # Returns
+/// * `Result<BrokerCFD>` - Broker encontrado con todos sus componentes.
+///
+/// # Errores
+/// Retorna error si no se encuentra el broker o falla la conexión.
 #[tauri::command]
 pub async fn get_broker_cfd_by_id(id: i32) -> Result<BrokerCFD> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -160,42 +204,55 @@ pub async fn get_broker_cfd_by_id(id: i32) -> Result<BrokerCFD> {
     Ok(broker)
 }
 
+/// Elimina un broker CFD por su ID.
+///
+/// # Parámetros
+/// * `id`: ID del broker a eliminar.
+///
+/// # Returns
+/// * `Result<()>` - Ok si la eliminación es correcta.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la eliminación.
+#[tauri::command]
+pub async fn delete_broker_cfd(id: i32) -> Result<()> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    conn.execute("DELETE FROM broker_cfd WHERE id = ?", params![id])
+        .await?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_brokers_cfd() -> Result<()> {
-        let _ = get_brokers_cfd().await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_broker_cfd_by_id() -> Result<()> {
-        let _ = get_broker_cfd_by_id(1).await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_table_brokers_cfd() -> Result<()> {
-        let _ = table_brokers_cfd().await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_brokers_cfd_by_name() -> Result<()> {
-        let _ = get_brokers_cfd_by_name("Axen").await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_insert_broker_cfd() -> Result<()> {
-        let _ = insert_broker_cfd(BrokerCFD {
+    async fn test_crud_broker_cfd() -> Result<()> {
+        let broker: BrokerCFD = BrokerCFD {
             id: 2,
             name: "Darwinex".to_string(),
             symbol_info: Vec::new(),
-        })
-        .await?;
+        };
+
+        let _ = table_brokers_cfd().await?;
+
+        let id: i32 = insert_broker_cfd(broker.clone()).await?;
+
+        let _ = get_brokers_cfd().await?;
+
+        let _ = get_broker_cfd_by_id(id).await?;
+
+        let _ = get_brokers_cfd_by_name(&broker.name.clone()).await?;
+
+        let _ = delete_broker_cfd(id).await?;
         Ok(())
     }
 }

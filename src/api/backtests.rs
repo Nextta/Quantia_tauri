@@ -1,4 +1,5 @@
-use crate::api::trades::get_trades_by_backtest;
+use crate::api::resultados::delete_resultados_by_backtest;
+use crate::api::trades::{delete_trades_by_backtest, get_trades_by_backtest};
 use crate::backtest::backtest::Backtest;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
@@ -276,6 +277,10 @@ pub async fn delete_backtest(id: i32) -> Result<()> {
 
     let conn = db.connect()?;
 
+    let _ = delete_resultados_by_backtest(id).await;
+
+    let _ = delete_trades_by_backtest(id).await;
+
     conn.execute("DELETE FROM backtests WHERE id = ?", [id])
         .await?;
 
@@ -297,6 +302,8 @@ mod tests {
             datos: Vec::new(),
         };
 
+        let _ = table_backtests_cfd().await?;
+
         let id: i32 = insert_backtest_cfd(backtest.clone()).await?;
 
         let _ = get_backtests().await?;
@@ -309,12 +316,6 @@ mod tests {
 
         let _ = delete_backtest(id).await?;
 
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_table_backtests_cfd() -> Result<()> {
-        let _ = table_backtests_cfd().await?;
         Ok(())
     }
 }

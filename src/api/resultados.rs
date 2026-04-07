@@ -30,6 +30,13 @@ fn get_db_config() -> Result<(String, String, String)> {
     Ok((db_path, sync_url, auth_token))
 }
 
+/// Crea la tabla `resultados` en la base de datos si no existe.
+///
+/// # Returns
+/// Returns `Ok(String)` con el mensaje "Tabla resultados is ok." si la tabla se crea correctamente.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la creación de la tabla falla.
 #[tauri::command]
 pub async fn table_resultados() -> Result<String> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -119,6 +126,16 @@ pub async fn table_resultados() -> Result<String> {
     Ok("Tabla resultados is ok.".to_string())
 }
 
+/// Inserta nuevos resultados en la base de datos.
+///
+/// # Parámetros
+/// - `resultados`: Objeto `Resultados` con los datos de resultados a insertar.
+///
+/// # Returns
+/// Returns `Ok(i32)` con el ID de los resultados insertados.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la inserción falla.
 #[tauri::command]
 pub async fn insert_resultados(resultados: Resultados) -> Result<i32> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -225,6 +242,13 @@ pub async fn insert_resultados(resultados: Resultados) -> Result<i32> {
     Ok(id)
 }
 
+/// Obtiene todos los resultados de backtests almacenados en la base de datos.
+///
+/// # Returns
+/// Returns `Ok(Vec<Resultados>)` con la lista de todos los resultados.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
 pub async fn get_resultados() -> Result<Vec<Resultados>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -314,6 +338,16 @@ pub async fn get_resultados() -> Result<Vec<Resultados>> {
     Ok(resultados)
 }
 
+/// Obtiene los resultados de un backtest específico por su ID.
+///
+/// # Parámetros
+/// - `id`: ID de los resultados a obtener.
+///
+/// # Returns
+/// Returns `Ok(Resultados)` con los datos de los resultados.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
 pub async fn get_resultados_by_id(id: i32) -> Result<Resultados> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -403,6 +437,16 @@ pub async fn get_resultados_by_id(id: i32) -> Result<Resultados> {
     Ok(resultado)
 }
 
+/// Obtiene los resultados de un backtest específico por el id del backtest.
+///
+/// # Parámetros
+/// - `id`: ID del backtest cuyos resultados se desean obtener.
+///
+/// # Returns
+/// Returns `Ok(Resultados)` con los datos de los resultados.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
 pub async fn get_resultados_by_id_backtest(id: i32) -> Result<Resultados> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -492,31 +536,66 @@ pub async fn get_resultados_by_id_backtest(id: i32) -> Result<Resultados> {
     Ok(resultado)
 }
 
+/// Elimina los resultados de un backtest específico por el id de resultados.
+///
+/// # Parámetros
+/// - `id`: ID de los resultados que se desean eliminar.
+///
+/// # Returns
+/// Returns `Ok(())` si los resultados fueron eliminados correctamente.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
+#[tauri::command]
+pub async fn delete_resultados(id: i32) -> Result<()> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    conn.execute("DELETE FROM resultados WHERE id = ?", [id])
+        .await?;
+    Ok(())
+}
+
+/// Elimina los resultados de un backtest específico por el id del backtest.
+///
+/// # Parámetros
+/// - `id_backtest`: ID del backtest cuyos resultados se desean eliminar.
+///
+/// # Returns
+/// Returns `Ok(())` si los resultados fueron eliminados correctamente.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
+#[tauri::command]
+pub async fn delete_resultados_by_backtest(id_backtest: i32) -> Result<()> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    conn.execute(
+        "DELETE FROM resultados WHERE id_backtest = ?",
+        [id_backtest],
+    )
+    .await?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_resultados() -> Result<()> {
-        let _ = get_resultados().await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_resultados_by_id() -> Result<()> {
-        let _ = get_resultados_by_id(1).await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_resultados_by_id_backtest() -> Result<()> {
-        let _ = get_resultados_by_id_backtest(1).await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_insert_resultados() -> Result<()> {
-        let _ = insert_resultados(Resultados {
+    async fn test_crud_resultados() -> Result<()> {
+        let resultado: Resultados = Resultados {
             id: 1,
             id_backtest: 1,
             retorno: 1.0,
@@ -585,14 +664,20 @@ mod tests {
             n_losses: 1,
             avg_bars_win: 1.0,
             avg_bars_loss: 1.0,
-        })
-        .await?;
-        Ok(())
-    }
+        };
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_table_resultados() -> Result<()> {
         let _ = table_resultados().await?;
+
+        let id: i32 = insert_resultados(resultado.clone()).await?;
+
+        let _ = get_resultados().await?;
+
+        let _ = get_resultados_by_id(id).await?;
+
+        let _ = get_resultados_by_id_backtest(resultado.id_backtest.clone()).await?;
+
+        let _ = delete_resultados(id).await?;
+
         Ok(())
     }
 }

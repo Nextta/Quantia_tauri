@@ -34,6 +34,13 @@ fn get_db_config() -> Result<(String, String, String)> {
     Ok((db_path, sync_url, auth_token))
 }
 
+/// Crea la tabla `trades` en la base de datos si no existe.
+///
+/// # Returns
+/// Returns `Ok(String)` con el mensaje "Tabla Trades is ok." si la tabla se crea correctamente.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la creación de la tabla falla.
 #[tauri::command]
 pub async fn table_trades() -> Result<String> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -78,6 +85,17 @@ pub async fn table_trades() -> Result<String> {
     Ok("Tabla Trades is ok.".to_string())
 }
 
+/// Inserta un nuevo trade en la base de datos asociado a un backtest.
+///
+/// # Parámetros
+/// - `id_backtest`: ID del backtest al que pertenece el trade.
+/// - `trade`: Objeto `Trade` contiene los datos del trade a insertar.
+///
+/// # Returns
+/// Returns `Ok(i32)` con el ID del trade insertado.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la inserción falla.
 #[tauri::command]
 pub async fn insert_trades(id_backtest: i32, trade: &Trade) -> Result<i32> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -130,6 +148,16 @@ pub async fn insert_trades(id_backtest: i32, trade: &Trade) -> Result<i32> {
     Ok(id)
 }
 
+/// Obtiene todos los trades asociados a un backtest específico.
+///
+/// # Parámetros
+/// - `id_backtest`: ID del backtest del cual obtener los trades.
+///
+/// # Returns
+/// Returns `Ok(Vec<Trade>)` con la lista de trades del backtest.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
 pub async fn get_trades_by_backtest(id_backtest: i32) -> Result<Vec<Trade>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -178,6 +206,57 @@ pub async fn get_trades_by_backtest(id_backtest: i32) -> Result<Vec<Trade>> {
     Ok(trades)
 }
 
+/// Elimina todos los trades por id.
+///
+/// # Parámetros
+/// - `id`: ID del trade.
+///
+/// # Returns
+/// Returns `Ok(())` si la eliminación fue exitosa.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
+#[tauri::command]
+pub async fn delete_trades(id: i32) -> Result<()> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    conn.query("DELETE FROM trades WHERE id = ?", [id]).await?;
+
+    Ok(())
+}
+
+/// Elimina todos los trades por backtest.
+///
+/// # Parámetros
+/// - `id_backtest`: ID del backtest del cual eliminar los trades.
+///
+/// # Returns
+/// Returns `Ok(())` si la eliminación fue exitosa.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
+#[tauri::command]
+pub async fn delete_trades_by_backtest(id_backtest: i32) -> Result<()> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    conn.query("DELETE FROM trades WHERE id_backtest = ?", [id_backtest])
+        .await?;
+
+    Ok(())
+}
+
 // ============== TESTS ==============
 
 #[cfg(test)]
@@ -185,52 +264,57 @@ mod tests {
     use super::*;
 
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_table_trades() -> Result<()> {
+    async fn test_crud_trade() -> Result<()> {
+        let mut trade: Trade = Trade::new(
+            1,
+            SymbolInfoCFD {
+                id: 1,
+                broker_id: 1,
+                name: "EURUSD".to_string(),
+                valor_contrato: 100000.0,
+                comision_lote: 6.0,
+                swap_long: -6.0,
+                swap_short: 6.0,
+                dia_triple_swap: crate::backtest::dias::Dias::Vi,
+                lotaje_minimo: 0.01,
+                lotaje_maximo: 100.0,
+                digitos: 5,
+                open_weekend: false,
+                spread: 0.2,
+            },
+        )
+        .await;
+
+        trade.id = 1;
+        trade.id_symbol = 1;
+        trade.tipo = "Sell".to_string();
+        trade.lotaje = 1.0;
+        trade.multiplicador = 1.0;
+        trade.t0 = "12-12-2000".to_string();
+        trade.precio_entrada = 1.25244;
+        trade.tp = 1.25244;
+        trade.sl = 1.25244;
+        trade.t1 = "14-12-2000".to_string();
+        trade.precio_cierre = 1.25244;
+        trade.precio_maximo = 1.25244;
+        trade.precio_minimo = 1.25244;
+        trade.duracion_segundos = "100".to_string();
+        trade.duracion_minutos = "100".to_string();
+        trade.duracion_horas = "100".to_string();
+        trade.duracion_dias = "100".to_string();
+        trade.label = 1;
+        trade.pl = 500.23;
+        trade.plsc = 500.23;
+        trade.pips_pl = 500.23;
+
         let _ = table_trades().await?;
-        Ok(())
-    }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_insert_trades() -> Result<()> {
-        let symbol = get_symbol_cfd_by_id(1).await;
+        let id: i32 = insert_trades(trade.id_backtest.clone(), &trade).await?;
 
-        match symbol {
-            Ok(symb) => {
-                let mut trade: Trade = Trade::new(1, symb).await;
+        let _ = get_trades_by_backtest(trade.id_backtest.clone()).await?;
 
-                trade.id = 1;
-                trade.id_symbol = 1;
-                trade.tipo = "Sell".to_string();
-                trade.lotaje = 1.0;
-                trade.multiplicador = 1.0;
-                trade.t0 = "12-12-2000".to_string();
-                trade.precio_entrada = 1.25244;
-                trade.tp = 1.25244;
-                trade.sl = 1.25244;
-                trade.t1 = "14-12-2000".to_string();
-                trade.precio_cierre = 1.25244;
-                trade.precio_maximo = 1.25244;
-                trade.precio_minimo = 1.25244;
-                trade.duracion_segundos = "100".to_string();
-                trade.duracion_minutos = "100".to_string();
-                trade.duracion_horas = "100".to_string();
-                trade.duracion_dias = "100".to_string();
-                trade.label = 1;
-                trade.pl = 500.23;
-                trade.plsc = 500.23;
-                trade.pips_pl = 500.23;
+        let _ = delete_trades(id).await?;
 
-                let _ = insert_trades(1, &trade).await?;
-            }
-            Err(e) => println!("Error: {:?}", e),
-        }
-
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_trades_by_backtest() -> Result<()> {
-        let _ = get_trades_by_backtest(1).await?;
         Ok(())
     }
 }

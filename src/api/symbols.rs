@@ -31,6 +31,13 @@ fn get_db_config() -> Result<(String, String, String)> {
     Ok((db_path, sync_url, auth_token))
 }
 
+/// Crea la tabla `symbol_cfd` en la base de datos si no existe.
+///
+/// # Returns
+/// Returns `Ok(String)` con el mensaje "Tabla symbols is ok." si la tabla se crea correctamente.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la creación de la tabla falla.
 #[tauri::command]
 pub async fn table_symbols_cfd() -> Result<String> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -65,8 +72,18 @@ pub async fn table_symbols_cfd() -> Result<String> {
     Ok("Tabla symbols is ok.".to_string())
 }
 
+/// Obtiene la información de un símbolo CFD por su ID.
+///
+/// # Parámetros
+/// - `id`: ID del símbolo a obtener.
+///
+/// # Returns
+/// Returns `Ok(SymbolInfoCFD)` con la información del símbolo.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
-pub async fn get_symbol_cfd_by_id(id: i64) -> Result<SymbolInfoCFD> {
+pub async fn get_symbol_cfd_by_id(id: i32) -> Result<SymbolInfoCFD> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
@@ -115,6 +132,16 @@ pub async fn get_symbol_cfd_by_id(id: i64) -> Result<SymbolInfoCFD> {
     Ok(symbol)
 }
 
+/// Inserta un nuevo símbolo CFD en la base de datos.
+///
+/// # Parámetros
+/// - `symbol`: Objeto `SymbolInfoCFD` con los datos del símbolo a insertar.
+///
+/// # Returns
+/// Returns `Ok(i32)` con el ID del símbolo insertado.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la inserción falla.
 #[tauri::command]
 pub async fn insert_symbol_cfd(symbol: SymbolInfoCFD) -> Result<i32> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -146,6 +173,13 @@ pub async fn insert_symbol_cfd(symbol: SymbolInfoCFD) -> Result<i32> {
     Ok(id)
 }
 
+/// Obtiene todos los símbolos CFD disponibles en la base de datos.
+///
+/// # Returns
+/// Returns `Ok(Vec<SymbolInfoCFD>)` con la lista de todos los símbolos.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
 pub async fn get_symbols_cfd() -> Result<Vec<SymbolInfoCFD>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -197,6 +231,16 @@ pub async fn get_symbols_cfd() -> Result<Vec<SymbolInfoCFD>> {
     Ok(symbols)
 }
 
+/// Obtiene los símbolos CFD que coinciden con un nombre específico.
+///
+/// # Parámetros
+/// - `name`: Nombre del símbolo a buscar.
+///
+/// # Returns
+/// Returns `Ok(Vec<SymbolInfoCFD>)` con la lista de símbolos que coinciden con el nombre.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
 pub async fn get_symbols_cfd_by_name(name: &str) -> Result<Vec<SymbolInfoCFD>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -250,6 +294,16 @@ pub async fn get_symbols_cfd_by_name(name: &str) -> Result<Vec<SymbolInfoCFD>> {
     Ok(symbols)
 }
 
+/// Obtiene los símbolos CFD asociados a un broker específico.
+///
+/// # Parámetros
+/// - `broker_id`: ID del broker del cual obtener los símbolos.
+///
+/// # Returns
+/// Returns `Ok(Vec<SymbolInfoCFD>)` con la lista de símbolos del broker.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
 pub async fn get_symbols_cfd_by_broker(broker_id: i32) -> Result<Vec<SymbolInfoCFD>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -303,37 +357,39 @@ pub async fn get_symbols_cfd_by_broker(broker_id: i32) -> Result<Vec<SymbolInfoC
     Ok(symbols)
 }
 
+/// Elimina un símbolo CFD por su ID.
+///
+/// # Parámetros
+/// - `id`: ID del símbolo a eliminar.
+///
+/// # Returns
+/// Returns `Ok(())` si la eliminación fue exitosa.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
+#[tauri::command]
+pub async fn delete_symbol_cfd(id: i32) -> Result<()> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    conn.query("DELETE FROM symbol_cfd WHERE id = ?", [id])
+        .await?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_symbol_cfd_by_id() -> Result<()> {
-        let _ = get_symbol_cfd_by_id(1).await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_symbols_cfd() -> Result<()> {
-        let _ = get_symbols_cfd().await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_symbols_cfd_by_broker() -> Result<()> {
-        let _ = get_symbols_cfd_by_broker(1).await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_symbols_cfd_by_name() -> Result<()> {
-        let _ = get_symbols_cfd_by_name("XAUUSD").await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_insert_symbols_cfd() -> Result<()> {
-        let _ = insert_symbol_cfd(SymbolInfoCFD {
+    async fn test_crud_symbol_cfd() -> Result<()> {
+        let symbol: SymbolInfoCFD = SymbolInfoCFD {
             id: 0,
             broker_id: 1,
             name: "XAGUSD".to_string(),
@@ -347,14 +403,22 @@ mod tests {
             digitos: 0,
             open_weekend: false,
             spread: 0.0,
-        })
-        .await?;
-        Ok(())
-    }
+        };
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_table_symbols_cfd() -> Result<()> {
         let _ = table_symbols_cfd().await?;
+
+        let id: i32 = insert_symbol_cfd(symbol.clone()).await?;
+
+        let _ = get_symbol_cfd_by_id(id).await?;
+
+        let _ = get_symbols_cfd().await?;
+
+        let _ = get_symbols_cfd_by_broker(symbol.broker_id.clone()).await?;
+
+        let _ = get_symbols_cfd_by_name(&symbol.name.clone()).await?;
+
+        let _ = delete_symbol_cfd(id).await?;
+
         Ok(())
     }
 }

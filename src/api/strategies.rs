@@ -345,7 +345,7 @@ pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_strategies_by_nombre(nombre: &str) -> Result<Vec<Strategy>> {
+pub async fn get_strategies_by_nombre(nombre: String) -> Result<Vec<Strategy>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
@@ -734,7 +734,7 @@ pub async fn get_all_desactive_strategies() -> Result<Vec<Strategy>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_active_strategies_by_date(fecha: &str) -> Result<Vec<Strategy>> {
+pub async fn get_active_strategies_by_date(fecha: String) -> Result<Vec<Strategy>> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
@@ -1484,33 +1484,9 @@ pub async fn delete_strategy_condition_by_strategy(strategy_id: i32) -> Result<S
 mod tests {
     use super::*;
 
-    async fn create_strategy(id_user: i32, nombre: &str, activa: bool, fecha: &str) -> i32 {
-        let estrategia: Strategy = Strategy {
-            id: 1,
-            id_user: id_user,
-            nombre: nombre.to_string(),
-            descripcion: Some("Cruce de 3 emas".to_string()),
-            activa: activa,
-            creada_en: fecha.to_string(),
-            indicadores: Vec::<StrategyIndicator>::new(),
-            condiciones: Vec::<StrategyCondition>::new(),
-            acciones: Vec::<StrategyAction>::new(),
-        };
-
-        let id = insert_strategies(estrategia).await.unwrap();
-
-        id
-    }
-
     //================================TEST: Strategies================================
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_table_strategies() -> Result<()> {
-        let _ = table_strategies().await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_insert_strategies() -> Result<()> {
+    async fn test_crud_strategies() -> Result<()> {
         let estrategia: Strategy = Strategy {
             id: 1,
             id_user: 1,
@@ -1523,100 +1499,34 @@ mod tests {
             acciones: Vec::<StrategyAction>::new(),
         };
 
-        let id = insert_strategies(estrategia).await.unwrap();
+        let _ = table_strategies().await?;
 
-        let _ = delete_strategy(id).await;
+        let id = insert_strategies(estrategia.clone()).await?;
 
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_strategies() -> Result<()> {
-        let id = create_strategy(1, "Test", true, "01-04-2026").await;
         let _ = get_strategies().await;
-        let _ = delete_strategy(id).await;
-        Ok(())
-    }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_strategies_by_id() -> Result<()> {
-        let id = create_strategy(1, "Test", true, "01-04-2026").await;
         let _ = get_strategies_by_id(id).await;
-        let _ = delete_strategy(id).await;
-        Ok(())
-    }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_strategies_by_id_user() -> Result<()> {
-        let id = create_strategy(1, "Test", true, "01-04-2026").await;
-        let _ = get_strategies_by_id_user(1).await;
-        let _ = delete_strategy(id).await;
-        Ok(())
-    }
+        let _ = get_strategies_by_id_user(estrategia.id_user.clone()).await;
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_strategies_by_nombre() -> Result<()> {
-        let id = create_strategy(1, "Test", true, "01-04-2026").await;
-        let _ = get_strategies_by_nombre("Test").await;
-        let _ = delete_strategy(id).await;
-        Ok(())
-    }
+        let _ = get_strategies_by_nombre(estrategia.nombre.clone()).await;
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_active_strategies_by_user() -> Result<()> {
-        let id = create_strategy(1, "Test", true, "01-04-2026").await;
-        let _ = get_active_strategies_by_user(1).await;
-        let _ = delete_strategy(id).await;
-        Ok(())
-    }
+        let _ = get_active_strategies_by_user(estrategia.id_user.clone()).await;
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_all_active_strategies() -> Result<()> {
-        let id = create_strategy(1, "Test", true, "01-04-2026").await;
         let _ = get_all_active_strategies().await;
-        let _ = delete_strategy(id).await;
-        Ok(())
-    }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_desactive_strategies_by_user() -> Result<()> {
-        let id = create_strategy(1, "Test", true, "01-04-2026").await;
-        let _ = get_desactive_strategies_by_user(1).await;
-        let _ = delete_strategy(id).await;
-        Ok(())
-    }
+        let _ = get_desactive_strategies_by_user(estrategia.id_user.clone()).await;
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_all_desactive_strategies() -> Result<()> {
-        let id = create_strategy(1, "Test", true, "01-04-2026").await;
         let _ = get_all_desactive_strategies().await;
-        let _ = delete_strategy(id).await;
-        Ok(())
-    }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_active_strategies_by_date() -> Result<()> {
-        let id = create_strategy(1, "Test", true, "01-04-2026").await;
-        let _ = get_active_strategies_by_date("01-04-2026").await;
-        let _ = delete_strategy(id).await;
-        Ok(())
-    }
+        let _ = get_active_strategies_by_date(estrategia.creada_en.clone()).await;
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_delete_strategy() -> Result<()> {
-        let id = create_strategy(1, "Test", true, "01-04-2026").await;
         let _ = delete_strategy(id).await;
 
         Ok(())
     }
 
     //================================TEST: Indicators================================
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_table_strategy_indicators() -> Result<()> {
-        let _ = table_strategy_indicators().await?;
-        Ok(())
-    }
-
     #[tokio::test(flavor = "multi_thread")]
     async fn test_crud_strategy_indicators() -> Result<()> {
         let indicator = StrategyIndicator {
@@ -1631,6 +1541,8 @@ mod tests {
                 .to_string(),
             ),
         };
+
+        let _ = table_strategy_indicators().await?;
 
         let id: i32 = insert_strategies_indicator(indicator.clone())
             .await
@@ -1652,12 +1564,6 @@ mod tests {
     }
     //================================TEST: Actions================================
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_table_strategy_actions() -> Result<()> {
-        let _ = table_strategy_actions().await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
     async fn test_crud_startegy_actions() -> Result<()> {
         let action: StrategyAction = StrategyAction {
             id: 1,
@@ -1666,6 +1572,8 @@ mod tests {
             tipo: "Close".to_string(),
             parametros: serde_json::Value::String("{parametro:20}".to_string()),
         };
+
+        let _ = table_strategy_actions().await?;
 
         let id: i32 = insert_strategies_action(action.clone()).await.unwrap();
 
@@ -1684,12 +1592,6 @@ mod tests {
 
     //================================TEST: Conditions================================
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_table_strategy_conditions() -> Result<()> {
-        let _ = table_strategy_conditions().await?;
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
     async fn test_crud_strategy_conditions() -> Result<()> {
         let condition: StrategyCondition = StrategyCondition {
             id: 1,
@@ -1701,6 +1603,8 @@ mod tests {
             logica: "AND".to_string(),
             orden: 0,
         };
+
+        let _ = table_strategy_conditions().await?;
 
         let id: i32 = insert_strategy_condition(condition.clone()).await.unwrap();
 
