@@ -20,4 +20,14 @@ impl StrategyIndicator {
             parametros,
         }
     }
+
+    pub fn new_empty() -> Self {
+        Self {
+            id: 0,
+            strategy_id: 0,
+            nombre: String::new(),
+            tipo: String::new(),
+            parametros: Value::Null,
+        }
+    }
 }

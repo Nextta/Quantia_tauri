@@ -2,6 +2,7 @@ use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_action::StrategyAction;
 use crate::strategy::strategy_condition::StrategyCondition;
 use crate::strategy::strategy_indicator::StrategyIndicator;
+use crate::strategy::strategy_options::StrategyOptions;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
 use serde::Serialize;
@@ -1282,8 +1283,10 @@ pub async fn table_strategy_conditions() -> Result<String> {
             strategy_id  INTEGER NOT NULL REFERENCES strategies(id),
             action_id    INTEGER NOT NULL REFERENCES strategy_actions(id),
             campo_a      TEXT NOT NULL,  -- 'close', 'sma_20', 'rsi'
+            shift_a      INTEGER DEFAULT 0,
             operador     TEXT NOT NULL,  -- '>', '<', '>=', '<=', '==', 'cross_above', 'cross_below'
             campo_b      TEXT NOT NULL,  -- 'sma_50' o valor literal '30.0'
+            shift_b      INTEGER DEFAULT 0,
             logica       TEXT DEFAULT 'NULL',
             orden        INTEGER DEFAULT 0
         )",
@@ -1318,13 +1321,15 @@ pub async fn insert_strategy_condition(condition: StrategyCondition) -> Result<i
         condition.strategy_id,
         condition.action_id,
         condition.campo_a,
+        condition.shift_a,
         condition.operador,
         condition.campo_b,
+        condition.shift_b,
         condition.logica,
         condition.orden
     ];
     conn.query(
-        "INSERT INTO strategy_conditions (strategy_id, action_id, campo_a, operador, campo_b, logica, orden) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id",
+        "INSERT INTO strategy_conditions (strategy_id, action_id, campo_a, shift_a, operador, campo_b, shift_b, logica, orden) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
         parametros,
     )
     .await?;
@@ -1366,10 +1371,12 @@ pub async fn get_strategy_condition_by_id(id: i32) -> Result<StrategyCondition> 
         strategy_id: row.get::<i32>(1)?,
         action_id: row.get::<i32>(2)?,
         campo_a: row.get::<String>(3)?,
-        operador: row.get::<String>(4)?,
-        campo_b: row.get::<String>(5)?,
-        logica: row.get::<String>(6)?,
-        orden: row.get::<i32>(7)?,
+        shift_a: row.get::<i32>(4)?,
+        operador: row.get::<String>(5)?,
+        campo_b: row.get::<String>(6)?,
+        shift_b: row.get::<i32>(7)?,
+        logica: row.get::<String>(8)?,
+        orden: row.get::<i32>(9)?,
     };
 
     Ok(condition)
@@ -1410,10 +1417,12 @@ pub async fn get_strategies_conditions_by_strategy_id(
             strategy_id: row.get::<i32>(1)?,
             action_id: row.get::<i32>(2)?,
             campo_a: row.get::<String>(3)?,
-            operador: row.get::<String>(4)?,
-            campo_b: row.get::<String>(5)?,
-            logica: row.get::<String>(6)?,
-            orden: row.get::<i32>(7)?,
+            shift_a: row.get::<i32>(4)?,
+            operador: row.get::<String>(5)?,
+            campo_b: row.get::<String>(6)?,
+            shift_b: row.get::<i32>(7)?,
+            logica: row.get::<String>(8)?,
+            orden: row.get::<i32>(9)?,
         };
         conditions.push(condition);
     }
@@ -1497,6 +1506,7 @@ mod tests {
             indicadores: Vec::<StrategyIndicator>::new(),
             condiciones: Vec::<StrategyCondition>::new(),
             acciones: Vec::<StrategyAction>::new(),
+            opciones: StrategyOptions::new_empty(),
         };
 
         let _ = table_strategies().await?;
@@ -1598,8 +1608,10 @@ mod tests {
             strategy_id: 1,
             action_id: 1,
             campo_a: "SMA_20".to_string(),
+            shift_a: 0,
             operador: ">".to_string(),
             campo_b: "SMA_ 50".to_string(),
+            shift_b: 0,
             logica: "AND".to_string(),
             orden: 0,
         };

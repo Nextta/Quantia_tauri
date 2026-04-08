@@ -1,9 +1,17 @@
 use crate::api::backtests::{insert_backtest_cfd, table_backtests_cfd};
+use crate::api::strategies::{
+    get_strategies_actions_by_strategy_id, get_strategies_by_id,
+    get_strategies_conditions_by_strategy_id, get_strategies_indicators_by_strategy_id,
+};
+
 use crate::api::trades::insert_trades;
 use crate::backtest::datos::Datos;
 use crate::backtest::trade::Trade;
-
+use crate::strategy::strategy::Strategy;
+use polars::datatypes::DataType;
 use polars::prelude::*;
+use std::collections::HashMap;
+use std::time::Instant;
 
 #[derive(Debug, Clone)]
 pub struct Backtest {
@@ -13,6 +21,7 @@ pub struct Backtest {
     pub tipo: String, // Tipo de activo ej: Forex, Crypto, Futuros...etc
     pub trades: Vec<Trade>,
     pub datos: Vec<Datos>,
+    pub estrategia: Strategy,
 }
 
 impl Backtest {
@@ -26,6 +35,7 @@ impl Backtest {
             tipo,
             trades: Vec::<Trade>::new(),
             datos: Vec::<Datos>::new(),
+            estrategia: Strategy::new_empty(),
         };
 
         match table {
@@ -80,6 +90,78 @@ impl Backtest {
 
     pub fn solapamiento_trades(&self) {
         // TODO: Implementar la función para calcular el solapamiento entre los trades y mostrar un grafico.
+    }
+
+    pub async fn run(&mut self, id_startegy: i32) -> Result<String, Box<dyn std::error::Error>> {
+        let inicio = Instant::now();
+        self.estrategia = match get_strategies_by_id(id_startegy).await {
+            Ok(strategy) => {
+                let mut estrategia: Strategy = strategy;
+
+                match get_strategies_actions_by_strategy_id(estrategia.id).await {
+                    Ok(acciones) => {
+                        estrategia.acciones = acciones;
+                    }
+                    Err(e) => {
+                        println!("Error al obtener acciones: {:?}", e);
+                    }
+                }
+
+                match get_strategies_indicators_by_strategy_id(estrategia.id).await {
+                    Ok(indicadores) => {
+                        estrategia.indicadores = indicadores;
+                    }
+                    Err(e) => {
+                        println!("Error al obtener indicadores: {:?}", e);
+                    }
+                }
+
+                match get_strategies_conditions_by_strategy_id(estrategia.id).await {
+                    Ok(condiciones) => {
+                        estrategia.condiciones = condiciones;
+                    }
+                    Err(e) => {
+                        println!("Error al obtener condiciones: {:?}", e);
+                    }
+                }
+
+                estrategia
+            }
+            Err(e) => {
+                println!("Error al obtener estrategia: {:?}", e);
+                Strategy {
+                    id: 0,
+                    id_user: 0,
+                    nombre: String::new(),
+                    descripcion: None,
+                    activa: false,
+                    creada_en: String::new(),
+                    indicadores: Vec::new(),
+                    condiciones: Vec::new(),
+                    acciones: Vec::new(),
+                }
+            }
+        };
+
+        if self.datos.is_empty() {
+            return Ok("No hay datos para ejecutar el backtest".to_string());
+        }
+
+        // Foma de optener un dato: df.column(&columna)?.get(row_idx)?;
+
+        for data in &self.datos {
+            let df = data.get_datos();
+            let schema = df.schema();
+            let data_types = schema
+                .iter()
+                .map(|(name, dtype)| (name.clone().to_string(), dtype.clone()))
+                .collect::<HashMap<String, DataType>>();
+
+            for i in 0..df.height() {}
+        }
+
+        let duracion = inicio.elapsed();
+        Ok(format!("Backtest finalizado en {}", duracion.as_secs_f64()))
     }
 
     pub async fn guardar_trades(&self) {

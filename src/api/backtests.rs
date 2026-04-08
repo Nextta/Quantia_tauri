@@ -1,6 +1,7 @@
 use crate::api::resultados::delete_resultados_by_backtest;
 use crate::api::trades::{delete_trades_by_backtest, get_trades_by_backtest};
 use crate::backtest::backtest::Backtest;
+use crate::strategy::strategy::Strategy;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
 use serde::Serialize;
@@ -124,6 +125,17 @@ pub async fn get_backtests() -> Result<Vec<Backtest>> {
             tipo: row.get::<String>(3)?,
             trades: trades,
             datos: Vec::new(),
+            estrategia: Strategy {
+                id: 0,
+                id_user: 0,
+                nombre: String::new(),
+                descripcion: None,
+                activa: false,
+                creada_en: String::new(),
+                indicadores: Vec::new(),
+                condiciones: Vec::new(),
+                acciones: Vec::new(),
+            },
         };
         backtests.push(backtest);
     }
@@ -166,6 +178,17 @@ pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>> {
             tipo: row.get::<String>(3)?,
             trades: trades,
             datos: Vec::new(),
+            estrategia: Strategy {
+                id: 0,
+                id_user: 0,
+                nombre: String::new(),
+                descripcion: None,
+                activa: false,
+                creada_en: String::new(),
+                indicadores: Vec::new(),
+                condiciones: Vec::new(),
+                acciones: Vec::new(),
+            },
         };
         backtests.push(backtest);
     }
@@ -208,6 +231,17 @@ pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
             tipo: row.get::<String>(3)?,
             trades: trades,
             datos: Vec::new(),
+            estrategia: Strategy {
+                id: 0,
+                id_user: 0,
+                nombre: String::new(),
+                descripcion: None,
+                activa: false,
+                creada_en: String::new(),
+                indicadores: Vec::new(),
+                condiciones: Vec::new(),
+                acciones: Vec::new(),
+            },
         };
         backtests.push(backtest);
     }
@@ -250,6 +284,17 @@ pub async fn get_backtests_by_tipo(tipo: String) -> Result<Vec<Backtest>> {
             tipo: row.get::<String>(3)?,
             trades: trades,
             datos: Vec::new(),
+            estrategia: Strategy {
+                id: 0,
+                id_user: 0,
+                nombre: String::new(),
+                descripcion: None,
+                activa: false,
+                creada_en: String::new(),
+                indicadores: Vec::new(),
+                condiciones: Vec::new(),
+                acciones: Vec::new(),
+            },
         };
         backtests.push(backtest);
     }
@@ -306,6 +351,17 @@ mod tests {
             tipo: "CFD".to_string(),
             trades: Vec::new(),
             datos: Vec::new(),
+            estrategia: Strategy {
+                id: 0,
+                id_user: 0,
+                nombre: String::new(),
+                descripcion: None,
+                activa: false,
+                creada_en: String::new(),
+                indicadores: Vec::new(),
+                condiciones: Vec::new(),
+                acciones: Vec::new(),
+            },
         };
 
         let _ = table_backtests_cfd().await?;
