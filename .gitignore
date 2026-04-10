@@ -2,3 +2,8 @@
 # will have compiled files and executables
 /target/
 /gen/schemas
+.env
+Quantia.db
+Quantia.db-info
+Quantia.db-shm
+Quantia.db-wal
