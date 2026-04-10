@@ -92,6 +92,14 @@ impl Backtest {
         // TODO: Implementar la función para calcular el solapamiento entre los trades y mostrar un grafico.
     }
 
+    fn set_indicators_strategy(&mut self, datos: DataFrame) -> PolarsResult<DataFrame> {
+        //TODO: Añadir los indicadores de la estrategia al dataframe de datos.
+
+        //Borrar este df, solo es de ejemplo.
+        let df: DataFrame = datos.clone();
+        Ok(df)
+    }
+
     pub async fn run(&mut self, id_startegy: i32) -> Result<String, Box<dyn std::error::Error>> {
         let inicio = Instant::now();
         self.estrategia = match get_strategies_by_id(id_startegy).await {
@@ -148,16 +156,24 @@ impl Backtest {
             return Ok("No hay datos para ejecutar el backtest".to_string());
         }
 
-        // Foma de optener un dato: df.column(&columna)?.get(row_idx)?;
+        for data in self.datos.clone() {
+            //TODO: 1-Verificamos los indicadores que tiene la estrategia para añadirlos a los datos del DataFrame
+            let df = match self.set_indicators_strategy(data.get_datos()) {
+                Ok(df_result) => df_result,
+                Err(e) => {
+                    return Err(Box::new(e));
+                }
+            };
 
-        for data in &self.datos {
-            let df = data.get_datos();
             let schema = df.schema();
             let data_types = schema
                 .iter()
                 .map(|(name, dtype)| (name.clone().to_string(), dtype.clone()))
                 .collect::<HashMap<String, DataType>>();
 
+            //TODO: 2-Verificamos la direccion operativa que la estrategia nos permite operar. Long, Short o Both.
+
+            // Foma de optener un dato: df.column(&columna)?.get(row_idx)?;
             for i in 0..df.height() {}
         }
 

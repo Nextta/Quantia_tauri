@@ -11,8 +11,8 @@ impl Datos {
     }
 
     //GETTERS
-    pub fn get_datos(&self) -> &DataFrame {
-        &self.datos
+    pub fn get_datos(&self) -> DataFrame {
+        self.datos.clone()
     }
 
     //SETTERS
