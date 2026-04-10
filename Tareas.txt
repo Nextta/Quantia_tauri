@@ -8,9 +8,10 @@ Terminadas:
 -Añadir a la api la funciones para almacenar las estrategias que se usarán en la plantilla de backtest.
 -Crear los test para la funcionalidad de la api de las plantillas de backtest.
 -Repasar todos los test  de api y mejorarlos antes de continuar con todas las demas tareas.
+-Añadir a la api las funciones para strategy_options y crear sus test.
+-Verificar los test y corregir los test fallidos de strategies.
 
 TODO:
--Añadir a la api las funciones para strategy_options y crear sus test.
 -Crear la logica para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.
 -Crear plantillas para que genere el código en MQL5.

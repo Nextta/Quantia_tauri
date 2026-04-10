@@ -28,12 +28,17 @@ where
     }
 }
 
-fn get_db_config() -> Result<(String, String, String)> {
+struct TestsActive {
+    pub valor: bool,
+}
+
+fn get_db_config() -> Result<(String, String, String, TestsActive)> {
     dotenv().expect(".env file not found");
     let db_path = env::var("DB_PATH").unwrap();
     let sync_url = env::var("TURSO_SYNC_URL").unwrap();
     let auth_token = env::var("TURSO_AUTH_TOKEN").unwrap();
-    Ok((db_path, sync_url, auth_token))
+    let tests_active = TestsActive { valor: true };
+    Ok((db_path, sync_url, auth_token, tests_active))
 }
 //================================Strategies================================
 
@@ -46,11 +51,15 @@ fn get_db_config() -> Result<(String, String, String)> {
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_strategies() -> Result<String> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -82,11 +91,15 @@ pub async fn table_strategies() -> Result<String> {
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
 pub async fn insert_strategies(strategy: Strategy) -> Result<i32> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -116,11 +129,15 @@ pub async fn insert_strategies(strategy: Strategy) -> Result<i32> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_strategies() -> Result<Vec<Strategy>> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -203,11 +220,15 @@ pub async fn get_strategies() -> Result<Vec<Strategy>> {
 /// Retorna error si no se encuentra la estrategia o falla la conexión.
 #[tauri::command]
 pub async fn get_strategies_by_id(id: i32) -> Result<Strategy> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -290,11 +311,15 @@ pub async fn get_strategies_by_id(id: i32) -> Result<Strategy> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -379,11 +404,15 @@ pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_strategies_by_nombre(nombre: String) -> Result<Vec<Strategy>> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -468,11 +497,15 @@ pub async fn get_strategies_by_nombre(nombre: String) -> Result<Vec<Strategy>> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_active_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -554,11 +587,15 @@ pub async fn get_active_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_all_active_strategies() -> Result<Vec<Strategy>> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -643,11 +680,15 @@ pub async fn get_all_active_strategies() -> Result<Vec<Strategy>> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_desactive_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -729,11 +770,15 @@ pub async fn get_desactive_strategies_by_user(id_user: i32) -> Result<Vec<Strate
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_all_desactive_strategies() -> Result<Vec<Strategy>> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -818,11 +863,15 @@ pub async fn get_all_desactive_strategies() -> Result<Vec<Strategy>> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_active_strategies_by_date(fecha: String) -> Result<Vec<Strategy>> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -915,11 +964,15 @@ pub async fn delete_strategy(id: i32) -> Result<String> {
     let _ = delete_strategy_action_by_strategy(id).await;
     let _ = delete_strategy_options_by_strategy(id).await;
 
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -941,11 +994,15 @@ pub async fn delete_strategy(id: i32) -> Result<String> {
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_strategy_indicators() -> Result<String> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -976,11 +1033,15 @@ pub async fn table_strategy_indicators() -> Result<String> {
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
 pub async fn insert_strategies_indicator(indicator: StrategyIndicator) -> Result<i32> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1012,19 +1073,23 @@ pub async fn insert_strategies_indicator(indicator: StrategyIndicator) -> Result
 /// Retorna error si no se encuentra el indicador o falla la conexión.
 #[tauri::command]
 pub async fn get_strategy_indicator_by_id(id: i32) -> Result<StrategyIndicator> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
-    let sql = "SELECT * FROM strategy_indicators WHERE id = ?";
-
     let parametros = params![id];
 
-    let mut result = conn.query(sql, parametros).await?;
+    let mut result = conn
+        .query("SELECT * FROM strategy_indicators WHERE id = ?", parametros)
+        .await?;
 
     let row = result.next().await?.unwrap();
 
@@ -1053,11 +1118,15 @@ pub async fn get_strategy_indicator_by_id(id: i32) -> Result<StrategyIndicator> 
 pub async fn get_strategies_indicators_by_strategy_id(
     startegy_id: i32,
 ) -> Result<Vec<StrategyIndicator>> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1094,11 +1163,15 @@ pub async fn get_strategies_indicators_by_strategy_id(
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_indicator(id: i32) -> Result<String> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1122,11 +1195,15 @@ pub async fn delete_strategy_indicator(id: i32) -> Result<String> {
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_indicator_by_strategy(strategy_id: i32) -> Result<String> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1152,11 +1229,15 @@ pub async fn delete_strategy_indicator_by_strategy(strategy_id: i32) -> Result<S
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_strategy_actions() -> Result<String> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1187,11 +1268,15 @@ pub async fn table_strategy_actions() -> Result<String> {
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
 pub async fn insert_strategies_action(action: StrategyAction) -> Result<i32> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1202,7 +1287,7 @@ pub async fn insert_strategies_action(action: StrategyAction) -> Result<i32> {
         action.parametros.to_string()
     ];
     conn.query(
-        "INSERT INTO strategy_actions (strategy_id, tipo_signal, tipo, parametros) VALUES (?, ?, ?, ?) RETURNING id",
+        "INSERT INTO strategy_actions (strategy_id, tipo_signal, tipo, parametro) VALUES (?, ?, ?, ?) RETURNING id",
         parametros,
     )
     .await?;
@@ -1223,11 +1308,15 @@ pub async fn insert_strategies_action(action: StrategyAction) -> Result<i32> {
 /// Retorna error si no se encuentra la acción o falla la conexión.
 #[tauri::command]
 pub async fn get_strategy_action_by_id(id: i32) -> Result<StrategyAction> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1264,11 +1353,15 @@ pub async fn get_strategy_action_by_id(id: i32) -> Result<StrategyAction> {
 pub async fn get_strategies_actions_by_strategy_id(
     startegy_id: i32,
 ) -> Result<Vec<StrategyAction>> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1305,11 +1398,15 @@ pub async fn get_strategies_actions_by_strategy_id(
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_action(id: i32) -> Result<String> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1333,11 +1430,15 @@ pub async fn delete_strategy_action(id: i32) -> Result<String> {
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_action_by_strategy(strategy_id: i32) -> Result<String> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1362,11 +1463,15 @@ pub async fn delete_strategy_action_by_strategy(strategy_id: i32) -> Result<Stri
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_strategy_conditions() -> Result<String> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1402,11 +1507,15 @@ pub async fn table_strategy_conditions() -> Result<String> {
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
 pub async fn insert_strategy_condition(condition: StrategyCondition) -> Result<i32> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1443,11 +1552,15 @@ pub async fn insert_strategy_condition(condition: StrategyCondition) -> Result<i
 /// Retorna error si no se encuentra la condición o falla la conexión.
 #[tauri::command]
 pub async fn get_strategy_condition_by_id(id: i32) -> Result<StrategyCondition> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1489,11 +1602,15 @@ pub async fn get_strategy_condition_by_id(id: i32) -> Result<StrategyCondition> 
 pub async fn get_strategies_conditions_by_strategy_id(
     startegy_id: i32,
 ) -> Result<Vec<StrategyCondition>> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1535,11 +1652,15 @@ pub async fn get_strategies_conditions_by_strategy_id(
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_condition(id: i32) -> Result<String> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1563,11 +1684,15 @@ pub async fn delete_strategy_condition(id: i32) -> Result<String> {
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_condition_by_strategy(strategy_id: i32) -> Result<String> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1592,11 +1717,15 @@ pub async fn delete_strategy_condition_by_strategy(strategy_id: i32) -> Result<S
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_strategy_options() -> Result<String> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1637,11 +1766,15 @@ pub async fn table_strategy_options() -> Result<String> {
 /// * `Err(Error)` - Ocurrió un error al insertar las opciones de estrategia.
 #[tauri::command]
 pub async fn insert_strategy_options(options: StrategyOptions) -> Result<i32> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1682,11 +1815,15 @@ pub async fn insert_strategy_options(options: StrategyOptions) -> Result<i32> {
 /// Retorna error si no se encuentra la estrategia o falla la conexión.
 #[tauri::command]
 pub async fn get_strategy_options_by_id(id: i32) -> Result<StrategyOptions> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1761,11 +1898,15 @@ pub async fn get_strategy_options_by_id(id: i32) -> Result<StrategyOptions> {
 /// Retorna error si no se encuentra la estrategia o falla la conexión.
 #[tauri::command]
 pub async fn get_strategy_options_by_strategy_id(strategy_id: i32) -> Result<StrategyOptions> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1840,11 +1981,15 @@ pub async fn get_strategy_options_by_strategy_id(strategy_id: i32) -> Result<Str
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_option(id: i32) -> Result<String> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1868,11 +2013,15 @@ pub async fn delete_strategy_option(id: i32) -> Result<String> {
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_options_by_strategy(strategy_id: i32) -> Result<String> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -1894,161 +2043,198 @@ mod tests {
     //================================TEST: Strategies================================
     #[tokio::test(flavor = "multi_thread")]
     async fn test_crud_strategies() -> Result<()> {
-        let estrategia: Strategy = Strategy {
-            id: 1,
-            id_user: 1,
-            nombre: "Ema_tres".to_string(),
-            descripcion: Some("Cruce de 3 emas".to_string()),
-            activa: true,
-            creada_en: "01-04-2026".to_string(),
-            indicadores: Vec::<StrategyIndicator>::new(),
-            condiciones: Vec::<StrategyCondition>::new(),
-            acciones: Vec::<StrategyAction>::new(),
-            opciones: StrategyOptions::new_empty(),
-        };
+        match table_strategies().await {
+            Ok(_) => {
+                let estrategia: Strategy = Strategy {
+                    id: 1,
+                    id_user: 1,
+                    nombre: "Ema_tres".to_string(),
+                    descripcion: Some("Cruce de 3 emas".to_string()),
+                    activa: true,
+                    creada_en: "01-04-2026".to_string(),
+                    indicadores: Vec::<StrategyIndicator>::new(),
+                    condiciones: Vec::<StrategyCondition>::new(),
+                    acciones: Vec::<StrategyAction>::new(),
+                    opciones: StrategyOptions::new_empty(),
+                };
 
-        let _ = table_strategies().await?;
+                match insert_strategies(estrategia.clone()).await {
+                    Ok(id) => {
+                        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
 
-        let id = insert_strategies(estrategia.clone()).await?;
+                        match table_strategy_indicators().await {
+                            Ok(_) => {
+                                let indicator = StrategyIndicator {
+                                    id: 1,
+                                    strategy_id: id,
+                                    nombre: "SMA_20".to_string(),
+                                    tipo: "SMA".to_string(),
+                                    parametros: serde_json::Value::String(
+                                        "{
+                                        period: 20
+                                        }"
+                                        .to_string(),
+                                    ),
+                                };
 
-        let _ = get_strategies().await;
+                                match insert_strategies_indicator(indicator.clone()).await {
+                                    Ok(id_indicador) => {
+                                        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                                        //================================TEST: GETTERS Indicators================================
+                                        let _ = get_strategy_indicator_by_id(id_indicador).await;
 
-        let _ = get_strategies_by_id(id).await;
+                                        let _ = get_strategies_indicators_by_strategy_id(
+                                            indicator.strategy_id.clone(),
+                                        )
+                                        .await;
+                                    }
+                                    Err(e) => return Err(e),
+                                }
+                            }
+                            Err(e) => return Err(e),
+                        };
 
-        let _ = get_strategies_by_id_user(estrategia.id_user.clone()).await;
+                        match table_strategy_actions().await {
+                            Ok(_) => {
+                                let action: StrategyAction = StrategyAction {
+                                    id: 1,
+                                    strategy_id: id,
+                                    tipo_signal: "Buy".to_string(),
+                                    tipo: "Close".to_string(),
+                                    parametros: serde_json::Value::String(
+                                        "{parametro:20}".to_string(),
+                                    ),
+                                };
 
-        let _ = get_strategies_by_nombre(estrategia.nombre.clone()).await;
+                                match insert_strategies_action(action.clone()).await {
+                                    Ok(id_action) => {
+                                        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                                        let condition: StrategyCondition = StrategyCondition {
+                                            id: 1,
+                                            strategy_id: id,
+                                            action_id: id_action,
+                                            campo_a: "SMA_20".to_string(),
+                                            shift_a: 0,
+                                            operador: ">".to_string(),
+                                            campo_b: "SMA_ 50".to_string(),
+                                            shift_b: 0,
+                                            logica: "AND".to_string(),
+                                            orden: 0,
+                                        };
 
-        let _ = get_active_strategies_by_user(estrategia.id_user.clone()).await;
+                                        match table_strategy_conditions().await {
+                                            Ok(_) => {
+                                                match insert_strategy_condition(condition.clone())
+                                                    .await
+                                                {
+                                                    Ok(id_condition) => {
+                                                        //================================TEST: GETTERS Conditions================================
+                                                        let _ = get_strategy_condition_by_id(
+                                                            id_condition,
+                                                        )
+                                                        .await;
 
-        let _ = get_all_active_strategies().await;
+                                                        let _ = get_strategies_conditions_by_strategy_id(
+                                                            condition.strategy_id.clone(),
+                                                        )
+                                                        .await;
+                                                    }
+                                                    Err(e) => return Err(e),
+                                                }
+                                            }
+                                            Err(e) => return Err(e),
+                                        };
 
-        let _ = get_desactive_strategies_by_user(estrategia.id_user.clone()).await;
+                                        //================================TEST: GETTERS Actions================================
+                                        let _ = get_strategy_action_by_id(id_action).await;
 
-        let _ = get_all_desactive_strategies().await;
+                                        let _ = get_strategies_actions_by_strategy_id(
+                                            action.strategy_id.clone(),
+                                        )
+                                        .await;
+                                    }
+                                    Err(e) => return Err(e),
+                                }
+                            }
+                            Err(e) => return Err(e),
+                        };
 
-        let _ = get_active_strategies_by_date(estrategia.creada_en.clone()).await;
+                        match table_strategy_options().await {
+                            Ok(_) => {
+                                let option: StrategyOptions = StrategyOptions {
+                                    id: 1,
+                                    strategy_id: id,
+                                    multiples_tardes: false,
+                                    trading_direccion: TradingDirection::Long,
+                                    operar_finde: false,
+                                    cerrar_fin_de_dia: false,
+                                    hora_fin_de_dia: Utc::now(),
+                                    cerrar_viernes: false,
+                                    hora_cierre_viernes: Utc::now(),
+                                    rango_operativo: false,
+                                    rango_operativo_inicio: Utc::now(),
+                                    rango_operativo_fin: Utc::now(),
+                                    cerrar_fin_rango_operativo: false,
+                                    activar_cierre_numero_velas: false,
+                                    numero_velas_cierre: 0,
+                                    cierre_limite_hora: false,
+                                    hora_cierre_limite: Utc::now(),
+                                };
 
-        let _ = delete_strategy(id).await;
+                                match insert_strategy_options(option.clone()).await {
+                                    Ok(id_option) => {
+                                        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                                        //================================TEST: GETTERS Options================================
 
-        Ok(())
-    }
+                                        let _ = get_strategy_options_by_id(id_option).await;
 
-    //================================TEST: Indicators================================
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_crud_strategy_indicators() -> Result<()> {
-        let indicator = StrategyIndicator {
-            id: 1,
-            strategy_id: 1,
-            nombre: "SMA_20".to_string(),
-            tipo: "SMA".to_string(),
-            parametros: serde_json::Value::String(
-                "{
-                period: 20
-                }"
-                .to_string(),
-            ),
-        };
+                                        let _ = get_strategy_options_by_strategy_id(
+                                            option.strategy_id.clone(),
+                                        )
+                                        .await;
+                                    }
+                                    Err(e) => return Err(e),
+                                }
+                            }
+                            Err(e) => return Err(e),
+                        };
 
-        let _ = table_strategy_indicators().await?;
+                        //================================TEST: GETTERS Strategies================================
+                        let _ = get_strategies().await;
 
-        let id: i32 = insert_strategies_indicator(indicator.clone())
-            .await
-            .unwrap();
+                        let _ = get_strategies_by_id(id).await;
 
-        let _ = get_strategy_indicator_by_id(id).await;
+                        let _ = get_strategies_by_id_user(estrategia.id_user.clone()).await;
 
-        let _ = get_strategies_indicators_by_strategy_id(indicator.strategy_id.clone()).await;
+                        let _ = get_strategies_by_nombre(estrategia.nombre.clone()).await;
 
-        let _ = delete_strategy_indicator(id).await;
+                        let _ = get_active_strategies_by_user(estrategia.id_user.clone()).await;
 
-        let _ = insert_strategies_indicator(indicator.clone())
-            .await
-            .unwrap();
+                        let _ = get_all_active_strategies().await;
 
-        let _ = delete_strategy_indicator_by_strategy(indicator.strategy_id.clone()).await;
+                        let _ = get_desactive_strategies_by_user(estrategia.id_user.clone()).await;
 
-        Ok(())
-    }
-    //================================TEST: Actions================================
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_crud_startegy_actions() -> Result<()> {
-        let action: StrategyAction = StrategyAction {
-            id: 1,
-            strategy_id: 1,
-            tipo_signal: "Buy".to_string(),
-            tipo: "Close".to_string(),
-            parametros: serde_json::Value::String("{parametro:20}".to_string()),
-        };
+                        let _ = get_all_desactive_strategies().await;
 
-        let _ = table_strategy_actions().await?;
+                        let _ = get_active_strategies_by_date(estrategia.creada_en.clone()).await;
 
-        let id: i32 = insert_strategies_action(action.clone()).await.unwrap();
+                        //================================TEST: DELETE Strategies================================
 
-        let _ = get_strategy_action_by_id(id).await;
-
-        let _ = get_strategies_actions_by_strategy_id(action.strategy_id.clone()).await;
-
-        let _ = delete_strategy_action(id).await;
-
-        let _ = insert_strategies_action(action.clone()).await.unwrap();
-
-        let _ = delete_strategy_action_by_strategy(action.strategy_id).await;
-
-        Ok(())
-    }
-
-    //================================TEST: Conditions================================
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_crud_strategy_conditions() -> Result<()> {
-        let condition: StrategyCondition = StrategyCondition {
-            id: 1,
-            strategy_id: 1,
-            action_id: 1,
-            campo_a: "SMA_20".to_string(),
-            shift_a: 0,
-            operador: ">".to_string(),
-            campo_b: "SMA_ 50".to_string(),
-            shift_b: 0,
-            logica: "AND".to_string(),
-            orden: 0,
-        };
-
-        let _ = table_strategy_conditions().await?;
-
-        let id: i32 = insert_strategy_condition(condition.clone()).await.unwrap();
-
-        let _ = get_strategy_condition_by_id(id).await;
-
-        let _ = get_strategies_conditions_by_strategy_id(condition.strategy_id.clone()).await;
-
-        let _ = delete_strategy_condition(id).await;
-
-        let _ = insert_strategy_condition(condition.clone()).await.unwrap();
-
-        let _ = delete_strategy_condition_by_strategy(condition.strategy_id).await;
-
-        Ok(())
-    }
-
-    //================================TEST: Options================================
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_crud_strategy_options() -> Result<()> {
-        let option: StrategyOptions = StrategyOptions::new_empty();
-
-        let _ = table_strategy_options().await?;
-
-        let id: i32 = insert_strategy_options(option.clone()).await.unwrap();
-
-        let _ = get_strategy_options_by_id(id).await;
-
-        let _ = get_strategy_options_by_strategy_id(option.strategy_id.clone()).await;
-
-        let _ = delete_strategy_option(id).await;
-
-        let _ = insert_strategy_options(option.clone()).await.unwrap();
-
-        let _ = delete_strategy_options_by_strategy(option.strategy_id).await;
+                        let _ = delete_strategy_indicator_by_strategy(id).await;
+                        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                        let _ = delete_strategy_action_by_strategy(id).await;
+                        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                        let _ = delete_strategy_condition_by_strategy(id).await;
+                        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                        let _ = delete_strategy_options_by_strategy(id).await;
+                        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                        let _ = delete_strategy(id).await;
+                    }
+                    Err(e) => return Err(e),
+                };
+            }
+            Err(e) => return Err(e),
+        }
 
         Ok(())
     }
