@@ -10,6 +10,7 @@ Terminadas:
 -Repasar todos los test  de api y mejorarlos antes de continuar con todas las demas tareas.
 
 TODO:
+-Añadir a la api las funciones para strategy_options y crear sus test.
 -Crear la logica para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.
 -Crear plantillas para que genere el código en MQL5.

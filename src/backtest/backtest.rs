@@ -3,11 +3,11 @@ use crate::api::strategies::{
     get_strategies_actions_by_strategy_id, get_strategies_by_id,
     get_strategies_conditions_by_strategy_id, get_strategies_indicators_by_strategy_id,
 };
-
 use crate::api::trades::insert_trades;
 use crate::backtest::datos::Datos;
 use crate::backtest::trade::Trade;
 use crate::strategy::strategy::Strategy;
+use crate::strategy::strategy_options::StrategyOptions;
 use polars::datatypes::DataType;
 use polars::prelude::*;
 use std::collections::HashMap;
@@ -139,6 +139,7 @@ impl Backtest {
                     indicadores: Vec::new(),
                     condiciones: Vec::new(),
                     acciones: Vec::new(),
+                    opciones: StrategyOptions::new_empty(),
                 }
             }
         };

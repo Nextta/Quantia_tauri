@@ -2,6 +2,7 @@ use crate::api::resultados::delete_resultados_by_backtest;
 use crate::api::trades::{delete_trades_by_backtest, get_trades_by_backtest};
 use crate::backtest::backtest::Backtest;
 use crate::strategy::strategy::Strategy;
+use crate::strategy::strategy_options::StrategyOptions;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
 use serde::Serialize;
@@ -135,6 +136,7 @@ pub async fn get_backtests() -> Result<Vec<Backtest>> {
                 indicadores: Vec::new(),
                 condiciones: Vec::new(),
                 acciones: Vec::new(),
+                opciones: StrategyOptions::new_empty(),
             },
         };
         backtests.push(backtest);
@@ -188,6 +190,7 @@ pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>> {
                 indicadores: Vec::new(),
                 condiciones: Vec::new(),
                 acciones: Vec::new(),
+                opciones: StrategyOptions::new_empty(),
             },
         };
         backtests.push(backtest);
@@ -241,6 +244,7 @@ pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
                 indicadores: Vec::new(),
                 condiciones: Vec::new(),
                 acciones: Vec::new(),
+                opciones: StrategyOptions::new_empty(),
             },
         };
         backtests.push(backtest);
@@ -294,6 +298,7 @@ pub async fn get_backtests_by_tipo(tipo: String) -> Result<Vec<Backtest>> {
                 indicadores: Vec::new(),
                 condiciones: Vec::new(),
                 acciones: Vec::new(),
+                opciones: StrategyOptions::new_empty(),
             },
         };
         backtests.push(backtest);
@@ -361,6 +366,7 @@ mod tests {
                 indicadores: Vec::new(),
                 condiciones: Vec::new(),
                 acciones: Vec::new(),
+                opciones: StrategyOptions::new_empty(),
             },
         };
 

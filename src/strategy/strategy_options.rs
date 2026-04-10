@@ -3,6 +3,8 @@ use chrono::Utc;
 
 #[derive(Debug, Clone)]
 pub struct StrategyOptions {
+    pub id: i32,
+    pub strategy_id: i32,
     pub multiples_tardes: bool,
     pub trading_direccion: TradingDirection,
     pub operar_finde: bool,
@@ -15,7 +17,7 @@ pub struct StrategyOptions {
     pub rango_operativo_fin: DateTime<Utc>,
     pub cerrar_fin_rango_operativo: bool,
     pub activar_cierre_numero_velas: bool,
-    pub numero_velas_cierre: usize,
+    pub numero_velas_cierre: i32,
     pub cierre_limite_hora: bool,
     pub hora_cierre_limite: DateTime<Utc>,
 }
@@ -27,8 +29,20 @@ pub enum TradingDirection {
     Both,
 }
 
+impl TradingDirection {
+    pub fn to_string(&self) -> &str {
+        match self {
+            TradingDirection::Long => "Long",
+            TradingDirection::Short => "Short",
+            TradingDirection::Both => "Both",
+        }
+    }
+}
+
 impl StrategyOptions {
     pub fn new(
+        id: i32,
+        strategy_id: i32,
         multiples_tardes: bool,
         trading_direccion: TradingDirection,
         operar_finde: bool,
@@ -41,11 +55,13 @@ impl StrategyOptions {
         rango_operativo_fin: DateTime<Utc>,
         cerrar_fin_rango_operativo: bool,
         activar_cierre_numero_velas: bool,
-        numero_velas_cierre: usize,
+        numero_velas_cierre: i32,
         cierre_limite_hora: bool,
         hora_cierre_limite: DateTime<Utc>,
     ) -> Self {
         Self {
+            id,
+            strategy_id,
             multiples_tardes,
             trading_direccion,
             operar_finde,
@@ -66,6 +82,8 @@ impl StrategyOptions {
 
     pub fn new_empty() -> Self {
         Self {
+            id: 0,
+            strategy_id: 0,
             multiples_tardes: false,
             trading_direccion: TradingDirection::Both,
             operar_finde: false,

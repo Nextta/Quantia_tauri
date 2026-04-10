@@ -2,7 +2,9 @@ use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_action::StrategyAction;
 use crate::strategy::strategy_condition::StrategyCondition;
 use crate::strategy::strategy_indicator::StrategyIndicator;
-use crate::strategy::strategy_options::StrategyOptions;
+use crate::strategy::strategy_options::{StrategyOptions, TradingDirection};
+use chrono::DateTime;
+use chrono::Utc;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
 use serde::Serialize;
@@ -131,6 +133,7 @@ pub async fn get_strategies() -> Result<Vec<Strategy>> {
         let mut str_indicators: Vec<StrategyIndicator> = Vec::<StrategyIndicator>::new();
         let mut str_conditions: Vec<StrategyCondition> = Vec::<StrategyCondition>::new();
         let mut str_actions: Vec<StrategyAction> = Vec::<StrategyAction>::new();
+        let mut str_options: StrategyOptions = StrategyOptions::new_empty();
 
         let id_startegy = row.get::<i32>(0)?;
 
@@ -158,6 +161,14 @@ pub async fn get_strategies() -> Result<Vec<Strategy>> {
             ),
         }
 
+        match get_strategy_options_by_strategy_id(id_startegy).await {
+            Ok(options) => str_options = options,
+            Err(e) => println!(
+                "Error al optener los options de strategy_id: {}. Error: {:?}",
+                id_startegy, e
+            ),
+        }
+
         let mut activa = false;
         if row.get::<i32>(4)? != 0 {
             activa = true;
@@ -172,6 +183,7 @@ pub async fn get_strategies() -> Result<Vec<Strategy>> {
             indicadores: str_indicators,
             condiciones: str_conditions,
             acciones: str_actions,
+            opciones: str_options,
         };
         strategies.push(strategy);
     }
@@ -210,6 +222,7 @@ pub async fn get_strategies_by_id(id: i32) -> Result<Strategy> {
     let mut str_indicators: Vec<StrategyIndicator> = Vec::<StrategyIndicator>::new();
     let mut str_conditions: Vec<StrategyCondition> = Vec::<StrategyCondition>::new();
     let mut str_actions: Vec<StrategyAction> = Vec::<StrategyAction>::new();
+    let mut str_options: StrategyOptions = StrategyOptions::new_empty();
 
     let id_startegy = row.get::<i32>(0)?;
 
@@ -237,6 +250,14 @@ pub async fn get_strategies_by_id(id: i32) -> Result<Strategy> {
         ),
     }
 
+    match get_strategy_options_by_strategy_id(id_startegy).await {
+        Ok(options) => str_options = options,
+        Err(e) => println!(
+            "Error al optener los options de strategy_id: {}. Error: {:?}",
+            id_startegy, e
+        ),
+    }
+
     let mut activa = false;
     if row.get::<i32>(4)? != 0 {
         activa = true;
@@ -251,6 +272,7 @@ pub async fn get_strategies_by_id(id: i32) -> Result<Strategy> {
         indicadores: str_indicators,
         condiciones: str_conditions,
         acciones: str_actions,
+        opciones: str_options,
     };
 
     Ok(strategy)
@@ -287,6 +309,7 @@ pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>> {
         let mut str_indicators: Vec<StrategyIndicator> = Vec::<StrategyIndicator>::new();
         let mut str_conditions: Vec<StrategyCondition> = Vec::<StrategyCondition>::new();
         let mut str_actions: Vec<StrategyAction> = Vec::<StrategyAction>::new();
+        let mut str_options: StrategyOptions = StrategyOptions::new_empty();
 
         let id_startegy = row.get::<i32>(0)?;
 
@@ -314,6 +337,14 @@ pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>> {
             ),
         }
 
+        match get_strategy_options_by_strategy_id(id_startegy).await {
+            Ok(options) => str_options = options,
+            Err(e) => println!(
+                "Error al optener los options de strategy_id: {}. Error: {:?}",
+                id_startegy, e
+            ),
+        }
+
         let mut activa = false;
         if row.get::<i32>(4)? != 0 {
             activa = true;
@@ -328,6 +359,7 @@ pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>> {
             indicadores: str_indicators,
             condiciones: str_conditions,
             acciones: str_actions,
+            opciones: str_options,
         };
         strategies.push(strategy);
     }
@@ -366,6 +398,7 @@ pub async fn get_strategies_by_nombre(nombre: String) -> Result<Vec<Strategy>> {
         let mut str_indicators: Vec<StrategyIndicator> = Vec::<StrategyIndicator>::new();
         let mut str_conditions: Vec<StrategyCondition> = Vec::<StrategyCondition>::new();
         let mut str_actions: Vec<StrategyAction> = Vec::<StrategyAction>::new();
+        let mut str_options: StrategyOptions = StrategyOptions::new_empty();
 
         let id_startegy = row.get::<i32>(0)?;
 
@@ -393,6 +426,14 @@ pub async fn get_strategies_by_nombre(nombre: String) -> Result<Vec<Strategy>> {
             ),
         }
 
+        match get_strategy_options_by_strategy_id(id_startegy).await {
+            Ok(options) => str_options = options,
+            Err(e) => println!(
+                "Error al optener los options de strategy_id: {}. Error: {:?}",
+                id_startegy, e
+            ),
+        }
+
         let mut activa = false;
         if row.get::<i32>(4)? != 0 {
             activa = true;
@@ -407,6 +448,7 @@ pub async fn get_strategies_by_nombre(nombre: String) -> Result<Vec<Strategy>> {
             indicadores: str_indicators,
             condiciones: str_conditions,
             acciones: str_actions,
+            opciones: str_options,
         };
         strategies.push(strategy);
     }
@@ -445,6 +487,7 @@ pub async fn get_active_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>
         let mut str_indicators: Vec<StrategyIndicator> = Vec::<StrategyIndicator>::new();
         let mut str_conditions: Vec<StrategyCondition> = Vec::<StrategyCondition>::new();
         let mut str_actions: Vec<StrategyAction> = Vec::<StrategyAction>::new();
+        let mut str_options: StrategyOptions = StrategyOptions::new_empty();
 
         let id_startegy = row.get::<i32>(0)?;
 
@@ -472,6 +515,14 @@ pub async fn get_active_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>
             ),
         }
 
+        match get_strategy_options_by_strategy_id(id_startegy).await {
+            Ok(options) => str_options = options,
+            Err(e) => println!(
+                "Error al optener los options de strategy_id: {}. Error: {:?}",
+                id_startegy, e
+            ),
+        }
+
         let mut activa = false;
         if row.get::<i32>(4)? != 0 {
             activa = true;
@@ -486,6 +537,7 @@ pub async fn get_active_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>
             indicadores: str_indicators,
             condiciones: str_conditions,
             acciones: str_actions,
+            opciones: str_options,
         };
         strategies.push(strategy);
     }
@@ -521,6 +573,7 @@ pub async fn get_all_active_strategies() -> Result<Vec<Strategy>> {
         let mut str_indicators: Vec<StrategyIndicator> = Vec::<StrategyIndicator>::new();
         let mut str_conditions: Vec<StrategyCondition> = Vec::<StrategyCondition>::new();
         let mut str_actions: Vec<StrategyAction> = Vec::<StrategyAction>::new();
+        let mut str_options: StrategyOptions = StrategyOptions::new_empty();
 
         let id_startegy = row.get::<i32>(0)?;
 
@@ -548,6 +601,14 @@ pub async fn get_all_active_strategies() -> Result<Vec<Strategy>> {
             ),
         }
 
+        match get_strategy_options_by_strategy_id(id_startegy).await {
+            Ok(options) => str_options = options,
+            Err(e) => println!(
+                "Error al optener los options de strategy_id: {}. Error: {:?}",
+                id_startegy, e
+            ),
+        }
+
         let mut activa = false;
         if row.get::<i32>(4)? != 0 {
             activa = true;
@@ -562,6 +623,7 @@ pub async fn get_all_active_strategies() -> Result<Vec<Strategy>> {
             indicadores: str_indicators,
             condiciones: str_conditions,
             acciones: str_actions,
+            opciones: str_options,
         };
         strategies.push(strategy);
     }
@@ -600,6 +662,7 @@ pub async fn get_desactive_strategies_by_user(id_user: i32) -> Result<Vec<Strate
         let mut str_indicators: Vec<StrategyIndicator> = Vec::<StrategyIndicator>::new();
         let mut str_conditions: Vec<StrategyCondition> = Vec::<StrategyCondition>::new();
         let mut str_actions: Vec<StrategyAction> = Vec::<StrategyAction>::new();
+        let mut str_options: StrategyOptions = StrategyOptions::new_empty();
 
         let id_startegy = row.get::<i32>(0)?;
 
@@ -627,6 +690,14 @@ pub async fn get_desactive_strategies_by_user(id_user: i32) -> Result<Vec<Strate
             ),
         }
 
+        match get_strategy_options_by_strategy_id(id_startegy).await {
+            Ok(options) => str_options = options,
+            Err(e) => println!(
+                "Error al optener los options de strategy_id: {}. Error: {:?}",
+                id_startegy, e
+            ),
+        }
+
         let mut activa = false;
         if row.get::<i32>(4)? != 0 {
             activa = true;
@@ -641,6 +712,7 @@ pub async fn get_desactive_strategies_by_user(id_user: i32) -> Result<Vec<Strate
             indicadores: str_indicators,
             condiciones: str_conditions,
             acciones: str_actions,
+            opciones: str_options,
         };
         strategies.push(strategy);
     }
@@ -676,6 +748,7 @@ pub async fn get_all_desactive_strategies() -> Result<Vec<Strategy>> {
         let mut str_indicators: Vec<StrategyIndicator> = Vec::<StrategyIndicator>::new();
         let mut str_conditions: Vec<StrategyCondition> = Vec::<StrategyCondition>::new();
         let mut str_actions: Vec<StrategyAction> = Vec::<StrategyAction>::new();
+        let mut str_options: StrategyOptions = StrategyOptions::new_empty();
 
         let id_startegy = row.get::<i32>(0)?;
 
@@ -703,6 +776,14 @@ pub async fn get_all_desactive_strategies() -> Result<Vec<Strategy>> {
             ),
         }
 
+        match get_strategy_options_by_strategy_id(id_startegy).await {
+            Ok(options) => str_options = options,
+            Err(e) => println!(
+                "Error al optener los options de strategy_id: {}. Error: {:?}",
+                id_startegy, e
+            ),
+        }
+
         let mut activa = false;
         if row.get::<i32>(4)? != 0 {
             activa = true;
@@ -717,6 +798,7 @@ pub async fn get_all_desactive_strategies() -> Result<Vec<Strategy>> {
             indicadores: str_indicators,
             condiciones: str_conditions,
             acciones: str_actions,
+            opciones: str_options,
         };
         strategies.push(strategy);
     }
@@ -755,6 +837,7 @@ pub async fn get_active_strategies_by_date(fecha: String) -> Result<Vec<Strategy
         let mut str_indicators: Vec<StrategyIndicator> = Vec::<StrategyIndicator>::new();
         let mut str_conditions: Vec<StrategyCondition> = Vec::<StrategyCondition>::new();
         let mut str_actions: Vec<StrategyAction> = Vec::<StrategyAction>::new();
+        let mut str_options: StrategyOptions = StrategyOptions::new_empty();
 
         let id_startegy = row.get::<i32>(0)?;
 
@@ -782,6 +865,14 @@ pub async fn get_active_strategies_by_date(fecha: String) -> Result<Vec<Strategy
             ),
         }
 
+        match get_strategy_options_by_strategy_id(id_startegy).await {
+            Ok(options) => str_options = options,
+            Err(e) => println!(
+                "Error al optener los options de strategy_id: {}. Error: {:?}",
+                id_startegy, e
+            ),
+        }
+
         let mut activa = false;
         if row.get::<i32>(4)? != 0 {
             activa = true;
@@ -796,6 +887,7 @@ pub async fn get_active_strategies_by_date(fecha: String) -> Result<Vec<Strategy
             indicadores: str_indicators,
             condiciones: str_conditions,
             acciones: str_actions,
+            opciones: str_options,
         };
         strategies.push(strategy);
     }
@@ -821,6 +913,7 @@ pub async fn delete_strategy(id: i32) -> Result<String> {
     let _ = delete_strategy_condition_by_strategy(id).await;
     let _ = delete_strategy_indicator_by_strategy(id).await;
     let _ = delete_strategy_action_by_strategy(id).await;
+    let _ = delete_strategy_options_by_strategy(id).await;
 
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
@@ -835,7 +928,7 @@ pub async fn delete_strategy(id: i32) -> Result<String> {
     conn.query("DELETE FROM strategies WHERE id = ?", parametros)
         .await?;
 
-    Ok("Condition eliminado con exito!".to_string())
+    Ok("Estrategia eliminada con exito!".to_string())
 }
 //================================Indicators================================
 
@@ -1489,6 +1582,311 @@ pub async fn delete_strategy_condition_by_strategy(strategy_id: i32) -> Result<S
     Ok("Conditions eliminados con exito!".to_string())
 }
 
+//================================Options================================
+/// Crea la tabla de opciones de estrategias en la base de datos.
+///
+/// # Returns
+/// * `Result<String>` - Mensaje de éxito si la tabla se crea correctamente.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
+#[tauri::command]
+pub async fn table_strategy_options() -> Result<String> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    conn.query(
+        "CREATE TABLE IF NOT EXISTS strategy_options (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            strategy_id  INTEGER NOT NULL REFERENCES strategies(id),
+            multiples_tardes BOOLEAN DEFAULT FALSE,
+            trading_direccion TEXT DEFAULT 'Both',
+            operar_finde BOOLEAN DEFAULT FALSE,
+            cerrar_fin_de_dia BOOLEAN DEFAULT FALSE,
+            hora_fin_de_dia TEXT DEFAULT 'NULL',
+            cerrar_viernes BOOLEAN DEFAULT FALSE,
+            hora_cierre_viernes TEXT DEFAULT 'NULL',
+            rango_operativo BOOLEAN DEFAULT FALSE,
+            rango_operativo_inicio TEXT DEFAULT 'NULL',
+            rango_operativo_fin TEXT DEFAULT 'NULL',
+            cerrar_fin_rango_operativo BOOLEAN DEFAULT FALSE,
+            activar_cierre_numero_velas BOOLEAN DEFAULT FALSE,
+            numero_velas_cierre INTEGER DEFAULT 0,
+            cierre_limite_hora BOOLEAN DEFAULT FALSE,
+            hora_cierre_limite TEXT DEFAULT 'NULL'
+        )",
+        (),
+    )
+    .await?;
+
+    Ok("Tabla strategy_options is ok.".to_string())
+}
+
+/// Inserta las opciones de estrategia en la base de datos.
+///
+/// # Parámetros
+/// * `options` - Las opciones de estrategia a insertar.
+///
+/// # Returns
+/// * `Ok(())` - Las opciones de estrategia fueron insertadas correctamente.
+/// * `Err(Error)` - Ocurrió un error al insertar las opciones de estrategia.
+#[tauri::command]
+pub async fn insert_strategy_options(options: StrategyOptions) -> Result<i32> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![
+        options.strategy_id,
+        options.multiples_tardes,
+        options.trading_direccion.to_string(),
+        options.operar_finde,
+        options.cerrar_fin_de_dia,
+        options.hora_fin_de_dia.to_string(),
+        options.cerrar_viernes,
+        options.hora_cierre_viernes.to_string(),
+        options.rango_operativo,
+        options.rango_operativo_inicio.to_string(),
+        options.rango_operativo_fin.to_string(),
+        options.cerrar_fin_rango_operativo,
+        options.activar_cierre_numero_velas,
+        options.numero_velas_cierre,
+        options.cierre_limite_hora,
+        options.hora_cierre_limite.to_string(),
+    ];
+
+    conn.execute("INSERT INTO strategy_options (strategy_id, multiples_tardes, trading_direccion, operar_finde, cerrar_fin_de_dia, hora_fin_de_dia, cerrar_viernes, hora_cierre_viernes, rango_operativo, rango_operativo_inicio, rango_operativo_fin, cerrar_fin_rango_operativo, activar_cierre_numero_velas, numero_velas_cierre, cierre_limite_hora, hora_cierre_limite) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", parametros).await?;
+
+    let id = conn.last_insert_rowid() as i32;
+    Ok(id)
+}
+
+/// Obtiene las opciones de estrategia específica por su ID.
+///
+/// # Parámetros
+/// * `id`: ID de las opciones de estrategia a buscar.
+///
+/// # Returns
+/// * `Result<StrategyOptions>` - Opciones de estrategia encontradas.
+///
+/// # Errores
+/// Retorna error si no se encuentra la estrategia o falla la conexión.
+#[tauri::command]
+pub async fn get_strategy_options_by_id(id: i32) -> Result<StrategyOptions> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let sql = "SELECT * FROM strategy_options WHERE id = ?";
+
+    let parametros = params![id];
+
+    let mut result = conn.query(sql, parametros).await?;
+
+    let row = result.next().await?.unwrap();
+
+    let options = StrategyOptions {
+        id: row.get::<i32>(0)?,
+        strategy_id: row.get::<i32>(1)?,
+        multiples_tardes: if row.get::<i32>(2)? == 1 { true } else { false },
+        trading_direccion: if row.get::<String>(3)? == "long" {
+            TradingDirection::Long
+        } else if row.get::<String>(3)? == "short" {
+            TradingDirection::Short
+        } else {
+            TradingDirection::Both
+        },
+        operar_finde: if row.get::<i32>(4)? == 1 { true } else { false },
+        cerrar_fin_de_dia: if row.get::<i32>(5)? == 1 { true } else { false },
+        hora_fin_de_dia: DateTime::parse_from_rfc3339(&row.get::<String>(6)?)
+            .map(|dt| dt.with_timezone(&Utc))
+            .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
+        cerrar_viernes: if row.get::<i32>(7)? == 1 { true } else { false },
+        hora_cierre_viernes: DateTime::parse_from_rfc3339(&row.get::<String>(8)?)
+            .map(|dt| dt.with_timezone(&Utc))
+            .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
+        rango_operativo: if row.get::<i32>(9)? == 1 { true } else { false },
+        rango_operativo_inicio: DateTime::parse_from_rfc3339(&row.get::<String>(10)?)
+            .map(|dt| dt.with_timezone(&Utc))
+            .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
+        rango_operativo_fin: DateTime::parse_from_rfc3339(&row.get::<String>(11)?)
+            .map(|dt| dt.with_timezone(&Utc))
+            .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
+        cerrar_fin_rango_operativo: if row.get::<i32>(12)? == 1 {
+            true
+        } else {
+            false
+        },
+        activar_cierre_numero_velas: if row.get::<i32>(13)? == 1 {
+            true
+        } else {
+            false
+        },
+        numero_velas_cierre: row.get::<i32>(14)?,
+        cierre_limite_hora: if row.get::<i32>(15)? == 1 {
+            true
+        } else {
+            false
+        },
+        hora_cierre_limite: DateTime::parse_from_rfc3339(&row.get::<String>(16)?)
+            .map(|dt| dt.with_timezone(&Utc))
+            .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
+    };
+
+    Ok(options)
+}
+
+/// Obtiene las opciones de estrategia específica por su strategy_id.
+///
+/// # Parámetros
+/// * `strategy_id`: ID de la estrategia a buscar.
+///
+/// # Returns
+/// * `Result<StrategyOptions>` - Opciones de estrategia encontradas.
+///
+/// # Errores
+/// Retorna error si no se encuentra la estrategia o falla la conexión.
+#[tauri::command]
+pub async fn get_strategy_options_by_strategy_id(strategy_id: i32) -> Result<StrategyOptions> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let sql = "SELECT * FROM strategy_options WHERE strategy_id = ?";
+
+    let parametros = params![strategy_id];
+
+    let mut result = conn.query(sql, parametros).await?;
+
+    let row = result.next().await?.unwrap();
+
+    let options = StrategyOptions {
+        id: row.get::<i32>(0)?,
+        strategy_id: row.get::<i32>(1)?,
+        multiples_tardes: if row.get::<i32>(2)? == 1 { true } else { false },
+        trading_direccion: if row.get::<String>(3)? == "long" {
+            TradingDirection::Long
+        } else if row.get::<String>(3)? == "short" {
+            TradingDirection::Short
+        } else {
+            TradingDirection::Both
+        },
+        operar_finde: if row.get::<i32>(4)? == 1 { true } else { false },
+        cerrar_fin_de_dia: if row.get::<i32>(5)? == 1 { true } else { false },
+        hora_fin_de_dia: DateTime::parse_from_rfc3339(&row.get::<String>(6)?)
+            .map(|dt| dt.with_timezone(&Utc))
+            .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
+        cerrar_viernes: if row.get::<i32>(7)? == 1 { true } else { false },
+        hora_cierre_viernes: DateTime::parse_from_rfc3339(&row.get::<String>(8)?)
+            .map(|dt| dt.with_timezone(&Utc))
+            .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
+        rango_operativo: if row.get::<i32>(9)? == 1 { true } else { false },
+        rango_operativo_inicio: DateTime::parse_from_rfc3339(&row.get::<String>(10)?)
+            .map(|dt| dt.with_timezone(&Utc))
+            .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
+        rango_operativo_fin: DateTime::parse_from_rfc3339(&row.get::<String>(11)?)
+            .map(|dt| dt.with_timezone(&Utc))
+            .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
+        cerrar_fin_rango_operativo: if row.get::<i32>(12)? == 1 {
+            true
+        } else {
+            false
+        },
+        activar_cierre_numero_velas: if row.get::<i32>(13)? == 1 {
+            true
+        } else {
+            false
+        },
+        numero_velas_cierre: row.get::<i32>(14)?,
+        cierre_limite_hora: if row.get::<i32>(15)? == 1 {
+            true
+        } else {
+            false
+        },
+        hora_cierre_limite: DateTime::parse_from_rfc3339(&row.get::<String>(16)?)
+            .map(|dt| dt.with_timezone(&Utc))
+            .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
+    };
+
+    Ok(options)
+}
+
+/// Elimina las opciones de estrategia específica por su ID.
+///
+/// # Parámetros
+/// * `id`: ID de las opciones de estrategia a eliminar.
+///
+/// # Returns
+/// * `Result<String>` - Mensaje de éxito si la eliminación es correcta.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la eliminación.
+#[tauri::command]
+pub async fn delete_strategy_option(id: i32) -> Result<String> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![id];
+
+    conn.query("DELETE FROM strategy_options WHERE id = ?", parametros)
+        .await?;
+
+    Ok("Option eliminado con exito!".to_string())
+}
+
+/// Elimina todas las opciones de estrategia asociadas a una estrategia.
+///
+/// # Parámetros
+/// * `strategy_id`: ID de la estrategia cuyas opciones se eliminarán.
+///
+/// # Returns
+/// * `Result<String>` - Mensaje de éxito si la eliminación es correcta.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la eliminación.
+#[tauri::command]
+pub async fn delete_strategy_options_by_strategy(strategy_id: i32) -> Result<String> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
+        .build()
+        .await?;
+
+    let conn = db.connect()?;
+
+    let parametros = params![strategy_id];
+
+    conn.query(
+        "DELETE FROM strategy_options WHERE strategy_id = ?",
+        parametros,
+    )
+    .await?;
+
+    Ok("Options eliminados con exito!".to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1629,6 +2027,28 @@ mod tests {
         let _ = insert_strategy_condition(condition.clone()).await.unwrap();
 
         let _ = delete_strategy_condition_by_strategy(condition.strategy_id).await;
+
+        Ok(())
+    }
+
+    //================================TEST: Options================================
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_crud_strategy_options() -> Result<()> {
+        let option: StrategyOptions = StrategyOptions::new_empty();
+
+        let _ = table_strategy_options().await?;
+
+        let id: i32 = insert_strategy_options(option.clone()).await.unwrap();
+
+        let _ = get_strategy_options_by_id(id).await;
+
+        let _ = get_strategy_options_by_strategy_id(option.strategy_id.clone()).await;
+
+        let _ = delete_strategy_option(id).await;
+
+        let _ = insert_strategy_options(option.clone()).await.unwrap();
+
+        let _ = delete_strategy_options_by_strategy(option.strategy_id).await;
 
         Ok(())
     }
