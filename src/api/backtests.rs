@@ -26,12 +26,17 @@ where
     }
 }
 
-fn get_db_config() -> Result<(String, String, String)> {
+struct TestsActive {
+    pub valor: bool,
+}
+
+fn get_db_config() -> Result<(String, String, String, TestsActive)> {
     dotenv().expect(".env file not found");
     let db_path = env::var("DB_PATH").unwrap();
     let sync_url = env::var("TURSO_SYNC_URL").unwrap();
     let auth_token = env::var("TURSO_AUTH_TOKEN").unwrap();
-    Ok((db_path, sync_url, auth_token))
+    let tests_active = TestsActive { valor: true };
+    Ok((db_path, sync_url, auth_token, tests_active))
 }
 
 /// Crea la tabla de backtests en la base de datos.
@@ -43,11 +48,15 @@ fn get_db_config() -> Result<(String, String, String)> {
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_backtests_cfd() -> Result<String> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -78,11 +87,15 @@ pub async fn table_backtests_cfd() -> Result<String> {
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
 pub async fn insert_backtest_cfd(backtest: Backtest) -> Result<i32> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -105,11 +118,15 @@ pub async fn insert_backtest_cfd(backtest: Backtest) -> Result<i32> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_backtests() -> Result<Vec<Backtest>> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -157,11 +174,15 @@ pub async fn get_backtests() -> Result<Vec<Backtest>> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -211,11 +232,15 @@ pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -265,11 +290,15 @@ pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_backtests_by_tipo(tipo: String) -> Result<Vec<Backtest>> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -319,11 +348,15 @@ pub async fn get_backtests_by_tipo(tipo: String) -> Result<Vec<Backtest>> {
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_backtest(id: i32) -> Result<()> {
-    let (db_path, sync_url, auth_token) = get_db_config()?;
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
-    let db = Builder::new_remote_replica(db_path, sync_url, auth_token)
-        .build()
-        .await?;
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
 
     let conn = db.connect()?;
 
@@ -331,7 +364,7 @@ pub async fn delete_backtest(id: i32) -> Result<()> {
         Ok(_) => {
             match delete_trades_by_backtest(id).await {
                 Ok(_) => {
-                    conn.execute("DELETE FROM backtests WHERE id = ?", [id])
+                    conn.execute("DELETE FROM backtest WHERE id = ?", [id])
                         .await?;
                 }
                 Err(e) => println!("{:?}", e),

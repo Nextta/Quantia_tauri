@@ -11,6 +11,7 @@ Terminadas:
 -Añadir a la api las funciones para strategy_options y crear sus test.
 -Verificar los test y corregir los test fallidos de strategies.
 
+
 TODO:
 -Crear la logica para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.
