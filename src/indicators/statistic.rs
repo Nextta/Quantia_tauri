@@ -432,3 +432,173 @@ pub async fn var(
         .with_column(lit(Series::new(output_name.into(), result.as_slice())))
         .collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    //Para los test crear una carpeta llamada download en la raiz de este proyecto
+    // y llamar a los datos test.csv
+    async fn load_data() -> PolarsResult<DataFrame> {
+        let df = CsvReadOptions::default()
+            .try_into_reader_with_file_path(Some("download/test.csv".into()))
+            .unwrap()
+            .finish()
+            .unwrap();
+        Ok(df)
+    }
+
+    async fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
+        let mut df: DataFrame = df_result.clone();
+        let mut file = std::fs::File::create(path).unwrap();
+        CsvWriter::new(&mut file).finish(&mut df).unwrap();
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_beta() {
+        match load_data().await {
+            Ok(df) => {
+                match beta(df, "close", "open", 20, Some("beta")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_beta.csv").await.unwrap();
+                    }
+                    Err(e) => panic!("Failed to calculate beta: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_correl() {
+        match load_data().await {
+            Ok(df) => {
+                match correl(df, "close", "open", 20, None).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_correl.csv")
+                            .await
+                            .unwrap();
+                    }
+                    Err(e) => panic!("Failed to calculate correl: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_linearreg() {
+        match load_data().await {
+            Ok(df) => {
+                match linearreg(df, "close", 20, None).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_linearreg.csv")
+                            .await
+                            .unwrap();
+                    }
+                    Err(e) => panic!("Failed to calculate linearreg: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_linearreg_angle() {
+        match load_data().await {
+            Ok(df) => {
+                match linearreg_angle(df, "close", 20, None).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_linearreg_angle.csv")
+                            .await
+                            .unwrap();
+                    }
+                    Err(e) => panic!("Failed to calculate linearreg_angle: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_linearreg_intercept() {
+        match load_data().await {
+            Ok(df) => {
+                match linearreg_intercept(df, "close", 20, None).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_linearreg_intercept.csv")
+                            .await
+                            .unwrap();
+                    }
+                    Err(e) => panic!("Failed to calculate linearreg_intercept: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_linearreg_slope() {
+        match load_data().await {
+            Ok(df) => {
+                match linearreg_slope(df, "close", 20, None).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_linearreg_slope.csv")
+                            .await
+                            .unwrap();
+                    }
+                    Err(e) => panic!("Failed to calculate linearreg_slope: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_stddev() {
+        match load_data().await {
+            Ok(df) => {
+                match stddev(df, "close", 20, None, None).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_stddev.csv")
+                            .await
+                            .unwrap();
+                    }
+                    Err(e) => panic!("Failed to calculate stddev: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_tsf() {
+        match load_data().await {
+            Ok(df) => {
+                match tsf(df, "close", 20, None).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_tsf.csv").await.unwrap();
+                    }
+                    Err(e) => panic!("Failed to calculate tsf: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_var() {
+        match load_data().await {
+            Ok(df) => {
+                match var(df, "close", 20, None, None).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_var.csv").await.unwrap();
+                    }
+                    Err(e) => panic!("Failed to calculate var: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+}
