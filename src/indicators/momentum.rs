@@ -133,7 +133,18 @@ fn get_volume(df: &DataFrame) -> PolarsResult<Series> {
 }
 
 /// ADX - Average Directional Movement Index
-/// Default: timeperiod=14
+/// 
+/// Mide la fuerza de la tendencia actual, independientemente de su dirección.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columnas: high, low, close (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 14)
+/// 
+/// # Retorna
+/// DataFrame con columna "adx" añadida
+/// 
+/// # Fórmula
+/// ADX = EMA(DX), donde DX = ((+|DI| - |DI|) / (+|DI| + |DI|)) * 100
 pub async fn adx(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
     let high = get_high(&df)?;
@@ -252,7 +263,18 @@ pub async fn adx(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 }
 
 /// ADXR - Average Directional Movement Index Rating
-/// Default: timeperiod=14
+/// 
+/// Variante del ADX que es menos sensible y produce menos señales falsas.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columnas: high, low, close (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 14)
+/// 
+/// # Retorna
+/// DataFrame con columna "adxr" añadida
+/// 
+/// # Fórmula
+/// ADXR = (ADX + ADX[timeperiod]) / 2
 pub async fn adxr(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
     let adx_df = adx(df.clone(), timeperiod).await?;
@@ -276,7 +298,19 @@ pub async fn adxr(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 }
 
 /// APO - Absolute Price Oscillator
-/// Default: fastperiod=12, slowperiod=26, matype=0 (0=EMA)
+/// 
+/// Diferencia absoluta entre dos medias móviles (EMA rápida y lenta).
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columna: close (case insensitive)
+/// * `fastperiod` - Período de EMA rápida (default: 12)
+/// * `slowperiod` - Período de EMA lenta (default: 26)
+/// 
+/// # Retorna
+/// DataFrame con columna "apo" añadida
+/// 
+/// # Fórmula
+/// APO = EMA(fast) - EMA(slow)
 pub async fn apo(df: DataFrame, fastperiod: usize, slowperiod: usize) -> PolarsResult<DataFrame> {
     let fastperiod = if fastperiod == 0 { 12 } else { fastperiod };
     let slowperiod = if slowperiod == 0 { 26 } else { slowperiod };
@@ -309,7 +343,20 @@ pub async fn apo(df: DataFrame, fastperiod: usize, slowperiod: usize) -> PolarsR
 }
 
 /// AROON - Aroon Indicator
-/// Default: timeperiod=14
+/// 
+/// Identifica cambios de tendencia y la fortaleza de una tendencia.
+/// Devuelve dos líneas: Aroon Up y Aroon Down.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columnas: high, low (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 14)
+/// 
+/// # Retorna
+/// DataFrame con columnas "aroon_up" y "aroon_down" añadidas
+/// 
+/// # Fórmula
+/// Aroon Up = ((timeperiod - períodos desde máximo) / timeperiod) * 100
+/// Aroon Down = ((timeperiod - períodos desde mínimo) / timeperiod) * 100
 pub async fn aroon(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
     let high = get_high(&df)?;
@@ -358,7 +405,18 @@ pub async fn aroon(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> 
 }
 
 /// AROONOSC - Aroon Oscillator
-/// Default: timeperiod=14
+/// 
+/// Oscilador derivado de Aroon que mide la diferencia entre Aroon Up y Aroon Down.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columnas: high, low (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 14)
+/// 
+/// # Retorna
+/// DataFrame con columna "aroonosc" añadida
+/// 
+/// # Fórmula
+/// AROONOSC = Aroon Up - Aroon Down
 pub async fn aroonosc(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
     let aroon_df = aroon(df.clone(), timeperiod).await?;
@@ -390,6 +448,17 @@ pub async fn aroonosc(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFram
 }
 
 /// BOP - Balance Of Power
+/// 
+/// Mide la fuerza del precio de cierre en relación con el rango alto-bajo.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columnas: open, high, low, close (case insensitive)
+/// 
+/// # Retorna
+/// DataFrame con columna "bop" añadida
+/// 
+/// # Fórmula
+/// BOP = (close - open) / (high - low)
 pub async fn bop(df: DataFrame) -> PolarsResult<DataFrame> {
     let open = get_open(&df)?;
     let high = get_high(&df)?;
@@ -428,7 +497,19 @@ pub async fn bop(df: DataFrame) -> PolarsResult<DataFrame> {
 }
 
 /// CCI - Commodity Channel Index
-/// Default: timeperiod=14
+/// 
+/// Identifica retrocesos cíclicos y sobrecompra/sobreventa.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columnas: high, low, close (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 14)
+/// 
+/// # Retorna
+/// DataFrame con columna "cci" añadida
+/// 
+/// # Fórmula
+/// CCI = (Typical Price - SMA(Typical Price)) / (0.015 * Mean Deviation)
+/// Typical Price = (high + low + close) / 3
 pub async fn cci(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
     let high = get_high(&df)?;
@@ -472,7 +553,20 @@ pub async fn cci(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 }
 
 /// CMO - Chande Momentum Oscillator
-/// Default: timeperiod=14
+/// 
+/// Oscilador de momentum que mide la fuerza de los movimientos alcistas vs bajistas.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columna: close (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 14)
+/// 
+/// # Retorna
+/// DataFrame con columna "cmo" añadida
+/// 
+/// # Fórmula
+/// CMO = 100 * ((sum_up - sum_down) / (sum_up + sum_down))
+/// sum_up = suma de precios que subieron
+/// sum_down = suma de precios que bajaron
 pub async fn cmo(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
     let close = get_close(&df)?;
@@ -509,7 +603,18 @@ pub async fn cmo(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 }
 
 /// DX - Directional Movement Index
-/// Default: timeperiod=14
+/// 
+/// Mide la fuerza de la diferencia entre +DI y -DI, ignorando la dirección.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columnas: high, low, close (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 14)
+/// 
+/// # Retorna
+/// DataFrame con columna "dx" añadida
+/// 
+/// # Fórmula
+/// DX = (|+DI - -DI| / (+DI + -DI)) * 100
 pub async fn dx(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
     let high = get_high(&df)?;
@@ -590,7 +695,23 @@ pub async fn dx(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 }
 
 /// MACD - Moving Average Convergence/Divergence
-/// Default: fastperiod=12, slowperiod=26, signalperiod=9
+/// 
+/// Indicador de tendencia que muestra la relación entre dos EMAs.
+/// Devuelve: MACD line, Signal line, y Histogram.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columna: close (case insensitive)
+/// * `fastperiod` - Período de EMA rápida (default: 12)
+/// * `slowperiod` - Período de EMA lenta (default: 26)
+/// * `signalperiod` - Período de EMA de señal (default: 9)
+/// 
+/// # Retorna
+/// DataFrame con columnas "macd", "macd_signal" y "macd_hist" añadidas
+/// 
+/// # Fórmula
+/// MACD = EMA(fast) - EMA(slow)
+/// Signal = EMA(MACD, signalperiod)
+/// Histogram = MACD - Signal
 pub async fn macd(
     df: DataFrame,
     fastperiod: usize,
@@ -653,7 +774,20 @@ pub async fn macd(
 }
 
 /// MACDEXT - MACD with controllable MA type
-/// Default: fastperiod=12, slowperiod=26, signalperiod=9, fastmatype=0, slowmatype=0, signalmatype=0
+/// 
+/// MACD con tipo de media móvil configurable para todas las componentes.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columna: close (case insensitive)
+/// * `fastperiod` - Período de EMA rápida (default: 12)
+/// * `slowperiod` - Período de EMA lenta (default: 26)
+/// * `signalperiod` - Período de EMA de señal (default: 9)
+/// * `fastmatype` - Tipo de media para EMA rápida: 0=EMA, 1=SMA (default: 0)
+/// * `slowmatype` - Tipo de media para EMA lenta: 0=EMA, 1=SMA (default: 0)
+/// * `signalmatype` - Tipo de media para señal: 0=EMA, 1=SMA (default: 0)
+/// 
+/// # Retorna
+/// DataFrame con columnas "macd", "macd_signal" y "macd_hist" añadidas
 pub async fn macdext(
     df: DataFrame,
     fastperiod: usize,
@@ -733,13 +867,36 @@ pub async fn macdext(
 }
 
 /// MACDFIX - Moving Average Convergence/Divergence Fix 12/26
-/// Default: signalperiod=9
+/// 
+/// Variante del MACD con períodos fijos en 12 y 26.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columna: close (case insensitive)
+/// * `signalperiod` - Período de EMA de señal (default: 9)
+/// 
+/// # Retorna
+/// DataFrame con columnas "macd", "macd_signal" y "macd_hist" añadidas
 pub async fn macdfix(df: DataFrame, signalperiod: usize) -> PolarsResult<DataFrame> {
     macd(df, 12, 26, signalperiod).await
 }
 
 /// MFI - Money Flow Index
-/// Default: timeperiod=14
+/// 
+/// Indicador de volumen que mide la fuerza del flujo de dinero.
+/// Combina precio y volumen para identificar sobrecompra/sobreventa.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columnas: high, low, close, volume (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 14)
+/// 
+/// # Retorna
+/// DataFrame con columna "mfi" añadida
+/// 
+/// # Fórmula
+/// Typical Price = (high + low + close) / 3
+/// Money Flow = Typical Price * Volume
+/// Money Ratio = Positive Flow / Negative Flow
+/// MFI = 100 - (100 / (1 + Money Ratio))
 pub async fn mfi(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
     let high = get_high(&df)?;
@@ -799,7 +956,18 @@ pub async fn mfi(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 }
 
 /// MINUS_DI - Minus Directional Indicator
-/// Default: timeperiod=14
+/// 
+/// Indica la fuerza de la tendencia bajista.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columnas: high, low, close (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 14)
+/// 
+/// # Retorna
+/// DataFrame con columna "minus_di" añadida
+/// 
+/// # Fórmula
+/// -DI = (Smoothed -DM / Smoothed TR) * 100
 pub async fn minus_di(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
     let high = get_high(&df)?;
@@ -864,7 +1032,18 @@ pub async fn minus_di(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFram
 }
 
 /// MINUS_DM - Minus Directional Movement
-/// Default: timeperiod=14
+/// 
+/// Movimiento direccional negativo suavizado (RMA).
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columnas: high, low (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 14)
+/// 
+/// # Retorna
+/// DataFrame con columna "minus_dm" añadida
+/// 
+/// # Fórmula
+/// -DM = RMA(Max(high - low, high - prev_close, prev_close - low))
 pub async fn minus_dm(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
     let high = get_high(&df)?;
@@ -901,7 +1080,18 @@ pub async fn minus_dm(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFram
 }
 
 /// MOM - Momentum
-/// Default: timeperiod=10
+/// 
+/// Mide la tasa de cambio del precio en un período.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columna: close (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 10)
+/// 
+/// # Retorna
+/// DataFrame con columna "mom" añadida
+/// 
+/// # Fórmula
+/// MOM = close[i] - close[i - timeperiod]
 pub async fn mom(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 10 } else { timeperiod };
     let close = get_close(&df)?;
@@ -923,7 +1113,18 @@ pub async fn mom(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 }
 
 /// PLUS_DI - Plus Directional Indicator
-/// Default: timeperiod=14
+/// 
+/// Indica la fuerza de la tendencia alcista.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columnas: high, low, close (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 14)
+/// 
+/// # Retorna
+/// DataFrame con columna "plus_di" añadida
+/// 
+/// # Fórmula
+/// +DI = (Smoothed +DM / Smoothed TR) * 100
 pub async fn plus_di(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
     let high = get_high(&df)?;
@@ -988,7 +1189,18 @@ pub async fn plus_di(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame
 }
 
 /// PLUS_DM - Plus Directional Movement
-/// Default: timeperiod=14
+/// 
+/// Movimiento direccional positivo suavizado (RMA).
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columnas: high, low (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 14)
+/// 
+/// # Retorna
+/// DataFrame con columna "plus_dm" añadida
+/// 
+/// # Fórmula
+/// +DM = RMA(Max(high - low, high - prev_close, prev_close - low))
 pub async fn plus_dm(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
     let high = get_high(&df)?;
@@ -1025,7 +1237,19 @@ pub async fn plus_dm(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame
 }
 
 /// PPO - Percentage Price Oscillator
-/// Default: fastperiod=12, slowperiod=26, matype=0 (0=EMA)
+/// 
+/// Oscilador de precio porcentual que muestra la diferencia entre dos EMAs.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columna: close (case insensitive)
+/// * `fastperiod` - Período de EMA rápida (default: 12)
+/// * `slowperiod` - Período de EMA lenta (default: 26)
+/// 
+/// # Retorna
+/// DataFrame con columna "ppo" añadida
+/// 
+/// # Fórmula
+/// PPO = ((EMA(fast) - EMA(slow)) / EMA(slow)) * 100
 pub async fn ppo(df: DataFrame, fastperiod: usize, slowperiod: usize) -> PolarsResult<DataFrame> {
     let fastperiod = if fastperiod == 0 { 12 } else { fastperiod };
     let slowperiod = if slowperiod == 0 { 26 } else { slowperiod };
@@ -1057,8 +1281,19 @@ pub async fn ppo(df: DataFrame, fastperiod: usize, slowperiod: usize) -> PolarsR
     Ok(result_df)
 }
 
-/// ROC - Rate of change : ((price/prevPrice)-1)*100
-/// Default: timeperiod=10
+/// ROC - Rate of change
+/// 
+/// Mide el cambio porcentual del precio desde hace timeperiod períodos.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columna: close (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 10)
+/// 
+/// # Retorna
+/// DataFrame con columna "roc" añadida
+/// 
+/// # Fórmula
+/// ROC = ((close[i] / close[i - timeperiod]) - 1) * 100
 pub async fn roc(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 10 } else { timeperiod };
     let close = get_close(&df)?;
@@ -1081,8 +1316,19 @@ pub async fn roc(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     Ok(result_df)
 }
 
-/// ROCP - Rate of change Percentage: (price-prevPrice)/prevPrice
-/// Default: timeperiod=10
+/// ROCP - Rate of change Percentage
+/// 
+/// Variante del ROC que devuelve el cambio decimal en lugar de porcentual.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columna: close (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 10)
+/// 
+/// # Retorna
+/// DataFrame con columna "rocp" añadida
+/// 
+/// # Fórmula
+/// ROCP = (close[i] - close[i - timeperiod]) / close[i - timeperiod]
 pub async fn rocp(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 10 } else { timeperiod };
     let close = get_close(&df)?;
@@ -1106,8 +1352,19 @@ pub async fn rocp(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     Ok(result_df)
 }
 
-/// ROCR - Rate of change ratio: (price/prevPrice)
-/// Default: timeperiod=10
+/// ROCR - Rate of change ratio
+/// 
+/// Ratio de cambio de precio entre el precio actual y el de hace timeperiod períodos.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columna: close (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 10)
+/// 
+/// # Retorna
+/// DataFrame con columna "rocr" añadida
+/// 
+/// # Fórmula
+/// ROCR = close[i] / close[i - timeperiod]
 pub async fn rocr(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 10 } else { timeperiod };
     let close = get_close(&df)?;
@@ -1130,8 +1387,19 @@ pub async fn rocr(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     Ok(result_df)
 }
 
-/// ROCR100 - Rate of change ratio 100 scale: (price/prevPrice)*100
-/// Default: timeperiod=10
+/// ROCR100 - Rate of change ratio 100 scale
+/// 
+/// ROCR multiplicado por 100 para dar una escala más legible.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columna: close (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 10)
+/// 
+/// # Retorna
+/// DataFrame con columna "rocr100" añadida
+/// 
+/// # Fórmula
+/// ROCR100 = (close[i] / close[i - timeperiod]) * 100
 pub async fn rocr100(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 10 } else { timeperiod };
     let close = get_close(&df)?;
@@ -1155,7 +1423,20 @@ pub async fn rocr100(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame
 }
 
 /// RSI - Relative Strength Index
-/// Default: timeperiod=14
+/// 
+/// Oscilador de momentum que mide la velocidad y magnitud de los cambios de precio.
+/// Escala de 0-100: >70 sobrecompra, <70 sobreventa.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columna: close (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 14)
+/// 
+/// # Retorna
+/// DataFrame con columna "rsi" añadida
+/// 
+/// # Fórmula
+/// RSI = 100 - (100 / (1 + RS))
+/// RS = Average Gain / Average Loss
 pub async fn rsi(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
     let close = get_close(&df)?;
@@ -1204,7 +1485,24 @@ pub async fn rsi(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 }
 
 /// STOCH - Stochastic
-/// Default: fastk_period=5, slowk_period=3, slowk_matype=0, slowd_period=3, slowd_matype=0
+/// 
+/// Oscilador que compara el precio de cierre con el rango alto-bajo en un período.
+/// Devuelve %K (lenta) y %D.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columnas: high, low, close (case insensitive)
+/// * `fastk_period` - Período para cálculo de %K rápido (default: 5)
+/// * `slowk_period` - Período de suavizado de %K (default: 3)
+/// * `slowk_matype` - Tipo de media para %K: 0=EMA, 1=SMA (default: 0)
+/// * `slowd_period` - Período de cálculo de %D (default: 3)
+/// * `slowd_matype` - Tipo de media para %D: 0=EMA, 1=SMA (default: 0)
+/// 
+/// # Retorna
+/// DataFrame con columnas "slow_k" y "slow_d" añadidas
+/// 
+/// # Fórmula
+/// %K = ((close - lowest_low) / (highest_high - lowest_low)) * 100
+/// %D = SMA(%K, slowd_period)
 pub async fn stoch(
     df: DataFrame,
     fastk_period: usize,
@@ -1272,7 +1570,21 @@ pub async fn stoch(
 }
 
 /// STOCHF - Stochastic Fast
-/// Default: fastk_period=5, fastd_period=3, fastd_matype=0
+/// 
+/// Versión rápida del Stochastic que no suaviza %K.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columnas: high, low, close (case insensitive)
+/// * `fastk_period` - Período para cálculo de %K rápido (default: 5)
+/// * `fastd_period` - Período de cálculo de %D (default: 3)
+/// * `fastd_matype` - Tipo de media para %D: 0=EMA, 1=SMA (default: 0)
+/// 
+/// # Retorna
+/// DataFrame con columnas "fast_k" y "fast_d" añadidas
+/// 
+/// # Fórmula
+/// %K = ((close - lowest_low) / (highest_high - lowest_low)) * 100
+/// %D = EMA(%K, fastd_period)
 pub async fn stochf(
     df: DataFrame,
     fastk_period: usize,
@@ -1331,7 +1643,22 @@ pub async fn stochf(
 }
 
 /// STOCHRSI - Stochastic Relative Strength Index
-/// Default: timeperiod=14, fastk_period=3, fastd_period=3, fastd_matype=0
+/// 
+/// Aplica el análisis Stochastic al RSI en lugar de al precio.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columna: close (case insensitive)
+/// * `timeperiod` - Período de cálculo del RSI (default: 14)
+/// * `fastk_period` - Período para cálculo de %K rápido (default: 3)
+/// * `fastd_period` - Período de cálculo de %D (default: 3)
+/// * `fastd_matype` - Tipo de media para %D: 0=EMA, 1=SMA (default: 0)
+/// 
+/// # Retorna
+/// DataFrame con columnas "stochrsi_k" y "stochrsi_d" añadidas
+/// 
+/// # Fórmula
+/// %K = (RSI - lowest_RSI) / (highest_RSI - lowest_RSI)
+/// %D = SMA(%K, fastd_period)
 pub async fn stochrsi(
     df: DataFrame,
     timeperiod: usize,
@@ -1385,8 +1712,21 @@ pub async fn stochrsi(
     Ok(result_df)
 }
 
-/// TRIX - 1-day Rate-Of-Change (ROC) of a Triple Smooth EMA
-/// Default: timeperiod=30
+/// TRIX - Triple EMA Rate of Change
+/// 
+/// Oscilador de momento que muestra el ritmo de cambio de una triple EMA.
+/// Fija tendencias a largo plazo y filtra fluctuaciones de precio menores.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columna: close (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 30)
+/// 
+/// # Retorna
+/// DataFrame con columna "trix" añadida
+/// 
+/// # Fórmula
+/// TRIX = ((EMA3[t] - EMA3[t-1]) / EMA3[t-1]) * 100
+/// donde EMA3 = EMA(EMA(EMA(close)))
 pub async fn trix(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 30 } else { timeperiod };
     let close = get_close(&df)?;
@@ -1414,7 +1754,23 @@ pub async fn trix(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 }
 
 /// ULTOSC - Ultimate Oscillator
-/// Default: timeperiod1=7, timeperiod2=14, timeperiod3=28
+/// 
+/// Oscilador multi-tiempo que reduce señales falsas usando tres períodos diferentes.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columnas: high, low, close (case insensitive)
+/// * `timeperiod1` - Período corto (default: 7)
+/// * `timeperiod2` - Período medio (default: 14)
+/// * `timeperiod3` - Período largo (default: 28)
+/// 
+/// # Retorna
+/// DataFrame con columna "ultosc" añadida
+/// 
+/// # Fórmula
+/// BP = close - min(low, prev_close)
+/// TR = max(high, prev_close) - min(low, prev_close)
+/// Avg = sum(BP) / sum(TR)
+/// ULTOSC = 100 * (4*Avg1 + 2*Avg2 + Avg3) / 7
 pub async fn ultosc(
     df: DataFrame,
     timeperiod1: usize,
@@ -1484,7 +1840,19 @@ pub async fn ultosc(
 }
 
 /// WILLR - Williams' %R
-/// Default: timeperiod=14
+/// 
+/// Oscilador de momento que mide el nivel de cierre respecto al máximo-mínimo.
+/// Escala invertida: -100 = sobreventa, 0 = sobrecompra.
+/// 
+/// # Parámetros
+/// * `df` - DataFrame con columnas: high, low, close (case insensitive)
+/// * `timeperiod` - Período de cálculo (default: 14)
+/// 
+/// # Retorna
+/// DataFrame con columna "willr" añadida
+/// 
+/// # Fórmula
+/// %R = ((highest_high - close) / (highest_high - lowest_low)) * -100
 pub async fn willr(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
     let high = get_high(&df)?;
