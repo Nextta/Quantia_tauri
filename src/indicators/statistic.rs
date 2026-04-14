@@ -59,7 +59,7 @@ pub async fn beta(
     }
 
     df.lazy()
-        .with_column(Series::new(output_name, result))
+        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
         .collect()
 }
 
@@ -113,7 +113,7 @@ pub async fn correl(
     }
 
     df.lazy()
-        .with_column(Series::new(output_name, result))
+        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
         .collect()
 }
 
@@ -160,7 +160,7 @@ pub async fn linearreg(
     }
 
     df.lazy()
-        .with_column(Series::new(output_name, result))
+        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
         .collect()
 }
 
@@ -205,7 +205,7 @@ pub async fn linearreg_angle(
     }
 
     df.lazy()
-        .with_column(Series::new(output_name, result))
+        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
         .collect()
 }
 
@@ -251,7 +251,7 @@ pub async fn linearreg_intercept(
     }
 
     df.lazy()
-        .with_column(Series::new(output_name, result))
+        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
         .collect()
 }
 
@@ -296,7 +296,7 @@ pub async fn linearreg_slope(
     }
 
     df.lazy()
-        .with_column(Series::new(output_name, result))
+        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
         .collect()
 }
 
@@ -339,7 +339,7 @@ pub async fn stddev(
     }
 
     df.lazy()
-        .with_column(Series::new(output_name, result))
+        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
         .collect()
 }
 
@@ -386,7 +386,7 @@ pub async fn tsf(
     }
 
     df.lazy()
-        .with_column(Series::new(output_name, result))
+        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
         .collect()
 }
 
@@ -429,6 +429,6 @@ pub async fn var(
     }
 
     df.lazy()
-        .with_column(Series::new(output_name, result))
+        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
         .collect()
 }

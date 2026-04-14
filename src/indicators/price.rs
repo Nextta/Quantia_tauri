@@ -1,17 +1,23 @@
 use polars::prelude::*;
 
-pub async fn avg_price(df: DataFrame) -> PolarsResult<DataFrame> {
+/// Lista de indicadores:
+/// AVGPRICE             Average Price
+/// MEDPRICE             Median Price
+/// TYPPRICE             Typical Price
+/// WCLPRICE             Weighted Close Price
+
+pub async fn avgprice(df: DataFrame) -> PolarsResult<DataFrame> {
     Ok(df)
 }
 
-pub async fn ht_dcperiod(df: DataFrame) -> PolarsResult<DataFrame> {
+pub async fn medprice(df: DataFrame) -> PolarsResult<DataFrame> {
     Ok(df)
 }
 
-pub async fn ht_dcperiod(df: DataFrame) -> PolarsResult<DataFrame> {
+pub async fn typprice(df: DataFrame) -> PolarsResult<DataFrame> {
     Ok(df)
 }
 
-pub async fn ht_dcperiod(df: DataFrame) -> PolarsResult<DataFrame> {
+pub async fn wclprice(df: DataFrame) -> PolarsResult<DataFrame> {
     Ok(df)
 }
