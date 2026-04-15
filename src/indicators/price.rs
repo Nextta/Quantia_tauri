@@ -251,3 +251,86 @@ pub async fn wclprice(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
     result_df.with_column(wclprice_series.into())?;
     Ok(result_df)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    //Para los test crear una carpeta llamada download en la raiz de este proyecto
+    // y llamar a los datos test.csv
+    async fn load_data() -> PolarsResult<DataFrame> {
+        let df = CsvReadOptions::default()
+            .try_into_reader_with_file_path(Some("download/test.csv".into()))
+            .unwrap()
+            .finish()
+            .unwrap();
+        Ok(df)
+    }
+
+    async fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
+        let mut df: DataFrame = df_result.clone();
+        let mut file = std::fs::File::create(path).unwrap();
+        CsvWriter::new(&mut file).finish(&mut df).unwrap();
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_avgprice() {
+        match load_data().await {
+            Ok(df) => match avgprice(df, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_avgprice.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute avgprice: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_medprice() {
+        match load_data().await {
+            Ok(df) => match medprice(df, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_medprice.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute medprice: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_typprice() {
+        match load_data().await {
+            Ok(df) => match typprice(df, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_typprice.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute typprice: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_wclprice() {
+        match load_data().await {
+            Ok(df) => match wclprice(df, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_wclprice.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute wclprice: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+}
