@@ -50,12 +50,40 @@ fn calc_sma(values: &[f64], period: usize) -> Vec<f64> {
         return result;
     }
 
-    let mut sum: f64 = values[..period].iter().sum();
-    result[period - 1] = sum / period as f64;
+    // Initialize - skip NaN values
+    let init: f64 = values[..period]
+        .iter()
+        .filter(|v| !v.is_nan())
+        .sum::<f64>();
+    let valid_init = values[..period].iter().filter(|v| !v.is_nan()).count();
+    
+    if valid_init > 0 {
+        result[period - 1] = init / valid_init as f64;
+    } else {
+        return result;
+    }
 
+    // Fill remaining values - track valid count for rolling window
+    let mut sum = init;
+    let mut valid_count = valid_init;
+    
     for i in period..n {
-        sum += values[i] - values[i - period];
-        result[i] = sum / period as f64;
+        let prev_val = values[i - period];
+        let curr_val = values[i];
+        
+        // Adjust sum and valid_count based on NaN values
+        if !prev_val.is_nan() {
+            sum -= prev_val;
+            valid_count -= 1;
+        }
+        if !curr_val.is_nan() {
+            sum += curr_val;
+            valid_count += 1;
+        }
+        
+        if valid_count > 0 {
+            result[i] = sum / valid_count as f64;
+        }
     }
 
     result
@@ -72,12 +100,38 @@ fn calc_ema(values: &[f64], period: usize) -> Vec<f64> {
 
     let multiplier = 2.0 / (period as f64 + 1.0);
 
-    // Initialize with SMA
-    let init_sum: f64 = values[..period].iter().sum();
-    result[period - 1] = init_sum / period as f64;
+    // Find first valid value to start EMA
+    let first_valid = values.iter().position(|v| !v.is_nan());
+    if first_valid.is_none() {
+        return result;
+    }
+    let start_idx = first_valid.unwrap();
+    
+    // Need at least 'period' total valid values
+    let valid_count = values[start_idx..].iter().filter(|v| !v.is_nan()).count();
+    if valid_count < period {
+        return result;
+    }
 
-    for i in period..n {
-        result[i] = (values[i] - result[i - 1]) * multiplier + result[i - 1];
+    // Initialize with SMA of first 'period' valid values
+    let init_vals: Vec<f64> = values[start_idx..]
+        .iter()
+        .filter(|v| !v.is_nan())
+        .take(period)
+        .copied()
+        .collect();
+    let init_sum: f64 = init_vals.iter().sum();
+    result[start_idx + period - 1] = init_sum / period as f64;
+
+    // Fill from start_idx + period onwards
+    let mut last_valid = result[start_idx + period - 1];
+    for i in (start_idx + period)..n {
+        if values[i].is_nan() {
+            result[i] = f64::NAN;
+        } else {
+            result[i] = (values[i] - last_valid) * multiplier + last_valid;
+            last_valid = result[i];
+        }
     }
 
     result
@@ -131,6 +185,9 @@ impl MAType {
 /// * `nbdevup` - Desviaciones estándar para banda superior (default: 2.0)
 /// * `nbdevdn` - Desviaciones estándar para banda inferior (default: 2.0)
 /// * `matype` - Tipo de media móvil (0=SMA, default: 0)
+/// * `output_col_bb_upper` - Nombre de la columna para la banda superior (default: "bb_upper")
+/// * `output_col_bb_middle` - Nombre de la columna para la banda media (default: "bb_middle")
+/// * `output_col_bb_lower` - Nombre de la columna para la banda inferior (default: "bb_lower")
 ///
 /// # Retorna
 /// DataFrame con columnas "bb_upper", "bb_middle", "bb_lower" añadidas
@@ -145,11 +202,17 @@ pub async fn bbands(
     nbdevup: Option<f64>,
     nbdevdn: Option<f64>,
     matype: Option<i32>,
+    output_col_bb_upper: Option<&str>,
+    output_col_bb_middle: Option<&str>,
+    output_col_bb_lower: Option<&str>,
 ) -> PolarsResult<DataFrame> {
     let timeperiod = timeperiod.unwrap_or(5);
     let nbdevup = nbdevup.unwrap_or(2.0);
     let nbdevdn = nbdevdn.unwrap_or(2.0);
     let _matype = MAType::from_i32(matype.unwrap_or(0));
+    let output_col_bb_upper = output_col_bb_upper.unwrap_or("bb_upper");
+    let output_col_bb_middle = output_col_bb_middle.unwrap_or("bb_middle");
+    let output_col_bb_lower = output_col_bb_lower.unwrap_or("bb_lower");
 
     let close = get_close(&df)?;
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
@@ -174,9 +237,9 @@ pub async fn bbands(
         }
     }
 
-    let upper_series = Series::new("bb_upper".into(), &upper);
-    let middle_series = Series::new("bb_middle".into(), &middle);
-    let lower_series = Series::new("bb_lower".into(), &lower);
+    let upper_series = Series::new(output_col_bb_upper.into(), &upper);
+    let middle_series = Series::new(output_col_bb_middle.into(), &middle);
+    let lower_series = Series::new(output_col_bb_lower.into(), &lower);
 
     let mut result_df = df;
     result_df
@@ -1049,11 +1112,19 @@ pub async fn sar(
         }
 
         if reversed {
-            // Reverse position
+            // Reverse position - set SAR to previous extreme point
             is_long = !is_long;
             af = acceleration;
             ep = if is_long { high_vals[i] } else { low_vals[i] };
-            sar_vals[i] = ep;
+            // On reversal, SAR equals prior extreme point
+            sar_vals[i] = if is_long {
+                high_vals[i - 1].max(high_vals[i - 2])
+            } else {
+                low_vals[i - 1].min(low_vals[i - 2])
+            };
+            // Reset for next iteration
+            let next_sar = sar_vals[i] + af * (ep - sar_vals[i]);
+            sar_vals[i] = next_sar;
         } else {
             // Update extreme point and acceleration factor
             if is_long && high_vals[i] > ep {
@@ -1474,4 +1545,258 @@ fn calc_wma(values: &[f64], period: usize) -> Vec<f64> {
     }
 
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    //Para los test crear una carpeta llamada download en la raiz de este proyecto
+    // y llamar a los datos test.csv
+    async fn load_data() -> PolarsResult<DataFrame> {
+        let df = CsvReadOptions::default()
+            .try_into_reader_with_file_path(Some("download/test.csv".into()))
+            .unwrap()
+            .finish()
+            .unwrap();
+        Ok(df)
+    }
+
+    async fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
+        let mut df: DataFrame = df_result.clone();
+        let mut file = std::fs::File::create(path).unwrap();
+        CsvWriter::new(&mut file).finish(&mut df).unwrap();
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_adx() {
+        match load_data().await {
+            Ok(df) => match bbands(df, None, None, None, None, None, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_bbands.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute bbands: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_dema() {
+        match load_data().await {
+            Ok(df) => match dema(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_dema.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute dema: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_ema() {
+        match load_data().await {
+            Ok(df) => match ema(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_ema.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute ema: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_ht_trendline() {
+        match load_data().await {
+            Ok(df) => match ht_trendline(df, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_ht_trendline.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute ht_trendline: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_kama() {
+        match load_data().await {
+            Ok(df) => match kama(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_kama.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute kama: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_ma() {
+        match load_data().await {
+            Ok(df) => match ma(df, None, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_ma.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute ma: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_mama() {
+        match load_data().await {
+            Ok(df) => match mama(df, None, None, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_mama.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute mama: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_mavp() {
+        match load_data().await {
+            Ok(df) => match mavp(df, None, None, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_mavp.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute mavp: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_midpoint() {
+        match load_data().await {
+            Ok(df) => match midpoint(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_midpoint.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute midpoint: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_midprice() {
+        match load_data().await {
+            Ok(df) => match midprice(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_midprice.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute midprice: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_sar() {
+        match load_data().await {
+            Ok(df) => match sar(df, None, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_sar.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute sar: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_sarext() {
+        match load_data().await {
+            Ok(df) => match sarext(df, None, None, None, None, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_sarext.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute sarext: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_sma() {
+        match load_data().await {
+            Ok(df) => match sma(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_sma.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute sma: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_t3() {
+        match load_data().await {
+            Ok(df) => match t3(df, None, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_t3.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute t3: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_tema() {
+        match load_data().await {
+            Ok(df) => match tema(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_tema.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute tema: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_trima() {
+        match load_data().await {
+            Ok(df) => match trima(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_trima.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute trima: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_wma() {
+        match load_data().await {
+            Ok(df) => match wma(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_wma.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute wma: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
 }
