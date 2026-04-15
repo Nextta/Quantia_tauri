@@ -1,3 +1,4 @@
+use libsql::Op;
 use polars::prelude::*;
 
 /// Lista de indicadores:
@@ -35,29 +36,44 @@ use polars::prelude::*;
 // Helper function: Exponential Moving Average
 fn ema_series(values: &Series, period: usize) -> Series {
     let multiplier = 2.0 / (period as f64 + 1.0);
-    let mut ema_values: Vec<f64> = Vec::with_capacity(values.len());
-    let mut current_ema: f64 = 0.0;
-    let mut initialized = false;
+    let ca: ChunkedArray<Float64Type> = values.f64().unwrap().clone();
+    let n = ca.len();
+    let mut ema_values: Vec<f64> = vec![f64::NAN; n];
 
-    // Get f64 values from series
-    let ca: &ChunkedArray<Float64Type> = values.f64().unwrap();
-    let values_vec: Vec<f64> = ca.into_no_null_iter().collect();
+    // Find the first `period` valid values to initialize
+    let mut valid_count = 0;
+    let mut init_sum: f64 = 0.0;
+    let mut start_idx = 0;
 
-    // Initialize with SMA
-    if values_vec.len() >= period {
-        let sum: f64 = values_vec[..period].iter().sum();
-        current_ema = sum / period as f64;
-        initialized = true;
+    for i in 0..n {
+        if let Some(val) = ca.get(i) {
+            if !val.is_nan() {
+                init_sum += val;
+                valid_count += 1;
+
+                if valid_count == period {
+                    // Initialize EMA with SMA
+                    ema_values[i] = init_sum / period as f64;
+                    start_idx = i;
+                    break;
+                }
+            }
+        }
     }
 
-    for (i, &val) in values_vec.iter().enumerate() {
-        if i < period - 1 {
-            ema_values.push(f64::NAN);
-        } else if i == period - 1 {
-            ema_values.push(current_ema);
-        } else {
-            current_ema = val * multiplier + current_ema * (1.0 - multiplier);
-            ema_values.push(current_ema);
+    // If we couldn't initialize, return all NaN
+    if valid_count < period {
+        return Series::new("ema".into(), &ema_values);
+    }
+
+    // Continue EMA from start_idx + 1
+    let mut current_ema = ema_values[start_idx];
+    for i in (start_idx + 1)..n {
+        if let Some(val) = ca.get(i) {
+            if !val.is_nan() {
+                current_ema = val * multiplier + current_ema * (1.0 - multiplier);
+                ema_values[i] = current_ema;
+            }
         }
     }
 
@@ -66,16 +82,29 @@ fn ema_series(values: &Series, period: usize) -> Series {
 
 // Helper function: Simple Moving Average
 fn sma_series(values: &Series, period: usize) -> Series {
-    let ca: &ChunkedArray<Float64Type> = values.f64().unwrap();
-    let values_vec: Vec<f64> = ca.into_no_null_iter().collect();
-    let mut sma_values: Vec<f64> = Vec::with_capacity(values_vec.len());
+    let ca: ChunkedArray<Float64Type> = values.f64().unwrap().clone();
+    let n = ca.len();
+    let mut sma_values: Vec<f64> = vec![f64::NAN; n];
 
-    for i in 0..values_vec.len() {
-        if i < period - 1 {
-            sma_values.push(f64::NAN);
-        } else {
-            let sum: f64 = values_vec[i - period + 1..=i].iter().sum();
-            sma_values.push(sum / period as f64);
+    for i in (period - 1)..n {
+        let mut sum = 0.0;
+        let mut valid = true;
+        for j in (i - period + 1)..=i {
+            if let Some(val) = ca.get(j) {
+                if !val.is_nan() {
+                    sum += val;
+                } else {
+                    valid = false;
+                    break;
+                }
+            } else {
+                valid = false;
+                break;
+            }
+        }
+
+        if valid {
+            sma_values[i] = sum / period as f64;
         }
     }
 
@@ -85,21 +114,42 @@ fn sma_series(values: &Series, period: usize) -> Series {
 // Helper function: Wilder's RMA (Running Moving Average)
 fn rma_series(values: &Series, period: usize) -> Series {
     let alpha = 1.0 / period as f64;
-    let ca: &ChunkedArray<Float64Type> = values.f64().unwrap();
-    let values_vec: Vec<f64> = ca.into_no_null_iter().collect();
-    let mut rma_values: Vec<f64> = Vec::with_capacity(values_vec.len());
-    let mut current_rma: f64 = 0.0;
+    let ca: ChunkedArray<Float64Type> = values.f64().unwrap().clone();
+    let n = ca.len();
+    let mut rma_values: Vec<f64> = vec![f64::NAN; n];
 
-    for i in 0..values_vec.len() {
-        if i < period - 1 {
-            rma_values.push(f64::NAN);
-        } else if i == period - 1 {
-            let sum: f64 = values_vec[..period].iter().sum();
-            current_rma = sum / period as f64;
-            rma_values.push(current_rma);
-        } else {
-            current_rma = values_vec[i] * alpha + current_rma * (1.0 - alpha);
-            rma_values.push(current_rma);
+    // Find the first `period` valid values to initialize
+    let mut valid_count = 0;
+    let mut init_sum: f64 = 0.0;
+    let mut start_idx = 0;
+
+    for i in 0..n {
+        if let Some(val) = ca.get(i) {
+            if !val.is_nan() {
+                init_sum += val;
+                valid_count += 1;
+
+                if valid_count == period {
+                    rma_values[i] = init_sum / period as f64;
+                    start_idx = i;
+                    break;
+                }
+            }
+        }
+    }
+
+    if valid_count < period {
+        return Series::new("rma".into(), &rma_values);
+    }
+
+    // Continue RMA from start_idx + 1
+    let mut current_rma = rma_values[start_idx];
+    for i in (start_idx + 1)..n {
+        if let Some(val) = ca.get(i) {
+            if !val.is_nan() {
+                current_rma = val * alpha + current_rma * (1.0 - alpha);
+                rma_values[i] = current_rma;
+            }
         }
     }
 
@@ -540,6 +590,7 @@ pub async fn bop(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFr
 /// # Parámetros
 /// * `df` - DataFrame con columnas: high, low, close (case insensitive)
 /// * `timeperiod` - Período de cálculo (default: 14)
+/// * `output_col` - Nombre de la columna de salida (default: "cci")
 ///
 /// # Retorna
 /// DataFrame con columna "cci" añadida
@@ -547,8 +598,14 @@ pub async fn bop(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFr
 /// # Fórmula
 /// CCI = (Typical Price - SMA(Typical Price)) / (0.015 * Mean Deviation)
 /// Typical Price = (high + low + close) / 3
-pub async fn cci(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
+pub async fn cci(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(14);
+    let timeperiod = timeperiod.max(2); // Prevent overflow
+    let output_col = output_col.unwrap_or("cci");
     let high = get_high(&df)?;
     let low = get_low(&df)?;
     let close = get_close(&df)?;
@@ -557,18 +614,15 @@ pub async fn cci(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
     let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
 
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
+    let n = df.height();
+    let mut typical_price: Vec<f64> = vec![f64::NAN; n];
 
-    let typical_price: Vec<f64> = high_vals
-        .iter()
-        .zip(&low_vals)
-        .zip(&close_vals)
-        .map(|((h, l), c)| (h + l + c) / 3.0)
-        .collect();
+    for i in 0..n {
+        if let (Some(h), Some(l), Some(c)) = (high_ca.get(i), low_ca.get(i), close_ca.get(i)) {
+            typical_price[i] = (h + l + c) / 3.0;
+        }
+    }
 
-    let n = typical_price.len();
     let mut cci_vals: Vec<f64> = vec![f64::NAN; n];
 
     for i in (timeperiod - 1)..n {
@@ -583,7 +637,7 @@ pub async fn cci(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
         }
     }
 
-    let cci_series = Series::new("cci".into(), &cci_vals);
+    let cci_series = Series::new(output_col.into(), &cci_vals);
     let mut result_df = df;
     result_df.with_column(cci_series.into())?;
     Ok(result_df)
@@ -596,6 +650,7 @@ pub async fn cci(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 /// # Parámetros
 /// * `df` - DataFrame con columna: close (case insensitive)
 /// * `timeperiod` - Período de cálculo (default: 14)
+/// * `output_col` - Nombre de la columna de salida (default: "cmo")
 ///
 /// # Retorna
 /// DataFrame con columna "cmo" añadida
@@ -604,8 +659,14 @@ pub async fn cci(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 /// CMO = 100 * ((sum_up - sum_down) / (sum_up + sum_down))
 /// sum_up = suma de precios que subieron
 /// sum_down = suma de precios que bajaron
-pub async fn cmo(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
+pub async fn cmo(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(14);
+    let output_col = output_col.unwrap_or("cmo");
+
     let close = get_close(&df)?;
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
@@ -633,7 +694,7 @@ pub async fn cmo(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
         }
     }
 
-    let cmo_series = Series::new("cmo".into(), &cmo_vals);
+    let cmo_series = Series::new(output_col.into(), &cmo_vals);
     let mut result_df = df;
     result_df.with_column(cmo_series.into())?;
     Ok(result_df)
@@ -646,14 +707,20 @@ pub async fn cmo(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 /// # Parámetros
 /// * `df` - DataFrame con columnas: high, low, close (case insensitive)
 /// * `timeperiod` - Período de cálculo (default: 14)
+/// * `output_col` - Nombre de la columna de salida (default: "dx")
 ///
 /// # Retorna
 /// DataFrame con columna "dx" añadida
 ///
 /// # Fórmula
 /// DX = (|+DI - -DI| / (+DI + -DI)) * 100
-pub async fn dx(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
+pub async fn dx(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(14);
+    let output_col = output_col.unwrap_or("dx");
     let high = get_high(&df)?;
     let low = get_low(&df)?;
     let close = get_close(&df)?;
@@ -725,7 +792,7 @@ pub async fn dx(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
         }
     }
 
-    let dx_series = Series::new("dx".into(), &dx_vals);
+    let dx_series = Series::new(output_col.into(), &dx_vals);
     let mut result_df = df;
     result_df.with_column(dx_series.into())?;
     Ok(result_df)
@@ -741,6 +808,9 @@ pub async fn dx(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 /// * `fastperiod` - Período de EMA rápida (default: 12)
 /// * `slowperiod` - Período de EMA lenta (default: 26)
 /// * `signalperiod` - Período de EMA de señal (default: 9)
+/// * `output_col` - Nombre de la columna de salida (default: "macd")
+/// * `output_col_signal` - Nombre de la columna de señal (default: "macd_signal")
+/// * `output_col_hist` - Nombre de la columna de histograma (default: "macd_hist")
 ///
 /// # Retorna
 /// DataFrame con columnas "macd", "macd_signal" y "macd_hist" añadidas
@@ -751,56 +821,64 @@ pub async fn dx(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 /// Histogram = MACD - Signal
 pub async fn macd(
     df: DataFrame,
-    fastperiod: usize,
-    slowperiod: usize,
-    signalperiod: usize,
+    fastperiod: Option<usize>,
+    slowperiod: Option<usize>,
+    signalperiod: Option<usize>,
+    output_col: Option<&str>,
+    output_col_signal: Option<&str>,
+    output_col_hist: Option<&str>,
 ) -> PolarsResult<DataFrame> {
-    let fastperiod = if fastperiod == 0 { 12 } else { fastperiod };
-    let slowperiod = if slowperiod == 0 { 26 } else { slowperiod };
-    let signalperiod = if signalperiod == 0 { 9 } else { signalperiod };
+    let fastperiod = fastperiod.unwrap_or(12);
+    let slowperiod = slowperiod.unwrap_or(26);
+    let signalperiod = signalperiod.unwrap_or(9);
+    let output_col = output_col.unwrap_or("macd");
+    let output_col_signal = output_col_signal.unwrap_or("macd_signal");
+    let output_col_hist = output_col_hist.unwrap_or("macd_hist");
 
     let close = get_close(&df)?;
     let fast_ema = ema_series(&close, fastperiod);
     let slow_ema = ema_series(&close, slowperiod);
 
+    // Get values preserving NaN positions (use f64 directly, not into_no_null_iter)
     let fast_ca: ChunkedArray<Float64Type> = fast_ema.f64().unwrap().clone();
     let slow_ca: ChunkedArray<Float64Type> = slow_ema.f64().unwrap().clone();
-    let fast_vals: Vec<f64> = fast_ca.into_no_null_iter().collect();
-    let slow_vals: Vec<f64> = slow_ca.into_no_null_iter().collect();
 
-    let macd_vals: Vec<f64> = fast_vals
-        .iter()
-        .zip(&slow_vals)
-        .map(|(&f, &s)| {
-            if f.is_nan() || s.is_nan() {
-                f64::NAN
-            } else {
-                f - s
+    // Convert to vec maintaining positions (ChunkedArray already has the right length)
+    let n = fast_ema.len();
+    let mut macd_vals: Vec<f64> = vec![f64::NAN; n];
+
+    for i in 0..n {
+        let f = fast_ca.get(i);
+        let s = slow_ca.get(i);
+
+        if let (Some(f_val), Some(s_val)) = (f, s) {
+            if !f_val.is_nan() && !s_val.is_nan() {
+                macd_vals[i] = f_val - s_val;
             }
-        })
-        .collect();
+        }
+    }
 
     let macd_series = Series::new("macd".into(), &macd_vals);
     let signal = ema_series(&macd_series, signalperiod);
 
     let signal_ca: ChunkedArray<Float64Type> = signal.f64().unwrap().clone();
-    let signal_vals: Vec<f64> = signal_ca.into_no_null_iter().collect();
-
-    let hist_vals: Vec<f64> = macd_vals
-        .iter()
-        .zip(&signal_vals)
-        .map(|(&m, &s)| {
-            if m.is_nan() || s.is_nan() {
-                f64::NAN
-            } else {
-                m - s
-            }
-        })
+    let signal_vals: Vec<f64> = (0..n)
+        .map(|i| signal_ca.get(i).unwrap_or(f64::NAN))
         .collect();
 
-    let macd_series_final = Series::new("macd".into(), &macd_vals);
-    let signal_series = Series::new("macd_signal".into(), &signal_vals);
-    let hist_series = Series::new("macd_hist".into(), &hist_vals);
+    let mut hist_vals: Vec<f64> = vec![f64::NAN; n];
+    for i in 0..n {
+        let m = macd_vals[i];
+        let s = signal_vals[i];
+
+        if !m.is_nan() && !s.is_nan() {
+            hist_vals[i] = m - s;
+        }
+    }
+
+    let macd_series_final = Series::new(output_col.into(), &macd_vals);
+    let signal_series = Series::new(output_col_signal.into(), &signal_vals);
+    let hist_series = Series::new(output_col_hist.into(), &hist_vals);
 
     let mut result_df = df;
     result_df
@@ -822,21 +900,33 @@ pub async fn macd(
 /// * `fastmatype` - Tipo de media para EMA rápida: 0=EMA, 1=SMA (default: 0)
 /// * `slowmatype` - Tipo de media para EMA lenta: 0=EMA, 1=SMA (default: 0)
 /// * `signalmatype` - Tipo de media para señal: 0=EMA, 1=SMA (default: 0)
+/// * `output_col` - Nombre de la columna de salida para MACD (default: "macd")
+/// * `output_col_signal` - Nombre de la columna de salida para señal (default: "macd_signal")
+/// * `output_col_hist` - Nombre de la columna de salida para histograma (default: "macd_hist")
 ///
 /// # Retorna
 /// DataFrame con columnas "macd", "macd_signal" y "macd_hist" añadidas
 pub async fn macdext(
     df: DataFrame,
-    fastperiod: usize,
-    slowperiod: usize,
-    signalperiod: usize,
-    fastmatype: usize,
-    slowmatype: usize,
-    signalmatype: usize,
+    fastperiod: Option<usize>,
+    slowperiod: Option<usize>,
+    signalperiod: Option<usize>,
+    fastmatype: Option<usize>,
+    slowmatype: Option<usize>,
+    signalmatype: Option<usize>,
+    output_col: Option<&str>,
+    output_col_signal: Option<&str>,
+    output_col_hist: Option<&str>,
 ) -> PolarsResult<DataFrame> {
-    let fastperiod = if fastperiod == 0 { 12 } else { fastperiod };
-    let slowperiod = if slowperiod == 0 { 26 } else { slowperiod };
-    let signalperiod = if signalperiod == 0 { 9 } else { signalperiod };
+    let fastperiod = fastperiod.unwrap_or(12);
+    let slowperiod = slowperiod.unwrap_or(26);
+    let signalperiod = signalperiod.unwrap_or(9);
+    let fastmatype = fastmatype.unwrap_or(0);
+    let slowmatype = slowmatype.unwrap_or(0);
+    let signalmatype = signalmatype.unwrap_or(0);
+    let output_col = output_col.unwrap_or("macd");
+    let output_col_signal = output_col_signal.unwrap_or("macd_signal");
+    let output_col_hist = output_col_hist.unwrap_or("macd_hist");
 
     let close = get_close(&df)?;
 
@@ -854,20 +944,20 @@ pub async fn macdext(
 
     let fast_ca: ChunkedArray<Float64Type> = fast_ema.f64().unwrap().clone();
     let slow_ca: ChunkedArray<Float64Type> = slow_ema.f64().unwrap().clone();
-    let fast_vals: Vec<f64> = fast_ca.into_no_null_iter().collect();
-    let slow_vals: Vec<f64> = slow_ca.into_no_null_iter().collect();
 
-    let macd_vals: Vec<f64> = fast_vals
-        .iter()
-        .zip(&slow_vals)
-        .map(|(&f, &s)| {
-            if f.is_nan() || s.is_nan() {
-                f64::NAN
-            } else {
-                f - s
+    let n = fast_ema.len();
+    let mut macd_vals: Vec<f64> = vec![f64::NAN; n];
+
+    for i in 0..n {
+        let f = fast_ca.get(i);
+        let s = slow_ca.get(i);
+
+        if let (Some(f_val), Some(s_val)) = (f, s) {
+            if !f_val.is_nan() && !s_val.is_nan() {
+                macd_vals[i] = f_val - s_val;
             }
-        })
-        .collect();
+        }
+    }
 
     let macd_series = Series::new("macd".into(), &macd_vals);
     let signal = if signalmatype == 0 {
@@ -877,23 +967,23 @@ pub async fn macdext(
     };
 
     let signal_ca: ChunkedArray<Float64Type> = signal.f64().unwrap().clone();
-    let signal_vals: Vec<f64> = signal_ca.into_no_null_iter().collect();
-
-    let hist_vals: Vec<f64> = macd_vals
-        .iter()
-        .zip(&signal_vals)
-        .map(|(&m, &s)| {
-            if m.is_nan() || s.is_nan() {
-                f64::NAN
-            } else {
-                m - s
-            }
-        })
+    let signal_vals: Vec<f64> = (0..n)
+        .map(|i| signal_ca.get(i).unwrap_or(f64::NAN))
         .collect();
 
-    let macd_series_final = Series::new("macd".into(), &macd_vals);
-    let signal_series = Series::new("macd_signal".into(), &signal_vals);
-    let hist_series = Series::new("macd_hist".into(), &hist_vals);
+    let mut hist_vals: Vec<f64> = vec![f64::NAN; n];
+    for i in 0..n {
+        let m = macd_vals[i];
+        let s = signal_vals[i];
+
+        if !m.is_nan() && !s.is_nan() {
+            hist_vals[i] = m - s;
+        }
+    }
+
+    let macd_series_final = Series::new(output_col.into(), &macd_vals);
+    let signal_series = Series::new(output_col_signal.into(), &signal_vals);
+    let hist_series = Series::new(output_col_hist.into(), &hist_vals);
 
     let mut result_df = df;
     result_df
@@ -913,8 +1003,9 @@ pub async fn macdext(
 ///
 /// # Retorna
 /// DataFrame con columnas "macd", "macd_signal" y "macd_hist" añadidas
-pub async fn macdfix(df: DataFrame, signalperiod: usize) -> PolarsResult<DataFrame> {
-    macd(df, 12, 26, signalperiod).await
+pub async fn macdfix(df: DataFrame, signalperiod: Option<usize>) -> PolarsResult<DataFrame> {
+    let signalperiod = signalperiod.unwrap_or(9);
+    macd(df, Some(12), Some(26), Some(signalperiod), None, None, None).await
 }
 
 /// MFI - Money Flow Index
@@ -925,6 +1016,7 @@ pub async fn macdfix(df: DataFrame, signalperiod: usize) -> PolarsResult<DataFra
 /// # Parámetros
 /// * `df` - DataFrame con columnas: high, low, close, volume (case insensitive)
 /// * `timeperiod` - Período de cálculo (default: 14)
+/// * `output_col` - Nombre de la columna de salida (default: "mfi")
 ///
 /// # Retorna
 /// DataFrame con columna "mfi" añadida
@@ -934,8 +1026,13 @@ pub async fn macdfix(df: DataFrame, signalperiod: usize) -> PolarsResult<DataFra
 /// Money Flow = Typical Price * Volume
 /// Money Ratio = Positive Flow / Negative Flow
 /// MFI = 100 - (100 / (1 + Money Ratio))
-pub async fn mfi(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
+pub async fn mfi(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(14);
+    let output_col = output_col.unwrap_or("mfi");
     let high = get_high(&df)?;
     let low = get_low(&df)?;
     let close = get_close(&df)?;
@@ -986,7 +1083,7 @@ pub async fn mfi(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
         }
     }
 
-    let mfi_series = Series::new("mfi".into(), &mfi_vals);
+    let mfi_series = Series::new(output_col.into(), &mfi_vals);
     let mut result_df = df;
     result_df.with_column(mfi_series.into())?;
     Ok(result_df)
@@ -999,14 +1096,20 @@ pub async fn mfi(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 /// # Parámetros
 /// * `df` - DataFrame con columnas: high, low, close (case insensitive)
 /// * `timeperiod` - Período de cálculo (default: 14)
+/// * `output_col` - Nombre de la columna de salida (default: "minus_di")
 ///
 /// # Retorna
 /// DataFrame con columna "minus_di" añadida
 ///
 /// # Fórmula
 /// -DI = (Smoothed -DM / Smoothed TR) * 100
-pub async fn minus_di(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
+pub async fn minus_di(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(14);
+    let output_col = output_col.unwrap_or("minus_di");
     let high = get_high(&df)?;
     let low = get_low(&df)?;
     let close = get_close(&df)?;
@@ -1062,7 +1165,7 @@ pub async fn minus_di(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFram
         })
         .collect();
 
-    let minus_di_series = Series::new("minus_di".into(), &minus_di_vals);
+    let minus_di_series = Series::new(output_col.into(), &minus_di_vals);
     let mut result_df = df;
     result_df.with_column(minus_di_series.into())?;
     Ok(result_df)
@@ -1075,14 +1178,20 @@ pub async fn minus_di(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFram
 /// # Parámetros
 /// * `df` - DataFrame con columnas: high, low (case insensitive)
 /// * `timeperiod` - Período de cálculo (default: 14)
+/// * `output_col` - Nombre de la columna de salida (default: "minus_dm")
 ///
 /// # Retorna
 /// DataFrame con columna "minus_dm" añadida
 ///
 /// # Fórmula
 /// -DM = RMA(Max(high - low, high - prev_close, prev_close - low))
-pub async fn minus_dm(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
+pub async fn minus_dm(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(14);
+    let output_col = output_col.unwrap_or("minus_dm");
     let high = get_high(&df)?;
     let low = get_low(&df)?;
 
@@ -1111,7 +1220,7 @@ pub async fn minus_dm(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFram
 
     let mut result_df = df;
     let mut renamed = smoothed_minus_dm;
-    renamed.rename("minus_dm".into());
+    renamed.rename(output_col.into());
     result_df.with_column(renamed.into())?;
     Ok(result_df)
 }
@@ -1123,14 +1232,20 @@ pub async fn minus_dm(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFram
 /// # Parámetros
 /// * `df` - DataFrame con columna: close (case insensitive)
 /// * `timeperiod` - Período de cálculo (default: 10)
+/// * `output_col` - Nombre de la columna de salida (default: "mom")
 ///
 /// # Retorna
 /// DataFrame con columna "mom" añadida
 ///
 /// # Fórmula
 /// MOM = close[i] - close[i - timeperiod]
-pub async fn mom(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 10 } else { timeperiod };
+pub async fn mom(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(10);
+    let output_col = output_col.unwrap_or("mom");
     let close = get_close(&df)?;
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
@@ -1143,7 +1258,7 @@ pub async fn mom(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
         mom_vals[i] = close_vals[i] - close_vals[i - timeperiod];
     }
 
-    let mom_series = Series::new("mom".into(), &mom_vals);
+    let mom_series = Series::new(output_col.into(), &mom_vals);
     let mut result_df = df;
     result_df.with_column(mom_series.into())?;
     Ok(result_df)
@@ -1156,14 +1271,20 @@ pub async fn mom(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 /// # Parámetros
 /// * `df` - DataFrame con columnas: high, low, close (case insensitive)
 /// * `timeperiod` - Período de cálculo (default: 14)
+/// * `output_col` - Nombre de la columna de salida (default: "plus_di")
 ///
 /// # Retorna
 /// DataFrame con columna "plus_di" añadida
 ///
 /// # Fórmula
 /// +DI = (Smoothed +DM / Smoothed TR) * 100
-pub async fn plus_di(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
+pub async fn plus_di(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(14);
+    let output_col = output_col.unwrap_or("plus_di");
     let high = get_high(&df)?;
     let low = get_low(&df)?;
     let close = get_close(&df)?;
@@ -1219,7 +1340,7 @@ pub async fn plus_di(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame
         })
         .collect();
 
-    let plus_di_series = Series::new("plus_di".into(), &plus_di_vals);
+    let plus_di_series = Series::new(output_col.into(), &plus_di_vals);
     let mut result_df = df;
     result_df.with_column(plus_di_series.into())?;
     Ok(result_df)
@@ -1232,14 +1353,20 @@ pub async fn plus_di(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame
 /// # Parámetros
 /// * `df` - DataFrame con columnas: high, low (case insensitive)
 /// * `timeperiod` - Período de cálculo (default: 14)
+/// * `output_col` - Nombre de la columna de salida (default: "plus_dm")
 ///
 /// # Retorna
 /// DataFrame con columna "plus_dm" añadida
 ///
 /// # Fórmula
 /// +DM = RMA(Max(high - low, high - prev_close, prev_close - low))
-pub async fn plus_dm(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
+pub async fn plus_dm(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(14);
+    let output_col = output_col.unwrap_or("plus_dm");
     let high = get_high(&df)?;
     let low = get_low(&df)?;
 
@@ -1268,7 +1395,7 @@ pub async fn plus_dm(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame
 
     let mut result_df = df;
     let mut renamed = smoothed_plus_dm;
-    renamed.rename("plus_dm".into());
+    renamed.rename(output_col.into());
     result_df.with_column(renamed.into())?;
     Ok(result_df)
 }
@@ -1281,15 +1408,22 @@ pub async fn plus_dm(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame
 /// * `df` - DataFrame con columna: close (case insensitive)
 /// * `fastperiod` - Período de EMA rápida (default: 12)
 /// * `slowperiod` - Período de EMA lenta (default: 26)
+/// * `output_col` - Nombre de la columna de salida (default: "ppo")
 ///
 /// # Retorna
 /// DataFrame con columna "ppo" añadida
 ///
 /// # Fórmula
 /// PPO = ((EMA(fast) - EMA(slow)) / EMA(slow)) * 100
-pub async fn ppo(df: DataFrame, fastperiod: usize, slowperiod: usize) -> PolarsResult<DataFrame> {
-    let fastperiod = if fastperiod == 0 { 12 } else { fastperiod };
-    let slowperiod = if slowperiod == 0 { 26 } else { slowperiod };
+pub async fn ppo(
+    df: DataFrame,
+    fastperiod: Option<usize>,
+    slowperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let fastperiod = fastperiod.unwrap_or(12);
+    let slowperiod = slowperiod.unwrap_or(26);
+    let output_col = output_col.unwrap_or("ppo");
     let close = get_close(&df)?;
 
     let fast_ema = ema_series(&close, fastperiod);
@@ -1312,7 +1446,7 @@ pub async fn ppo(df: DataFrame, fastperiod: usize, slowperiod: usize) -> PolarsR
         })
         .collect();
 
-    let ppo_series = Series::new("ppo".into(), &ppo_vals);
+    let ppo_series = Series::new(output_col.into(), &ppo_vals);
     let mut result_df = df;
     result_df.with_column(ppo_series.into())?;
     Ok(result_df)
@@ -1325,14 +1459,20 @@ pub async fn ppo(df: DataFrame, fastperiod: usize, slowperiod: usize) -> PolarsR
 /// # Parámetros
 /// * `df` - DataFrame con columna: close (case insensitive)
 /// * `timeperiod` - Período de cálculo (default: 10)
+/// * `output_col` - Nombre de la columna de salida (default: "roc")
 ///
 /// # Retorna
 /// DataFrame con columna "roc" añadida
 ///
 /// # Fórmula
 /// ROC = ((close[i] / close[i - timeperiod]) - 1) * 100
-pub async fn roc(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 10 } else { timeperiod };
+pub async fn roc(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(10);
+    let output_col = output_col.unwrap_or("roc");
     let close = get_close(&df)?;
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
@@ -1347,7 +1487,7 @@ pub async fn roc(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
         }
     }
 
-    let roc_series = Series::new("roc".into(), &roc_vals);
+    let roc_series = Series::new(output_col.into(), &roc_vals);
     let mut result_df = df;
     result_df.with_column(roc_series.into())?;
     Ok(result_df)
@@ -1360,14 +1500,20 @@ pub async fn roc(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 /// # Parámetros
 /// * `df` - DataFrame con columna: close (case insensitive)
 /// * `timeperiod` - Período de cálculo (default: 10)
+/// * `output_col` - Nombre de la columna de salida (default: "rocp")
 ///
 /// # Retorna
 /// DataFrame con columna "rocp" añadida
 ///
 /// # Fórmula
 /// ROCP = (close[i] - close[i - timeperiod]) / close[i - timeperiod]
-pub async fn rocp(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 10 } else { timeperiod };
+pub async fn rocp(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(10);
+    let output_col = output_col.unwrap_or("rocp");
     let close = get_close(&df)?;
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
@@ -1383,7 +1529,7 @@ pub async fn rocp(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
         }
     }
 
-    let rocp_series = Series::new("rocp".into(), &rocp_vals);
+    let rocp_series = Series::new(output_col.into(), &rocp_vals);
     let mut result_df = df;
     result_df.with_column(rocp_series.into())?;
     Ok(result_df)
@@ -1396,14 +1542,20 @@ pub async fn rocp(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 /// # Parámetros
 /// * `df` - DataFrame con columna: close (case insensitive)
 /// * `timeperiod` - Período de cálculo (default: 10)
+/// * `output_col` - Nombre de la columna de salida (default: "rocr")
 ///
 /// # Retorna
 /// DataFrame con columna "rocr" añadida
 ///
 /// # Fórmula
 /// ROCR = close[i] / close[i - timeperiod]
-pub async fn rocr(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 10 } else { timeperiod };
+pub async fn rocr(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(10);
+    let output_col = output_col.unwrap_or("rocr");
     let close = get_close(&df)?;
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
@@ -1418,7 +1570,7 @@ pub async fn rocr(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
         }
     }
 
-    let rocr_series = Series::new("rocr".into(), &rocr_vals);
+    let rocr_series = Series::new(output_col.into(), &rocr_vals);
     let mut result_df = df;
     result_df.with_column(rocr_series.into())?;
     Ok(result_df)
@@ -1431,14 +1583,20 @@ pub async fn rocr(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 /// # Parámetros
 /// * `df` - DataFrame con columna: close (case insensitive)
 /// * `timeperiod` - Período de cálculo (default: 10)
+/// * `output_col` - Nombre de la columna de salida (default: "rocr100")
 ///
 /// # Retorna
 /// DataFrame con columna "rocr100" añadida
 ///
 /// # Fórmula
 /// ROCR100 = (close[i] / close[i - timeperiod]) * 100
-pub async fn rocr100(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 10 } else { timeperiod };
+pub async fn rocr100(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(10);
+    let output_col = output_col.unwrap_or("rocr100");
     let close = get_close(&df)?;
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
@@ -1453,7 +1611,7 @@ pub async fn rocr100(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame
         }
     }
 
-    let rocr100_series = Series::new("rocr100".into(), &rocr100_vals);
+    let rocr100_series = Series::new(output_col.into(), &rocr100_vals);
     let mut result_df = df;
     result_df.with_column(rocr100_series.into())?;
     Ok(result_df)
@@ -1467,6 +1625,7 @@ pub async fn rocr100(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame
 /// # Parámetros
 /// * `df` - DataFrame con columna: close (case insensitive)
 /// * `timeperiod` - Período de cálculo (default: 14)
+/// * `output_col` - Nombre de la columna de salida (default: "rsi")
 ///
 /// # Retorna
 /// DataFrame con columna "rsi" añadida
@@ -1474,8 +1633,13 @@ pub async fn rocr100(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame
 /// # Fórmula
 /// RSI = 100 - (100 / (1 + RS))
 /// RS = Average Gain / Average Loss
-pub async fn rsi(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
+pub async fn rsi(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(14);
+    let output_col = output_col.unwrap_or("rsi");
     let close = get_close(&df)?;
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
@@ -1515,7 +1679,7 @@ pub async fn rsi(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
         }
     }
 
-    let rsi_series = Series::new("rsi".into(), &rsi_vals);
+    let rsi_series = Series::new(output_col.into(), &rsi_vals);
     let mut result_df = df;
     result_df.with_column(rsi_series.into())?;
     Ok(result_df)
@@ -1533,6 +1697,8 @@ pub async fn rsi(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 /// * `slowk_matype` - Tipo de media para %K: 0=EMA, 1=SMA (default: 0)
 /// * `slowd_period` - Período de cálculo de %D (default: 3)
 /// * `slowd_matype` - Tipo de media para %D: 0=EMA, 1=SMA (default: 0)
+/// * `output_col_k` - Nombre de la columna de salida para %K (default: "slow_k")
+/// * `output_col_d` - Nombre de la columna de salida para %D (default: "slow_d")
 ///
 /// # Retorna
 /// DataFrame con columnas "slow_k" y "slow_d" añadidas
@@ -1542,15 +1708,21 @@ pub async fn rsi(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 /// %D = SMA(%K, slowd_period)
 pub async fn stoch(
     df: DataFrame,
-    fastk_period: usize,
-    slowk_period: usize,
-    slowk_matype: usize,
-    slowd_period: usize,
-    slowd_matype: usize,
+    fastk_period: Option<usize>,
+    slowk_period: Option<usize>,
+    slowk_matype: Option<usize>,
+    slowd_period: Option<usize>,
+    // slowd_matype: Option<usize>,
+    output_col_k: Option<&str>,
+    output_col_d: Option<&str>,
 ) -> PolarsResult<DataFrame> {
-    let fastk_period = if fastk_period == 0 { 5 } else { fastk_period };
-    let slowk_period = if slowk_period == 0 { 3 } else { slowk_period };
-    let slowd_period = if slowd_period == 0 { 3 } else { slowd_period };
+    let fastk_period = fastk_period.unwrap_or(5).max(2);
+    let slowk_period = slowk_period.unwrap_or(3).max(2);
+    let slowd_period = slowd_period.unwrap_or(3).max(2);
+    let slowk_matype = slowk_matype.unwrap_or(0);
+    // let slowd_matype = slowd_matype.unwrap_or(0);
+    let output_col_k = output_col_k.unwrap_or("slow_k");
+    let output_col_d = output_col_d.unwrap_or("slow_d");
 
     let high = get_high(&df)?;
     let low = get_low(&df)?;
@@ -1560,23 +1732,35 @@ pub async fn stoch(
     let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
 
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
-
-    let n = high_vals.len();
+    let n = df.height();
     let mut k_vals: Vec<f64> = vec![f64::NAN; n];
 
     for i in (fastk_period - 1)..n {
-        let hh = high_vals[i - fastk_period + 1..=i]
-            .iter()
-            .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        let ll = low_vals[i - fastk_period + 1..=i]
-            .iter()
-            .fold(f64::INFINITY, |a, &b| a.min(b));
+        let mut hh = f64::NEG_INFINITY;
+        let mut ll = f64::INFINITY;
+        let mut valid = true;
 
-        if hh != ll {
-            k_vals[i] = ((close_vals[i] - ll) / (hh - ll)) * 100.0;
+        for j in (i - fastk_period + 1)..=i {
+            match (high_ca.get(j), low_ca.get(j), close_ca.get(j)) {
+                (Some(h), Some(l), Some(c)) => {
+                    if h > hh {
+                        hh = h;
+                    }
+                    if l < ll {
+                        ll = l;
+                    }
+                }
+                _ => {
+                    valid = false;
+                    break;
+                }
+            }
+        }
+
+        if valid && hh != ll {
+            if let Some(c) = close_ca.get(i) {
+                k_vals[i] = ((c - ll) / (hh - ll)) * 100.0;
+            }
         }
     }
 
@@ -1596,8 +1780,8 @@ pub async fn stoch(
     let k_final: Vec<f64> = k_ca.into_no_null_iter().collect();
     let d_final: Vec<f64> = d_ca.into_no_null_iter().collect();
 
-    let k_series_final = Series::new("slow_k".into(), &k_final);
-    let d_series_final = Series::new("slow_d".into(), &d_final);
+    let k_series_final = Series::new(output_col_k.into(), &k_final);
+    let d_series_final = Series::new(output_col_d.into(), &d_final);
 
     let mut result_df = df;
     result_df
@@ -1615,6 +1799,8 @@ pub async fn stoch(
 /// * `fastk_period` - Período para cálculo de %K rápido (default: 5)
 /// * `fastd_period` - Período de cálculo de %D (default: 3)
 /// * `fastd_matype` - Tipo de media para %D: 0=EMA, 1=SMA (default: 0)
+/// * `output_col_k` - Nombre de la columna de salida para %K (default: "fast_k")
+/// * `output_col_d` - Nombre de la columna de salida para %D (default: "fast_d")
 ///
 /// # Retorna
 /// DataFrame con columnas "fast_k" y "fast_d" añadidas
@@ -1624,12 +1810,17 @@ pub async fn stoch(
 /// %D = EMA(%K, fastd_period)
 pub async fn stochf(
     df: DataFrame,
-    fastk_period: usize,
-    fastd_period: usize,
-    fastd_matype: usize,
+    fastk_period: Option<usize>,
+    fastd_period: Option<usize>,
+    fastd_matype: Option<usize>,
+    output_col_k: Option<&str>,
+    output_col_d: Option<&str>,
 ) -> PolarsResult<DataFrame> {
-    let fastk_period = if fastk_period == 0 { 5 } else { fastk_period };
-    let fastd_period = if fastd_period == 0 { 3 } else { fastd_period };
+    let fastk_period = fastk_period.unwrap_or(5).max(2);
+    let fastd_period = fastd_period.unwrap_or(3).max(2);
+    let fastd_matype = fastd_matype.unwrap_or(0);
+    let output_col_k = output_col_k.unwrap_or("fast_k");
+    let output_col_d = output_col_d.unwrap_or("fast_d");
 
     let high = get_high(&df)?;
     let low = get_low(&df)?;
@@ -1639,23 +1830,35 @@ pub async fn stochf(
     let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
 
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
-
-    let n = high_vals.len();
+    let n = df.height();
     let mut fastk_vals: Vec<f64> = vec![f64::NAN; n];
 
     for i in (fastk_period - 1)..n {
-        let hh = high_vals[i - fastk_period + 1..=i]
-            .iter()
-            .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        let ll = low_vals[i - fastk_period + 1..=i]
-            .iter()
-            .fold(f64::INFINITY, |a, &b| a.min(b));
+        let mut hh = f64::NEG_INFINITY;
+        let mut ll = f64::INFINITY;
+        let mut valid = true;
 
-        if hh != ll {
-            fastk_vals[i] = ((close_vals[i] - ll) / (hh - ll)) * 100.0;
+        for j in (i - fastk_period + 1)..=i {
+            match (high_ca.get(j), low_ca.get(j)) {
+                (Some(h), Some(l)) => {
+                    if h > hh {
+                        hh = h;
+                    }
+                    if l < ll {
+                        ll = l;
+                    }
+                }
+                _ => {
+                    valid = false;
+                    break;
+                }
+            }
+        }
+
+        if valid && hh != ll {
+            if let Some(c) = close_ca.get(i) {
+                fastk_vals[i] = ((c - ll) / (hh - ll)) * 100.0;
+            }
         }
     }
 
@@ -1669,8 +1872,8 @@ pub async fn stochf(
     let fastd_ca: ChunkedArray<Float64Type> = fastd.f64().unwrap().clone();
     let fastd_final: Vec<f64> = fastd_ca.into_no_null_iter().collect();
 
-    let fastk_series_final = Series::new("fast_k".into(), &fastk_vals);
-    let fastd_series_final = Series::new("fast_d".into(), &fastd_final);
+    let fastk_series_final = Series::new(output_col_k.into(), &fastk_vals);
+    let fastd_series_final = Series::new(output_col_d.into(), &fastd_final);
 
     let mut result_df = df;
     result_df
@@ -1689,6 +1892,8 @@ pub async fn stochf(
 /// * `fastk_period` - Período para cálculo de %K rápido (default: 3)
 /// * `fastd_period` - Período de cálculo de %D (default: 3)
 /// * `fastd_matype` - Tipo de media para %D: 0=EMA, 1=SMA (default: 0)
+/// * `output_col_k` - Nombre de la columna para %K (default: "stochrsi_k")
+/// * `output_col_d` - Nombre de la columna para %D (default: "stochrsi_d")
 ///
 /// # Retorna
 /// DataFrame con columnas "stochrsi_k" y "stochrsi_d" añadidas
@@ -1698,30 +1903,57 @@ pub async fn stochf(
 /// %D = SMA(%K, fastd_period)
 pub async fn stochrsi(
     df: DataFrame,
-    timeperiod: usize,
-    fastk_period: usize,
-    fastd_period: usize,
-    fastd_matype: usize,
+    timeperiod: Option<usize>,
+    fastk_period: Option<usize>,
+    fastd_period: Option<usize>,
+    fastd_matype: Option<usize>,
+    output_col_k: Option<&str>,
+    output_col_d: Option<&str>,
 ) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
-    let fastk_period = if fastk_period == 0 { 3 } else { fastk_period };
-    let fastd_period = if fastd_period == 0 { 3 } else { fastd_period };
+    let timeperiod = timeperiod.unwrap_or(14).max(2);
+    let fastk_period = fastk_period.unwrap_or(3).max(2);
+    let fastd_period = fastd_period.unwrap_or(3).max(2);
+    let fastd_matype = fastd_matype.unwrap_or(0);
+    let output_col_k = output_col_k.unwrap_or("stochrsi_k");
+    let output_col_d = output_col_d.unwrap_or("stochrsi_d");
 
-    let rsi_df = rsi(df.clone(), timeperiod).await?;
+    let rsi_df = rsi(df.clone(), Some(timeperiod), None).await?;
     let rsi_col = rsi_df.column("rsi").unwrap();
     let rsi_ca: ChunkedArray<Float64Type> = rsi_col.f64().unwrap().clone();
-    let rsi_vals: Vec<f64> = rsi_ca.into_no_null_iter().collect();
 
-    let n = rsi_vals.len();
+    let n = df.height();
     let mut stochrsi_vals: Vec<f64> = vec![f64::NAN; n];
 
-    for i in (timeperiod - 1)..n {
-        let window = &rsi_vals[i - timeperiod + 1..=i];
-        let hh = window.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        let ll = window.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+    for i in (fastk_period - 1)..n {
+        let mut hh = f64::NEG_INFINITY;
+        let mut ll = f64::INFINITY;
+        let mut valid = true;
 
-        if hh != ll {
-            stochrsi_vals[i] = (rsi_vals[i] - ll) / (hh - ll);
+        for j in (i - fastk_period + 1)..=i {
+            if let Some(rsi_val) = rsi_ca.get(j) {
+                if !rsi_val.is_nan() {
+                    if rsi_val > hh {
+                        hh = rsi_val;
+                    }
+                    if rsi_val < ll {
+                        ll = rsi_val;
+                    }
+                } else {
+                    valid = false;
+                    break;
+                }
+            } else {
+                valid = false;
+                break;
+            }
+        }
+
+        if valid && hh != ll {
+            if let Some(rsi_val) = rsi_ca.get(i) {
+                if !rsi_val.is_nan() {
+                    stochrsi_vals[i] = (rsi_val - ll) / (hh - ll);
+                }
+            }
         }
     }
 
@@ -1739,8 +1971,8 @@ pub async fn stochrsi(
     let k_final: Vec<f64> = fastk_ca.into_no_null_iter().collect();
     let d_final: Vec<f64> = fastd_ca.into_no_null_iter().collect();
 
-    let k_series_final = Series::new("stochrsi_k".into(), &k_final);
-    let d_series_final = Series::new("stochrsi_d".into(), &d_final);
+    let k_series_final = Series::new(output_col_k.into(), &k_final);
+    let d_series_final = Series::new(output_col_d.into(), &d_final);
 
     let mut result_df = df;
     result_df
@@ -1757,6 +1989,7 @@ pub async fn stochrsi(
 /// # Parámetros
 /// * `df` - DataFrame con columna: close (case insensitive)
 /// * `timeperiod` - Período de cálculo (default: 30)
+/// * `output_col` - Nombre de la columna de salida (default: "trix")
 ///
 /// # Retorna
 /// DataFrame con columna "trix" añadida
@@ -1764,8 +1997,13 @@ pub async fn stochrsi(
 /// # Fórmula
 /// TRIX = ((EMA3[t] - EMA3[t-1]) / EMA3[t-1]) * 100
 /// donde EMA3 = EMA(EMA(EMA(close)))
-pub async fn trix(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 30 } else { timeperiod };
+pub async fn trix(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(30);
+    let output_col = output_col.unwrap_or("trix");
     let close = get_close(&df)?;
 
     let ema1 = ema_series(&close, timeperiod);
@@ -1784,7 +2022,7 @@ pub async fn trix(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
         }
     }
 
-    let trix_series = Series::new("trix".into(), &trix_vals);
+    let trix_series = Series::new(output_col.into(), &trix_vals);
     let mut result_df = df;
     result_df.with_column(trix_series.into())?;
     Ok(result_df)
@@ -1799,6 +2037,7 @@ pub async fn trix(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 /// * `timeperiod1` - Período corto (default: 7)
 /// * `timeperiod2` - Período medio (default: 14)
 /// * `timeperiod3` - Período largo (default: 28)
+/// * `output_col` - Nombre de la columna de salida (default: "ultosc")
 ///
 /// # Retorna
 /// DataFrame con columna "ultosc" añadida
@@ -1810,13 +2049,15 @@ pub async fn trix(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
 /// ULTOSC = 100 * (4*Avg1 + 2*Avg2 + Avg3) / 7
 pub async fn ultosc(
     df: DataFrame,
-    timeperiod1: usize,
-    timeperiod2: usize,
-    timeperiod3: usize,
+    timeperiod1: Option<usize>,
+    timeperiod2: Option<usize>,
+    timeperiod3: Option<usize>,
+    output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
-    let timeperiod1 = if timeperiod1 == 0 { 7 } else { timeperiod1 };
-    let timeperiod2 = if timeperiod2 == 0 { 14 } else { timeperiod2 };
-    let timeperiod3 = if timeperiod3 == 0 { 28 } else { timeperiod3 };
+    let timeperiod1 = timeperiod1.unwrap_or(7).max(2);
+    let timeperiod2 = timeperiod2.unwrap_or(14).max(2);
+    let timeperiod3 = timeperiod3.unwrap_or(28).max(2);
+    let output_col = output_col.unwrap_or("ultosc");
 
     let high = get_high(&df)?;
     let low = get_low(&df)?;
@@ -1826,51 +2067,56 @@ pub async fn ultosc(
     let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
 
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
-
-    let n = high_vals.len();
-    let mut bp: Vec<f64> = vec![0.0; n]; // Buying Pressure
-    let mut tr: Vec<f64> = vec![0.0; n]; // True Range
+    let n = df.height();
+    let mut bp: Vec<f64> = vec![0.0; n];
+    let mut tr: Vec<f64> = vec![0.0; n];
 
     for i in 1..n {
-        bp[i] = close_vals[i] - min(low_vals[i], close_vals[i - 1]);
-        let tr1 = high_vals[i] - low_vals[i];
-        let tr2 = (high_vals[i] - close_vals[i - 1]).abs();
-        let tr3 = (low_vals[i] - close_vals[i - 1]).abs();
-        tr[i] = tr1.max(tr2).max(tr3);
+        match (
+            close_ca.get(i),
+            low_ca.get(i),
+            high_ca.get(i),
+            close_ca.get(i - 1),
+        ) {
+            (Some(c), Some(l), Some(h), Some(prev_c)) => {
+                bp[i] = c - l.min(prev_c);
+                let tr1 = h - l;
+                let tr2 = (h - prev_c).abs();
+                let tr3 = (l - prev_c).abs();
+                tr[i] = tr1.max(tr2).max(tr3);
+            }
+            _ => {
+                bp[i] = 0.0;
+                tr[i] = 0.0;
+            }
+        }
     }
 
     fn sum_bp_tr(bp: &[f64], tr: &[f64], start: usize, end: usize) -> (f64, f64) {
+        if start > end || end >= bp.len() {
+            return (0.0, 0.0);
+        }
         let sum_bp: f64 = bp[start..=end].iter().sum();
         let sum_tr: f64 = tr[start..=end].iter().sum();
         (sum_bp, sum_tr)
     }
 
-    fn min(a: f64, b: f64) -> f64 {
-        if a < b {
-            a
-        } else {
-            b
-        }
-    }
-
     let mut ultosc_vals: Vec<f64> = vec![f64::NAN; n];
 
-    for i in (timeperiod1 + timeperiod2)..n {
-        let (bp1, tr1) = sum_bp_tr(&bp, &tr, i - timeperiod1 + 1, i);
-        let (bp2, tr2) = sum_bp_tr(&bp, &tr, i - timeperiod2 + 1, i);
-        let (bp3, tr3) = sum_bp_tr(&bp, &tr, i - timeperiod3 + 1, i);
+    let min_start = (timeperiod1 + timeperiod2).max(timeperiod3);
+    for i in min_start..n {
+        let (bp1, tr1_val) = sum_bp_tr(&bp, &tr, i - timeperiod1 + 1, i);
+        let (bp2, tr2_val) = sum_bp_tr(&bp, &tr, i - timeperiod2 + 1, i);
+        let (bp3, tr3_val) = sum_bp_tr(&bp, &tr, i - timeperiod3 + 1, i);
 
-        let avg1 = if tr1 != 0.0 { bp1 / tr1 } else { 0.0 };
-        let avg2 = if tr2 != 0.0 { bp2 / tr2 } else { 0.0 };
-        let avg3 = if tr3 != 0.0 { bp3 / tr3 } else { 0.0 };
+        let avg1 = if tr1_val != 0.0 { bp1 / tr1_val } else { 0.0 };
+        let avg2 = if tr2_val != 0.0 { bp2 / tr2_val } else { 0.0 };
+        let avg3 = if tr3_val != 0.0 { bp3 / tr3_val } else { 0.0 };
 
         ultosc_vals[i] = 100.0 * (4.0 * avg1 + 2.0 * avg2 + avg3) / 7.0;
     }
 
-    let ultosc_series = Series::new("ultosc".into(), &ultosc_vals);
+    let ultosc_series = Series::new(output_col.into(), &ultosc_vals);
     let mut result_df = df;
     result_df.with_column(ultosc_series.into())?;
     Ok(result_df)
@@ -1884,14 +2130,20 @@ pub async fn ultosc(
 /// # Parámetros
 /// * `df` - DataFrame con columnas: high, low, close (case insensitive)
 /// * `timeperiod` - Período de cálculo (default: 14)
+/// * `output_col` - Nombre de la columna de salida (default: "willr")
 ///
 /// # Retorna
 /// DataFrame con columna "willr" añadida
 ///
 /// # Fórmula
 /// %R = ((highest_high - close) / (highest_high - lowest_low)) * -100
-pub async fn willr(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> {
-    let timeperiod = if timeperiod == 0 { 14 } else { timeperiod };
+pub async fn willr(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(14).max(2);
+    let output_col = output_col.unwrap_or("willr");
     let high = get_high(&df)?;
     let low = get_low(&df)?;
     let close = get_close(&df)?;
@@ -1920,7 +2172,7 @@ pub async fn willr(df: DataFrame, timeperiod: usize) -> PolarsResult<DataFrame> 
         }
     }
 
-    let willr_series = Series::new("willr".into(), &willr_vals);
+    let willr_series = Series::new(output_col.into(), &willr_vals);
     let mut result_df = df;
     result_df.with_column(willr_series.into())?;
     Ok(result_df)
@@ -2023,6 +2275,339 @@ mod tests {
                     save_data(&result, "download/test_bop.csv").await.unwrap();
                 }
                 Err(e) => panic!("Failed to compute BOP: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cci() {
+        match load_data().await {
+            Ok(df) => match cci(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_cci.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute CCI: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cmo() {
+        match load_data().await {
+            Ok(df) => match cmo(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_cmo.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute CMO: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_dx() {
+        match load_data().await {
+            Ok(df) => match dx(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_dx.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute DX: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_macd() {
+        match load_data().await {
+            Ok(df) => match macd(df, Some(12), Some(26), Some(9), None, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_macd.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute MACD: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_macdext() {
+        match load_data().await {
+            Ok(df) => match macdext(df, None, None, None, None, None, None, None, None, None).await
+            {
+                Ok(result) => {
+                    save_data(&result, "download/test_macdext.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute macdext: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_macdfix() {
+        match load_data().await {
+            Ok(df) => match macdfix(df, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_macdfix.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute macdfix: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_mfi() {
+        match load_data().await {
+            Ok(df) => match mfi(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_mfi.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute mfi: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_minus_di() {
+        match load_data().await {
+            Ok(df) => match minus_di(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_minus_di.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute minus_di: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_minus_dm() {
+        match load_data().await {
+            Ok(df) => match minus_dm(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_minus_dm.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute minus_dm: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_mom() {
+        match load_data().await {
+            Ok(df) => match mom(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_mom.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute mom: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_plus_di() {
+        match load_data().await {
+            Ok(df) => match plus_di(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_plus_di.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute plus_di: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_plus_dm() {
+        match load_data().await {
+            Ok(df) => match plus_dm(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_plus_dm.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute plus_dm: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_ppo() {
+        match load_data().await {
+            Ok(df) => match ppo(df, None, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_ppo.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute ppo: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_roc() {
+        match load_data().await {
+            Ok(df) => match roc(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_roc.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute roc: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_rocp() {
+        match load_data().await {
+            Ok(df) => match rocp(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_rocp.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute rocp: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_rocr() {
+        match load_data().await {
+            Ok(df) => match rocr(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_rocr.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute rocr: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_rocr100() {
+        match load_data().await {
+            Ok(df) => match rocr100(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_rocr100.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute rocr100: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_rsi() {
+        match load_data().await {
+            Ok(df) => match rsi(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_rsi.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute rsi: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_stoch() {
+        match load_data().await {
+            Ok(df) => match stoch(df, None, None, None, None, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_stoch.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute stoch: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_stochf() {
+        match load_data().await {
+            Ok(df) => match stochf(df, None, None, None, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_stochf.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute stochf: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_stochrsi() {
+        match load_data().await {
+            Ok(df) => match stochrsi(df, None, None, None, None, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_stochrsi.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute stochrsi: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_trix() {
+        match load_data().await {
+            Ok(df) => match trix(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_trix.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute trix: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_ultosc() {
+        match load_data().await {
+            Ok(df) => match ultosc(df, None, None, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_ultosc.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute ultosc: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_willr() {
+        match load_data().await {
+            Ok(df) => match willr(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_willr.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute willr: {:?}", e),
             },
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
