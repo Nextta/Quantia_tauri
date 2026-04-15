@@ -266,3 +266,67 @@ pub async fn natr(
     result_df.with_column(natr_series.into())?;
     Ok(result_df)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    //Para los test crear una carpeta llamada download en la raiz de este proyecto
+    // y llamar a los datos test.csv
+    async fn load_data() -> PolarsResult<DataFrame> {
+        let df = CsvReadOptions::default()
+            .try_into_reader_with_file_path(Some("download/test.csv".into()))
+            .unwrap()
+            .finish()
+            .unwrap();
+        Ok(df)
+    }
+
+    async fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
+        let mut df: DataFrame = df_result.clone();
+        let mut file = std::fs::File::create(path).unwrap();
+        CsvWriter::new(&mut file).finish(&mut df).unwrap();
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_trange() {
+        match load_data().await {
+            Ok(df) => match trange(df, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_trange.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute trange: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_atr() {
+        match load_data().await {
+            Ok(df) => match atr(df, Some(14), None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_atr.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute ATR: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_natr() {
+        match load_data().await {
+            Ok(df) => match natr(df, Some(14), None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_natr.csv").await.unwrap();
+                }
+                Err(e) => panic!("Failed to compute NATR: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+}
