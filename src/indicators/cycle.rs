@@ -45,6 +45,7 @@ struct HTState {
     // Period tracking
     period: f64,
     prev_period: f64,
+    bounded_period: f64,
     smooth_period: f64,
     prev_smooth_period: f64,
 
@@ -81,6 +82,7 @@ impl HTState {
             im: 0.0,
             period: 0.0,
             prev_period: 0.0,
+            bounded_period: 0.0,
             smooth_period: 0.0,
             prev_smooth_period: 0.0,
             dc_phase: 0.0,
@@ -199,6 +201,7 @@ impl HTState {
 
             // Hard limits
             bounded_period = bounded_period.max(6.0).min(50.0);
+            self.bounded_period = bounded_period;
 
             // Double exponential smoothing
             let period_filtered = 0.2 * bounded_period + 0.8 * self.prev_period;
@@ -230,9 +233,13 @@ impl HTState {
         }
 
         // Step 5: Trend mode detection
-        let trend_mode = if self.count >= 10 && self.prev_smooth_period > 0.0 {
-            if self.smooth_period > 1.5 * self.prev_smooth_period {
+        let trend_mode = if self.count >= 10 && self.prev_period > 0.0 {
+            // Compare bounded_period (raw, pre-smoothed) vs prev_period
+            // If the raw period increases significantly, we're in trend mode
+            if self.bounded_period > 1.2 * self.prev_period {
                 1 // Trend mode
+            } else if self.bounded_period < 0.8 * self.prev_period {
+                0 // Cycle mode (period decreased)
             } else {
                 0 // Cycle mode
             }
@@ -557,4 +564,102 @@ pub async fn ht_trendmode(df: DataFrame, output_col: Option<&str>) -> PolarsResu
     let mut result_df = df;
     result_df.with_column(trend_mode_series.into())?;
     Ok(result_df)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    //Para los test crear una carpeta llamada download en la raiz de este proyecto
+    // y llamar a los datos test.csv
+    async fn load_data() -> PolarsResult<DataFrame> {
+        let df = CsvReadOptions::default()
+            .try_into_reader_with_file_path(Some("download/test.csv".into()))
+            .unwrap()
+            .finish()
+            .unwrap();
+        Ok(df)
+    }
+
+    async fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
+        let mut df: DataFrame = df_result.clone();
+        let mut file = std::fs::File::create(path).unwrap();
+        CsvWriter::new(&mut file).finish(&mut df).unwrap();
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_ht_dcperiod() {
+        match load_data().await {
+            Ok(df) => match ht_dcperiod(df, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_ht_dcperiod.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute ht_dcperiod: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_ht_dcphase() {
+        match load_data().await {
+            Ok(df) => match ht_dcphase(df, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_ht_dcphase.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute ht_dcphase: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_ht_phasor() {
+        match load_data().await {
+            Ok(df) => match ht_phasor(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_ht_phasor.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute ht_phasor: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_ht_sine() {
+        match load_data().await {
+            Ok(df) => match ht_sine(df, None, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_ht_sine.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute ht_sine: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_ht_trendmode() {
+        match load_data().await {
+            Ok(df) => match ht_trendmode(df, None).await {
+                Ok(result) => {
+                    save_data(&result, "download/test_ht_trendmode.csv")
+                        .await
+                        .unwrap();
+                }
+                Err(e) => panic!("Failed to compute ht_trendmode: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
 }
