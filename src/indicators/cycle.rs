@@ -43,6 +43,11 @@ struct HTState {
     // Phase tracking
     prev_dc_phase: f64,
 
+    // SineWave tracking for Trend vs Cycle mode
+    prev_sine: f64,
+    prev_lead_sine: f64,
+    bars_since_cross: usize,
+
     // Index tracking
     count: usize,
 }
@@ -62,6 +67,9 @@ impl HTState {
             prev_period: 0.0,
             prev_smooth_period: 0.0,
             prev_dc_phase: 0.0,
+            prev_sine: 0.0,
+            prev_lead_sine: 0.0,
+            bars_since_cross: 0,
             count: 0,
         }
     }
@@ -193,7 +201,7 @@ impl HTState {
         self.prev_period = filtered_period;
         self.prev_smooth_period = smooth_period;
 
-        // Step 7: DC Phase computation
+        // Step 7: DC Phase computation (Stable Accumulation)
         let mut dc_phase = if i1.abs() > 0.0 {
             (q1 / i1).atan().to_degrees()
         } else {
@@ -201,7 +209,7 @@ impl HTState {
         };
         dc_phase += 90.0;
 
-        // Correct for wrap-around
+        // Correct for wrap-around of raw phase
         if dc_phase < 0.0 {
             dc_phase += 360.0;
         }
@@ -209,13 +217,52 @@ impl HTState {
             dc_phase -= 360.0;
         }
 
-        // Smooth the phase
-        let smooth_phase = 0.33 * dc_phase + 0.67 * self.prev_dc_phase;
+        // Calculate Delta Phase (change in phase)
+        let mut delta_phase = self.prev_dc_phase - dc_phase;
+        if self.prev_dc_phase < dc_phase {
+            delta_phase = 360.0 + self.prev_dc_phase - dc_phase;
+        }
+
+        // Clip delta phase to a reasonable range based on the dominant period
+        // If period is 20, expected delta is 360/20 = 18 degrees
+        if delta_phase < 1.0 {
+            delta_phase = 1.0;
+        }
+
+        // Update the stable accumulated phase
+        let mut smooth_phase = self.prev_dc_phase - delta_phase;
+        if smooth_phase < 0.0 {
+            smooth_phase += 360.0;
+        }
+
+        // Final smoothing
+        smooth_phase = 0.33 * smooth_phase + 0.67 * self.prev_dc_phase;
         self.prev_dc_phase = smooth_phase;
 
-        // Step 8: Trend mode detection
+        // Step 8: Trend mode detection (Sine Wave Crossings + Period Stability)
+        let sine_val = (smooth_phase.to_radians()).sin();
+        let lead_sine_val = ((smooth_phase + 45.0).to_radians()).sin();
+
+        // Detect crossing: if current diff and previous diff have different signs
+        let cross =
+            (sine_val - lead_sine_val).signum() != (self.prev_sine - self.prev_lead_sine).signum();
+
+        if cross {
+            self.bars_since_cross = 0;
+        } else {
+            self.bars_since_cross += 1;
+        }
+
+        self.prev_sine = sine_val;
+        self.prev_lead_sine = lead_sine_val;
+
         if self.count >= 12 {
-            if smooth_period > 1.5 * self.prev_smooth_period {
+            // Trend if:
+            // 1. No Sine/LeadSine cross for more than 50% of the period
+            // 2. OR Period has jumped significantly (>50%)
+            if self.bars_since_cross as f64 > 0.6 * smooth_period
+                || smooth_period > 1.5 * self.prev_smooth_period
+            {
                 trend_mode = 1;
             }
         }
@@ -224,10 +271,10 @@ impl HTState {
         if self.count >= 30 {
             dc_period = smooth_period;
             dc_phase_out = smooth_phase;
-            in_phase = i1;
-            quadrature = q1;
-            sine = (smooth_phase.to_radians()).sin();
-            lead_sine = ((smooth_phase + 45.0).to_radians()).sin();
+            in_phase = smoothed_i2;
+            quadrature = smoothed_q2;
+            sine = sine_val;
+            lead_sine = lead_sine_val;
         }
 
         (

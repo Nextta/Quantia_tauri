@@ -4,11 +4,9 @@ use polars::prelude::*;
 /// BBANDS               Bollinger Bands
 /// DEMA                 Double Exponential Moving Average
 /// EMA                  Exponential Moving Average
-/// HT_TRENDLINE         Hilbert Transform - Instantaneous Trendline
 /// KAMA                 Kaufman Adaptive Moving Average
 /// MA                   Moving average
 /// MAMA                 MESA Adaptive Moving Average
-/// MAVP                 Moving average with variable period
 /// MIDPOINT             MidPoint over period
 /// MIDPRICE             Midpoint Price over period
 /// SAR                  Parabolic SAR
@@ -66,14 +64,14 @@ fn calc_sma(values: &[f64], period: usize) -> Vec<f64> {
                 break;
             }
         }
-        
+
         if valid_start + period > n {
             return result;
         }
-        
+
         sum = values[valid_start..valid_start + period].iter().sum();
         result[valid_start + period - 1] = sum / period as f64;
-        
+
         // Continue from valid_start + period
         for i in (valid_start + period)..n {
             sum += values[i] - values[i - period];
@@ -81,7 +79,7 @@ fn calc_sma(values: &[f64], period: usize) -> Vec<f64> {
         }
     } else {
         result[period - 1] = sum / period as f64;
-        
+
         for i in period..n {
             sum += values[i] - values[i - period];
             result[i] = sum / period as f64;
@@ -108,7 +106,7 @@ fn calc_ema(values: &[f64], period: usize) -> Vec<f64> {
         return result;
     }
     let start_idx = first_valid.unwrap();
-    
+
     // Need at least 'period' total valid values
     let valid_count = values[start_idx..].iter().filter(|v| !v.is_nan()).count();
     if valid_count < period {
@@ -171,6 +169,94 @@ impl MAType {
     }
 }
 
+/// Kaufman Adaptive Moving Average helper
+fn calc_kama(values: &[f64], period: usize) -> Vec<f64> {
+    let n = values.len();
+    let mut kama_vals = vec![f64::NAN; n];
+
+    if n < period {
+        return kama_vals;
+    }
+
+    let fast_sc = 2.0 / 3.0;
+    let slow_sc = 2.0 / 31.0;
+
+    for i in 0..n {
+        let start_idx = i.saturating_sub(period - 1);
+        if start_idx == 0 && i < period - 1 {
+            continue;
+        }
+
+        let change = (values[i] - values[start_idx]).abs();
+        let mut volatility = 0.0;
+        for j in start_idx..i {
+            volatility += (values[j + 1] - values[j]).abs();
+        }
+
+        if volatility != 0.0 {
+            let er = change / volatility;
+            let sc = (er * (fast_sc - slow_sc) + slow_sc).powi(2);
+
+            if i == period - 1 {
+                let sum: f64 = values[..period].iter().sum();
+                kama_vals[i] = sum / period as f64;
+            } else if i > period - 1 {
+                kama_vals[i] = sc * values[i] + (1.0 - sc) * kama_vals[i - 1];
+            }
+        } else if i > 0 {
+            kama_vals[i] = kama_vals[i - 1];
+        }
+    }
+
+    kama_vals
+}
+
+/// Generic Moving Average helper
+fn calc_ma(values: &[f64], period: usize, matype: MAType) -> Vec<f64> {
+    match matype {
+        MAType::Sma => calc_sma(values, period),
+        MAType::Ema => calc_ema(values, period),
+        MAType::Wma => calc_wma(values, period),
+        MAType::Dema => {
+            let ema1 = calc_ema(values, period);
+            let ema2 = calc_ema(&ema1, period);
+            ema1.iter()
+                .zip(ema2.iter())
+                .map(|(&e1, &e2)| {
+                    if e1.is_nan() || e2.is_nan() {
+                        f64::NAN
+                    } else {
+                        2.0 * e1 - e2
+                    }
+                })
+                .collect()
+        }
+        MAType::Tema => {
+            let ema1 = calc_ema(values, period);
+            let ema2 = calc_ema(&ema1, period);
+            let ema3 = calc_ema(&ema2, period);
+            ema1.iter()
+                .zip(ema2.iter())
+                .zip(ema3.iter())
+                .map(|((&e1, &e2), &e3)| {
+                    if e1.is_nan() || e2.is_nan() || e3.is_nan() {
+                        f64::NAN
+                    } else {
+                        3.0 * e1 - 3.0 * e2 + e3
+                    }
+                })
+                .collect()
+        }
+        MAType::Trima => calc_trima(values, period),
+        MAType::Kama => calc_kama(values, period),
+        MAType::Mama => {
+            let (mama, _) = calc_mama(values, 0.5, 0.05);
+            mama
+        }
+        MAType::T3 => calc_t3(values, period, 0.7),
+    }
+}
+
 // ============================================================================
 // BBANDS - Bollinger Bands
 // ============================================================================
@@ -195,7 +281,7 @@ impl MAType {
 /// DataFrame con columnas "bb_upper", "bb_middle", "bb_lower" añadidas
 ///
 /// # Fórmula
-/// Middle = SMA(close, timeperiod)
+/// Middle = MA(close, timeperiod, matype)
 /// Upper = Middle + (nbdevup * StdDev(close, timeperiod))
 /// Lower = Middle - (nbdevdn * StdDev(close, timeperiod))
 pub async fn bbands(
@@ -211,7 +297,7 @@ pub async fn bbands(
     let timeperiod = timeperiod.unwrap_or(5);
     let nbdevup = nbdevup.unwrap_or(2.0);
     let nbdevdn = nbdevdn.unwrap_or(2.0);
-    let _matype = MAType::from_i32(matype.unwrap_or(0));
+    let matype = MAType::from_i32(matype.unwrap_or(0));
     let output_col_bb_upper = output_col_bb_upper.unwrap_or("bb_upper");
     let output_col_bb_middle = output_col_bb_middle.unwrap_or("bb_middle");
     let output_col_bb_lower = output_col_bb_lower.unwrap_or("bb_lower");
@@ -221,22 +307,26 @@ pub async fn bbands(
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
     let n = close_vals.len();
 
-    let middle = calc_sma(&close_vals, timeperiod);
+    // Middle band uses the selected MAType
+    let middle = calc_ma(&close_vals, timeperiod, matype);
+
+    // Standard deviation is ALWAYS calculated using SMA as the mean (classical Bollinger definition)
+    let sma_for_stddev = calc_sma(&close_vals, timeperiod);
 
     let mut upper: Vec<f64> = vec![f64::NAN; n];
     let mut lower: Vec<f64> = vec![f64::NAN; n];
 
     for i in 0..n {
-        if i >= timeperiod - 1 && !middle[i].is_nan() {
+        if i >= timeperiod - 1 && !middle[i].is_nan() && !sma_for_stddev[i].is_nan() {
             let start = i.saturating_sub(timeperiod - 1);
             let window = &close_vals[start..=i];
-            let mean = middle[i];
+            let mean = sma_for_stddev[i];
             let variance: f64 =
                 window.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / timeperiod as f64;
             let stddev = variance.sqrt();
 
-            upper[i] = mean + nbdevup * stddev;
-            lower[i] = mean - nbdevdn * stddev;
+            upper[i] = middle[i] + nbdevup * stddev;
+            lower[i] = middle[i] - nbdevdn * stddev;
         }
     }
 
@@ -346,163 +436,6 @@ pub async fn ema(
 }
 
 // ============================================================================
-// HT_TRENDLINE - Hilbert Transform - Instantaneous Trendline
-// ============================================================================
-
-/// HT_TRENDLINE - Hilbert Transform - Instantaneous Trendline
-///
-/// Línea de tendencia instantánea basada en la Transformada de Hilbert.
-/// Utiliza el algoritmo de Ehlers para extraer la tendencia dominante
-/// del mercado filtrando el ruido cíclico.
-///
-/// # Parámetros
-/// * `df` - DataFrame con columna: close (case insensitive)
-/// * `output_col` - Nombre de la columna de salida (default: "ht_trendline")
-///
-/// # Retorna
-/// DataFrame con columna "ht_trendline" añadida
-///
-/// # Fórmula
-/// Aplica filtro WMA(4) → Transformada de Hilbert → Filtro de fase →
-/// Trendline = (I1[0] + Q1[0]) / 2 suavizado
-pub async fn ht_trendline(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
-    let output_col = output_col.unwrap_or("ht_trendline");
-
-    let close = get_close(&df)?;
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
-    let n = close_vals.len();
-
-    let mut trendline_vals: Vec<f64> = vec![f64::NAN; n];
-
-    // HT Trendline state
-    let mut period_wma_sum = 0.0;
-    let mut period_wma_sub = 0.0;
-    let mut trailing_price = 0.0;
-    let mut smoothed_buf = [0.0f64; 6];
-    let mut detrender_buf = [0.0f64; 6];
-    let mut q1_buf = [0.0f64; 6];
-    let mut i1_buf = [0.0f64; 10];
-    let mut prev_i2 = 0.0;
-    let mut prev_q2 = 0.0;
-    let mut i2 = 0.0;
-    let mut q2 = 0.0;
-    let mut re = 0.0;
-    let mut im = 0.0;
-    let mut prev_period = 0.0;
-    let mut smooth_period = 0.0;
-    let mut prev_smooth_period = 0.0;
-    let mut trendline = 0.0;
-    let mut prev_trendline = 0.0;
-
-    let a = 0.0962;
-    let b = 0.5769;
-
-    for (i, &price) in close_vals.iter().enumerate() {
-        // Step 1: Price Smoothing (4-period WMA)
-        period_wma_sub += price;
-        period_wma_sub -= trailing_price;
-        period_wma_sum += price * 4.0;
-        let smoothed = period_wma_sum * 0.1;
-        period_wma_sum -= period_wma_sub;
-        trailing_price = price;
-
-        for j in (1..6).rev() {
-            smoothed_buf[j] = smoothed_buf[j - 1];
-        }
-        smoothed_buf[0] = smoothed;
-
-        if i < 5 {
-            continue;
-        }
-
-        // Step 2: Hilbert Transform - Detrender
-        let detrender =
-            a * smoothed_buf[0] + b * smoothed_buf[2] - a * smoothed_buf[4] - b * smoothed_buf[5];
-
-        for j in (1..6).rev() {
-            detrender_buf[j] = detrender_buf[j - 1];
-        }
-        detrender_buf[0] = detrender;
-
-        // Q1 computation
-        let q1 = a * detrender_buf[0] + b * detrender_buf[2]
-            - a * detrender_buf[4]
-            - b * detrender_buf[5];
-
-        for j in (1..6).rev() {
-            q1_buf[j] = q1_buf[j - 1];
-        }
-        q1_buf[0] = q1;
-
-        // I1 is detrender delayed 3 bars
-        if i >= 8 {
-            for j in (1..10).rev() {
-                i1_buf[j] = i1_buf[j - 1];
-            }
-            i1_buf[0] = detrender_buf[0];
-        }
-
-        if i < 8 {
-            continue;
-        }
-
-        // jI and jQ
-        let j_i = a * i1_buf[3] + b * i1_buf[5] - a * i1_buf[7] - b * i1_buf[9];
-        let j_q = a * q1_buf[0] + b * q1_buf[2] - a * q1_buf[4] - b * q1_buf[5];
-
-        // Step 3: Phasor components (I2, Q2)
-        i2 = 0.2 * (i1_buf[0] - j_q) + 0.8 * prev_i2;
-        q2 = 0.2 * (q1_buf[0] + j_i) + 0.8 * prev_q2;
-        prev_i2 = i2;
-        prev_q2 = q2;
-
-        // Step 4: Period computation
-        if i >= 9 {
-            re = 0.2 * (i2 * prev_i2 + q2 * prev_q2) + 0.8 * re;
-            im = 0.2 * (i2 * prev_q2 - q2 * prev_i2) + 0.8 * im;
-
-            if im.abs() < 0.001 {
-                im = 0.001;
-            }
-            if re.abs() < 0.001 {
-                re = 0.001;
-            }
-
-            let temp_period = 360.0 / (im / re).atan().to_degrees().abs();
-
-            let mut bounded_period = if prev_period > 0.0 {
-                let lower = 0.67 * prev_period;
-                let upper = 1.5 * prev_period;
-                temp_period.max(lower).min(upper)
-            } else {
-                temp_period
-            };
-
-            bounded_period = bounded_period.max(6.0).min(50.0);
-
-            let period_filtered = 0.2 * bounded_period + 0.8 * prev_period;
-            smooth_period = 0.33 * period_filtered + 0.67 * prev_smooth_period;
-
-            prev_period = period_filtered;
-            prev_smooth_period = smooth_period;
-
-            // Trendline computation
-            let temp_trendline = (i1_buf[0] + q1_buf[0]) / 2.0;
-            trendline = 0.33 * temp_trendline + 0.67 * prev_trendline;
-            prev_trendline = trendline;
-
-            trendline_vals[i] = trendline;
-        }
-    }
-
-    let trendline_series = Series::new(output_col.into(), &trendline_vals);
-    let mut result_df = df;
-    result_df.with_column(trendline_series.into())?;
-    Ok(result_df)
-}
-
-// ============================================================================
 // KAMA - Kaufman Adaptive Moving Average
 // ============================================================================
 
@@ -535,50 +468,8 @@ pub async fn kama(
     let close = get_close(&df)?;
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
-    let n = close_vals.len();
 
-    if n < timeperiod + 1 {
-        let kama_series = Series::new(output_col.into(), &vec![f64::NAN; n]);
-        let mut result_df = df;
-        result_df.with_column(kama_series.into())?;
-        return Ok(result_df);
-    }
-    
-    let mut kama_vals: Vec<f64> = vec![f64::NAN; n];
-
-    if n >= timeperiod {
-        let fast_sc = 2.0 / (3.0); // 2/(2+1)
-        let slow_sc = 2.0 / (31.0); // 2/(30+1)
-
-        for i in 0..n {
-            let start_idx = i.saturating_sub(timeperiod - 1);
-            if start_idx == 0 && i < timeperiod - 1 {
-                continue;
-            }
-            if i.saturating_sub(timeperiod - 1) == 0 && i == 0 {
-                continue;
-            }
-            let change = (close_vals[i] - close_vals[start_idx]).abs();
-            let start = start_idx;
-            let mut volatility = 0.0;
-            for j in start..i {
-                volatility += (close_vals[j + 1] - close_vals[j]).abs();
-            }
-
-            if volatility != 0.0 {
-                let er = change / volatility;
-                let sc = (er * (fast_sc - slow_sc) + slow_sc).powi(2);
-
-                if i == timeperiod - 1 {
-                    // Initialize with SMA
-                    let sum: f64 = close_vals[..timeperiod].iter().sum();
-                    kama_vals[i] = sum / timeperiod as f64;
-                } else {
-                    kama_vals[i] = sc * close_vals[i] + (1.0 - sc) * kama_vals[i - 1];
-                }
-            }
-        }
-    }
+    let kama_vals = calc_kama(&close_vals, timeperiod);
 
     let kama_series = Series::new(output_col.into(), &kama_vals);
     let mut result_df = df;
@@ -617,71 +508,7 @@ pub async fn ma(
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
-    let ma_vals = match MAType::from_i32(matype) {
-        MAType::Sma => calc_sma(&close_vals, timeperiod),
-        MAType::Ema => calc_ema(&close_vals, timeperiod),
-        MAType::Wma => calc_wma(&close_vals, timeperiod),
-        MAType::Dema => {
-            let ema1 = calc_ema(&close_vals, timeperiod);
-            let ema2 = calc_ema(&ema1, timeperiod);
-            ema1.iter()
-                .zip(ema2.iter())
-                .map(|(&e1, &e2)| {
-                    if e1.is_nan() || e2.is_nan() {
-                        f64::NAN
-                    } else {
-                        2.0 * e1 - e2
-                    }
-                })
-                .collect()
-        }
-        MAType::Tema => {
-            let ema1 = calc_ema(&close_vals, timeperiod);
-            let ema2 = calc_ema(&ema1, timeperiod);
-            let ema3 = calc_ema(&ema2, timeperiod);
-            ema1.iter()
-                .zip(ema2.iter())
-                .zip(ema3.iter())
-                .map(|((&e1, &e2), &e3)| {
-                    if e1.is_nan() || e2.is_nan() || e3.is_nan() {
-                        f64::NAN
-                    } else {
-                        3.0 * e1 - 3.0 * e2 + e3
-                    }
-                })
-                .collect()
-        }
-        MAType::Trima => calc_trima(&close_vals, timeperiod),
-        MAType::Kama => {
-            let mut kama = vec![f64::NAN; close_vals.len()];
-            if close_vals.len() >= timeperiod {
-                let fast_sc = 2.0 / 3.0;
-                let slow_sc = 2.0 / 31.0;
-                for i in (timeperiod - 1)..close_vals.len() {
-                    let change = (close_vals[i] - close_vals[i - timeperiod + 1]).abs();
-                    let volatility: f64 = (i - timeperiod + 2..=i)
-                        .map(|j| (close_vals[j] - close_vals[j - 1]).abs())
-                        .sum();
-                    if volatility != 0.0 {
-                        let er = change / volatility;
-                        let sc = (er * (fast_sc - slow_sc) + slow_sc).powi(2);
-                        if i == timeperiod - 1 {
-                            let sum: f64 = close_vals[..timeperiod].iter().sum();
-                            kama[i] = sum / timeperiod as f64;
-                        } else {
-                            kama[i] = sc * close_vals[i] + (1.0 - sc) * kama[i - 1];
-                        }
-                    }
-                }
-            }
-            kama
-        }
-        MAType::Mama => {
-            let (mama, _) = calc_mama(&close_vals, 0.5, 0.05);
-            mama
-        }
-        MAType::T3 => calc_t3(&close_vals, timeperiod, 0.7),
-    };
+    let ma_vals = calc_ma(&close_vals, timeperiod, MAType::from_i32(matype));
 
     let ma_series = Series::new(output_col.into(), &ma_vals);
     let mut result_df = df;
@@ -746,26 +573,23 @@ fn calc_mama(values: &[f64], fastlimit: f64, slowlimit: f64) -> (Vec<f64>, Vec<f
     let mut mama_vals = vec![f64::NAN; n];
     let mut fama_vals = vec![f64::NAN; n];
 
-    if n < 9 {
+    if n < 30 {
         return (mama_vals, fama_vals);
     }
 
-    let mut period_wma_sum = 0.0;
-    let mut period_wma_sub = 0.0;
-    let mut trailing_price = 0.0;
-    let mut smoothed_buf = [0.0f64; 6];
-    let mut detrender_buf = [0.0f64; 6];
-    let mut q1_buf = [0.0f64; 6];
-    let mut i1_buf = [0.0f64; 10];
+    let mut price_buf = [0.0f64; 4];
+    let mut smoothed_buf = [0.0f64; 7];
+    let mut detrender_buf = [0.0f64; 7];
+    let mut q1_buf = [0.0f64; 7];
+    let mut i1_buf = [0.0f64; 7];
+
     let mut prev_i2 = 0.0;
     let mut prev_q2 = 0.0;
-    let mut i2 = 0.0;
-    let mut q2 = 0.0;
     let mut re = 0.0;
     let mut im = 0.0;
     let mut prev_period = 0.0;
-    let mut smooth_period = 0.0;
     let mut prev_smooth_period = 0.0;
+    let mut prev_phase = 0.0;
     let mut mama = 0.0;
     let mut fama = 0.0;
     let mut initialized = false;
@@ -774,96 +598,107 @@ fn calc_mama(values: &[f64], fastlimit: f64, slowlimit: f64) -> (Vec<f64>, Vec<f
     let b = 0.5769;
 
     for (i, &price) in values.iter().enumerate() {
-        period_wma_sub += price;
-        period_wma_sub -= trailing_price;
-        period_wma_sum += price * 4.0;
-        let smoothed = period_wma_sum * 0.1;
-        period_wma_sum -= period_wma_sub;
-        trailing_price = price;
+        // Shift buffers
+        for j in (1..4).rev() {
+            price_buf[j] = price_buf[j - 1];
+        }
+        price_buf[0] = price;
 
-        for j in (1..6).rev() {
+        let smoothed =
+            (price_buf[0] + 2.0 * price_buf[1] + 2.0 * price_buf[2] + price_buf[3]) / 6.0;
+
+        for j in (1..7).rev() {
             smoothed_buf[j] = smoothed_buf[j - 1];
         }
         smoothed_buf[0] = smoothed;
 
-        if i < 5 {
+        if i < 6 {
             continue;
         }
 
+        let mult = 0.075 * prev_period + 0.54;
         let detrender =
-            a * smoothed_buf[0] + b * smoothed_buf[2] - a * smoothed_buf[4] - b * smoothed_buf[5];
+            (a * smoothed_buf[0] + b * smoothed_buf[2] - b * smoothed_buf[4] - a * smoothed_buf[6])
+                * mult;
 
-        for j in (1..6).rev() {
+        for j in (1..7).rev() {
             detrender_buf[j] = detrender_buf[j - 1];
         }
         detrender_buf[0] = detrender;
 
-        let q1 = a * detrender_buf[0] + b * detrender_buf[2]
-            - a * detrender_buf[4]
-            - b * detrender_buf[5];
+        let q1 = (a * detrender_buf[0] + b * detrender_buf[2]
+            - b * detrender_buf[4]
+            - a * detrender_buf[6])
+            * mult;
 
-        for j in (1..6).rev() {
+        for j in (1..7).rev() {
             q1_buf[j] = q1_buf[j - 1];
         }
         q1_buf[0] = q1;
 
-        if i >= 8 {
-            for j in (1..10).rev() {
-                i1_buf[j] = i1_buf[j - 1];
-            }
-            i1_buf[0] = detrender_buf[0];
+        let i1 = detrender_buf[3];
+        for j in (1..7).rev() {
+            i1_buf[j] = i1_buf[j - 1];
         }
+        i1_buf[0] = i1;
 
-        if i < 8 {
-            continue;
-        }
+        let j_i = (a * i1_buf[0] + b * i1_buf[2] - b * i1_buf[4] - a * i1_buf[6]) * mult;
+        let j_q = (a * q1_buf[0] + b * q1_buf[2] - b * q1_buf[4] - a * q1_buf[6]) * mult;
 
-        let j_i = a * i1_buf[3] + b * i1_buf[5] - a * i1_buf[7] - b * i1_buf[9];
-        let j_q = a * q1_buf[0] + b * q1_buf[2] - a * q1_buf[4] - b * q1_buf[5];
+        let i2 = i1 - j_q;
+        let q2 = q1 + j_i;
 
-        i2 = 0.2 * (i1_buf[0] - j_q) + 0.8 * prev_i2;
-        q2 = 0.2 * (q1_buf[0] + j_i) + 0.8 * prev_q2;
-        prev_i2 = i2;
-        prev_q2 = q2;
+        let smoothed_i2 = 0.2 * i2 + 0.8 * prev_i2;
+        let smoothed_q2 = 0.2 * q2 + 0.8 * prev_q2;
 
-        if i >= 9 {
-            re = 0.2 * (i2 * prev_i2 + q2 * prev_q2) + 0.8 * re;
-            im = 0.2 * (i2 * prev_q2 - q2 * prev_i2) + 0.8 * im;
+        re = 0.2 * (smoothed_i2 * prev_i2 + smoothed_q2 * prev_q2) + 0.8 * re;
+        im = 0.2 * (smoothed_i2 * prev_q2 - smoothed_q2 * prev_i2) + 0.8 * im;
 
-            if im.abs() < 0.001 {
-                im = 0.001;
-            }
-            if re.abs() < 0.001 {
-                re = 0.001;
-            }
+        prev_i2 = smoothed_i2;
+        prev_q2 = smoothed_q2;
 
-            let temp_period = 360.0 / (im / re).atan().to_degrees().abs();
+        if i >= 12 {
+            let temp_period = if im != 0.0 && re != 0.0 {
+                360.0 / (im / re).atan().to_degrees()
+            } else {
+                prev_period
+            };
 
             let mut bounded_period = if prev_period > 0.0 {
                 temp_period.max(0.67 * prev_period).min(1.5 * prev_period)
             } else {
                 temp_period
             };
-
             bounded_period = bounded_period.max(6.0).min(50.0);
 
             let period_filtered = 0.2 * bounded_period + 0.8 * prev_period;
-            smooth_period = 0.33 * period_filtered + 0.67 * prev_smooth_period;
+            let smooth_period = 0.33 * period_filtered + 0.67 * prev_smooth_period;
 
             prev_period = period_filtered;
             prev_smooth_period = smooth_period;
 
             // Phase calculation
-            let phase = if i1_buf[0].abs() > 0.001 {
-                (q1_buf[0] / i1_buf[0]).atan().to_degrees() + 90.0
+            let mut phase = if i1.abs() > 0.0 {
+                (q1 / i1).atan().to_degrees()
             } else {
-                90.0
+                0.0
             };
 
-            // Alpha adaptativo
-            let abs_phase = phase.abs();
-            let mut alpha = (fastlimit / abs_phase.max(1.0)).min(slowlimit).max(0.0);
-            alpha = alpha.max(0.0).min(fastlimit);
+            let mut delta_phase = prev_phase - phase;
+            if prev_phase < phase {
+                delta_phase = 360.0 + prev_phase - phase;
+            }
+            if delta_phase < 1.0 {
+                delta_phase = 1.0;
+            }
+
+            let mut alpha = fastlimit / delta_phase;
+            if alpha < slowlimit {
+                alpha = slowlimit;
+            }
+            if alpha > fastlimit {
+                alpha = fastlimit;
+            }
 
             if !initialized {
                 mama = price;
@@ -874,86 +709,16 @@ fn calc_mama(values: &[f64], fastlimit: f64, slowlimit: f64) -> (Vec<f64>, Vec<f
                 fama = 0.5 * alpha * mama + (1.0 - 0.5 * alpha) * fama;
             }
 
-            mama_vals[i] = mama;
-            fama_vals[i] = fama;
-        }
-    }
+            prev_phase = phase;
 
-    (mama_vals, fama_vals)
-}
-
-// ============================================================================
-// MAVP - Moving Average with Variable Period
-// ============================================================================
-
-/// MAVP - Moving Average with Variable Period
-///
-/// Media móvil con período variable que cambia en cada barra según una
-/// serie de entrada. Permite adaptar dinámicamente la sensibilidad
-/// de la media móvil.
-///
-/// # Parámetros
-/// * `df` - DataFrame con columnas: close, period (case insensitive)
-/// * `minperiod` - Período mínimo (default: 2)
-/// * `maxperiod` - Período máximo (default: 30)
-/// * `matype` - Tipo de media móvil (default: 0=SMA)
-/// * `output_col` - Nombre de la columna de salida (default: "mavp")
-///
-/// # Retorna
-/// DataFrame con columna "mavp" añadida
-pub async fn mavp(
-    df: DataFrame,
-    minperiod: Option<usize>,
-    maxperiod: Option<usize>,
-    matype: Option<i32>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
-    let minperiod = minperiod.unwrap_or(2);
-    let maxperiod = maxperiod.unwrap_or(30);
-    let matype = matype.unwrap_or(0);
-    let output_col = output_col.unwrap_or("mavp");
-
-    let close = get_close(&df)?;
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
-
-    // Try to get period column - if not found, return NaN
-    let period_vals: Vec<f64> = match df.column("period").or_else(|_| df.column("Period")) {
-        Ok(col) => {
-            let s = col.cast(&DataType::Float64).unwrap();
-            let ca = s.f64().unwrap();
-            ca.into_no_null_iter().collect()
-        }
-        Err(_) => vec![f64::NAN; close_vals.len()],
-    };
-
-    let n = close_vals.len();
-    let mut mavp_vals: Vec<f64> = vec![f64::NAN; n];
-
-    for i in 0..n {
-        if !period_vals[i].is_nan() && period_vals[i] > 0.0 {
-            let period = period_vals[i].round() as usize;
-            let period = period.max(minperiod).min(maxperiod);
-
-            if i >= period - 1 {
-                let window = &close_vals[i - period + 1..=i];
-                mavp_vals[i] = match MAType::from_i32(matype) {
-                    MAType::Sma => window.iter().sum::<f64>() / period as f64,
-                    MAType::Ema => {
-                        // Simplified: use last value of EMA
-                        let ema = calc_ema(window, period);
-                        ema.last().copied().unwrap_or(f64::NAN)
-                    }
-                    _ => window.iter().sum::<f64>() / period as f64, // Default to SMA
-                };
+            if i >= 30 {
+                mama_vals[i] = mama;
+                fama_vals[i] = fama;
             }
         }
     }
 
-    let mavp_series = Series::new(output_col.into(), &mavp_vals);
-    let mut result_df = df;
-    result_df.with_column(mavp_series.into())?;
-    Ok(result_df)
+    (mama_vals, fama_vals)
 }
 
 // ============================================================================
@@ -984,26 +749,40 @@ pub async fn midpoint(
     let output_col = output_col.unwrap_or("midpoint");
 
     let close = get_close(&df)?;
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
+    let close_ca = close.f64().unwrap();
+    // Maintain original length by including nulls as NaN
+    let close_vals: Vec<f64> = close_ca
+        .into_iter()
+        .map(|opt| opt.unwrap_or(f64::NAN))
+        .collect();
     let n = close_vals.len();
-
-    if n < timeperiod {
-        let midpoint_series = Series::new(output_col.into(), &vec![f64::NAN; n]);
-        let mut result_df = df;
-        result_df.with_column(midpoint_series.into())?;
-        return Ok(result_df);
-    }
 
     let mut midpoint_vals: Vec<f64> = vec![f64::NAN; n];
 
-    for i in 0..n {
-        if i >= timeperiod - 1 {
-            let start = i.saturating_sub(timeperiod - 1);
+    if n >= timeperiod {
+        for i in (timeperiod - 1)..n {
+            let start = i + 1 - timeperiod;
             let window = &close_vals[start..=i];
-            let max_val = window.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-            let min_val = window.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-            midpoint_vals[i] = (max_val + min_val) / 2.0;
+
+            let mut max_val = f64::NEG_INFINITY;
+            let mut min_val = f64::INFINITY;
+            let mut has_valid = false;
+
+            for &val in window {
+                if val.is_finite() {
+                    if val > max_val {
+                        max_val = val;
+                    }
+                    if val < min_val {
+                        min_val = val;
+                    }
+                    has_valid = true;
+                }
+            }
+
+            if has_valid {
+                midpoint_vals[i] = (max_val + min_val) / 2.0;
+            }
         }
     }
 
@@ -1014,10 +793,10 @@ pub async fn midpoint(
 }
 
 // ============================================================================
-// MIDPRICE - Midpoint Price over period
+// MIDPRICE - Midprice over period
 // ============================================================================
 
-/// MIDPRICE - Midpoint Price over period
+/// MIDPRICE - Midprice over period
 ///
 /// Punto medio entre el precio más alto y más bajo en un período.
 /// Similar a MIDPOINT pero usa high y low en lugar de close.
@@ -1043,22 +822,53 @@ pub async fn midprice(
     let high = get_high(&df)?;
     let low = get_low(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let n = high_vals.len();
+    let high_ca = high.f64().unwrap();
+    let low_ca = low.f64().unwrap();
 
+    // Maintain original length by including nulls as NaN and ensuring alignment
+    let high_vals: Vec<f64> = high_ca
+        .into_iter()
+        .map(|opt| opt.unwrap_or(f64::NAN))
+        .collect();
+    let low_vals: Vec<f64> = low_ca
+        .into_iter()
+        .map(|opt| opt.unwrap_or(f64::NAN))
+        .collect();
+
+    let n = high_vals.len();
     let mut midprice_vals: Vec<f64> = vec![f64::NAN; n];
 
-    for i in 0..n {
-        if i >= timeperiod - 1 {
-            let start = i.saturating_sub(timeperiod - 1);
+    if n >= timeperiod {
+        for i in (timeperiod - 1)..n {
+            let start = i + 1 - timeperiod;
             let high_window = &high_vals[start..=i];
             let low_window = &low_vals[start..=i];
-            let max_high = high_window.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-            let min_low = low_window.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-            midprice_vals[i] = (max_high + min_low) / 2.0;
+
+            let mut max_high = f64::NEG_INFINITY;
+            let mut min_low = f64::INFINITY;
+            let mut has_valid = false;
+
+            for j in 0..timeperiod {
+                let h = high_window[j];
+                let l = low_window[j];
+
+                if h.is_finite() {
+                    if h > max_high {
+                        max_high = h;
+                    }
+                    has_valid = true;
+                }
+                if l.is_finite() {
+                    if l < min_low {
+                        min_low = l;
+                    }
+                    has_valid = true;
+                }
+            }
+
+            if has_valid {
+                midprice_vals[i] = (max_high + min_low) / 2.0;
+            }
         }
     }
 
@@ -1553,7 +1363,7 @@ pub async fn wma(
     let close = get_close(&df)?;
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
-    
+
     if close_vals.len() < timeperiod {
         let wma_series = Series::new(output_col.into(), &vec![f64::NAN; close_vals.len()]);
         let mut result_df = df;
@@ -1616,7 +1426,7 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_adx() {
+    async fn test_bbands() {
         match load_data().await {
             Ok(df) => match bbands(df, None, None, None, None, None, None, None).await {
                 Ok(result) => {
@@ -1657,21 +1467,6 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_ht_trendline() {
-        match load_data().await {
-            Ok(df) => match ht_trendline(df, None).await {
-                Ok(result) => {
-                    save_data(&result, "download/test_ht_trendline.csv")
-                        .await
-                        .unwrap();
-                }
-                Err(e) => panic!("Failed to compute ht_trendline: {:?}", e),
-            },
-            Err(e) => panic!("Failed to load data: {:?}", e),
-        }
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
     async fn test_kama() {
         match load_data().await {
             Ok(df) => match kama(df, None, None).await {
@@ -1705,19 +1500,6 @@ mod tests {
                     save_data(&result, "download/test_mama.csv").await.unwrap();
                 }
                 Err(e) => panic!("Failed to compute mama: {:?}", e),
-            },
-            Err(e) => panic!("Failed to load data: {:?}", e),
-        }
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_mavp() {
-        match load_data().await {
-            Ok(df) => match mavp(df, None, None, None, None).await {
-                Ok(result) => {
-                    save_data(&result, "download/test_mavp.csv").await.unwrap();
-                }
-                Err(e) => panic!("Failed to compute mavp: {:?}", e),
             },
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
