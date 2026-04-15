@@ -46,43 +46,45 @@ fn calc_sma(values: &[f64], period: usize) -> Vec<f64> {
     let n = values.len();
     let mut result = vec![f64::NAN; n];
 
-    if n < period {
+    if n < period || period == 0 {
         return result;
     }
 
-    // Initialize - skip NaN values
-    let init: f64 = values[..period]
-        .iter()
-        .filter(|v| !v.is_nan())
-        .sum::<f64>();
-    let valid_init = values[..period].iter().filter(|v| !v.is_nan()).count();
-    
-    if valid_init > 0 {
-        result[period - 1] = init / valid_init as f64;
+    // Initialize
+    let mut sum: f64 = values[..period].iter().sum();
+
+    // Check for NaN in initial window
+    if !sum.is_finite() {
+        // Find first 'period' valid values
+        let mut valid_start = 0;
+        for i in 0..n {
+            let window_is_valid = values[i..i.saturating_add(period)]
+                .iter()
+                .all(|v| v.is_finite());
+            if window_is_valid {
+                valid_start = i;
+                break;
+            }
+        }
+        
+        if valid_start + period > n {
+            return result;
+        }
+        
+        sum = values[valid_start..valid_start + period].iter().sum();
+        result[valid_start + period - 1] = sum / period as f64;
+        
+        // Continue from valid_start + period
+        for i in (valid_start + period)..n {
+            sum += values[i] - values[i - period];
+            result[i] = sum / period as f64;
+        }
     } else {
-        return result;
-    }
-
-    // Fill remaining values - track valid count for rolling window
-    let mut sum = init;
-    let mut valid_count = valid_init;
-    
-    for i in period..n {
-        let prev_val = values[i - period];
-        let curr_val = values[i];
+        result[period - 1] = sum / period as f64;
         
-        // Adjust sum and valid_count based on NaN values
-        if !prev_val.is_nan() {
-            sum -= prev_val;
-            valid_count -= 1;
-        }
-        if !curr_val.is_nan() {
-            sum += curr_val;
-            valid_count += 1;
-        }
-        
-        if valid_count > 0 {
-            result[i] = sum / valid_count as f64;
+        for i in period..n {
+            sum += values[i] - values[i - period];
+            result[i] = sum / period as f64;
         }
     }
 
@@ -224,9 +226,10 @@ pub async fn bbands(
     let mut upper: Vec<f64> = vec![f64::NAN; n];
     let mut lower: Vec<f64> = vec![f64::NAN; n];
 
-    for i in (timeperiod - 1)..n {
-        if !middle[i].is_nan() {
-            let window = &close_vals[i - timeperiod + 1..=i];
+    for i in 0..n {
+        if i >= timeperiod - 1 && !middle[i].is_nan() {
+            let start = i.saturating_sub(timeperiod - 1);
+            let window = &close_vals[start..=i];
             let mean = middle[i];
             let variance: f64 =
                 window.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / timeperiod as f64;
@@ -534,17 +537,33 @@ pub async fn kama(
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
     let n = close_vals.len();
 
+    if n < timeperiod + 1 {
+        let kama_series = Series::new(output_col.into(), &vec![f64::NAN; n]);
+        let mut result_df = df;
+        result_df.with_column(kama_series.into())?;
+        return Ok(result_df);
+    }
+    
     let mut kama_vals: Vec<f64> = vec![f64::NAN; n];
 
     if n >= timeperiod {
         let fast_sc = 2.0 / (3.0); // 2/(2+1)
         let slow_sc = 2.0 / (31.0); // 2/(30+1)
 
-        for i in (timeperiod - 1)..n {
-            let change = (close_vals[i] - close_vals[i - timeperiod + 1]).abs();
-            let volatility: f64 = (i - timeperiod + 2..=i)
-                .map(|j| (close_vals[j] - close_vals[j - 1]).abs())
-                .sum();
+        for i in 0..n {
+            let start_idx = i.saturating_sub(timeperiod - 1);
+            if start_idx == 0 && i < timeperiod - 1 {
+                continue;
+            }
+            if i.saturating_sub(timeperiod - 1) == 0 && i == 0 {
+                continue;
+            }
+            let change = (close_vals[i] - close_vals[start_idx]).abs();
+            let start = start_idx;
+            let mut volatility = 0.0;
+            for j in start..i {
+                volatility += (close_vals[j + 1] - close_vals[j]).abs();
+            }
 
             if volatility != 0.0 {
                 let er = change / volatility;
@@ -898,10 +917,15 @@ pub async fn mavp(
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
-    // Try to get period column
-    let period_col = df.column("period").or_else(|_| df.column("Period"))?;
-    let period_ca: ChunkedArray<Float64Type> = period_col.cast(&DataType::Float64)?.f64()?.clone();
-    let period_vals: Vec<f64> = period_ca.into_no_null_iter().collect();
+    // Try to get period column - if not found, return NaN
+    let period_vals: Vec<f64> = match df.column("period").or_else(|_| df.column("Period")) {
+        Ok(col) => {
+            let s = col.cast(&DataType::Float64).unwrap();
+            let ca = s.f64().unwrap();
+            ca.into_no_null_iter().collect()
+        }
+        Err(_) => vec![f64::NAN; close_vals.len()],
+    };
 
     let n = close_vals.len();
     let mut mavp_vals: Vec<f64> = vec![f64::NAN; n];
@@ -964,13 +988,23 @@ pub async fn midpoint(
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
     let n = close_vals.len();
 
+    if n < timeperiod {
+        let midpoint_series = Series::new(output_col.into(), &vec![f64::NAN; n]);
+        let mut result_df = df;
+        result_df.with_column(midpoint_series.into())?;
+        return Ok(result_df);
+    }
+
     let mut midpoint_vals: Vec<f64> = vec![f64::NAN; n];
 
-    for i in (timeperiod - 1)..n {
-        let window = &close_vals[i - timeperiod + 1..=i];
-        let max_val = window.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        let min_val = window.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-        midpoint_vals[i] = (max_val + min_val) / 2.0;
+    for i in 0..n {
+        if i >= timeperiod - 1 {
+            let start = i.saturating_sub(timeperiod - 1);
+            let window = &close_vals[start..=i];
+            let max_val = window.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+            let min_val = window.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+            midpoint_vals[i] = (max_val + min_val) / 2.0;
+        }
     }
 
     let midpoint_series = Series::new(output_col.into(), &midpoint_vals);
@@ -1017,12 +1051,15 @@ pub async fn midprice(
 
     let mut midprice_vals: Vec<f64> = vec![f64::NAN; n];
 
-    for i in (timeperiod - 1)..n {
-        let high_window = &high_vals[i - timeperiod + 1..=i];
-        let low_window = &low_vals[i - timeperiod + 1..=i];
-        let max_high = high_window.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        let min_low = low_window.iter().fold(f64::INFINITY, |a, &b| a.min(b));
-        midprice_vals[i] = (max_high + min_low) / 2.0;
+    for i in 0..n {
+        if i >= timeperiod - 1 {
+            let start = i.saturating_sub(timeperiod - 1);
+            let high_window = &high_vals[start..=i];
+            let low_window = &low_vals[start..=i];
+            let max_high = high_window.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b));
+            let min_low = low_window.iter().fold(f64::INFINITY, |a, &b| a.min(b));
+            midprice_vals[i] = (max_high + min_low) / 2.0;
+        }
     }
 
     let midprice_series = Series::new(output_col.into(), &midprice_vals);
@@ -1516,6 +1553,13 @@ pub async fn wma(
     let close = get_close(&df)?;
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
+    
+    if close_vals.len() < timeperiod {
+        let wma_series = Series::new(output_col.into(), &vec![f64::NAN; close_vals.len()]);
+        let mut result_df = df;
+        result_df.with_column(wma_series.into())?;
+        return Ok(result_df);
+    }
 
     let wma_vals = calc_wma(&close_vals, timeperiod);
 
@@ -1535,13 +1579,15 @@ fn calc_wma(values: &[f64], period: usize) -> Vec<f64> {
 
     let weight_sum: f64 = (1..=period).map(|w| w as f64).sum();
 
-    for i in (period - 1)..n {
-        let mut weighted_sum = 0.0;
-        for j in 0..period {
-            let weight = (j + 1) as f64;
-            weighted_sum += values[i - period + 1 + j] * weight;
+    for i in 0..n {
+        if i >= period - 1 {
+            let mut weighted_sum = 0.0;
+            let start = i.saturating_sub(period - 1);
+            for j in 0..period {
+                weighted_sum += values[start + j] * (j + 1) as f64;
+            }
+            result[i] = weighted_sum / weight_sum;
         }
-        result[i] = weighted_sum / weight_sum;
     }
 
     result
