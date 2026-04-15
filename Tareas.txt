@@ -13,7 +13,7 @@ Terminadas:
 
 
 TODO:
-promt: Quiero que me crees la funcionalidad de las funciones de [@statistic.rs](file:///home/jairo/Documentos/proyectos/QuantiaBuilder/src-tauri/src/indicators/statistic.rs) que tienen que recibir un dataframe por parametros y los parametros necesarios para calcular el indicador de trading de cada función y devolver el dataframe de polars con los datos: Los calculos para los indicadores puedes verlos en https://github.com/TA-Lib/ta-lib para optener más infomación.
+promt: Quiero que me crees la funcionalidad de las funciones de [@statistic.rs](file:///home/jairo/Documentos/proyectos/QuantiaBuilder/src-tauri/src/indicators/statistic.rs) que tienen que recibir un dataframe por parametros y los parametros necesarios para calcular el indicador de trading de cada función y devolver el dataframe de polars con los datos: Los calculos para los indicadores puedes verlos en https://github.com/TA-Lib/ta-lib para optener más infomación. Crea tambien la coumentación correspondiente de las funciones.
 -Crear indicadores basicos por ahora:
     Overlap Studies:
         BBANDS               Bollinger Bands
