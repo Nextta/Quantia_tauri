@@ -13,7 +13,7 @@ Terminadas:
 
 
 TODO:
-promt: Quiero que me crees la funcionalidad de las funciones de [@statistic.rs](file:///home/jairo/Documentos/proyectos/QuantiaBuilder/src-tauri/src/indicators/statistic.rs) que tienen que recibir un dataframe por parametros y los parametros necesarios para calcular el indicador de trading de cada función y devolver el dataframe de polars con los datos: Los calculos para los indicadores puedes verlos en https://github.com/TA-Lib/ta-lib para optener más infomación. Crea tambien la coumentación correspondiente de las funciones.
+promt: Quiero que me crees la funcionalidad de la funcion X de [@statistic.rs](file:///home/jairo/Documentos/proyectos/QuantiaBuilder/src-tauri/src/indicators/statistic.rs) que calcula el indicador X. Tienen que recibir un dataframe por parametros y los parametros necesarios para calcular el indicador de trading y devolver el dataframe de polars con los datos: Los calculos para los indicadores puedes verlos en https://github.com/TA-Lib/ta-lib y busca la formila tambien en internet para optener más infomación. Crea tambien la coumentación correspondiente de las funciones.
 
 Promt para verificar los indicadores: Quiero que busque en internet como se calcula el indicador de trading X y compruebes la función que yo tengo programada para que verifiques que mi función hace bien los calculos de ese indicador. En caso de que no lo este calculando bien, corrige los calculos de mi función para que calcule bien el indicador. Mi funcion es X.
 
@@ -52,7 +52,7 @@ Promt para verificar los indicadores: Quiero que busque en internet como se calc
         CDLHIKKAKEMOD        Modified Hikkake Pattern
         CDLHOMINGPIGEON      Homing Pigeon
         CDLIDENTICAL3CROWS   Identical Three Crows
-        CDLINNECK            In-Neck Pattern
+            CDLINNECK            In-Neck Pattern
         CDLINVERTEDHAMMER    Inverted Hammer
         CDLKICKING           Kicking
         CDLKICKINGBYLENGTH   Kicking - bull/bear determined by the longer marubozu
