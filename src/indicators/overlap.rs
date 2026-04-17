@@ -48,41 +48,37 @@ fn calc_sma(values: &[f64], period: usize) -> Vec<f64> {
         return result;
     }
 
-    // Initialize
-    let mut sum: f64 = values[..period].iter().sum();
+    // Find the first window of 'period' consecutive finite values
+    let mut first_valid_idx = None;
+    for i in 0..=(n - period) {
+        let window = &values[i..i + period];
+        if window.iter().all(|v| v.is_finite()) {
+            first_valid_idx = Some(i);
+            break;
+        }
+    }
 
-    // Check for NaN in initial window
-    if !sum.is_finite() {
-        // Find first 'period' valid values
-        let mut valid_start = 0;
-        for i in 0..n {
-            let window_is_valid = values[i..i.saturating_add(period)]
-                .iter()
-                .all(|v| v.is_finite());
-            if window_is_valid {
-                valid_start = i;
-                break;
+    if let Some(start) = first_valid_idx {
+        let mut sum: f64 = values[start..start + period].iter().sum();
+        result[start + period - 1] = sum / period as f64;
+
+        for i in (start + period)..n {
+            let val = values[i];
+            let oldest = values[i - period];
+
+            if val.is_finite() && oldest.is_finite() {
+                sum += val - oldest;
+                result[i] = sum / period as f64;
+            } else {
+                // If we encounter a NaN, we need to re-sync or propagate
+                // Standard SMA typically propagates NaN
+                sum = f64::NAN;
+                result[i] = f64::NAN;
+
+                // Try to find the next valid window if we want to be resilient,
+                // but standard TA-Lib behavior is to propagate or handle NaNs differently.
+                // For now, let's keep it simple and standard (propagate).
             }
-        }
-
-        if valid_start + period > n {
-            return result;
-        }
-
-        sum = values[valid_start..valid_start + period].iter().sum();
-        result[valid_start + period - 1] = sum / period as f64;
-
-        // Continue from valid_start + period
-        for i in (valid_start + period)..n {
-            sum += values[i] - values[i - period];
-            result[i] = sum / period as f64;
-        }
-    } else {
-        result[period - 1] = sum / period as f64;
-
-        for i in period..n {
-            sum += values[i] - values[i - period];
-            result[i] = sum / period as f64;
         }
     }
 
@@ -924,66 +920,61 @@ pub async fn sar(
         return Ok(result_df);
     }
 
-    let mut af = acceleration; // Acceleration Factor
-    let mut ep = high_vals[0]; // Extreme Point
-    let mut is_long = high_vals[1] > high_vals[0]; // Initial trend direction
+    let mut af = acceleration;
+    let mut is_long = high_vals[1] > high_vals[0];
+    let mut sar = if is_long { low_vals[0] } else { high_vals[0] };
+    let mut ep = if is_long { high_vals[1] } else { low_vals[1] };
 
-    // Initialize SAR
-    sar_vals[0] = low_vals[0];
-    sar_vals[1] = if is_long { low_vals[0] } else { high_vals[0] };
+    // Initial values
+    sar_vals[0] = sar;
+    sar_vals[1] = sar;
 
     for i in 2..n {
-        let prev_sar = sar_vals[i - 1];
-        let prev_prev_sar = if i >= 2 { sar_vals[i - 2] } else { prev_sar };
+        // 1. Calculate next SAR (tentative)
+        let mut next_sar = sar + af * (ep - sar);
 
-        // Calculate current SAR
-        let mut current_sar = prev_sar + af * (ep - prev_sar);
-
-        // SAR should not cross price
+        // 2. Apply constraints: SAR cannot be higher than low of last two bars (long)
+        // or lower than high of last two bars (short)
         if is_long {
-            current_sar = current_sar
-                .min(low_vals[i - 1])
-                .min(low_vals[i - 2].min(prev_sar));
+            next_sar = next_sar.min(low_vals[i - 1]).min(low_vals[i - 2]);
         } else {
-            current_sar = current_sar
-                .max(high_vals[i - 1])
-                .max(high_vals[i - 2].max(prev_sar));
+            next_sar = next_sar.max(high_vals[i - 1]).max(high_vals[i - 2]);
         }
 
-        // Check for SAR crossover (trend reversal)
-        let mut reversed = false;
-        if is_long && current_sar > low_vals[i] {
-            reversed = true;
-        } else if !is_long && current_sar < high_vals[i] {
-            reversed = true;
-        }
-
-        if reversed {
-            // Reverse position - set SAR to previous extreme point
-            is_long = !is_long;
-            af = acceleration;
-            ep = if is_long { high_vals[i] } else { low_vals[i] };
-            // On reversal, SAR equals prior extreme point
-            sar_vals[i] = if is_long {
-                high_vals[i - 1].max(high_vals[i - 2])
-            } else {
-                low_vals[i - 1].min(low_vals[i - 2])
-            };
-            // Reset for next iteration
-            let next_sar = sar_vals[i] + af * (ep - sar_vals[i]);
-            sar_vals[i] = next_sar;
-        } else {
-            // Update extreme point and acceleration factor
-            if is_long && high_vals[i] > ep {
-                ep = high_vals[i];
-                af = (af + acceleration).min(maximum);
-            } else if !is_long && low_vals[i] < ep {
+        // 3. Check for reversal
+        if is_long {
+            if low_vals[i] < next_sar {
+                // Reversal: Long to Short
+                is_long = false;
+                sar = ep; // New SAR is the highest high of the previous trend
                 ep = low_vals[i];
-                af = (af + acceleration).min(maximum);
+                af = acceleration;
+            } else {
+                // Continue Long
+                sar = next_sar;
+                if high_vals[i] > ep {
+                    ep = high_vals[i];
+                    af = (af + acceleration).min(maximum);
+                }
             }
-
-            sar_vals[i] = current_sar;
+        } else {
+            if high_vals[i] > next_sar {
+                // Reversal: Short to Long
+                is_long = true;
+                sar = ep; // New SAR is the lowest low of the previous trend
+                ep = high_vals[i];
+                af = acceleration;
+            } else {
+                // Continue Short
+                sar = next_sar;
+                if low_vals[i] < ep {
+                    ep = low_vals[i];
+                    af = (af + acceleration).min(maximum);
+                }
+            }
         }
+
+        sar_vals[i] = sar;
     }
 
     let sar_series = Series::new(output_col.into(), &sar_vals);
@@ -1047,50 +1038,62 @@ pub async fn sarext(
         return Ok(result_df);
     }
 
-    // Extended SAR with configurable parameters
     let mut af = startvalue;
-    let mut ep = high_vals[0];
     let mut is_long = high_vals[1] > high_vals[0];
+    let mut sar = if is_long { low_vals[0] } else { high_vals[0] };
+    let mut ep = if is_long { high_vals[1] } else { low_vals[1] };
 
-    sarext_vals[0] = low_vals[0];
-    sarext_vals[1] = if is_long { low_vals[0] } else { high_vals[0] };
+    // Initial values
+    sarext_vals[0] = sar;
+    sarext_vals[1] = sar;
 
     for i in 2..n {
-        let prev_sar = sarext_vals[i - 1];
+        // 1. Calculate next SAR
+        let mut next_sar = sar + af * (ep - sar);
 
-        let mut current_sar = prev_sar + af * (ep - prev_sar);
-
-        // Apply offsets
+        // 2. Apply constraints and offsets
         if is_long {
-            current_sar = current_sar.min(low_vals[i - 1]) - offsetonlong;
+            next_sar = next_sar.min(low_vals[i - 1]).min(low_vals[i - 2]);
+            next_sar -= offsetonlong;
         } else {
-            current_sar = current_sar.max(high_vals[i - 1]) + offsetonshort;
+            next_sar = next_sar.max(high_vals[i - 1]).max(high_vals[i - 2]);
+            next_sar += offsetonshort;
         }
 
-        // Check for reversal
-        let mut reversed = false;
-        if is_long && current_sar > low_vals[i] {
-            reversed = true;
-        } else if !is_long && current_sar < high_vals[i] {
-            reversed = true;
-        }
-
-        if reversed {
-            is_long = !is_long;
-            af = startvalue;
-            ep = if is_long { high_vals[i] } else { low_vals[i] };
-            sarext_vals[i] = ep;
-        } else {
-            if is_long && high_vals[i] > ep {
-                ep = high_vals[i];
-                af = (af + startvalue).min(0.2);
-            } else if !is_long && low_vals[i] < ep {
+        // 3. Check for reversal
+        if is_long {
+            if low_vals[i] < next_sar {
+                // Reversal: Long to Short
+                is_long = false;
+                sar = ep + offsetonshort;
                 ep = low_vals[i];
-                af = (af + startvalue).min(0.2);
+                af = startvalue;
+            } else {
+                // Continue Long
+                sar = next_sar;
+                if high_vals[i] > ep {
+                    ep = high_vals[i];
+                    af = (af + startvalue).min(0.2);
+                }
             }
-
-            sarext_vals[i] = current_sar;
+        } else {
+            if high_vals[i] > next_sar {
+                // Reversal: Short to Long
+                is_long = true;
+                sar = ep - offsetonlong;
+                ep = high_vals[i];
+                af = startvalue;
+            } else {
+                // Continue Short
+                sar = next_sar;
+                if low_vals[i] < ep {
+                    ep = low_vals[i];
+                    af = (af + startvalue).min(0.2);
+                }
+            }
         }
+
+        sarext_vals[i] = sar;
     }
 
     let sarext_series = Series::new(output_col.into(), &sarext_vals);
@@ -1159,14 +1162,19 @@ pub async fn sma(
 /// DataFrame con columna "t3" añadida
 ///
 /// # Fórmula
-/// e1 = EMA(price)
-/// e2 = EMA(e1)
-/// e3 = EMA(e2)
-/// e4 = EMA(e3)
-/// e5 = EMA(e4)
-/// e6 = EMA(e5)
-/// T3 = c1*e1 + c2*e2 + c3*e3 + c4*e4 + c5*e5 + c6*e6
-/// donde c1..c6 son coeficientes basados en vfactor
+/// e1 = EMA(price, period)
+/// e2 = EMA(e1, period)
+/// e3 = EMA(e2, period)
+/// e4 = EMA(e3, period)
+/// e5 = EMA(e4, period)
+/// e6 = EMA(e5, period)
+/// T3 = c1*e6 + c2*e5 + c3*e4 + c4*e3
+/// donde:
+/// a = vfactor
+/// c1 = -a^3
+/// c2 = 3a^2 + 3a^3
+/// c3 = -6a^2 - 3a - 3a^3
+/// c4 = 1 + 3a + 3a^2 + a^3
 pub async fn t3(
     df: DataFrame,
     timeperiod: Option<usize>,
@@ -1193,31 +1201,52 @@ fn calc_t3(values: &[f64], period: usize, vfactor: f64) -> Vec<f64> {
     let n = values.len();
     let mut result = vec![f64::NAN; n];
 
-    if n < period {
+    if n < period || period == 0 {
         return result;
     }
 
-    let c1 = -(vfactor.powi(3));
-    let c2 = 3.0 * vfactor.powi(2) + 3.0 * vfactor.powi(3);
-    let c3 = -6.0 * vfactor.powi(2) - 3.0 * vfactor - 3.0 * vfactor.powi(3);
-    let c4 = 1.0 + 3.0 * vfactor + vfactor.powi(3) + 3.0 * vfactor.powi(2);
+    let k = 2.0 / (period as f64 + 1.0);
+    let a = vfactor;
+    let c1 = -(a.powi(3));
+    let c2 = 3.0 * a.powi(2) + 3.0 * a.powi(3);
+    let c3 = -6.0 * a.powi(2) - 3.0 * a - 3.0 * a.powi(3);
+    let c4 = 1.0 + 3.0 * a + a.powi(3) + 3.0 * a.powi(2);
 
-    let e1 = calc_ema(values, period);
-    let e2 = calc_ema(&e1, period);
-    let e3 = calc_ema(&e2, period);
-    let e4 = calc_ema(&e3, period);
-    let e5 = calc_ema(&e4, period);
-    let e6 = calc_ema(&e5, period);
+    // Find first valid window
+    let mut first_valid_idx = None;
+    for i in 0..=(n - period) {
+        if values[i..i + period].iter().all(|v| v.is_finite()) {
+            first_valid_idx = Some(i);
+            break;
+        }
+    }
 
-    for i in 0..n {
-        if !e1[i].is_nan()
-            && !e2[i].is_nan()
-            && !e3[i].is_nan()
-            && !e4[i].is_nan()
-            && !e5[i].is_nan()
-            && !e6[i].is_nan()
-        {
-            result[i] = c1 * e6[i] + c2 * e5[i] + c3 * e4[i] + c4 * e3[i];
+    if let Some(start) = first_valid_idx {
+        // Initialize with SMA
+        let sma: f64 = values[start..start + period].iter().sum::<f64>() / period as f64;
+        let mut e1 = sma;
+        let mut e2 = sma;
+        let mut e3 = sma;
+        let mut e4 = sma;
+        let mut e5 = sma;
+        let mut e6 = sma;
+
+        // The first T3 value is at the end of the first window
+        result[start + period - 1] = c1 * e6 + c2 * e5 + c3 * e4 + c4 * e3;
+
+        // Loop through the rest
+        for i in (start + period)..n {
+            if values[i].is_finite() {
+                e1 = e1 + k * (values[i] - e1);
+                e2 = e2 + k * (e1 - e2);
+                e3 = e3 + k * (e2 - e3);
+                e4 = e4 + k * (e3 - e4);
+                e5 = e5 + k * (e4 - e5);
+                e6 = e6 + k * (e5 - e6);
+                result[i] = c1 * e6 + c2 * e5 + c3 * e4 + c4 * e3;
+            } else {
+                result[i] = f64::NAN;
+            }
         }
     }
 
@@ -1256,24 +1285,52 @@ pub async fn tema(
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
-    let ema1 = calc_ema(&close_vals, timeperiod);
-    let ema2 = calc_ema(&ema1, timeperiod);
-    let ema3 = calc_ema(&ema2, timeperiod);
+    let n = close_vals.len();
+    let mut result = vec![f64::NAN; n];
 
-    let tema_vals: Vec<f64> = ema1
-        .iter()
-        .zip(ema2.iter())
-        .zip(ema3.iter())
-        .map(|((&e1, &e2), &e3)| {
-            if e1.is_nan() || e2.is_nan() || e3.is_nan() {
-                f64::NAN
+    if n < timeperiod || timeperiod == 0 {
+        let tema_series = Series::new(output_col.into(), &result);
+        let mut result_df = df;
+        result_df.with_column(tema_series.into())?;
+        return Ok(result_df);
+    }
+
+    let k = 2.0 / (timeperiod as f64 + 1.0);
+
+    // Find first valid window
+    let mut first_valid_idx = None;
+    for i in 0..=(n - timeperiod) {
+        if close_vals[i..i + timeperiod].iter().all(|v| v.is_finite()) {
+            first_valid_idx = Some(i);
+            break;
+        }
+    }
+
+    if let Some(start) = first_valid_idx {
+        // Initialize with SMA
+        let sma: f64 =
+            close_vals[start..start + timeperiod].iter().sum::<f64>() / timeperiod as f64;
+        let mut e1 = sma;
+        let mut e2 = sma;
+        let mut e3 = sma;
+
+        // The first TEMA value is at the end of the first window
+        result[start + timeperiod - 1] = 3.0 * e1 - 3.0 * e2 + e3;
+
+        // Loop through the rest
+        for i in (start + timeperiod)..n {
+            if close_vals[i].is_finite() {
+                e1 = e1 + k * (close_vals[i] - e1);
+                e2 = e2 + k * (e1 - e2);
+                e3 = e3 + k * (e2 - e3);
+                result[i] = 3.0 * e1 - 3.0 * e2 + e3;
             } else {
-                3.0 * e1 - 3.0 * e2 + e3
+                result[i] = f64::NAN;
             }
-        })
-        .collect();
+        }
+    }
 
-    let tema_series = Series::new(output_col.into(), &tema_vals);
+    let tema_series = Series::new(output_col.into(), &result);
     let mut result_df = df;
     result_df.with_column(tema_series.into())?;
     Ok(result_df)
@@ -1383,20 +1440,52 @@ fn calc_wma(values: &[f64], period: usize) -> Vec<f64> {
     let n = values.len();
     let mut result = vec![f64::NAN; n];
 
-    if n < period {
+    if n < period || period == 0 {
         return result;
     }
 
-    let weight_sum: f64 = (1..=period).map(|w| w as f64).sum();
+    let weight_sum = (period * (period + 1)) as f64 / 2.0;
 
-    for i in 0..n {
-        if i >= period - 1 {
-            let mut weighted_sum = 0.0;
-            let start = i.saturating_sub(period - 1);
-            for j in 0..period {
-                weighted_sum += values[start + j] * (j + 1) as f64;
+    // Find the first window of 'period' consecutive finite values
+    let mut first_valid_idx = None;
+    for i in 0..=(n - period) {
+        if values[i..i + period].iter().all(|v| v.is_finite()) {
+            first_valid_idx = Some(i);
+            break;
+        }
+    }
+
+    if let Some(start) = first_valid_idx {
+        let mut current_weighted_sum = 0.0;
+        let mut current_sum = 0.0;
+
+        for j in 0..period {
+            let val = values[start + j];
+            current_weighted_sum += val * (j + 1) as f64;
+            current_sum += val;
+        }
+
+        result[start + period - 1] = current_weighted_sum / weight_sum;
+
+        for i in (start + period)..n {
+            let val = values[i];
+            let oldest = values[i - period];
+
+            if val.is_finite() && oldest.is_finite() {
+                // WMA(t+1) = WMA(t) + Price(t+1)*period - Sum(Price(t-period+1) to Price(t))
+                // The current_sum we have is Sum(Price(start) to Price(start+period-1))
+                // To move to next bar, we use the formula:
+                // NewWeightedSum = OldWeightedSum - OldSum + NewPrice * period
+                current_weighted_sum = current_weighted_sum - current_sum + val * period as f64;
+                current_sum = current_sum - oldest + val;
+                result[i] = current_weighted_sum / weight_sum;
+            } else {
+                result[i] = f64::NAN;
+                // If we hit a NaN, we'd need to re-initialize or propagate.
+                // Standard behavior is propagation.
+                current_sum = f64::NAN;
+                current_weighted_sum = f64::NAN;
             }
-            result[i] = weighted_sum / weight_sum;
         }
     }
 

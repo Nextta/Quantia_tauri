@@ -1,4 +1,3 @@
-use libsql::Op;
 use polars::prelude::*;
 
 /// Lista de indicadores:
@@ -216,14 +215,14 @@ pub async fn adx(
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
     let n = high_vals.len();
-    
+
     if n <= timeperiod {
         let adx_series = Series::new(output_col.into(), &vec![f64::NAN; n]);
         let mut result_df = df;
         result_df.with_column(adx_series.into())?;
         return Ok(result_df);
     }
-    
+
     let mut plus_dm: Vec<f64> = vec![0.0; n];
     let mut minus_dm: Vec<f64> = vec![0.0; n];
     let mut tr: Vec<f64> = vec![0.0; n];
