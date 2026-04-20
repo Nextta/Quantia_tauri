@@ -6,6 +6,9 @@ use crate::api::strategies::{
 use crate::api::trades::insert_trades;
 use crate::backtest::datos::Datos;
 use crate::backtest::trade::Trade;
+use crate::indicators::cycle::*;
+use crate::indicators::overlap::*;
+use crate::indicators::pattern::*;
 use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_options::StrategyOptions;
 use polars::datatypes::DataType;
@@ -92,11 +95,158 @@ impl Backtest {
         // TODO: Implementar la función para calcular el solapamiento entre los trades y mostrar un grafico.
     }
 
-    fn set_indicators_strategy(&mut self, datos: DataFrame) -> PolarsResult<DataFrame> {
+    async fn set_indicators_strategy(&mut self, datos: DataFrame) -> PolarsResult<DataFrame> {
+        let mut df: DataFrame = datos.clone();
         //TODO: Añadir los indicadores de la estrategia al dataframe de datos.
+        for indicator in &self.estrategia.indicadores {
+            df = match indicator.tipo.as_str() {
+                "HT_DCPERIOD" => ht_dcperiod(df, Some(&indicator.nombre)).await?,
+                "HT_DCPHASE" => ht_dcphase(df, Some(&indicator.nombre)).await?,
+                "HT_PHASOR" => {
+                    ht_phasor(
+                        df,
+                        Some(format!("{}_in_phase", &indicator.nombre).as_str()),
+                        Some(format!("{}_quadrature", &indicator.nombre).as_str()),
+                    )
+                    .await?
+                }
+                "HT_SINE" => {
+                    ht_sine(
+                        df,
+                        Some(format!("{}_sine", &indicator.nombre).as_str()),
+                        Some(format!("{}_lead_sine", &indicator.nombre).as_str()),
+                    )
+                    .await?
+                }
+                "HT_TRENDMODE" => ht_trendmode(df, Some(&indicator.nombre)).await?,
+                "BBANDS" => {
+                    let parametros =
+                        serde_json::from_value::<BbandsParams>(indicator.parametros.clone())
+                            .unwrap();
+                    bbands(
+                        df,
+                        Some(parametros.timeperiod),
+                        Some(parametros.nbdevup),
+                        Some(parametros.nbdevdn),
+                        Some(parametros.matype),
+                        Some(format!("{}_bb_upper", &indicator.nombre).as_str()),
+                        Some(format!("{}_bb_upper", &indicator.nombre).as_str()),
+                        Some(format!("{}_bb_upper", &indicator.nombre).as_str()),
+                    )
+                    .await?
+                }
+                "DEMA" => {
+                    let parametros =
+                        serde_json::from_value::<DemaParams>(indicator.parametros.clone()).unwrap();
+                    dema(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "EMA" => {
+                    let parametros =
+                        serde_json::from_value::<EmaParams>(indicator.parametros.clone()).unwrap();
+                    ema(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "KAMA" => {
+                    let parametros =
+                        serde_json::from_value::<KamaParams>(indicator.parametros.clone()).unwrap();
+                    kama(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "MA" => {
+                    let parametros =
+                        serde_json::from_value::<MaParams>(indicator.parametros.clone()).unwrap();
+                    ma(
+                        df,
+                        Some(parametros.timeperiod),
+                        Some(parametros.matype),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "MAMA" => {
+                    let parametros =
+                        serde_json::from_value::<MamaParams>(indicator.parametros.clone()).unwrap();
+                    mama(
+                        df,
+                        Some(parametros.fastlimit),
+                        Some(parametros.slowlimit),
+                        Some(format!("{}_mama", &indicator.nombre).as_str()),
+                        Some(format!("{}_fama", &indicator.nombre).as_str()),
+                    )
+                    .await?
+                }
+                "MIDPOINT" => {
+                    let parametros =
+                        serde_json::from_value::<MidpointParams>(indicator.parametros.clone())
+                            .unwrap();
+                    midpoint(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "MIDPRICE" => {
+                    let parametros =
+                        serde_json::from_value::<MidpriceParams>(indicator.parametros.clone())
+                            .unwrap();
+                    midprice(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "SAR" => {
+                    let parametros =
+                        serde_json::from_value::<SarParams>(indicator.parametros.clone()).unwrap();
+                    sar(
+                        df,
+                        Some(parametros.acceleration),
+                        Some(parametros.maximum),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "SAREXT" => {
+                    let parametros =
+                        serde_json::from_value::<SarextParams>(indicator.parametros.clone())
+                            .unwrap();
+                    sarext(
+                        df,
+                        Some(parametros.startvalue),
+                        Some(parametros.offsetonlong),
+                        Some(parametros.offsetonshort),
+                        Some(parametros.blockonlong),
+                        Some(parametros.blockonshort),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "SMA" => {
+                    let parametros =
+                        serde_json::from_value::<SmaParams>(indicator.parametros.clone()).unwrap();
+                    sma(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "T3" => {
+                    let parametros =
+                        serde_json::from_value::<T3Params>(indicator.parametros.clone()).unwrap();
+                    t3(
+                        df,
+                        Some(parametros.timeperiod),
+                        Some(parametros.vfactor),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "TEMA" => {
+                    let parametros =
+                        serde_json::from_value::<TemaParams>(indicator.parametros.clone()).unwrap();
+                    tema(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "TRIMA" => {
+                    let parametros =
+                        serde_json::from_value::<TrimaParams>(indicator.parametros.clone())
+                            .unwrap();
+                    trima(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "WMA" => {
+                    let parametros =
+                        serde_json::from_value::<WmaParams>(indicator.parametros.clone()).unwrap();
+                    wma(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                }
+                _ => df,
+            }
+        }
 
-        //Borrar este df, solo es de ejemplo.
-        let df: DataFrame = datos.clone();
         Ok(df)
     }
 
@@ -158,7 +308,7 @@ impl Backtest {
 
         for data in self.datos.clone() {
             //TODO: 1-Verificamos los indicadores que tiene la estrategia para añadirlos a los datos del DataFrame
-            let df = match self.set_indicators_strategy(data.get_datos()) {
+            let df = match self.set_indicators_strategy(data.get_datos()).await {
                 Ok(df_result) => df_result,
                 Err(e) => {
                     return Err(Box::new(e));

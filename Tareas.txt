@@ -1,4 +1,5 @@
 Terminadas:
+-Crear un proyecto de tauri para iniciar a crear la interfaz grafica.
 -Crear funcionalidad para usar spread variable en el backtest.
 -Añadir que se registre el precio maximo y minimo en el que ha estado un trade.
 -Añadir a cargo todas las librerías necesarias para el nuevo proyecto de tauri.
@@ -41,8 +42,7 @@ Promt para verificar los indicadores: Quiero que busque en internet como se calc
         CDLXSIDEGAP3METHODS  Upside/Downside Gap Three Methods
 
 -Crear la logica para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
--Crear funcionalidad para hacer que los backtest se hagan con ticks.
 -Crear plantillas para que genere el código en MQL5.
--Crear un proyecto de tauri para iniciar a crear la interfaz grafica.
+-Crear funcionalidad para hacer que los backtest se hagan con ticks.
 -Crear la interface y las funcionalidades para crear de forma visual estrategias con workflows.
 -Leer un trackrecord de Metatrader 5 y guardar los datos en la base de datos.

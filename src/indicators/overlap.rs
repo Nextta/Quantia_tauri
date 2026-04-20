@@ -1,4 +1,5 @@
 use polars::prelude::*;
+use serde::{Deserialize, Serialize};
 
 /// Lista de indicadores:
 /// BBANDS               Bollinger Bands
@@ -253,6 +254,13 @@ fn calc_ma(values: &[f64], period: usize, matype: MAType) -> Vec<f64> {
     }
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct BbandsParams {
+    pub timeperiod: usize,
+    pub nbdevup: f64,
+    pub nbdevdn: f64,
+    pub matype: i32,
+}
 // ============================================================================
 // BBANDS - Bollinger Bands
 // ============================================================================
@@ -339,6 +347,11 @@ pub async fn bbands(
     Ok(result_df)
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct DemaParams {
+    pub timeperiod: usize,
+}
+
 // ============================================================================
 // DEMA - Double Exponential Moving Average
 // ============================================================================
@@ -391,6 +404,11 @@ pub async fn dema(
     Ok(result_df)
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct EmaParams {
+    pub timeperiod: usize,
+}
+
 // ============================================================================
 // EMA - Exponential Moving Average
 // ============================================================================
@@ -429,6 +447,11 @@ pub async fn ema(
     let mut result_df = df;
     result_df.with_column(ema_series.into())?;
     Ok(result_df)
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct KamaParams {
+    pub timeperiod: usize,
 }
 
 // ============================================================================
@@ -473,6 +496,12 @@ pub async fn kama(
     Ok(result_df)
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct MaParams {
+    pub timeperiod: usize,
+    pub matype: i32,
+}
+
 // ============================================================================
 // MA - Moving Average
 // ============================================================================
@@ -510,6 +539,12 @@ pub async fn ma(
     let mut result_df = df;
     result_df.with_column(ma_series.into())?;
     Ok(result_df)
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct MamaParams {
+    pub fastlimit: f64,
+    pub slowlimit: f64,
 }
 
 // ============================================================================
@@ -717,6 +752,11 @@ fn calc_mama(values: &[f64], fastlimit: f64, slowlimit: f64) -> (Vec<f64>, Vec<f
     (mama_vals, fama_vals)
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct MidpointParams {
+    pub timeperiod: usize,
+}
+
 // ============================================================================
 // MIDPOINT - MidPoint over period
 // ============================================================================
@@ -786,6 +826,11 @@ pub async fn midpoint(
     let mut result_df = df;
     result_df.with_column(midpoint_series.into())?;
     Ok(result_df)
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct MidpriceParams {
+    pub timeperiod: usize,
 }
 
 // ============================================================================
@@ -872,6 +917,12 @@ pub async fn midprice(
     let mut result_df = df;
     result_df.with_column(midprice_series.into())?;
     Ok(result_df)
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct SarParams {
+    pub acceleration: f64,
+    pub maximum: f64,
 }
 
 // ============================================================================
@@ -981,6 +1032,15 @@ pub async fn sar(
     let mut result_df = df;
     result_df.with_column(sar_series.into())?;
     Ok(result_df)
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct SarextParams {
+    pub startvalue: f64,
+    pub offsetonlong: f64,
+    pub offsetonshort: f64,
+    pub blockonlong: f64,
+    pub blockonshort: f64,
 }
 
 // ============================================================================
@@ -1102,6 +1162,11 @@ pub async fn sarext(
     Ok(result_df)
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct SmaParams {
+    pub timeperiod: usize,
+}
+
 // ============================================================================
 // SMA - Simple Moving Average
 // ============================================================================
@@ -1140,6 +1205,12 @@ pub async fn sma(
     let mut result_df = df;
     result_df.with_column(sma_series.into())?;
     Ok(result_df)
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct T3Params {
+    pub timeperiod: usize,
+    pub vfactor: f64,
 }
 
 // ============================================================================
@@ -1253,6 +1324,11 @@ fn calc_t3(values: &[f64], period: usize, vfactor: f64) -> Vec<f64> {
     result
 }
 
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct TemaParams {
+    pub timeperiod: usize,
+}
+
 // ============================================================================
 // TEMA - Triple Exponential Moving Average
 // ============================================================================
@@ -1336,6 +1412,11 @@ pub async fn tema(
     Ok(result_df)
 }
 
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct TrimaParams {
+    pub timeperiod: usize,
+}
+
 // ============================================================================
 // TRIMA - Triangular Moving Average
 // ============================================================================
@@ -1388,6 +1469,11 @@ fn calc_trima(values: &[f64], period: usize) -> Vec<f64> {
     let trima = calc_sma(&sma1, half2);
 
     trima
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct WmaParams {
+    pub timeperiod: usize,
 }
 
 // ============================================================================
