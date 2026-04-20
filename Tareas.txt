@@ -13,55 +13,13 @@ Terminadas:
 
 
 TODO:
-promt: Quiero que me crees la funcionalidad de la funcion X de [@statistic.rs](file:///home/jairo/Documentos/proyectos/QuantiaBuilder/src-tauri/src/indicators/statistic.rs) que calcula el indicador X. Tienen que recibir un dataframe por parametros y los parametros necesarios para calcular el indicador de trading y devolver el dataframe de polars con los datos: Los calculos para los indicadores puedes verlos en https://github.com/TA-Lib/ta-lib y busca la formila tambien en internet para optener más infomación. Crea tambien la coumentación correspondiente de las funciones.
+promt: Quiero que me crees la funcionalidad de la funcion X de [@pattern.rs](file:///home/jairo/Documentos/proyectos/QuantiaBuilder/src-tauri/src/indicators/pattern.rs)  que calcula el indicador X. Tienen que recibir un dataframe por parametros y los parametros necesarios para calcular el indicador de trading y devolver el dataframe de polars con los datos: Los calculos para los indicadores puedes verlos en https://github.com/TA-Lib/ta-lib y busca la formila tambien en internet para optener más infomación. Crea tambien la coumentación correspondiente de las funciones.
 
 Promt para verificar los indicadores: Quiero que busque en internet como se calcula el indicador de trading X y compruebes la función que yo tengo programada para que verifiques que mi función hace bien los calculos de ese indicador. En caso de que no lo este calculando bien, corrige los calculos de mi función para que calcule bien el indicador. Mi funcion es X.
 
 -Crear indicadores basicos por ahora:
 
     Pattern Recognition
-        CDL2CROWS            Two Crows
-        CDL3BLACKCROWS       Three Black Crows
-        CDL3INSIDE           Three Inside Up/Down
-        CDL3LINESTRIKE       Three-Line Strike
-        CDL3OUTSIDE          Three Outside Up/Down
-        CDL3STARSINSOUTH     Three Stars In The South
-        CDL3WHITESOLDIERS    Three Advancing White Soldiers
-        CDLABANDONEDBABY     Abandoned Baby
-        CDLADVANCEBLOCK      Advance Block
-        CDLBELTHOLD          Belt-hold
-        CDLBREAKAWAY         Breakaway
-        CDLCLOSINGMARUBOZU   Closing Marubozu
-        CDLCONCEALBABYSWALL  Concealing Baby Swallow
-        CDLCOUNTERATTACK     Counterattack
-        CDLDARKCLOUDCOVER    Dark Cloud Cover
-        CDLDOJI              Doji
-        CDLDOJISTAR          Doji Star
-        CDLDRAGONFLYDOJI     Dragonfly Doji
-        CDLENGULFING         Engulfing Pattern
-        CDLEVENINGDOJISTAR   Evening Doji Star
-        CDLEVENINGSTAR       Evening Star
-        CDLGAPSIDESIDEWHITE  Up/Down-gap side-by-side white lines
-        CDLGRAVESTONEDOJI    Gravestone Doji
-        CDLHAMMER            Hammer
-        CDLHANGINGMAN        Hanging Man
-        CDLHARAMI            Harami Pattern
-        CDLHARAMICROSS       Harami Cross Pattern
-        CDLHIGHWAVE          High-Wave Candle
-        CDLHIKKAKE           Hikkake Pattern
-        CDLHIKKAKEMOD        Modified Hikkake Pattern
-        CDLHOMINGPIGEON      Homing Pigeon
-        CDLIDENTICAL3CROWS   Identical Three Crows
-            CDLINNECK            In-Neck Pattern
-        CDLINVERTEDHAMMER    Inverted Hammer
-        CDLKICKING           Kicking
-        CDLKICKINGBYLENGTH   Kicking - bull/bear determined by the longer marubozu
-        CDLLADDERBOTTOM      Ladder Bottom
-        CDLLONGLEGGEDDOJI    Long Legged Doji
-        CDLLONGLINE          Long Line Candle
-        CDLMARUBOZU          Marubozu
-        CDLMATCHINGLOW       Matching Low
-        CDLMATHOLD           Mat Hold
         CDLMORNINGDOJISTAR   Morning Doji Star
         CDLMORNINGSTAR       Morning Star
         CDLONNECK            On-Neck Pattern
