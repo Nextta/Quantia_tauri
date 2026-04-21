@@ -243,6 +243,83 @@ impl Backtest {
                         serde_json::from_value::<WmaParams>(indicator.parametros.clone()).unwrap();
                     wma(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
                 }
+                "CDL2CROWS" => cdlupsidegap2crows(df, Some(&indicator.nombre)).await?,
+                "CDL3BLACKCROWS" => cdl3blackcrows(df, Some(&indicator.nombre)).await?,
+                "CDL3INSIDE" => cdl3inside(df, Some(&indicator.nombre)).await?,
+                "CDL3LINESTRIKE" => cdl3linestrike(df, Some(&indicator.nombre)).await?,
+                "CDL3OUTSIDE" => cdl3outside(df, Some(&indicator.nombre)).await?,
+                "CDL3STARSINSOUTH" => cdl3starsinsouth(df, Some(&indicator.nombre)).await?,
+                "CDL3WHITESOLDIERS" => cdl3whitesoldiers(df, Some(&indicator.nombre)).await?,
+                "CDLABANDONEDBABY" => cdlabandonedbaby(df, Some(&indicator.nombre)).await?,
+                "CDLADVANCEBLOCK" => cdladvanceblock(df, Some(&indicator.nombre)).await?,
+                "CDLBELTHOLD" => cdlbelthold(df, Some(&indicator.nombre)).await?,
+                "CDLBREAKAWAY" => cdlbreakaway(df, Some(&indicator.nombre)).await?,
+                "CDLCLOSINGMARUBOZU" => cdlclosingmarubuzo(df, Some(&indicator.nombre)).await?,
+                "CDLCONCEALBABYSWALL" => cdlconcealbabyswall(df, Some(&indicator.nombre)).await?,
+                "CDLCOUNTERATTACK" => cdlcounterattack(df, Some(&indicator.nombre)).await?,
+                "CDLDARKCLOUDCOVER" => cdldarkcloudcover(df, Some(&indicator.nombre)).await?,
+                "CDLDOJI" => cdldoji(df, Some(&indicator.nombre)).await?,
+                "CDLDOJISTAR" => cdldojistar(df, Some(&indicator.nombre)).await?,
+                "CDLDRAGONFLYDOJI" => cdldragonflydoji(df, Some(&indicator.nombre)).await?,
+                "CDLENGULFING" => cdlengulfing(df, Some(&indicator.nombre)).await?,
+                "CDLEVENINGDOJISTAR" => cdleveningdojistar(df, Some(&indicator.nombre)).await?,
+                "CDLEVENINGSTAR" => cdleveningstar(df, Some(&indicator.nombre)).await?,
+                "CDLGAPSIDESIDEWHITE" => cdlgapsidesidewhite(df, Some(&indicator.nombre)).await?,
+                "CDLGRAVESTONEDOJI" => cdlgravestonedoji(df, Some(&indicator.nombre)).await?,
+                "CDLHAMMER" => cdlhammer(df, Some(&indicator.nombre)).await?,
+                "CDLHANGINGMAN" => cdlhangingman(df, Some(&indicator.nombre)).await?,
+                "CDLHARAMI" => cdlharami(df, Some(&indicator.nombre)).await?,
+                "CDLHARAMICROSS" => cdlharamicross(df, Some(&indicator.nombre)).await?,
+                "CDLHIGHWAVE" => cdlhighwave(df, Some(&indicator.nombre)).await?,
+                "CDLHIKKAKE" => cdlhikkake(df, Some(&indicator.nombre)).await?,
+                "CDLHIKKAKEMOD" => cdlhikkakemod(df, Some(&indicator.nombre)).await?,
+                "CDLHOMINGPIGEON" => cdlhomingpigeon(df, Some(&indicator.nombre)).await?,
+                "CDLIDENTICAL3CROWS" => cdlidentical3crows(df, Some(&indicator.nombre)).await?,
+                "CDLINNECK" => cdlinneck(df, Some(&indicator.nombre)).await?,
+                "CDLINVERTEDHAMMER" => cdlinvertedhammer(df, Some(&indicator.nombre)).await?,
+                "CDLKICKING" => cdlkicking(df, Some(&indicator.nombre)).await?,
+                "CDLKICKINGBYLENGTH" => cdlkickingbylength(df, Some(&indicator.nombre)).await?,
+                "CDLLADDERBOTTOM" => cdladderbottom(df, Some(&indicator.nombre)).await?,
+                "CDLLONGLEGGEDDOJI" => cdllongleggeddoji(df, Some(&indicator.nombre)).await?,
+                "CDLLONGLINE" => cdllongline(df, Some(&indicator.nombre)).await?,
+                "CDLMARUBOZU" => cdlmarubozu(df, Some(&indicator.nombre)).await?,
+                "CDLMATCHINGLOW" => cdlmatchinglow(df, Some(&indicator.nombre)).await?,
+                "CDLMATHOLD" => cdlmathold(df, Some(&indicator.nombre)).await?,
+                "CDLMORNINGDOJISTAR" => {
+                    let parametros =
+                        serde_json::from_value::<MorningDojiStar>(indicator.parametros.clone())
+                            .unwrap();
+                    cdlmorningdojistar(df, Some(parametros.penetration), Some(&indicator.nombre))
+                        .await?
+                }
+                "CDLMORNINGSTAR" => {
+                    let parametros =
+                        serde_json::from_value::<MorningStar>(indicator.parametros.clone())
+                            .unwrap();
+                    cdlmorningstar(df, Some(parametros.penetration), Some(&indicator.nombre))
+                        .await?
+                }
+                "CDLONNECK" => cdlonneck(df, Some(&indicator.nombre)).await?,
+                "CDLPIERCING" => {
+                    let parametros =
+                        serde_json::from_value::<Piercing>(indicator.parametros.clone()).unwrap();
+                    cdlpiercing(df, Some(parametros.penetration), Some(&indicator.nombre)).await?
+                }
+                "CDLRICKSHAWMAN" => cdlrickshawman(df, Some(&indicator.nombre)).await?,
+                "CDLRISEFALL3METHODS" => cdlrisefall3methods(df, Some(&indicator.nombre)).await?,
+                "CDLSEPARATINGLINES" => cdlseparatinglines(df, Some(&indicator.nombre)).await?,
+                "CDLSHOOTINGSTAR" => cdlshootingstar(df, Some(&indicator.nombre)).await?,
+                "CDLSHORTLINE" => cdlshortline(df, Some(&indicator.nombre)).await?,
+                "CDLSPINNINGTOP" => cdlspinningtop(df, Some(&indicator.nombre)).await?,
+                "CDLSTALLEDPATTERN" => cdlstalledpattern(df, Some(&indicator.nombre)).await?,
+                "CDLSTICKSANDWICH" => cdlsticksandwich(df, Some(&indicator.nombre)).await?,
+                "CDLTAKURI" => cdltakuri(df, Some(&indicator.nombre)).await?,
+                "CDLTASUKIGAP" => cdltasukigap(df, Some(&indicator.nombre)).await?,
+                "CDLTHRUSTING" => cdlthrusting(df, Some(&indicator.nombre)).await?,
+                "CDLTRISTAR" => cdltristar(df, Some(&indicator.nombre)).await?,
+                "CDLUNIQUE3RIVER" => cdlunique3river(df, Some(&indicator.nombre)).await?,
+                "CDLUPSIDEGAP2CROWS" => cdlupsidegap2crows(df, Some(&indicator.nombre)).await?,
+                "CDLXSIDEGAP3METHODS" => cdlxsidegap3methods(df, Some(&indicator.nombre)).await?,
                 _ => df,
             }
         }

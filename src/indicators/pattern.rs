@@ -1,4 +1,5 @@
 use polars::prelude::*;
+use serde::{Deserialize, Serialize};
 
 pub const PATTERN_BULLISH: i32 = 100;
 pub const PATTERN_BEARISH: i32 = -100;
@@ -2760,6 +2761,11 @@ pub async fn cdlmathold(df: DataFrame, output_col: Option<&str>) -> PolarsResult
         .collect()
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MorningDojiStar {
+    pub penetration: f64,
+}
+
 /// CDLMORNINGDOJISTAR - Morning Doji Star
 ///
 /// El Morning Doji Star es un patrón de reversión alcista de tres velas.
@@ -2856,6 +2862,11 @@ pub async fn cdlmorningdojistar(
     df.lazy()
         .with_column(lit(Series::new(output_name.into(), result)))
         .collect()
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MorningStar {
+    pub penetration: f64,
 }
 
 /// CDLMORNINGSTAR - Morning Star
@@ -3019,6 +3030,11 @@ pub async fn cdlonneck(df: DataFrame, output_col: Option<&str>) -> PolarsResult<
     df.lazy()
         .with_column(lit(Series::new(output_name.into(), result)))
         .collect()
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Piercing {
+    pub penetration: f64,
 }
 
 /// CDLPIERCING - Piercing Pattern
