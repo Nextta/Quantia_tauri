@@ -18,11 +18,11 @@ promt: Quiero que me crees la funcionalidad de la funcion X de [@pattern.rs](fil
 
 Promt para verificar los indicadores: Quiero que busque en internet como se calcula el indicador de trading X y compruebes la función que yo tengo programada para que verifiques que mi función hace bien los calculos de ese indicador. En caso de que no lo este calculando bien, corrige los calculos de mi función para que calcule bien el indicador. Mi funcion es X.
 
+Continua con la funcion X del indicador X
+
 -Crear indicadores basicos por ahora:
 
     Pattern Recognition
-        CDLMORNINGDOJISTAR   Morning Doji Star
-        CDLMORNINGSTAR       Morning Star
         CDLONNECK            On-Neck Pattern
         CDLPIERCING          Piercing Pattern
         CDLRICKSHAWMAN       Rickshaw Man

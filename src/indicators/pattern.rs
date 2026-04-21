@@ -2760,98 +2760,1469 @@ pub async fn cdlmathold(df: DataFrame, output_col: Option<&str>) -> PolarsResult
         .collect()
 }
 
+/// CDLMORNINGDOJISTAR - Morning Doji Star
+///
+/// El Morning Doji Star es un patrón de reversión alcista de tres velas.
+/// Consiste en una vela negra larga, seguida de un Doji que abre con gap bajista,
+/// y finalmente una vela blanca que cierra profundamente dentro del cuerpo de la primera vela.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `penetration`: Porcentaje de penetración de la tercera vela en el cuerpo de la primera (default: 0.3).
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdlmorningdojistar").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 0 (nada) o 100 (alcista).
 pub async fn cdlmorningdojistar(
     df: DataFrame,
-    _output_col: Option<&str>,
+    penetration: Option<f64>,
+    output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
-    Ok(df)
+    let output_name = output_col.unwrap_or("cdlmorningdojistar");
+    let penetration = penetration.unwrap_or(0.3);
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    if len < 3 {
+        return df
+            .lazy()
+            .with_column(lit(Series::new(output_name.into(), result)))
+            .collect();
+    }
+
+    for i in 2..len {
+        let o0 = open.get(i - 2).unwrap();
+        let h0 = high.get(i - 2).unwrap();
+        let l0 = low.get(i - 2).unwrap();
+        let c0 = close.get(i - 2).unwrap();
+
+        let o1 = open.get(i - 1).unwrap();
+        let h1 = high.get(i - 1).unwrap();
+        let l1 = low.get(i - 1).unwrap();
+        let c1 = close.get(i - 1).unwrap();
+
+        let o2 = open.get(i).unwrap();
+        let c2 = close.get(i).unwrap();
+
+        let body0 = (o0 - c0).abs();
+        let range0 = h0 - l0;
+
+        // Día 1: Negro largo
+        let is_black0 = candle_color(o0, c0) == -1;
+        let is_long0 = if range0 > 0.0 {
+            body0 > range0 * 0.6
+        } else {
+            false
+        };
+
+        // Día 2: Doji con gap bajista
+        let body1 = (o1 - c1).abs();
+        let range1 = h1 - l1;
+        let is_doji1 = if range1 > 0.0 {
+            body1 <= range1 * 0.1
+        } else {
+            true
+        };
+        // Gap bajista entre cuerpos
+        let gap_down1 = o1.max(c1) < o0.min(c0);
+
+        // Día 3: Blanco con gap alcista y penetración
+        let is_white2 = candle_color(o2, c2) == 1;
+        // Gap alcista entre cuerpos respecto al Doji
+        let gap_up2 = o2.min(c2) > o1.max(c1);
+
+        // Penetración: el cierre de la vela 3 supera el nivel de penetración del cuerpo de la vela 1
+        let target_level = c0 + body0 * penetration;
+        let deep_penetration = c2 > target_level && c2 < o0;
+
+        if is_black0
+            && is_long0
+            && is_doji1
+            && gap_down1
+            && is_white2
+            && gap_up2
+            && deep_penetration
+        {
+            result[i] = PATTERN_BULLISH;
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
-pub async fn cdlmorningstar(df: DataFrame, _output_col: Option<&str>) -> PolarsResult<DataFrame> {
-    Ok(df)
+/// CDLMORNINGSTAR - Morning Star
+///
+/// El Morning Star es un patrón de reversión alcista de tres velas.
+/// Consiste en una vela negra larga, seguida de una vela de cuerpo pequeño que abre con gap bajista,
+/// y finalmente una vela blanca que cierra profundamente dentro del cuerpo de la primera vela.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `penetration`: Porcentaje de penetración de la tercera vela en el cuerpo de la primera (default: 0.3).
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdlmorningstar").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 0 (nada) o 100 (alcista).
+pub async fn cdlmorningstar(
+    df: DataFrame,
+    penetration: Option<f64>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let output_name = output_col.unwrap_or("cdlmorningstar");
+    let penetration = penetration.unwrap_or(0.3);
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    if len < 3 {
+        return df
+            .lazy()
+            .with_column(lit(Series::new(output_name.into(), result)))
+            .collect();
+    }
+
+    for i in 2..len {
+        let o0 = open.get(i - 2).unwrap();
+        let h0 = high.get(i - 2).unwrap();
+        let l0 = low.get(i - 2).unwrap();
+        let c0 = close.get(i - 2).unwrap();
+
+        let o1 = open.get(i - 1).unwrap();
+        let h1 = high.get(i - 1).unwrap();
+        let l1 = low.get(i - 1).unwrap();
+        let c1 = close.get(i - 1).unwrap();
+
+        let o2 = open.get(i).unwrap();
+        let c2 = close.get(i).unwrap();
+
+        let body0 = (o0 - c0).abs();
+        let range0 = h0 - l0;
+
+        // Día 1: Negro largo
+        let is_black0 = candle_color(o0, c0) == -1;
+        let is_long0 = if range0 > 0.0 {
+            body0 > range0 * 0.6
+        } else {
+            false
+        };
+
+        // Día 2: Cuerpo pequeño con gap bajista
+        let body1 = (o1 - c1).abs();
+        let is_small1 = body1 < body0 * 0.3;
+        let gap_down1 = o1.max(c1) < o0.min(c0);
+
+        // Día 3: Blanco con gap alcista y penetración
+        let is_white2 = candle_color(o2, c2) == 1;
+        // Gap alcista entre cuerpos respecto al cuerpo de la vela 2
+        let gap_up2 = o2.min(c2) > o1.max(c1);
+
+        // Penetración: el cierre de la vela 3 supera el nivel de penetración del cuerpo de la vela 1
+        let target_level = c0 + body0 * penetration;
+        let deep_penetration = c2 > target_level && c2 < o0;
+
+        if is_black0
+            && is_long0
+            && is_small1
+            && gap_down1
+            && is_white2
+            && gap_up2
+            && deep_penetration
+        {
+            result[i] = PATTERN_BULLISH;
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
-pub async fn cdlonneck(df: DataFrame, _output_col: Option<&str>) -> PolarsResult<DataFrame> {
-    Ok(df)
+/// CDLONNECK - On-Neck Pattern
+///
+/// El patrón On-Neck es un patrón de continuación bajista que ocurre en una tendencia a la baja.
+/// Consiste en una vela negra larga seguida de una vela blanca pequeña que abre con gap bajista
+/// pero cierra al mismo nivel (o muy cerca) del mínimo de la vela anterior.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdlonneck").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 0 (nada) o -100 (bajista).
+pub async fn cdlonneck(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+    let output_name = output_col.unwrap_or("cdlonneck");
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    if len < 2 {
+        return df
+            .lazy()
+            .with_column(lit(Series::new(output_name.into(), result)))
+            .collect();
+    }
+
+    for i in 1..len {
+        let o0 = open.get(i - 1).unwrap();
+        let h0 = high.get(i - 1).unwrap();
+        let l0 = low.get(i - 1).unwrap();
+        let c0 = close.get(i - 1).unwrap();
+
+        let o1 = open.get(i).unwrap();
+        let c1 = close.get(i).unwrap();
+
+        let body0 = (o0 - c0).abs();
+        let range0 = h0 - l0;
+
+        // Día 1: Vela negra larga
+        let is_black0 = candle_color(o0, c0) == -1;
+        let is_long0 = if range0 > 0.0 {
+            body0 > range0 * 0.6
+        } else {
+            false
+        };
+
+        // Día 2: Vela blanca pequeña
+        let is_white1 = candle_color(o1, c1) == 1;
+
+        // El cierre del día 2 debe estar cerca del mínimo del día 1 (On-Neck)
+        // Usamos una tolerancia pequeña relativa al rango de la primera vela
+        let tolerance = range0 * 0.1;
+        let on_neck = (c1 - l0).abs() <= tolerance;
+
+        // Apertura con gap bajista (respecto al cierre anterior)
+        let gap_down = o1 < c0;
+
+        if is_black0 && is_long0 && is_white1 && on_neck && gap_down {
+            result[i] = PATTERN_BEARISH;
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
-pub async fn cdlpiercing(df: DataFrame, _output_col: Option<&str>) -> PolarsResult<DataFrame> {
-    Ok(df)
+/// CDLPIERCING - Piercing Pattern
+///
+/// El patrón Piercing es un patrón de reversión alcista de dos velas.
+/// Consiste en una vela negra larga seguida de una vela blanca que abre por debajo del mínimo de la vela anterior
+/// y cierra por encima del punto medio del cuerpo de la primera vela.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `penetration`: Porcentaje de penetración de la segunda vela en el cuerpo de la primera (default: 0.5).
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdlpiercing").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 0 (nada) o 100 (alcista).
+pub async fn cdlpiercing(
+    df: DataFrame,
+    penetration: Option<f64>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let output_name = output_col.unwrap_or("cdlpiercing");
+    let penetration = penetration.unwrap_or(0.5);
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    if len < 2 {
+        return df
+            .lazy()
+            .with_column(lit(Series::new(output_name.into(), result)))
+            .collect();
+    }
+
+    for i in 1..len {
+        let o0 = open.get(i - 1).unwrap();
+        let h0 = high.get(i - 1).unwrap();
+        let l0 = low.get(i - 1).unwrap();
+        let c0 = close.get(i - 1).unwrap();
+
+        let o1 = open.get(i).unwrap();
+        let c1 = close.get(i).unwrap();
+
+        let body0 = (o0 - c0).abs();
+        let range0 = h0 - l0;
+
+        // Día 1: Vela negra larga
+        let is_black0 = candle_color(o0, c0) == -1;
+        let is_long0 = if range0 > 0.0 {
+            body0 > range0 * 0.6
+        } else {
+            false
+        };
+
+        // Día 2: Vela blanca que abre por debajo del mínimo anterior
+        let is_white1 = candle_color(o1, c1) == 1;
+        let open_below = o1 < l0;
+
+        // Cierre por encima del nivel de penetración (por defecto punto medio) del cuerpo anterior
+        let target_level = c0 + body0 * penetration;
+        let deep_penetration = c1 > target_level && c1 < o0;
+
+        if is_black0 && is_long0 && is_white1 && open_below && deep_penetration {
+            result[i] = PATTERN_BULLISH;
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
-pub async fn cdlrickshawman(df: DataFrame, _output_col: Option<&str>) -> PolarsResult<DataFrame> {
-    Ok(df)
+/// CDLRICKSHAWMAN - Rickshaw Man
+///
+/// El Rickshaw Man es un Doji de piernas largas donde la apertura y el cierre
+/// están en el centro (o muy cerca) del rango de la vela. Indica extrema indecisión.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdlrickshawman").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 0 (nada) o 100 (indecisión/neutral).
+pub async fn cdlrickshawman(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+    let output_name = output_col.unwrap_or("cdlrickshawman");
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    for i in 0..len {
+        let o = open.get(i).unwrap();
+        let h = high.get(i).unwrap();
+        let l = low.get(i).unwrap();
+        let c = close.get(i).unwrap();
+
+        let body = (o - c).abs();
+        let range = h - l;
+
+        if range == 0.0 {
+            continue;
+        }
+
+        // 1. Condición de Doji (cuerpo muy pequeño)
+        let is_doji = body <= range * 0.1;
+
+        // 2. Condición de Rickshaw Man: el cuerpo está cerca del centro del rango
+        let body_mid = (o + c) / 2.0;
+        let range_mid = (h + l) / 2.0;
+        let is_centered = (body_mid - range_mid).abs() <= range * 0.1;
+
+        if is_doji && is_centered {
+            result[i] = 100; // Usualmente se marca como 100 para indicar presencia del patrón
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
+/// CDLRISEFALL3METHODS - Rising/Falling Three Methods
+///
+/// El patrón de Tres Métodos es un patrón de continuación de 5 velas.
+///
+/// # Rising Three Methods (Alcista):
+/// 1. Una vela blanca larga.
+/// 2. Un grupo de velas pequeñas (generalmente 3) que caen pero permanecen dentro del rango de la primera vela.
+/// 3. Una vela blanca larga que cierra por encima del cierre de la primera vela.
+///
+/// # Falling Three Methods (Bajista):
+/// 1. Una vela negra larga.
+/// 2. Un grupo de velas pequeñas (generalmente 3) que suben pero permanecen dentro del rango de la primera vela.
+/// 3. Una vela negra larga que cierra por debajo del cierre de la primera vela.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdlrisefall3methods").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
 pub async fn cdlrisefall3methods(
     df: DataFrame,
-    _output_col: Option<&str>,
+    output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
-    Ok(df)
+    let output_name = output_col.unwrap_or("cdlrisefall3methods");
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    if len < 5 {
+        return df
+            .lazy()
+            .with_column(lit(Series::new(output_name.into(), result)))
+            .collect();
+    }
+
+    for i in 4..len {
+        let o0 = open.get(i - 4).unwrap();
+        let h0 = high.get(i - 4).unwrap();
+        let l0 = low.get(i - 4).unwrap();
+        let c0 = close.get(i - 4).unwrap();
+
+        let o4 = open.get(i).unwrap();
+        let c4 = close.get(i).unwrap();
+
+        let body0 = (o0 - c0).abs();
+        let range0 = h0 - l0;
+
+        // --- RISING THREE METHODS (Alcista) ---
+        let is_white0 = candle_color(o0, c0) == 1;
+        let is_long0 = if range0 > 0.0 {
+            body0 > range0 * 0.6
+        } else {
+            false
+        };
+
+        if is_white0 && is_long0 {
+            let mut all_inside = true;
+            let mut rising_continuation = false;
+
+            // Velas 1, 2, 3 (índices i-3, i-2, i-1) deben estar dentro del rango de la vela 0
+            for j in 1..4 {
+                let hj = high.get(i - j).unwrap();
+                let lj = low.get(i - j).unwrap();
+                if hj > h0 || lj < l0 {
+                    all_inside = false;
+                    break;
+                }
+            }
+
+            // Vela 4 debe ser blanca larga y cerrar sobre c0
+            let is_white4 = candle_color(o4, c4) == 1;
+            if is_white4 && c4 > c0 && (o4 - c4).abs() > range0 * 0.5 {
+                rising_continuation = true;
+            }
+
+            if all_inside && rising_continuation {
+                result[i] = PATTERN_BULLISH;
+                continue;
+            }
+        }
+
+        // --- FALLING THREE METHODS (Bajista) ---
+        let is_black0 = candle_color(o0, c0) == -1;
+        if is_black0 && is_long0 {
+            let mut all_inside = true;
+            let mut falling_continuation = false;
+
+            for j in 1..4 {
+                let hj = high.get(i - j).unwrap();
+                let lj = low.get(i - j).unwrap();
+                if hj > h0 || lj < l0 {
+                    all_inside = false;
+                    break;
+                }
+            }
+
+            let is_black4 = candle_color(o4, c4) == -1;
+            if is_black4 && c4 < c0 && (o4 - c4).abs() > range0 * 0.5 {
+                falling_continuation = true;
+            }
+
+            if all_inside && falling_continuation {
+                result[i] = PATTERN_BEARISH;
+            }
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
+/// CDLSEPARATINGLINES - Separating Lines
+///
+/// El patrón Separating Lines es un patrón de continuación de 2 velas.
+///
+/// # Bullish Separating Lines (Alcista):
+/// 1. Una vela negra.
+/// 2. Una vela blanca que abre al mismo nivel que la apertura de la vela negra anterior.
+///
+/// # Bearish Separating Lines (Bajista):
+/// 1. Una vela blanca.
+/// 2. Una vela negra que abre al mismo nivel que la apertura de la vela blanca anterior.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdlseparatinglines").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
 pub async fn cdlseparatinglines(
     df: DataFrame,
-    _output_col: Option<&str>,
+    output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
-    Ok(df)
+    let output_name = output_col.unwrap_or("cdlseparatinglines");
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    if len < 2 {
+        return df
+            .lazy()
+            .with_column(lit(Series::new(output_name.into(), result)))
+            .collect();
+    }
+
+    for i in 1..len {
+        let o0 = open.get(i - 1).unwrap();
+        let c0 = close.get(i - 1).unwrap();
+        let h0 = high.get(i - 1).unwrap();
+        let l0 = low.get(i - 1).unwrap();
+
+        let o1 = open.get(i).unwrap();
+        let c1 = close.get(i).unwrap();
+
+        let range0 = h0 - l0;
+        let tolerance = if range0 > 0.0 { range0 * 0.05 } else { 0.0001 };
+
+        // --- BULLISH SEPARATING LINES ---
+        // Vela 0 negra, Vela 1 blanca, Apertura 1 == Apertura 0
+        let is_black0 = candle_color(o0, c0) == -1;
+        let is_white1 = candle_color(o1, c1) == 1;
+        let equal_open = (o1 - o0).abs() <= tolerance;
+
+        if is_black0 && is_white1 && equal_open {
+            result[i] = PATTERN_BULLISH;
+            continue;
+        }
+
+        // --- BEARISH SEPARATING LINES ---
+        // Vela 0 blanca, Vela 1 negra, Apertura 1 == Apertura 0
+        let is_white0 = candle_color(o0, c0) == 1;
+        let is_black1 = candle_color(o1, c1) == -1;
+
+        if is_white0 && is_black1 && equal_open {
+            result[i] = PATTERN_BEARISH;
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
-pub async fn cdlshootingstar(df: DataFrame, _output_col: Option<&str>) -> PolarsResult<DataFrame> {
-    Ok(df)
+/// CDLSHOOTINGSTAR - Shooting Star
+///
+/// El Shooting Star (Estrella Fugaz) es un patrón de reversión bajista de una vela.
+/// Se caracteriza por una vela con un cuerpo pequeño en la parte inferior del rango,
+/// una sombra superior muy larga (al menos 2 veces el tamaño del cuerpo)
+/// y una sombra inferior muy pequeña o inexistente.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdlshootingstar").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 0 o -100 (bajista).
+pub async fn cdlshootingstar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+    let output_name = output_col.unwrap_or("cdlshootingstar");
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    if len < 2 {
+        return df
+            .lazy()
+            .with_column(lit(Series::new(output_name.into(), result)))
+            .collect();
+    }
+
+    for i in 1..len {
+        let o = open.get(i).unwrap();
+        let h = high.get(i).unwrap();
+        let l = low.get(i).unwrap();
+        let c = close.get(i).unwrap();
+
+        // Referencia anterior para tendencia (opcional pero común)
+        let c_prev = close.get(i - 1).unwrap();
+
+        let body = (o - c).abs();
+        let range = h - l;
+
+        if range == 0.0 {
+            continue;
+        }
+
+        let upper_shadow = h - o.max(c);
+        let lower_shadow = o.min(c) - l;
+
+        // 1. Cuerpo pequeño: cuerpo <= 30% del rango total
+        let is_small_body = body <= range * 0.3;
+
+        // 2. Sombra superior larga: sombra superior >= 2 * cuerpo
+        let long_upper_shadow = upper_shadow >= body * 2.0;
+
+        // 3. Sombra inferior corta: sombra inferior <= 10% del rango total
+        let short_lower_shadow = lower_shadow <= range * 0.1;
+
+        // 4. Trend: Ocurre tras una subida (apertura o máximo sobre cierre anterior)
+        let is_uptrend = o > c_prev || h > c_prev;
+
+        if is_small_body && long_upper_shadow && short_lower_shadow && is_uptrend {
+            result[i] = PATTERN_BEARISH;
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
-pub async fn cdlshortline(df: DataFrame, _output_col: Option<&str>) -> PolarsResult<DataFrame> {
-    Ok(df)
+/// CDLSHORTLINE - Short Line Candle
+///
+/// El Short Line Candle es una vela con un cuerpo pequeño y sombras cortas.
+/// Indica una falta de impulso o consolidación.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdlshortline").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
+pub async fn cdlshortline(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+    let output_name = output_col.unwrap_or("cdlshortline");
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    for i in 0..len {
+        let o = open.get(i).unwrap();
+        let h = high.get(i).unwrap();
+        let l = low.get(i).unwrap();
+        let c = close.get(i).unwrap();
+
+        let body = (o - c).abs();
+        let range = h - l;
+
+        if range == 0.0 {
+            continue;
+        }
+
+        // 1. Cuerpo pequeño: entre 20% y 50% del rango total
+        // (Si es muy pequeño suele ser Doji o Spinning Top)
+        let is_short_body = body > range * 0.1 && body <= range * 0.5;
+
+        // 2. Sombras cortas: ambas sombras deben ser pequeñas
+        let upper_shadow = h - o.max(c);
+        let lower_shadow = o.min(c) - l;
+        let short_shadows = upper_shadow <= range * 0.3 && lower_shadow <= range * 0.3;
+
+        if is_short_body && short_shadows {
+            result[i] = if c > o {
+                PATTERN_BULLISH
+            } else {
+                PATTERN_BEARISH
+            };
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
-pub async fn cdlspinningtop(df: DataFrame, _output_col: Option<&str>) -> PolarsResult<DataFrame> {
-    Ok(df)
+/// CDLSPINNINGTOP - Spinning Top
+///
+/// El Spinning Top (Peonza) es una vela con un cuerpo pequeño y sombras
+/// superior e inferior largas que superan el tamaño del cuerpo.
+/// Indica indecisión en el mercado.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdlspinningtop").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
+pub async fn cdlspinningtop(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+    let output_name = output_col.unwrap_or("cdlspinningtop");
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    for i in 0..len {
+        let o = open.get(i).unwrap();
+        let h = high.get(i).unwrap();
+        let l = low.get(i).unwrap();
+        let c = close.get(i).unwrap();
+
+        let body = (o - c).abs();
+        let range = h - l;
+
+        if range == 0.0 {
+            continue;
+        }
+
+        let upper_shadow = h - o.max(c);
+        let lower_shadow = o.min(c) - l;
+
+        // 1. Cuerpo pequeño: cuerpo <= 33% del rango total
+        let is_small_body = body <= range * 0.33 && body > range * 0.05; // > 0.05 para excluir dojis puros
+
+        // 2. Sombras largas: ambas sombras deben ser mayores que el cuerpo
+        let long_shadows = upper_shadow > body && lower_shadow > body;
+
+        if is_small_body && long_shadows {
+            result[i] = if c > o {
+                PATTERN_BULLISH
+            } else {
+                PATTERN_BEARISH
+            };
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
-pub async fn cdlstalledpattern(
-    df: DataFrame,
-    _output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
-    Ok(df)
+/// CDLSTALLEDPATTERN - Stalled Pattern (Deliberation)
+///
+/// El patrón Stalled (Estancamiento) o Deliberation es un patrón de reversión bajista
+/// de tres velas que ocurre en una tendencia alcista.
+/// 1. Tres velas blancas.
+/// 2. La primera y segunda vela son largas y con cierres progresivamente más altos.
+/// 3. La tercera vela es pequeña, indicando que el impulso alcista se está agotando.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdlstalledpattern").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 0 o -100 (bajista).
+pub async fn cdlstalledpattern(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+    let output_name = output_col.unwrap_or("cdlstalledpattern");
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    if len < 3 {
+        return df
+            .lazy()
+            .with_column(lit(Series::new(output_name.into(), result)))
+            .collect();
+    }
+
+    for i in 2..len {
+        let o0 = open.get(i - 2).unwrap();
+        let c0 = close.get(i - 2).unwrap();
+        let h0 = high.get(i - 2).unwrap();
+        let l0 = low.get(i - 2).unwrap();
+
+        let o1 = open.get(i - 1).unwrap();
+        let c1 = close.get(i - 1).unwrap();
+        let h1 = high.get(i - 1).unwrap();
+
+        let o2 = open.get(i).unwrap();
+        let c2 = close.get(i).unwrap();
+
+        let body0 = (o0 - c0).abs();
+        let body1 = (o1 - c1).abs();
+        let body2 = (o2 - c2).abs();
+        let range0 = h0 - l0;
+
+        // 1. Tres velas blancas
+        let all_white =
+            candle_color(o0, c0) == 1 && candle_color(o1, c1) == 1 && candle_color(o2, c2) == 1;
+
+        if !all_white {
+            continue;
+        }
+
+        // 2. Cierres progresivamente más altos
+        let ascending = c1 > c0 && c2 > c1;
+
+        // 3. Vela 1 y 2 son "largas" (cuerpo > 60% del rango de v0)
+        let long_v0v1 = body0 > range0 * 0.6 && body1 > range0 * 0.6;
+
+        // 4. Vela 3 es pequeña respecto a la vela 2
+        let stalled = body2 < body1 * 0.5;
+
+        // 5. Vela 2 abre cerca del cierre de Vela 1
+        let o1_near_c0 = (o1 - c0).abs() <= range0 * 0.2;
+
+        if ascending && long_v0v1 && stalled && o1_near_c0 {
+            result[i] = PATTERN_BEARISH;
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
-pub async fn cdlsticksandwich(df: DataFrame, _output_col: Option<&str>) -> PolarsResult<DataFrame> {
-    Ok(df)
+/// CDLSTICKSANDWICH - Stick Sandwich
+///
+/// El Stick Sandwich es un patrón de reversión alcista de tres velas.
+/// 1. Una vela negra.
+/// 2. Una vela blanca que abre por encima del cierre anterior.
+/// 3. Una vela negra que cierra aproximadamente al mismo nivel que la primera vela negra.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdlsticksandwich").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 0 o 100 (alcista).
+pub async fn cdlsticksandwich(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+    let output_name = output_col.unwrap_or("cdlsticksandwich");
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    if len < 3 {
+        return df
+            .lazy()
+            .with_column(lit(Series::new(output_name.into(), result)))
+            .collect();
+    }
+
+    for i in 2..len {
+        let o0 = open.get(i - 2).unwrap();
+        let c0 = close.get(i - 2).unwrap();
+        let h0 = high.get(i - 2).unwrap();
+        let l0 = low.get(i - 2).unwrap();
+
+        let o1 = open.get(i - 1).unwrap();
+        let c1 = close.get(i - 1).unwrap();
+
+        let o2 = open.get(i).unwrap();
+        let c2 = close.get(i).unwrap();
+
+        // 1. Vela 0 negra, Vela 1 blanca, Vela 2 negra
+        let pattern_colors =
+            candle_color(o0, c0) == -1 && candle_color(o1, c1) == 1 && candle_color(o2, c2) == -1;
+
+        if !pattern_colors {
+            continue;
+        }
+
+        // 2. Cierre de la Vela 2 es igual al Cierre de la Vela 0
+        let range0 = h0 - l0;
+        let tolerance = if range0 > 0.0 { range0 * 0.05 } else { 0.0001 };
+        let equal_close = (c2 - c0).abs() <= tolerance;
+
+        // 3. La vela blanca (Vela 1) debe tener un cierre mayor que los cierres negros
+        let white_higher = c1 > c0 && c1 > c2;
+
+        if equal_close && white_higher {
+            result[i] = PATTERN_BULLISH;
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
-pub async fn cdltakuri(df: DataFrame, _output_col: Option<&str>) -> PolarsResult<DataFrame> {
-    Ok(df)
+/// CDLTAKURI - Takuri (Dragonfly Doji with very long lower shadow)
+///
+/// El Takuri es un patrón de reversión alcista de una sola vela.
+/// Se caracteriza por ser un Doji con una sombra inferior extremadamente larga
+/// y prácticamente sin sombra superior.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdltakuri").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 0 o 100 (alcista).
+pub async fn cdltakuri(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+    let output_name = output_col.unwrap_or("cdltakuri");
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    for i in 0..len {
+        let o = open.get(i).unwrap();
+        let h = high.get(i).unwrap();
+        let l = low.get(i).unwrap();
+        let c = close.get(i).unwrap();
+
+        let body = (o - c).abs();
+        let range = h - l;
+
+        if range == 0.0 {
+            continue;
+        }
+
+        let upper_shadow = h - o.max(c);
+        let lower_shadow = o.min(c) - l;
+
+        // 1. Condición de Doji (cuerpo muy pequeño)
+        let is_doji = body <= range * 0.1;
+
+        // 2. Sombra inferior muy larga (al menos 3 veces el cuerpo)
+        let very_long_lower = lower_shadow >= body * 3.0;
+
+        // 3. Sombra superior muy corta (máximo 10% del rango)
+        let very_short_upper = upper_shadow <= range * 0.1;
+
+        if is_doji && very_long_lower && very_short_upper {
+            result[i] = PATTERN_BULLISH;
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
-pub async fn cdltasukigap(df: DataFrame, _output_col: Option<&str>) -> PolarsResult<DataFrame> {
-    Ok(df)
+/// CDLTASUKIGAP - Tasuki Gap
+///
+/// El Tasuki Gap es un patrón de continuación de tres velas.
+///
+/// # Upside Tasuki Gap (Alcista):
+/// 1. Dos velas blancas con un gap alcista entre ellas.
+/// 2. Una tercera vela negra que abre dentro del cuerpo de la segunda vela
+///    y cierra dentro del gap, sin llegar a cerrarlo completamente.
+///
+/// # Downside Tasuki Gap (Bajista):
+/// 1. Dos velas negras con un gap bajista entre ellas.
+/// 2. Una tercera vela blanca que abre dentro del cuerpo de la segunda vela
+///    y cierra dentro del gap, sin llegar a cerrarlo completamente.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdltasukigap").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
+pub async fn cdltasukigap(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+    let output_name = output_col.unwrap_or("cdltasukigap");
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    if len < 3 {
+        return df
+            .lazy()
+            .with_column(lit(Series::new(output_name.into(), result)))
+            .collect();
+    }
+
+    for i in 2..len {
+        let o0 = open.get(i - 2).unwrap();
+        let c0 = close.get(i - 2).unwrap();
+        let o1 = open.get(i - 1).unwrap();
+        let c1 = close.get(i - 1).unwrap();
+        let o2 = open.get(i).unwrap();
+        let c2 = close.get(i).unwrap();
+
+        // --- UPSIDE TASUKI GAP ---
+        let is_white0 = candle_color(o0, c0) == 1;
+        let is_white1 = candle_color(o1, c1) == 1;
+        let gap_up = c0 < o1;
+        let is_black2 = candle_color(o2, c2) == -1;
+        let open_within1 = o2 > o1 && o2 < c1;
+        let close_in_gap = c2 < o1 && c2 > c0;
+
+        if is_white0 && is_white1 && gap_up && is_black2 && open_within1 && close_in_gap {
+            result[i] = PATTERN_BULLISH;
+            continue;
+        }
+
+        // --- DOWNSIDE TASUKI GAP ---
+        let is_black0 = candle_color(o0, c0) == -1;
+        let is_black1 = candle_color(o1, c1) == -1;
+        let gap_down = c0 > o1;
+        let is_white2 = candle_color(o2, c2) == 1;
+        let open_within1_down = o2 < o1 && o2 > c1;
+        let close_in_gap_down = c2 > o1 && c2 < c0;
+
+        if is_black0 && is_black1 && gap_down && is_white2 && open_within1_down && close_in_gap_down
+        {
+            result[i] = PATTERN_BEARISH;
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
-pub async fn cdlthrusting(df: DataFrame, _output_col: Option<&str>) -> PolarsResult<DataFrame> {
-    Ok(df)
+/// CDLTHRUSTING - Thrusting Pattern
+///
+/// El patrón Thrusting es un patrón de continuación bajista de dos velas.
+/// Consiste en una vela negra larga seguida de una vela blanca que abre por debajo
+/// del mínimo anterior y cierra dentro del cuerpo de la primera vela, pero
+/// por debajo de su punto medio (a diferencia del Piercing Pattern).
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdlthrusting").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 0 o -100 (bajista).
+pub async fn cdlthrusting(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+    let output_name = output_col.unwrap_or("cdlthrusting");
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    if len < 2 {
+        return df
+            .lazy()
+            .with_column(lit(Series::new(output_name.into(), result)))
+            .collect();
+    }
+
+    for i in 1..len {
+        let o0 = open.get(i - 1).unwrap();
+        let h0 = high.get(i - 1).unwrap();
+        let l0 = low.get(i - 1).unwrap();
+        let c0 = close.get(i - 1).unwrap();
+
+        let o1 = open.get(i).unwrap();
+        let c1 = close.get(i).unwrap();
+
+        let body0 = (o0 - c0).abs();
+        let range0 = h0 - l0;
+
+        // 1. Vela 0: Negra larga
+        let is_black0 = candle_color(o0, c0) == -1;
+        let is_long0 = if range0 > 0.0 {
+            body0 > range0 * 0.6
+        } else {
+            false
+        };
+
+        // 2. Vela 1: Blanca que abre bajo el mínimo de la vela 0
+        let is_white1 = candle_color(o1, c1) == 1;
+        let open_below = o1 < l0;
+
+        // 3. Cierre dentro del cuerpo pero BAJO el punto medio
+        let mid_point = (o0 + c0) / 2.0;
+        let closes_into_body = c1 > c0 && c1 < mid_point;
+
+        if is_black0 && is_long0 && is_white1 && open_below && closes_into_body {
+            result[i] = PATTERN_BEARISH;
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
-pub async fn cdltristar(df: DataFrame, _output_col: Option<&str>) -> PolarsResult<DataFrame> {
-    Ok(df)
+/// CDLTRISTAR - Tristar Pattern
+///
+/// El patrón Tristar es un patrón de reversión de tres velas compuesto por tres Dojis consecutivos.
+/// Es un patrón muy raro pero significativo.
+///
+/// # Bullish Tristar (Alcista):
+/// 1. Tres Dojis consecutivos.
+/// 2. El segundo Doji tiene un gap bajista respecto al primero.
+///
+/// # Bearish Tristar (Bajista):
+/// 1. Tres Dojis consecutivos.
+/// 2. El segundo Doji tiene un gap alcista respecto al primero.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdltristar").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
+pub async fn cdltristar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+    let output_name = output_col.unwrap_or("cdltristar");
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    if len < 3 {
+        return df
+            .lazy()
+            .with_column(lit(Series::new(output_name.into(), result)))
+            .collect();
+    }
+
+    for i in 2..len {
+        let o0 = open.get(i - 2).unwrap();
+        let h0 = high.get(i - 2).unwrap();
+        let l0 = low.get(i - 2).unwrap();
+        let c0 = close.get(i - 2).unwrap();
+
+        let o1 = open.get(i - 1).unwrap();
+        let h1 = high.get(i - 1).unwrap();
+        let l1 = low.get(i - 1).unwrap();
+        let c1 = close.get(i - 1).unwrap();
+
+        let o2 = open.get(i).unwrap();
+        let h2 = high.get(i).unwrap();
+        let l2 = low.get(i).unwrap();
+        let c2 = close.get(i).unwrap();
+
+        let body0 = (o0 - c0).abs();
+        let range0 = h0 - l0;
+        let body1 = (o1 - c1).abs();
+        let range1 = h1 - l1;
+        let body2 = (o2 - c2).abs();
+        let range2 = h2 - l2;
+
+        if range0 == 0.0 || range1 == 0.0 || range2 == 0.0 {
+            continue;
+        }
+
+        // Condición de Doji para las tres velas
+        let is_doji0 = body0 <= range0 * 0.1;
+        let is_doji1 = body1 <= range1 * 0.1;
+        let is_doji2 = body2 <= range2 * 0.1;
+
+        if is_doji0 && is_doji1 && is_doji2 {
+            // --- BULLISH TRISTAR ---
+            // Gap bajista del segundo Doji
+            if o1 < o0.min(c0) && o1 < o2.min(c2) {
+                result[i] = PATTERN_BULLISH;
+                continue;
+            }
+
+            // --- BEARISH TRISTAR ---
+            // Gap alcista del segundo Doji
+            if o1 > o0.max(c0) && o1 > o2.max(c2) {
+                result[i] = PATTERN_BEARISH;
+            }
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
-pub async fn cdlunique3river(df: DataFrame, _output_col: Option<&str>) -> PolarsResult<DataFrame> {
-    Ok(df)
+/// CDLUNIQUE3RIVER - Unique 3 River
+///
+/// El Unique 3 River es un patrón de reversión alcista de tres velas.
+/// 1. Una vela negra larga.
+/// 2. Una vela negra con un cuerpo tipo harami pero con un nuevo mínimo.
+/// 3. Una vela blanca pequeña que está por debajo del cierre de la segunda vela.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdlunique3river").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 0 o 100 (alcista).
+pub async fn cdlunique3river(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+    let output_name = output_col.unwrap_or("cdlunique3river");
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    if len < 3 {
+        return df
+            .lazy()
+            .with_column(lit(Series::new(output_name.into(), result)))
+            .collect();
+    }
+
+    for i in 2..len {
+        let o0 = open.get(i - 2).unwrap();
+        let h0 = high.get(i - 2).unwrap();
+        let l0 = low.get(i - 2).unwrap();
+        let c0 = close.get(i - 2).unwrap();
+
+        let o1 = open.get(i - 1).unwrap();
+        let l1 = low.get(i - 1).unwrap();
+        let c1 = close.get(i - 1).unwrap();
+
+        let o2 = open.get(i).unwrap();
+        let c2 = close.get(i).unwrap();
+
+        let body0 = (o0 - c0).abs();
+        let range0 = h0 - l0;
+
+        // 1. Vela 0: Negra larga
+        let is_black0 = candle_color(o0, c0) == -1;
+        let is_long0 = if range0 > 0.0 {
+            body0 > range0 * 0.6
+        } else {
+            false
+        };
+
+        if !is_black0 || !is_long0 {
+            continue;
+        }
+
+        // 2. Vela 1: Negra con nuevo mínimo pero cuerpo dentro del anterior (tipo harami)
+        let is_black1 = candle_color(o1, c1) == -1;
+        let body_inside0 = o1 < o0 && o1 > c0 && c1 < o0 && c1 > c0;
+        let new_low1 = l1 < l0;
+
+        // 3. Vela 2: Blanca pequeña y por debajo del cierre anterior (o dentro del rango inferior)
+        let is_white2 = candle_color(o2, c2) == 1;
+        let is_small2 = (o2 - c2).abs() < body0 * 0.3;
+        let below_c1 = c2 < c1; // Simplificación habitual
+
+        if is_black1 && body_inside0 && new_low1 && is_white2 && is_small2 && below_c1 {
+            result[i] = PATTERN_BULLISH;
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
+/// CDLUPSIDEGAP2CROWS - Upside Gap Two Crows
+///
+/// El Upside Gap Two Crows es un patrón de reversión bajista de tres velas
+/// que ocurre en una tendencia alcista.
+/// 1. Una vela blanca larga.
+/// 2. Una vela negra pequeña que abre con gap alcista respecto al cierre anterior.
+/// 3. Una segunda vela negra que envuelve el cuerpo de la vela anterior
+///    pero que aún cierra por encima del cierre de la primera vela blanca.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdlupsidegap2crows").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 0 o -100 (bajista).
 pub async fn cdlupsidegap2crows(
     df: DataFrame,
-    _output_col: Option<&str>,
+    output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
-    Ok(df)
+    let output_name = output_col.unwrap_or("cdlupsidegap2crows");
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    if len < 3 {
+        return df
+            .lazy()
+            .with_column(lit(Series::new(output_name.into(), result)))
+            .collect();
+    }
+
+    for i in 2..len {
+        let o0 = open.get(i - 2).unwrap();
+        let h0 = high.get(i - 2).unwrap();
+        let l0 = low.get(i - 2).unwrap();
+        let c0 = close.get(i - 2).unwrap();
+
+        let o1 = open.get(i - 1).unwrap();
+        let c1 = close.get(i - 1).unwrap();
+
+        let o2 = open.get(i).unwrap();
+        let c2 = close.get(i).unwrap();
+
+        let body0 = (o0 - c0).abs();
+        let range0 = h0 - l0;
+
+        // 1. Vela 0: Blanca larga
+        let is_white0 = candle_color(o0, c0) == 1;
+        let is_long0 = if range0 > 0.0 {
+            body0 > range0 * 0.6
+        } else {
+            false
+        };
+
+        if !is_white0 || !is_long0 {
+            continue;
+        }
+
+        // 2. Vela 1: Negra con gap alcista
+        let is_black1 = candle_color(o1, c1) == -1;
+        let gap_up1 = c1.min(o1) > c0;
+
+        // 3. Vela 2: Negra que envuelve a Vela 1 pero cierra sobre c0
+        let is_black2 = candle_color(o2, c2) == -1;
+        let engulfs1 = o2 > o1 && c2 < c1;
+        let above_c0 = c2 > c0;
+
+        if is_black1 && gap_up1 && is_black2 && engulfs1 && above_c0 {
+            result[i] = PATTERN_BEARISH;
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
+/// CDLXSIDEGAP3METHODS - Upside/Downside Gap Three Methods
+///
+/// El patrón Upside/Downside Gap Three Methods es un patrón de continuación de tres velas.
+/// Es similar al Tasuki Gap, pero la tercera vela cierra completamente el gap entre la primera y la segunda.
+///
+/// # Upside Gap Three Methods (Alcista):
+/// 1. Dos velas blancas con un gap alcista entre ellas.
+/// 2. Una tercera vela negra que abre dentro del cuerpo de la segunda vela y cierra dentro del cuerpo de la primera, cerrando el gap.
+///
+/// # Downside Gap Three Methods (Bajista):
+/// 1. Dos velas negras con un gap bajista entre ellas.
+/// 2. Una tercera vela blanca que abre dentro del cuerpo de la segunda vela y cierra dentro del cuerpo de la primera, cerrando el gap.
+///
+/// # Parámetros
+/// * `df`: DataFrame de Polars con columnas "open", "high", "low", "close".
+/// * `output_col`: Nombre opcional para la columna de salida (default: "cdlxsidegap3methods").
+///
+/// # Retorno
+/// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
 pub async fn cdlxsidegap3methods(
     df: DataFrame,
-    _output_col: Option<&str>,
+    output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
-    Ok(df)
+    let output_name = output_col.unwrap_or("cdlxsidegap3methods");
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let open = open_s.f64()?;
+    let high = high_s.f64()?;
+    let low = low_s.f64()?;
+    let close = close_s.f64()?;
+
+    let len = open.len();
+    let mut result: Vec<i32> = vec![0; len];
+
+    if len < 3 {
+        return df
+            .lazy()
+            .with_column(lit(Series::new(output_name.into(), result)))
+            .collect();
+    }
+
+    for i in 2..len {
+        let o0 = open.get(i - 2).unwrap();
+        let c0 = close.get(i - 2).unwrap();
+        let o1 = open.get(i - 1).unwrap();
+        let c1 = close.get(i - 1).unwrap();
+        let o2 = open.get(i).unwrap();
+        let c2 = close.get(i).unwrap();
+
+        // --- UPSIDE GAP THREE METHODS ---
+        let is_white0 = candle_color(o0, c0) == 1;
+        let is_white1 = candle_color(o1, c1) == 1;
+        let gap_up = c0 < o1;
+        let is_black2 = candle_color(o2, c2) == -1;
+
+        // La vela 3 abre dentro del cuerpo de la vela 2 y cierra dentro del cuerpo de la vela 1
+        let open_within1 = o2 > o1 && o2 < c1;
+        let close_within0 = c2 < o0.max(c0) && c2 > o0.min(c0);
+
+        if is_white0 && is_white1 && gap_up && is_black2 && open_within1 && close_within0 {
+            result[i] = PATTERN_BULLISH;
+            continue;
+        }
+
+        // --- DOWNSIDE GAP THREE METHODS ---
+        let is_black0 = candle_color(o0, c0) == -1;
+        let is_black1 = candle_color(o1, c1) == -1;
+        let gap_down = c0 > o1;
+        let is_white2 = candle_color(o2, c2) == 1;
+
+        let open_within1_down = o2 < o1 && o2 > c1;
+        let close_within0_down = c2 > o0.min(c0) && c2 < o0.max(c0);
+
+        if is_black0
+            && is_black1
+            && gap_down
+            && is_white2
+            && open_within1_down
+            && close_within0_down
+        {
+            result[i] = PATTERN_BEARISH;
+        }
+    }
+
+    df.lazy()
+        .with_column(lit(Series::new(output_name.into(), result)))
+        .collect()
 }
 
 #[cfg(test)]
@@ -3238,6 +4609,362 @@ mod tests {
                         println!("CDLEVENINGDOJISTAR calculated and saved to download/test_cdleveningdojistar.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdleveningdojistar: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdlmorningdojistar() {
+        match load_data().await {
+            Ok(df) => {
+                match cdlmorningdojistar(df, None, Some("cdlmorningdojistar")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdlmorningdojistar.csv")
+                            .await
+                            .unwrap();
+                        println!("CDLMORNINGDOJISTAR calculated and saved to download/test_cdlmorningdojistar.csv");
+                    }
+                    Err(e) => panic!("Failed to calculate cdlmorningdojistar: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdlmorningstar() {
+        match load_data().await {
+            Ok(df) => {
+                match cdlmorningstar(df, None, Some("cdlmorningstar")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdlmorningstar.csv")
+                            .await
+                            .unwrap();
+                        println!(
+                            "CDLMORNINGSTAR calculated and saved to download/test_cdlmorningstar.csv"
+                        );
+                    }
+                    Err(e) => panic!("Failed to calculate cdlmorningstar: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdlonneck() {
+        match load_data().await {
+            Ok(df) => {
+                match cdlonneck(df, Some("cdlonneck")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdlonneck.csv")
+                            .await
+                            .unwrap();
+                        println!("CDLONNECK calculated and saved to download/test_cdlonneck.csv");
+                    }
+                    Err(e) => panic!("Failed to calculate cdlonneck: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdlpiercing() {
+        match load_data().await {
+            Ok(df) => {
+                match cdlpiercing(df, None, Some("cdlpiercing")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdlpiercing.csv")
+                            .await
+                            .unwrap();
+                        println!(
+                            "CDLPIERCING calculated and saved to download/test_cdlpiercing.csv"
+                        );
+                    }
+                    Err(e) => panic!("Failed to calculate cdlpiercing: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdlrickshawman() {
+        match load_data().await {
+            Ok(df) => {
+                match cdlrickshawman(df, Some("cdlrickshawman")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdlrickshawman.csv")
+                            .await
+                            .unwrap();
+                        println!(
+                            "CDLRICKSHAWMAN calculated and saved to download/test_cdlrickshawman.csv"
+                        );
+                    }
+                    Err(e) => panic!("Failed to calculate cdlrickshawman: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdlrisefall3methods() {
+        match load_data().await {
+            Ok(df) => {
+                match cdlrisefall3methods(df, Some("cdlrisefall3methods")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdlrisefall3methods.csv")
+                            .await
+                            .unwrap();
+                        println!("CDLRISEFALL3METHODS calculated and saved to download/test_cdlrisefall3methods.csv");
+                    }
+                    Err(e) => panic!("Failed to calculate cdlrisefall3methods: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdlseparatinglines() {
+        match load_data().await {
+            Ok(df) => {
+                match cdlseparatinglines(df, Some("cdlseparatinglines")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdlseparatinglines.csv")
+                            .await
+                            .unwrap();
+                        println!("CDLSEPARATINGLINES calculated and saved to download/test_cdlseparatinglines.csv");
+                    }
+                    Err(e) => panic!("Failed to calculate cdlseparatinglines: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdlshootingstar() {
+        match load_data().await {
+            Ok(df) => {
+                match cdlshootingstar(df, Some("cdlshootingstar")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdlshootingstar.csv")
+                            .await
+                            .unwrap();
+                        println!(
+                            "CDLSHOOTINGSTAR calculated and saved to download/test_cdlshootingstar.csv"
+                        );
+                    }
+                    Err(e) => panic!("Failed to calculate cdlshootingstar: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdlshortline() {
+        match load_data().await {
+            Ok(df) => {
+                match cdlshortline(df, Some("cdlshortline")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdlshortline.csv")
+                            .await
+                            .unwrap();
+                        println!(
+                            "CDLSHORTLINE calculated and saved to download/test_cdlshortline.csv"
+                        );
+                    }
+                    Err(e) => panic!("Failed to calculate cdlshortline: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdlspinningtop() {
+        match load_data().await {
+            Ok(df) => {
+                match cdlspinningtop(df, Some("cdlspinningtop")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdlspinningtop.csv")
+                            .await
+                            .unwrap();
+                        println!("CDLSPINNINGTOP calculated and saved to download/test_cdlspinningtop.csv");
+                    }
+                    Err(e) => panic!("Failed to calculate cdlspinningtop: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdlstalledpattern() {
+        match load_data().await {
+            Ok(df) => {
+                match cdlstalledpattern(df, Some("cdlstalledpattern")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdlstalledpattern.csv")
+                            .await
+                            .unwrap();
+                        println!("CDLSTALLEDPATTERN calculated and saved to download/test_cdlstalledpattern.csv");
+                    }
+                    Err(e) => panic!("Failed to calculate cdlstalledpattern: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdlsticksandwich() {
+        match load_data().await {
+            Ok(df) => {
+                match cdlsticksandwich(df, Some("cdlsticksandwich")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdlsticksandwich.csv")
+                            .await
+                            .unwrap();
+                        println!("CDLSTICKSANDWICH calculated and saved to download/test_cdlsticksandwich.csv");
+                    }
+                    Err(e) => panic!("Failed to calculate cdlsticksandwich: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdltakuri() {
+        match load_data().await {
+            Ok(df) => {
+                match cdltakuri(df, Some("cdltakuri")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdltakuri.csv")
+                            .await
+                            .unwrap();
+                        println!("CDLTAKURI calculated and saved to download/test_cdltakuri.csv");
+                    }
+                    Err(e) => panic!("Failed to calculate cdltakuri: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdltasukigap() {
+        match load_data().await {
+            Ok(df) => {
+                match cdltasukigap(df, Some("cdltasukigap")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdltasukigap.csv")
+                            .await
+                            .unwrap();
+                        println!(
+                            "CDLTASUKIGAP calculated and saved to download/test_cdltasukigap.csv"
+                        );
+                    }
+                    Err(e) => panic!("Failed to calculate cdltasukigap: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdlthrusting() {
+        match load_data().await {
+            Ok(df) => {
+                match cdlthrusting(df, Some("cdlthrusting")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdlthrusting.csv")
+                            .await
+                            .unwrap();
+                        println!(
+                            "CDLTHRUSTING calculated and saved to download/test_cdlthrusting.csv"
+                        );
+                    }
+                    Err(e) => panic!("Failed to calculate cdlthrusting: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdltristar() {
+        match load_data().await {
+            Ok(df) => {
+                match cdltristar(df, Some("cdltristar")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdltristar.csv")
+                            .await
+                            .unwrap();
+                        println!("CDLTRISTAR calculated and saved to download/test_cdltristar.csv");
+                    }
+                    Err(e) => panic!("Failed to calculate cdltristar: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdlunique3river() {
+        match load_data().await {
+            Ok(df) => {
+                match cdlunique3river(df, Some("cdlunique3river")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdlunique3river.csv")
+                            .await
+                            .unwrap();
+                        println!("CDLUNIQUE3RIVER calculated and saved to download/test_cdlunique3river.csv");
+                    }
+                    Err(e) => panic!("Failed to calculate cdlunique3river: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdlupsidegap2crows() {
+        match load_data().await {
+            Ok(df) => {
+                match cdlupsidegap2crows(df, Some("cdlupsidegap2crows")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdlupsidegap2crows.csv")
+                            .await
+                            .unwrap();
+                        println!("CDLUPSIDEGAP2CROWS calculated and saved to download/test_cdlupsidegap2crows.csv");
+                    }
+                    Err(e) => panic!("Failed to calculate cdlupsidegap2crows: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_cdlxsidegap3methods() {
+        match load_data().await {
+            Ok(df) => {
+                match cdlxsidegap3methods(df, Some("cdlxsidegap3methods")).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_cdlxsidegap3methods.csv")
+                            .await
+                            .unwrap();
+                        println!("CDLXSIDEGAP3METHODS calculated and saved to download/test_cdlxsidegap3methods.csv");
+                    }
+                    Err(e) => panic!("Failed to calculate cdlxsidegap3methods: {:?}", e),
                 };
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
