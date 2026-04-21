@@ -14,32 +14,8 @@ Terminadas:
 
 
 TODO:
-promt: Quiero que me crees la funcionalidad de la funcion X de [@pattern.rs](file:///home/jairo/Documentos/proyectos/QuantiaBuilder/src-tauri/src/indicators/pattern.rs)  que calcula el indicador X. Tienen que recibir un dataframe por parametros y los parametros necesarios para calcular el indicador de trading y devolver el dataframe de polars con los datos: Los calculos para los indicadores puedes verlos en https://github.com/TA-Lib/ta-lib y busca la formila tambien en internet para optener más infomación. Crea tambien la coumentación correspondiente de las funciones.
-
-Promt para verificar los indicadores: Quiero que busque en internet como se calcula el indicador de trading X y compruebes la función que yo tengo programada para que verifiques que mi función hace bien los calculos de ese indicador. En caso de que no lo este calculando bien, corrige los calculos de mi función para que calcule bien el indicador. Mi funcion es X.
-
-Continua con la funcion X del indicador X
-
 -Crear indicadores basicos por ahora:
-
-    Pattern Recognition
-        CDLONNECK            On-Neck Pattern
-        CDLPIERCING          Piercing Pattern
-        CDLRICKSHAWMAN       Rickshaw Man
-        CDLRISEFALL3METHODS  Rising/Falling Three Methods
-        CDLSEPARATINGLINES   Separating Lines
-        CDLSHOOTINGSTAR      Shooting Star
-        CDLSHORTLINE         Short Line Candle
-        CDLSPINNINGTOP       Spinning Top
-        CDLSTALLEDPATTERN    Stalled Pattern
-        CDLSTICKSANDWICH     Stick Sandwich
-        CDLTAKURI            Takuri (Dragonfly Doji with very long lower shadow)
-        CDLTASUKIGAP         Tasuki Gap
-        CDLTHRUSTING         Thrusting Pattern
-        CDLTRISTAR           Tristar Pattern
-        CDLUNIQUE3RIVER      Unique 3 River
-        CDLUPSIDEGAP2CROWS   Upside Gap Two Crows
-        CDLXSIDEGAP3METHODS  Upside/Downside Gap Three Methods
+    Promt para verificar los indicadores: Quiero que busque en internet como se calcula el indicador de trading X y compruebes la función que yo tengo programada para que verifiques que mi función hace bien los calculos de ese indicador. En caso de que no lo este calculando bien, corrige los calculos de mi función para que calcule bien el indicador. Mi funcion es X.
 
 -Crear la logica para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
 -Crear plantillas para que genere el código en MQL5.

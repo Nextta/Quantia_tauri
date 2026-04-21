@@ -201,127 +201,97 @@ pub async fn adx(
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
     let timeperiod = timeperiod.unwrap_or(14);
-    let output_col = output_col.unwrap_or("adx");
+    let output_name = output_col.unwrap_or("adx");
     let high = get_high(&df)?;
     let low = get_low(&df)?;
     let close = get_close(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
-
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
+    let high_vals = high.f64().unwrap();
+    let low_vals = low.f64().unwrap();
+    let close_vals = close.f64().unwrap();
 
     let n = high_vals.len();
 
-    if n <= timeperiod {
-        let adx_series = Series::new(output_col.into(), &vec![f64::NAN; n]);
-        let mut result_df = df;
-        result_df.with_column(adx_series.into())?;
+    if n < (timeperiod * 2) {
+        let mut result_df = df.clone();
+        result_df.with_column(Series::new(output_name.into(), vec![f64::NAN; n]).into())?;
         return Ok(result_df);
     }
 
-    let mut plus_dm: Vec<f64> = vec![0.0; n];
-    let mut minus_dm: Vec<f64> = vec![0.0; n];
-    let mut tr: Vec<f64> = vec![0.0; n];
+    let mut plus_dm = vec![0.0; n];
+    let mut minus_dm = vec![0.0; n];
+    let mut tr = vec![0.0; n];
+
+    // First bar TR calculation
+    if n > 0 {
+        tr[0] = high_vals.get(0).unwrap() - low_vals.get(0).unwrap();
+    }
 
     for i in 1..n {
-        let high_diff = high_vals[i] - high_vals[i - 1];
-        let low_diff = low_vals[i - 1] - low_vals[i];
+        let h_curr = high_vals.get(i).unwrap();
+        let h_prev = high_vals.get(i - 1).unwrap();
+        let l_curr = low_vals.get(i).unwrap();
+        let l_prev = low_vals.get(i - 1).unwrap();
+        let c_prev = close_vals.get(i - 1).unwrap();
 
-        plus_dm[i] = if high_diff > low_diff && high_diff > 0.0 {
-            high_diff
-        } else {
-            0.0
-        };
-        minus_dm[i] = if low_diff > high_diff && low_diff > 0.0 {
-            low_diff
-        } else {
-            0.0
-        };
+        let high_diff = h_curr - h_prev;
+        let low_diff = l_prev - l_curr;
 
-        let tr1 = high_vals[i] - low_vals[i];
-        let tr2 = (high_vals[i] - close_vals[i - 1]).abs();
-        let tr3 = (low_vals[i] - close_vals[i - 1]).abs();
+        if high_diff > low_diff && high_diff > 0.0 {
+            plus_dm[i] = high_diff;
+        } else {
+            plus_dm[i] = 0.0;
+        }
+
+        if low_diff > high_diff && low_diff > 0.0 {
+            minus_dm[i] = low_diff;
+        } else {
+            minus_dm[i] = 0.0;
+        }
+
+        let tr1 = h_curr - l_curr;
+        let tr2 = (h_curr - c_prev).abs();
+        let tr3 = (l_curr - c_prev).abs();
         tr[i] = tr1.max(tr2).max(tr3);
     }
 
-    let plus_dm_series = Series::new("plus_dm".into(), &plus_dm);
-    let minus_dm_series = Series::new("minus_dm".into(), &minus_dm);
-    let tr_series = Series::new("tr".into(), &tr);
+    let tr_series = Series::new("tr".into(), tr);
+    let plus_dm_series = Series::new("plus_dm".into(), plus_dm);
+    let minus_dm_series = Series::new("minus_dm".into(), minus_dm);
 
+    let smoothed_tr = rma_series(&tr_series, timeperiod);
     let smoothed_plus_dm = rma_series(&plus_dm_series, timeperiod);
     let smoothed_minus_dm = rma_series(&minus_dm_series, timeperiod);
-    let smoothed_tr = rma_series(&tr_series, timeperiod);
 
-    let plus_di_ca: ChunkedArray<Float64Type> = smoothed_plus_dm.f64().unwrap().clone();
-    let minus_di_ca: ChunkedArray<Float64Type> = smoothed_minus_dm.f64().unwrap().clone();
-    let tr_ca: ChunkedArray<Float64Type> = smoothed_tr.f64().unwrap().clone();
+    let tr_v = smoothed_tr.f64().unwrap();
+    let pdm_v = smoothed_plus_dm.f64().unwrap();
+    let mdm_v = smoothed_minus_dm.f64().unwrap();
 
-    let plus_di_vals: Vec<f64> = plus_di_ca.into_no_null_iter().collect();
-    let minus_di_vals: Vec<f64> = minus_di_ca.into_no_null_iter().collect();
-    let tr_vals: Vec<f64> = tr_ca.into_no_null_iter().collect();
-
-    let mut dx_vals: Vec<f64> = vec![f64::NAN; n];
-    let mut adx_vals: Vec<f64> = vec![f64::NAN; n];
+    let mut dx_vals = vec![f64::NAN; n];
 
     for i in 0..n {
-        if !plus_di_vals[i].is_nan()
-            && !minus_di_vals[i].is_nan()
-            && !tr_vals[i].is_nan()
-            && tr_vals[i] != 0.0
-        {
-            let plus_di = (plus_di_vals[i] / tr_vals[i]) * 100.0;
-            let minus_di = (minus_di_vals[i] / tr_vals[i]) * 100.0;
+        let tr_val = tr_v.get(i).unwrap_or(f64::NAN);
+        let pdm_val = pdm_v.get(i).unwrap_or(f64::NAN);
+        let mdm_val = mdm_v.get(i).unwrap_or(f64::NAN);
+
+        if !tr_val.is_nan() && tr_val != 0.0 {
+            let plus_di = (pdm_val / tr_val) * 100.0;
+            let minus_di = (mdm_val / tr_val) * 100.0;
             let di_sum = plus_di + minus_di;
             if di_sum != 0.0 {
                 dx_vals[i] = ((plus_di - minus_di).abs() / di_sum) * 100.0;
-            }
-        }
-    }
-
-    let dx_series = Series::new("dx".into(), &dx_vals);
-    let dx_ca: ChunkedArray<Float64Type> = dx_series.f64().unwrap().clone();
-    let dx_vec: Vec<f64> = dx_ca.into_no_null_iter().collect();
-
-    // ADX is EMA of DX
-    let mut sum_dx = 0.0;
-    let mut count = 0;
-    for i in 0..n {
-        if !dx_vec[i].is_nan() {
-            sum_dx += dx_vec[i];
-            count += 1;
-            if count == timeperiod {
-                adx_vals[i] = sum_dx / timeperiod as f64;
-                break;
-            }
-        }
-    }
-
-    // Continue with EMA
-    for i in (timeperiod)..n {
-        if !dx_vec[i].is_nan() {
-            let prev = if adx_vals[i - 1].is_nan() {
-                adx_vals
-                    .iter()
-                    .rev()
-                    .find(|&&x| !x.is_nan())
-                    .copied()
-                    .unwrap_or(0.0)
             } else {
-                adx_vals[i - 1]
-            };
-            if prev != 0.0 || !adx_vals[i - 1].is_nan() {
-                adx_vals[i] = (prev * (timeperiod as f64 - 1.0) + dx_vec[i]) / timeperiod as f64;
+                dx_vals[i] = 0.0;
             }
         }
     }
 
-    let adx_series = Series::new(output_col.into(), &adx_vals);
+    let dx_series = Series::new("dx".into(), dx_vals);
+    let adx_series = rma_series(&dx_series, timeperiod);
+
     let mut result_df = df.clone();
-    result_df.with_column(adx_series.into())?;
+    let adx_final = adx_series.with_name(output_name.into());
+    result_df.with_column(adx_final.into())?;
     Ok(result_df)
 }
 
@@ -344,22 +314,27 @@ pub async fn adxr(
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
     let timeperiod = timeperiod.unwrap_or(14);
-    let output_col = output_col.unwrap_or("adxr");
-    let adx_df = adx(df.clone(), Some(timeperiod), None).await?;
-    let adx_col = adx_df.column("adx").unwrap();
-    let adx_ca: ChunkedArray<Float64Type> = adx_col.f64().unwrap().clone();
-    let adx_vals: Vec<f64> = adx_ca.into_no_null_iter().collect();
+    let output_name = output_col.unwrap_or("adxr");
 
-    let n = adx_vals.len();
+    // Calcular ADX primero
+    let adx_df = adx(df.clone(), Some(timeperiod), Some("temp_adx")).await?;
+    let adx_col = adx_df.column("temp_adx").unwrap().f64().unwrap();
+
+    let n = adx_col.len();
     let mut adxr_vals: Vec<f64> = vec![f64::NAN; n];
 
-    for i in (timeperiod - 1)..n {
-        if !adx_vals[i].is_nan() && !adx_vals[i - timeperiod + 1].is_nan() {
-            adxr_vals[i] = (adx_vals[i] + adx_vals[i - timeperiod + 1]) / 2.0;
+    // ADXR = (ADX[i] + ADX[i - (timeperiod - 1)]) / 2
+    let lookback = timeperiod - 1;
+    for i in lookback..n {
+        let current_adx = adx_col.get(i).unwrap_or(f64::NAN);
+        let past_adx = adx_col.get(i - lookback).unwrap_or(f64::NAN);
+
+        if !current_adx.is_nan() && !past_adx.is_nan() {
+            adxr_vals[i] = (current_adx + past_adx) / 2.0;
         }
     }
 
-    let adxr_series = Series::new(output_col.into(), &adxr_vals);
+    let adxr_series = Series::new(output_name.into(), adxr_vals);
     let mut result_df = df;
     result_df.with_column(adxr_series.into())?;
     Ok(result_df)
@@ -388,31 +363,24 @@ pub async fn apo(
 ) -> PolarsResult<DataFrame> {
     let fastperiod = fastperiod.unwrap_or(12);
     let slowperiod = slowperiod.unwrap_or(26);
-    let output_col = output_col.unwrap_or("apo");
+    let output_name = output_col.unwrap_or("apo");
 
     let close = get_close(&df)?;
 
     let fast_ema = ema_series(&close, fastperiod);
     let slow_ema = ema_series(&close, slowperiod);
 
-    let fast_ca: ChunkedArray<Float64Type> = fast_ema.f64().unwrap().clone();
-    let slow_ca: ChunkedArray<Float64Type> = slow_ema.f64().unwrap().clone();
-    let fast_vals: Vec<f64> = fast_ca.into_no_null_iter().collect();
-    let slow_vals: Vec<f64> = slow_ca.into_no_null_iter().collect();
+    let fast_ca = fast_ema.f64()?;
+    let slow_ca = slow_ema.f64()?;
 
-    let apo_vals: Vec<f64> = fast_vals
-        .iter()
-        .zip(slow_vals.iter())
-        .map(|(&f, &s)| {
-            if f.is_nan() || s.is_nan() {
-                f64::NAN
-            } else {
-                f - s
-            }
-        })
+    let apo_vals: Vec<f64> = fast_ca
+        .into_no_null_iter()
+        .zip(slow_ca.into_no_null_iter())
+        .map(|(f, s)| f - s)
         .collect();
 
-    let apo_series = Series::new(output_col.into(), &apo_vals);
+    let apo_series = Series::new(output_name.into(), apo_vals);
+
     let mut result_df = df;
     result_df.with_column(apo_series.into())?;
     Ok(result_df)
@@ -727,79 +695,84 @@ pub async fn dx(
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
     let timeperiod = timeperiod.unwrap_or(14);
-    let output_col = output_col.unwrap_or("dx");
+    let output_name = output_col.unwrap_or("dx");
     let high = get_high(&df)?;
     let low = get_low(&df)?;
     let close = get_close(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
-
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
+    let high_vals = high.f64().unwrap();
+    let low_vals = low.f64().unwrap();
+    let close_vals = close.f64().unwrap();
 
     let n = high_vals.len();
-    let mut plus_dm: Vec<f64> = vec![0.0; n];
-    let mut minus_dm: Vec<f64> = vec![0.0; n];
-    let mut tr: Vec<f64> = vec![0.0; n];
+    let mut plus_dm = vec![0.0; n];
+    let mut minus_dm = vec![0.0; n];
+    let mut tr = vec![0.0; n];
+
+    if n > 0 {
+        tr[0] = high_vals.get(0).unwrap() - low_vals.get(0).unwrap();
+    }
 
     for i in 1..n {
-        let high_diff = high_vals[i] - high_vals[i - 1];
-        let low_diff = low_vals[i - 1] - low_vals[i];
+        let h_curr = high_vals.get(i).unwrap();
+        let h_prev = high_vals.get(i - 1).unwrap();
+        let l_curr = low_vals.get(i).unwrap();
+        let l_prev = low_vals.get(i - 1).unwrap();
+        let c_prev = close_vals.get(i - 1).unwrap();
 
-        plus_dm[i] = if high_diff > low_diff && high_diff > 0.0 {
-            high_diff
-        } else {
-            0.0
-        };
-        minus_dm[i] = if low_diff > high_diff && low_diff > 0.0 {
-            low_diff
-        } else {
-            0.0
-        };
+        let high_diff = h_curr - h_prev;
+        let low_diff = l_prev - l_curr;
 
-        let tr1 = high_vals[i] - low_vals[i];
-        let tr2 = (high_vals[i] - close_vals[i - 1]).abs();
-        let tr3 = (low_vals[i] - close_vals[i - 1]).abs();
+        if high_diff > low_diff && high_diff > 0.0 {
+            plus_dm[i] = high_diff;
+        } else {
+            plus_dm[i] = 0.0;
+        }
+
+        if low_diff > high_diff && low_diff > 0.0 {
+            minus_dm[i] = low_diff;
+        } else {
+            minus_dm[i] = 0.0;
+        }
+
+        let tr1 = h_curr - l_curr;
+        let tr2 = (h_curr - c_prev).abs();
+        let tr3 = (l_curr - c_prev).abs();
         tr[i] = tr1.max(tr2).max(tr3);
     }
 
-    let plus_dm_series = Series::new("plus_dm".into(), &plus_dm);
-    let minus_dm_series = Series::new("minus_dm".into(), &minus_dm);
-    let tr_series = Series::new("tr".into(), &tr);
+    let tr_series = Series::new("tr".into(), tr);
+    let plus_dm_series = Series::new("plus_dm".into(), plus_dm);
+    let minus_dm_series = Series::new("minus_dm".into(), minus_dm);
 
+    let smoothed_tr = rma_series(&tr_series, timeperiod);
     let smoothed_plus_dm = rma_series(&plus_dm_series, timeperiod);
     let smoothed_minus_dm = rma_series(&minus_dm_series, timeperiod);
-    let smoothed_tr = rma_series(&tr_series, timeperiod);
 
-    let smoothed_plus_dm_ca: ChunkedArray<Float64Type> = smoothed_plus_dm.f64().unwrap().clone();
-    let smoothed_minus_dm_ca: ChunkedArray<Float64Type> = smoothed_minus_dm.f64().unwrap().clone();
-    let smoothed_tr_ca: ChunkedArray<Float64Type> = smoothed_tr.f64().unwrap().clone();
+    let tr_v = smoothed_tr.f64().unwrap();
+    let pdm_v = smoothed_plus_dm.f64().unwrap();
+    let mdm_v = smoothed_minus_dm.f64().unwrap();
 
-    let smoothed_plus_dm_vals: Vec<f64> = smoothed_plus_dm_ca.into_no_null_iter().collect();
-    let smoothed_minus_dm_vals: Vec<f64> = smoothed_minus_dm_ca.into_no_null_iter().collect();
-    let smoothed_tr_vals: Vec<f64> = smoothed_tr_ca.into_no_null_iter().collect();
-
-    let mut dx_vals: Vec<f64> = vec![f64::NAN; n];
+    let mut dx_vals = vec![f64::NAN; n];
 
     for i in 0..n {
-        if !smoothed_plus_dm_vals[i].is_nan()
-            && !smoothed_minus_dm_vals[i].is_nan()
-            && !smoothed_tr_vals[i].is_nan()
-            && smoothed_tr_vals[i] != 0.0
-        {
-            let plus_di = (smoothed_plus_dm_vals[i] / smoothed_tr_vals[i]) * 100.0;
-            let minus_di = (smoothed_minus_dm_vals[i] / smoothed_tr_vals[i]) * 100.0;
+        let tr_val = tr_v.get(i).unwrap_or(f64::NAN);
+        let pdm_val = pdm_v.get(i).unwrap_or(f64::NAN);
+        let mdm_val = mdm_v.get(i).unwrap_or(f64::NAN);
+
+        if !tr_val.is_nan() && tr_val != 0.0 {
+            let plus_di = (pdm_val / tr_val) * 100.0;
+            let minus_di = (mdm_val / tr_val) * 100.0;
             let di_sum = plus_di + minus_di;
             if di_sum != 0.0 {
                 dx_vals[i] = ((plus_di - minus_di).abs() / di_sum) * 100.0;
+            } else {
+                dx_vals[i] = 0.0;
             }
         }
     }
 
-    let dx_series = Series::new(output_col.into(), &dx_vals);
+    let dx_series = Series::new(output_name.into(), dx_vals);
     let mut result_df = df;
     result_df.with_column(dx_series.into())?;
     Ok(result_df)
@@ -1116,55 +1089,59 @@ pub async fn minus_di(
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
     let timeperiod = timeperiod.unwrap_or(14);
-    let output_col = output_col.unwrap_or("minus_di");
+    let output_name = output_col.unwrap_or("minus_di");
     let high = get_high(&df)?;
     let low = get_low(&df)?;
     let close = get_close(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
-
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
+    let high_vals = high.f64().unwrap();
+    let low_vals = low.f64().unwrap();
+    let close_vals = close.f64().unwrap();
 
     let n = high_vals.len();
-    let mut minus_dm: Vec<f64> = vec![0.0; n];
-    let mut tr: Vec<f64> = vec![0.0; n];
+    let mut minus_dm = vec![0.0; n];
+    let mut tr = vec![0.0; n];
+
+    if n > 0 {
+        tr[0] = high_vals.get(0).unwrap() - low_vals.get(0).unwrap();
+    }
 
     for i in 1..n {
-        let high_diff = high_vals[i] - high_vals[i - 1];
-        let low_diff = low_vals[i - 1] - low_vals[i];
+        let h_curr = high_vals.get(i).unwrap();
+        let h_prev = high_vals.get(i - 1).unwrap();
+        let l_curr = low_vals.get(i).unwrap();
+        let l_prev = low_vals.get(i - 1).unwrap();
+        let c_prev = close_vals.get(i - 1).unwrap();
 
-        minus_dm[i] = if low_diff > high_diff && low_diff > 0.0 {
-            low_diff
+        let high_diff = h_curr - h_prev;
+        let low_diff = l_prev - l_curr;
+
+        if low_diff > high_diff && low_diff > 0.0 {
+            minus_dm[i] = low_diff;
         } else {
-            0.0
-        };
+            minus_dm[i] = 0.0;
+        }
 
-        let tr1 = high_vals[i] - low_vals[i];
-        let tr2 = (high_vals[i] - close_vals[i - 1]).abs();
-        let tr3 = (low_vals[i] - close_vals[i - 1]).abs();
+        let tr1 = h_curr - l_curr;
+        let tr2 = (h_curr - c_prev).abs();
+        let tr3 = (l_curr - c_prev).abs();
         tr[i] = tr1.max(tr2).max(tr3);
     }
 
-    let minus_dm_series = Series::new("minus_dm".into(), &minus_dm);
-    let tr_series = Series::new("tr".into(), &tr);
+    let minus_dm_series = Series::new("minus_dm".into(), minus_dm);
+    let tr_series = Series::new("tr".into(), tr);
 
     let smoothed_minus_dm = rma_series(&minus_dm_series, timeperiod);
     let smoothed_tr = rma_series(&tr_series, timeperiod);
 
-    let smoothed_minus_dm_ca: ChunkedArray<Float64Type> = smoothed_minus_dm.f64().unwrap().clone();
-    let smoothed_tr_ca: ChunkedArray<Float64Type> = smoothed_tr.f64().unwrap().clone();
-    let minus_dm_vals: Vec<f64> = smoothed_minus_dm_ca.into_no_null_iter().collect();
-    let tr_vals: Vec<f64> = smoothed_tr_ca.into_no_null_iter().collect();
+    let mdm_v = smoothed_minus_dm.f64().unwrap();
+    let tr_v = smoothed_tr.f64().unwrap();
 
-    let minus_di_vals: Vec<f64> = minus_dm_vals
-        .iter()
-        .zip(&tr_vals)
-        .map(|(&dm, &tr)| {
-            if tr == 0.0 || dm.is_nan() || tr.is_nan() {
+    let minus_di_vals: Vec<f64> = mdm_v
+        .into_no_null_iter()
+        .zip(tr_v.into_no_null_iter())
+        .map(|(dm, tr)| {
+            if tr == 0.0 {
                 f64::NAN
             } else {
                 (dm / tr) * 100.0
@@ -1172,7 +1149,7 @@ pub async fn minus_di(
         })
         .collect();
 
-    let minus_di_series = Series::new(output_col.into(), &minus_di_vals);
+    let minus_di_series = Series::new(output_name.into(), minus_di_vals);
     let mut result_df = df;
     result_df.with_column(minus_di_series.into())?;
     Ok(result_df)
@@ -1198,37 +1175,37 @@ pub async fn minus_dm(
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
     let timeperiod = timeperiod.unwrap_or(14);
-    let output_col = output_col.unwrap_or("minus_dm");
+    let output_name = output_col.unwrap_or("minus_dm");
     let high = get_high(&df)?;
     let low = get_low(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
+    let high_vals = high.f64().unwrap();
+    let low_vals = low.f64().unwrap();
 
     let n = high_vals.len();
-    let mut minus_dm: Vec<f64> = vec![0.0; n];
+    let mut minus_dm = vec![0.0; n];
 
     for i in 1..n {
-        let high_diff = high_vals[i] - high_vals[i - 1];
-        let low_diff = low_vals[i - 1] - low_vals[i];
+        let h_curr = high_vals.get(i).unwrap();
+        let h_prev = high_vals.get(i - 1).unwrap();
+        let l_curr = low_vals.get(i).unwrap();
+        let l_prev = low_vals.get(i - 1).unwrap();
 
-        minus_dm[i] = if low_diff > high_diff && low_diff > 0.0 {
-            low_diff
+        let high_diff = h_curr - h_prev;
+        let low_diff = l_prev - l_curr;
+
+        if low_diff > high_diff && low_diff > 0.0 {
+            minus_dm[i] = low_diff;
         } else {
-            0.0
-        };
+            minus_dm[i] = 0.0;
+        }
     }
 
-    let minus_dm_series = Series::new("minus_dm".into(), &minus_dm);
+    let minus_dm_series = Series::new(output_name.into(), minus_dm);
     let smoothed_minus_dm = rma_series(&minus_dm_series, timeperiod);
 
     let mut result_df = df;
-    let mut renamed = smoothed_minus_dm;
-    renamed.rename(output_col.into());
-    result_df.with_column(renamed.into())?;
+    result_df.with_column(smoothed_minus_dm.into())?;
     Ok(result_df)
 }
 
@@ -1291,55 +1268,59 @@ pub async fn plus_di(
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
     let timeperiod = timeperiod.unwrap_or(14);
-    let output_col = output_col.unwrap_or("plus_di");
+    let output_name = output_col.unwrap_or("plus_di");
     let high = get_high(&df)?;
     let low = get_low(&df)?;
     let close = get_close(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
-
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
+    let high_vals = high.f64().unwrap();
+    let low_vals = low.f64().unwrap();
+    let close_vals = close.f64().unwrap();
 
     let n = high_vals.len();
-    let mut plus_dm: Vec<f64> = vec![0.0; n];
-    let mut tr: Vec<f64> = vec![0.0; n];
+    let mut plus_dm = vec![0.0; n];
+    let mut tr = vec![0.0; n];
+
+    if n > 0 {
+        tr[0] = high_vals.get(0).unwrap() - low_vals.get(0).unwrap();
+    }
 
     for i in 1..n {
-        let high_diff = high_vals[i] - high_vals[i - 1];
-        let low_diff = low_vals[i - 1] - low_vals[i];
+        let h_curr = high_vals.get(i).unwrap();
+        let h_prev = high_vals.get(i - 1).unwrap();
+        let l_curr = low_vals.get(i).unwrap();
+        let l_prev = low_vals.get(i - 1).unwrap();
+        let c_prev = close_vals.get(i - 1).unwrap();
 
-        plus_dm[i] = if high_diff > low_diff && high_diff > 0.0 {
-            high_diff
+        let high_diff = h_curr - h_prev;
+        let low_diff = l_prev - l_curr;
+
+        if high_diff > low_diff && high_diff > 0.0 {
+            plus_dm[i] = high_diff;
         } else {
-            0.0
-        };
+            plus_dm[i] = 0.0;
+        }
 
-        let tr1 = high_vals[i] - low_vals[i];
-        let tr2 = (high_vals[i] - close_vals[i - 1]).abs();
-        let tr3 = (low_vals[i] - close_vals[i - 1]).abs();
+        let tr1 = h_curr - l_curr;
+        let tr2 = (h_curr - c_prev).abs();
+        let tr3 = (l_curr - c_prev).abs();
         tr[i] = tr1.max(tr2).max(tr3);
     }
 
-    let plus_dm_series = Series::new("plus_dm".into(), &plus_dm);
-    let tr_series = Series::new("tr".into(), &tr);
+    let plus_dm_series = Series::new("plus_dm".into(), plus_dm);
+    let tr_series = Series::new("tr".into(), tr);
 
     let smoothed_plus_dm = rma_series(&plus_dm_series, timeperiod);
     let smoothed_tr = rma_series(&tr_series, timeperiod);
 
-    let smoothed_plus_dm_ca: ChunkedArray<Float64Type> = smoothed_plus_dm.f64().unwrap().clone();
-    let smoothed_tr_ca: ChunkedArray<Float64Type> = smoothed_tr.f64().unwrap().clone();
-    let plus_dm_vals: Vec<f64> = smoothed_plus_dm_ca.into_no_null_iter().collect();
-    let tr_vals: Vec<f64> = smoothed_tr_ca.into_no_null_iter().collect();
+    let pdm_v = smoothed_plus_dm.f64().unwrap();
+    let tr_v = smoothed_tr.f64().unwrap();
 
-    let plus_di_vals: Vec<f64> = plus_dm_vals
-        .iter()
-        .zip(&tr_vals)
-        .map(|(&dm, &tr)| {
-            if tr == 0.0 || dm.is_nan() || tr.is_nan() {
+    let plus_di_vals: Vec<f64> = pdm_v
+        .into_no_null_iter()
+        .zip(tr_v.into_no_null_iter())
+        .map(|(dm, tr)| {
+            if tr == 0.0 {
                 f64::NAN
             } else {
                 (dm / tr) * 100.0
@@ -1347,7 +1328,7 @@ pub async fn plus_di(
         })
         .collect();
 
-    let plus_di_series = Series::new(output_col.into(), &plus_di_vals);
+    let plus_di_series = Series::new(output_name.into(), plus_di_vals);
     let mut result_df = df;
     result_df.with_column(plus_di_series.into())?;
     Ok(result_df)
@@ -1373,37 +1354,37 @@ pub async fn plus_dm(
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
     let timeperiod = timeperiod.unwrap_or(14);
-    let output_col = output_col.unwrap_or("plus_dm");
+    let output_name = output_col.unwrap_or("plus_dm");
     let high = get_high(&df)?;
     let low = get_low(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
+    let high_vals = high.f64().unwrap();
+    let low_vals = low.f64().unwrap();
 
     let n = high_vals.len();
-    let mut plus_dm: Vec<f64> = vec![0.0; n];
+    let mut plus_dm = vec![0.0; n];
 
     for i in 1..n {
-        let high_diff = high_vals[i] - high_vals[i - 1];
-        let low_diff = low_vals[i - 1] - low_vals[i];
+        let h_curr = high_vals.get(i).unwrap();
+        let h_prev = high_vals.get(i - 1).unwrap();
+        let l_curr = low_vals.get(i).unwrap();
+        let l_prev = low_vals.get(i - 1).unwrap();
 
-        plus_dm[i] = if high_diff > low_diff && high_diff > 0.0 {
-            high_diff
+        let high_diff = h_curr - h_prev;
+        let low_diff = l_prev - l_curr;
+
+        if high_diff > low_diff && high_diff > 0.0 {
+            plus_dm[i] = high_diff;
         } else {
-            0.0
-        };
+            plus_dm[i] = 0.0;
+        }
     }
 
-    let plus_dm_series = Series::new("plus_dm".into(), &plus_dm);
+    let plus_dm_series = Series::new(output_name.into(), plus_dm);
     let smoothed_plus_dm = rma_series(&plus_dm_series, timeperiod);
 
     let mut result_df = df;
-    let mut renamed = smoothed_plus_dm;
-    renamed.rename(output_col.into());
-    result_df.with_column(renamed.into())?;
+    result_df.with_column(smoothed_plus_dm.into())?;
     Ok(result_df)
 }
 
@@ -1430,30 +1411,22 @@ pub async fn ppo(
 ) -> PolarsResult<DataFrame> {
     let fastperiod = fastperiod.unwrap_or(12);
     let slowperiod = slowperiod.unwrap_or(26);
-    let output_col = output_col.unwrap_or("ppo");
+    let output_name = output_col.unwrap_or("ppo");
     let close = get_close(&df)?;
 
     let fast_ema = ema_series(&close, fastperiod);
     let slow_ema = ema_series(&close, slowperiod);
+    let fast_ca = fast_ema.f64()?;
+    let slow_ca = slow_ema.f64()?;
 
-    let fast_ca: ChunkedArray<Float64Type> = fast_ema.f64().unwrap().clone();
-    let slow_ca: ChunkedArray<Float64Type> = slow_ema.f64().unwrap().clone();
-    let fast_vals: Vec<f64> = fast_ca.into_no_null_iter().collect();
-    let slow_vals: Vec<f64> = slow_ca.into_no_null_iter().collect();
-
-    let ppo_vals: Vec<f64> = fast_vals
-        .iter()
-        .zip(&slow_vals)
-        .map(|(&f, &s)| {
-            if s.is_nan() || s == 0.0 || f.is_nan() {
-                f64::NAN
-            } else {
-                ((f - s) / s) * 100.0
-            }
-        })
+    let ppo_vals: Vec<f64> = fast_ca
+        .into_no_null_iter()
+        .zip(slow_ca.into_no_null_iter())
+        .map(|(f, s)| ((f - s) / s) * 100.0)
         .collect();
 
-    let ppo_series = Series::new(output_col.into(), &ppo_vals);
+    let ppo_series = Series::new(output_name.into(), ppo_vals);
+
     let mut result_df = df;
     result_df.with_column(ppo_series.into())?;
     Ok(result_df)
