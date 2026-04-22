@@ -10,11 +10,31 @@ use crate::indicators::cycle::*;
 use crate::indicators::overlap::*;
 use crate::indicators::pattern::*;
 use crate::strategy::strategy::Strategy;
-use crate::strategy::strategy_options::StrategyOptions;
-use polars::datatypes::DataType;
+use crate::strategy::strategy_options::{StrategyOptions, TradingDirection};
+use serde::Serialize;
+use serde_json::Value;
+// use polars::datatypes::DataType;
 use polars::prelude::*;
-use std::collections::HashMap;
+// use std::collections::HashMap;
 use std::time::Instant;
+
+#[derive(Debug, Clone)]
+pub enum GestionStrategy {
+    Formula,
+}
+
+impl ToString for GestionStrategy {
+    fn to_string(&self) -> String {
+        match self {
+            GestionStrategy::Formula => "Formula".to_string(),
+        }
+    }
+}
+
+#[derive(Serialize, Debug)]
+pub struct GestionFormula {
+    pub multiplicador: f64,
+}
 
 #[derive(Debug, Clone)]
 pub struct Backtest {
@@ -22,13 +42,21 @@ pub struct Backtest {
     pub titulo: String,
     pub balance: f64,
     pub tipo: String, // Tipo de activo ej: Forex, Crypto, Futuros...etc
+    pub gestion_strategy: GestionStrategy,
+    pub parametros_gestion: Value,
     pub trades: Vec<Trade>,
     pub datos: Vec<Datos>,
     pub estrategia: Strategy,
 }
 
 impl Backtest {
-    pub async fn new(titulo: String, balance: f64, tipo: String) -> Self {
+    pub async fn new(
+        titulo: String,
+        balance: f64,
+        tipo: String,
+        gestion_strategy: GestionStrategy,
+        parametros_gestion: Value,
+    ) -> Self {
         let table = table_backtests_cfd().await;
 
         let mut backtest: Backtest = Backtest {
@@ -36,6 +64,8 @@ impl Backtest {
             titulo,
             balance,
             tipo,
+            gestion_strategy,
+            parametros_gestion,
             trades: Vec::<Trade>::new(),
             datos: Vec::<Datos>::new(),
             estrategia: Strategy::new_empty(),
@@ -327,6 +357,27 @@ impl Backtest {
         Ok(df)
     }
 
+    async fn backtest(&mut self, df: DataFrame) -> Result<String, Box<dyn std::error::Error>> {
+        // Foma de optener un dato: df.column(&columna)?.get(row_idx)?;
+        for i in 0..df.height() {}
+        Ok("Backtest ejecutado correctamente".to_string())
+    }
+
+    async fn backtest_long(&mut self, df: DataFrame) -> Result<String, Box<dyn std::error::Error>> {
+        // Foma de optener un dato: df.column(&columna)?.get(row_idx)?;
+        for i in 0..df.height() {}
+        Ok("Backtest ejecutado correctamente".to_string())
+    }
+
+    async fn backtest_short(
+        &mut self,
+        df: DataFrame,
+    ) -> Result<String, Box<dyn std::error::Error>> {
+        // Foma de optener un dato: df.column(&columna)?.get(row_idx)?;
+        for i in 0..df.height() {}
+        Ok("Backtest ejecutado correctamente".to_string())
+    }
+
     pub async fn run(&mut self, id_startegy: i32) -> Result<String, Box<dyn std::error::Error>> {
         let inicio = Instant::now();
         self.estrategia = match get_strategies_by_id(id_startegy).await {
@@ -384,7 +435,7 @@ impl Backtest {
         }
 
         for data in self.datos.clone() {
-            //TODO: 1-Verificamos los indicadores que tiene la estrategia para añadirlos a los datos del DataFrame
+            // Verificamos los indicadores que tiene la estrategia para añadirlos a los datos del DataFrame
             let df = match self.set_indicators_strategy(data.get_datos()).await {
                 Ok(df_result) => df_result,
                 Err(e) => {
@@ -392,16 +443,18 @@ impl Backtest {
                 }
             };
 
-            let schema = df.schema();
-            let data_types = schema
-                .iter()
-                .map(|(name, dtype)| (name.clone().to_string(), dtype.clone()))
-                .collect::<HashMap<String, DataType>>();
-
             //TODO: 2-Verificamos la direccion operativa que la estrategia nos permite operar. Long, Short o Both.
-
-            // Foma de optener un dato: df.column(&columna)?.get(row_idx)?;
-            for i in 0..df.height() {}
+            match self.estrategia.opciones.trading_direccion {
+                TradingDirection::Long => {
+                    self.backtest_long(df.clone()).await.unwrap();
+                }
+                TradingDirection::Short => {
+                    self.backtest_short(df.clone()).await.unwrap();
+                }
+                _ => {
+                    self.backtest(df.clone()).await.unwrap();
+                }
+            }
         }
 
         let duracion = inicio.elapsed();

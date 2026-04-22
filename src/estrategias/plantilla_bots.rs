@@ -1,4 +1,4 @@
-use crate::backtest::backtest::Backtest;
+use crate::backtest::backtest::{Backtest, GestionStrategy};
 use crate::backtest::datos::Datos;
 use crate::backtest::resultados::Resultados;
 use crate::backtest::symbol::SymbolInfoCFD;
@@ -73,7 +73,14 @@ pub async fn run_backtest(
     symbol: SymbolInfoCFD,
 ) -> PolarsResult<()> {
     // Creamos el backtest
-    let mut backtest: Backtest = Backtest::new(titulo.to_string(), balance, tipo.to_string()).await; // Hacer un Enum para los tipos de activos
+    let mut backtest: Backtest = Backtest::new(
+        titulo.to_string(),
+        balance,
+        tipo.to_string(),
+        GestionStrategy::Formula,
+        serde_json::from_str("{}").unwrap(),
+    )
+    .await; // Hacer un Enum para los tipos de activos
 
     // Añadimos los datos al backtest
     let df: Datos = backtest

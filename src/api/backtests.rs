@@ -1,11 +1,12 @@
 use crate::api::resultados::delete_resultados_by_backtest;
 use crate::api::trades::{delete_trades_by_backtest, get_trades_by_backtest};
-use crate::backtest::backtest::Backtest;
+use crate::backtest::backtest::{Backtest, GestionStrategy};
 use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_options::StrategyOptions;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
 use serde::Serialize;
+use serde_json::Value;
 use std::env;
 
 #[derive(Serialize, Debug)]
@@ -66,7 +67,9 @@ pub async fn table_backtests_cfd() -> Result<String> {
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     titulo TEXT NOT NULL,
                     balance REAL NOT NULL,
-                    tipo TEXT NOT NULL
+                    tipo TEXT NOT NULL,
+                    gestion_strategy TEXT DEFAULT 'Formula',
+                    parametros_gestion TEXT NOT NULL
                     )",
         (),
     )
@@ -100,8 +103,8 @@ pub async fn insert_backtest_cfd(backtest: Backtest) -> Result<i32> {
     let conn = db.connect()?;
 
     conn.query(
-        "INSERT INTO backtest (titulo, balance, tipo) VALUES (?, ?, ?) RETURNING id",
-        params![backtest.titulo, backtest.balance, backtest.tipo],
+        "INSERT INTO backtest (titulo, balance, tipo, gestion_strategy, parametros_gestion) VALUES (?, ?, ?, ?, ?) RETURNING id",
+        params![backtest.titulo, backtest.balance, backtest.tipo, backtest.gestion_strategy.to_string(), backtest.parametros_gestion.to_string()],
     )
     .await?;
 
@@ -136,11 +139,23 @@ pub async fn get_backtests() -> Result<Vec<Backtest>> {
     while let Some(row) = rows.next().await? {
         let trades = get_trades_by_backtest(row.get::<i32>(0)?).await.unwrap();
 
+        let mut parametros_gestion: Value = serde_json::from_str("{}")?;
+
+        let gestion_strategy = match row.get::<String>(4)?.as_str() {
+            "Formula" => {
+                parametros_gestion = serde_json::from_str(&row.get::<String>(5)?).unwrap();
+                GestionStrategy::Formula
+            }
+            _ => GestionStrategy::Formula,
+        };
+
         let backtest = Backtest {
             id: row.get::<i32>(0)?,
             titulo: row.get::<String>(1)?,
             balance: row.get::<f64>(2)?,
             tipo: row.get::<String>(3)?,
+            gestion_strategy: gestion_strategy,
+            parametros_gestion: parametros_gestion,
             trades: trades,
             datos: Vec::new(),
             estrategia: Strategy {
@@ -194,11 +209,23 @@ pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>> {
     while let Some(row) = rows.next().await? {
         let trades = get_trades_by_backtest(row.get::<i32>(0)?).await.unwrap();
 
+        let mut parametros_gestion: Value = serde_json::from_str("{}")?;
+
+        let gestion_strategy = match row.get::<String>(4)?.as_str() {
+            "Formula" => {
+                parametros_gestion = serde_json::from_str(&row.get::<String>(5)?).unwrap();
+                GestionStrategy::Formula
+            }
+            _ => GestionStrategy::Formula,
+        };
+
         let backtest = Backtest {
             id: row.get::<i32>(0)?,
             titulo: row.get::<String>(1)?,
             balance: row.get::<f64>(2)?,
             tipo: row.get::<String>(3)?,
+            gestion_strategy: gestion_strategy,
+            parametros_gestion: parametros_gestion,
             trades: trades,
             datos: Vec::new(),
             estrategia: Strategy {
@@ -252,11 +279,23 @@ pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
     while let Some(row) = rows.next().await? {
         let trades = get_trades_by_backtest(row.get::<i32>(0)?).await.unwrap();
 
+        let mut parametros_gestion: Value = serde_json::from_str("{}")?;
+
+        let gestion_strategy = match row.get::<String>(4)?.as_str() {
+            "Formula" => {
+                parametros_gestion = serde_json::from_str(&row.get::<String>(5)?).unwrap();
+                GestionStrategy::Formula
+            }
+            _ => GestionStrategy::Formula,
+        };
+
         let backtest = Backtest {
             id: row.get::<i32>(0)?,
             titulo: row.get::<String>(1)?,
             balance: row.get::<f64>(2)?,
             tipo: row.get::<String>(3)?,
+            gestion_strategy: gestion_strategy,
+            parametros_gestion: parametros_gestion,
             trades: trades,
             datos: Vec::new(),
             estrategia: Strategy {
@@ -310,11 +349,23 @@ pub async fn get_backtests_by_tipo(tipo: String) -> Result<Vec<Backtest>> {
     while let Some(row) = rows.next().await? {
         let trades = get_trades_by_backtest(row.get::<i32>(0)?).await.unwrap();
 
+        let mut parametros_gestion: Value = serde_json::from_str("{}")?;
+
+        let gestion_strategy = match row.get::<String>(4)?.as_str() {
+            "Formula" => {
+                parametros_gestion = serde_json::from_str(&row.get::<String>(5)?).unwrap();
+                GestionStrategy::Formula
+            }
+            _ => GestionStrategy::Formula,
+        };
+
         let backtest = Backtest {
             id: row.get::<i32>(0)?,
             titulo: row.get::<String>(1)?,
             balance: row.get::<f64>(2)?,
             tipo: row.get::<String>(3)?,
+            gestion_strategy: gestion_strategy,
+            parametros_gestion: parametros_gestion,
             trades: trades,
             datos: Vec::new(),
             estrategia: Strategy {
@@ -387,6 +438,8 @@ mod tests {
             titulo: "Test".to_string(),
             balance: 100.0,
             tipo: "CFD".to_string(),
+            gestion_strategy: GestionStrategy::Formula,
+            parametros_gestion: serde_json::from_str("{}")?,
             trades: Vec::new(),
             datos: Vec::new(),
             estrategia: Strategy {
