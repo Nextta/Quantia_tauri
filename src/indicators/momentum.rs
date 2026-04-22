@@ -88,7 +88,8 @@ fn sma_series(values: &Series, period: usize) -> Series {
     for i in (period - 1)..n {
         let mut sum = 0.0;
         let mut valid = true;
-        for j in (i - period + 1)..=i {
+        let start_j = i + 1 - period;
+        for j in start_j..=i {
             if let Some(val) = ca.get(j) {
                 if !val.is_nan() {
                     sum += val;
@@ -416,36 +417,49 @@ pub async fn aroon(
     let high = get_high(&df)?;
     let low = get_low(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
+    let high_ca = high.f64().unwrap();
+    let low_ca = low.f64().unwrap();
+
+    // Convertir a Vec<f64> manteniendo alineación con NaNs para nulos
+    let high_vals: Vec<f64> = high_ca.into_iter().map(|v| v.unwrap_or(f64::NAN)).collect();
+    let low_vals: Vec<f64> = low_ca.into_iter().map(|v| v.unwrap_or(f64::NAN)).collect();
 
     let n = high_vals.len();
     let mut aroon_up: Vec<f64> = vec![f64::NAN; n];
     let mut aroon_down: Vec<f64> = vec![f64::NAN; n];
 
     for i in timeperiod..n {
-        let window_high = &high_vals[i - timeperiod + 1..=i];
-        let window_low = &low_vals[i - timeperiod + 1..=i];
+        let window_high = &high_vals[i - timeperiod..=i];
+        let window_low = &low_vals[i - timeperiod..=i];
 
-        let max_idx = window_high
-            .iter()
-            .enumerate()
-            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-            .map(|(idx, _)| idx)
-            .unwrap_or(0);
-        let min_idx = window_low
-            .iter()
-            .enumerate()
-            .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
-            .map(|(idx, _)| idx)
-            .unwrap_or(0);
+        let (max_idx, _) = window_high.iter().enumerate().fold(
+            (0, f64::MIN),
+            |(max_idx, max_val), (idx, &val)| {
+                if val >= max_val {
+                    (idx, val)
+                } else {
+                    (max_idx, max_val)
+                }
+            },
+        );
 
-        aroon_up[i] =
-            ((timeperiod as f64 - (timeperiod - 1 - max_idx) as f64) / timeperiod as f64) * 100.0;
-        aroon_down[i] =
-            ((timeperiod as f64 - (timeperiod - 1 - min_idx) as f64) / timeperiod as f64) * 100.0;
+        let (min_idx, _) =
+            window_low
+                .iter()
+                .enumerate()
+                .fold((0, f64::MAX), |(min_idx, min_val), (idx, &val)| {
+                    if val <= min_val {
+                        (idx, val)
+                    } else {
+                        (min_idx, min_val)
+                    }
+                });
+
+        let days_since_high = (timeperiod - max_idx) as f64;
+        let days_since_low = (timeperiod - min_idx) as f64;
+
+        aroon_up[i] = ((timeperiod as f64 - days_since_high) / timeperiod as f64) * 100.0;
+        aroon_down[i] = ((timeperiod as f64 - days_since_low) / timeperiod as f64) * 100.0;
     }
 
     let aroon_up_series = Series::new(output_col_up.into(), &aroon_up);
@@ -478,30 +492,20 @@ pub async fn aroonosc(
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
     let timeperiod = timeperiod.unwrap_or(14);
-    let output_col = output_col.unwrap_or("aroonosc");
-    let aroon_df = aroon(df.clone(), Some(timeperiod), None, None).await?;
+    let output_name = output_col.unwrap_or("aroonosc");
 
-    let aroon_up_col = aroon_df.column("aroon_up").unwrap();
-    let aroon_down_col = aroon_df.column("aroon_down").unwrap();
+    // Calcular Aroon Up y Down usando nombres temporales
+    let temp_up = "temp_aroon_up";
+    let temp_down = "temp_aroon_down";
 
-    let up_ca: ChunkedArray<Float64Type> = aroon_up_col.f64().unwrap().clone();
-    let down_ca: ChunkedArray<Float64Type> = aroon_down_col.f64().unwrap().clone();
-    let up_vals: Vec<f64> = up_ca.into_no_null_iter().collect();
-    let down_vals: Vec<f64> = down_ca.into_no_null_iter().collect();
+    let aroon_df = aroon(df.clone(), Some(timeperiod), Some(temp_up), Some(temp_down)).await?;
 
-    let aroonosc_vals: Vec<f64> = up_vals
-        .iter()
-        .zip(down_vals.iter())
-        .map(|(&u, &d)| {
-            if u.is_nan() || d.is_nan() {
-                f64::NAN
-            } else {
-                u - d
-            }
-        })
-        .collect();
+    let up_col = aroon_df.column(temp_up)?;
+    let down_col = aroon_df.column(temp_down)?;
 
-    let aroonosc_series = Series::new(output_col.into(), &aroonosc_vals);
+    // AROONOSC = Aroon Up - Aroon Down
+    let aroonosc_series = (up_col - down_col)?.with_name(output_name.into());
+
     let mut result_df = df;
     result_df.with_column(aroonosc_series.into())?;
     Ok(result_df)
@@ -513,48 +517,38 @@ pub async fn aroonosc(
 ///
 /// # Parámetros
 /// * `df` - DataFrame con columnas: open, high, low, close (case insensitive)
+/// * `timeperiod` - Período de suavizado SMA (default: 14)
 /// * `output_col` - Nombre de la columna de salida (default: "bop")
 ///
 /// # Retorna
 /// DataFrame con columna "bop" añadida
 ///
 /// # Fórmula
-/// BOP = (close - open) / (high - low)
-pub async fn bop(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+/// BOP = SMA((close - open) / (high - low), timeperiod)
+pub async fn bop(
+    df: DataFrame,
+    timeperiod: Option<usize>,
+    output_col: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(14);
+    let output_name = output_col.unwrap_or("bop");
+
     let open = get_open(&df)?;
     let high = get_high(&df)?;
     let low = get_low(&df)?;
     let close = get_close(&df)?;
-    let output_col = output_col.unwrap_or("bop");
 
-    let open_ca: ChunkedArray<Float64Type> = open.f64().unwrap().clone();
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
+    // Calcular BOP raw usando expresiones de Polars para eficiencia y alineación
+    let denominator = (&high - &low)?;
 
-    let open_vals: Vec<f64> = open_ca.into_no_null_iter().collect();
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
+    // Evitar división por cero: donde denominator == 0, el resultado es NaN
+    let raw_bop = ((&close - &open)? / denominator)?;
 
-    let bop_vals: Vec<f64> = close_vals
-        .iter()
-        .zip(&open_vals)
-        .zip(&high_vals)
-        .zip(&low_vals)
-        .map(|(((c, o), h), l)| {
-            let denominator = h - l;
-            if denominator == 0.0 {
-                f64::NAN
-            } else {
-                (c - o) / denominator
-            }
-        })
-        .collect();
+    // Aplicar suavizado SMA (Estándar de la industria)
+    let bop_smoothed = sma_series(&raw_bop, timeperiod).with_name(output_name.into());
 
-    let bop_series = Series::new(output_col.into(), &bop_vals);
     let mut result_df = df;
-    result_df.with_column(bop_series.into())?;
+    result_df.with_column(bop_smoothed.into())?;
     Ok(result_df)
 }
 
@@ -579,40 +573,69 @@ pub async fn cci(
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
     let timeperiod = timeperiod.unwrap_or(14);
-    let timeperiod = timeperiod.max(2); // Prevent overflow
-    let output_col = output_col.unwrap_or("cci");
+    let timeperiod = timeperiod.max(2);
+    let output_name = output_col.unwrap_or("cci");
+
     let high = get_high(&df)?;
     let low = get_low(&df)?;
     let close = get_close(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
+    let high_vals = high
+        .f64()?
+        .into_iter()
+        .map(|v| v.unwrap_or(f64::NAN))
+        .collect::<Vec<f64>>();
+    let low_vals = low
+        .f64()?
+        .into_iter()
+        .map(|v| v.unwrap_or(f64::NAN))
+        .collect::<Vec<f64>>();
+    let close_vals = close
+        .f64()?
+        .into_iter()
+        .map(|v| v.unwrap_or(f64::NAN))
+        .collect::<Vec<f64>>();
 
-    let n = df.height();
-    let mut typical_price: Vec<f64> = vec![f64::NAN; n];
+    // Sumar high + low (simple operación de vectores)
+    let sum_high_low: Vec<f64> = high_vals
+        .iter()
+        .zip(low_vals.iter())
+        .map(|(a, b)| a + b)
+        .collect();
 
-    for i in 0..n {
-        if let (Some(h), Some(l), Some(c)) = (high_ca.get(i), low_ca.get(i), close_ca.get(i)) {
-            typical_price[i] = (h + l + c) / 3.0;
-        }
-    }
+    // Calcular Typical Price = (high + low + close) / 3 (también operación de vectores)
+    let typical_price_series: Vec<f64> = sum_high_low
+        .iter()
+        .zip(close_vals.iter())
+        .map(|(a, b)| (a + b) / 3.0)
+        .collect();
 
+    let tp_vals: Vec<f64> = typical_price_series.into_iter().map(|v| v).collect();
+
+    let n = tp_vals.len();
     let mut cci_vals: Vec<f64> = vec![f64::NAN; n];
 
+    // El cálculo del CCI requiere una ventana completa de 'timeperiod'
     for i in (timeperiod - 1)..n {
-        let window = &typical_price[i - timeperiod + 1..=i];
-        let mean: f64 = window.iter().sum::<f64>() / timeperiod as f64;
+        let start_idx = i + 1 - timeperiod;
+        let window = &tp_vals[start_idx..=i];
 
-        let mean_deviation: f64 =
-            window.iter().map(|x| (x - mean).abs()).sum::<f64>() / timeperiod as f64;
+        // Calcular media de la ventana
+        let sum: f64 = window.iter().sum();
+        let mean = sum / timeperiod as f64;
+
+        // Calcular Desviación Media (Mean Deviation)
+        let sum_abs_diff: f64 = window.iter().map(|x| (x - mean).abs()).sum();
+        let mean_deviation = sum_abs_diff / timeperiod as f64;
 
         if mean_deviation != 0.0 {
-            cci_vals[i] = (typical_price[i] - mean) / (0.015 * mean_deviation);
+            cci_vals[i] = (tp_vals[i] - mean) / (0.015 * mean_deviation);
+        } else {
+            cci_vals[i] = 0.0; // O NaN, según la convención deseada si no hay desviación
         }
     }
 
-    let cci_series = Series::new(output_col.into(), &cci_vals);
+    let cci_series = Series::new(output_name.into(), &cci_vals);
     let mut result_df = df;
     result_df.with_column(cci_series.into())?;
     Ok(result_df)
@@ -643,29 +666,41 @@ pub async fn cmo(
     let output_col = output_col.unwrap_or("cmo");
 
     let close = get_close(&df)?;
-
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
+    let close_ca = close.f64().unwrap();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
     let n = close_vals.len();
     let mut cmo_vals: Vec<f64> = vec![f64::NAN; n];
 
-    for i in timeperiod..n {
-        let mut sum_up = 0.0;
-        let mut sum_down = 0.0;
-
-        for j in (i - timeperiod + 1)..=i {
-            let change = close_vals[j] - close_vals[j - 1];
-            if change > 0.0 {
-                sum_up += change;
-            } else if change < 0.0 {
-                sum_down += change.abs();
-            }
+    if n > timeperiod {
+        // Pre-calculamos los cambios absolutos
+        let mut abs_changes = vec![0.0; n];
+        for i in 1..n {
+            abs_changes[i] = (close_vals[i] - close_vals[i - 1]).abs();
         }
 
-        let total = sum_up + sum_down;
-        if total != 0.0 {
-            cmo_vals[i] = 100.0 * ((sum_up - sum_down) / total);
+        // Suma inicial de cambios absolutos para la primera ventana completa
+        let mut sum_abs: f64 = abs_changes[1..=timeperiod].iter().sum();
+
+        // Primer cálculo en el índice 'timeperiod'
+        let diff = close_vals[timeperiod] - close_vals[0];
+        if sum_abs != 0.0 {
+            cmo_vals[timeperiod] = 100.0 * (diff / sum_abs);
+        } else {
+            cmo_vals[timeperiod] = 0.0;
+        }
+
+        // Cálculo rodante para el resto de los datos (O(n))
+        for i in (timeperiod + 1)..n {
+            // Actualizamos la suma restando el valor que sale de la ventana y sumando el que entra
+            sum_abs = sum_abs - abs_changes[i - timeperiod] + abs_changes[i];
+
+            let diff = close_vals[i] - close_vals[i - timeperiod];
+            if sum_abs != 0.0 {
+                cmo_vals[i] = 100.0 * (diff / sum_abs);
+            } else {
+                cmo_vals[i] = 0.0;
+            }
         }
     }
 
@@ -709,16 +744,21 @@ pub async fn dx(
     let mut minus_dm = vec![0.0; n];
     let mut tr = vec![0.0; n];
 
+    // Convertimos a vectores de f64 de forma segura
+    let h_v: Vec<f64> = high_vals.into_no_null_iter().collect();
+    let l_v: Vec<f64> = low_vals.into_no_null_iter().collect();
+    let c_v: Vec<f64> = close_vals.into_no_null_iter().collect();
+
     if n > 0 {
-        tr[0] = high_vals.get(0).unwrap() - low_vals.get(0).unwrap();
+        tr[0] = h_v[0] - l_v[0];
     }
 
     for i in 1..n {
-        let h_curr = high_vals.get(i).unwrap();
-        let h_prev = high_vals.get(i - 1).unwrap();
-        let l_curr = low_vals.get(i).unwrap();
-        let l_prev = low_vals.get(i - 1).unwrap();
-        let c_prev = close_vals.get(i - 1).unwrap();
+        let h_curr = h_v[i];
+        let h_prev = h_v[i - 1];
+        let l_curr = l_v[i];
+        let l_prev = l_v[i - 1];
+        let c_prev = c_v[i - 1];
 
         let high_diff = h_curr - h_prev;
         let low_diff = l_prev - l_curr;
@@ -749,26 +789,28 @@ pub async fn dx(
     let smoothed_plus_dm = rma_series(&plus_dm_series, timeperiod);
     let smoothed_minus_dm = rma_series(&minus_dm_series, timeperiod);
 
-    let tr_v = smoothed_tr.f64().unwrap();
-    let pdm_v = smoothed_plus_dm.f64().unwrap();
-    let mdm_v = smoothed_minus_dm.f64().unwrap();
+    let pdm_v: Vec<f64> = smoothed_plus_dm
+        .f64()
+        .unwrap()
+        .into_no_null_iter()
+        .collect();
+    let mdm_v: Vec<f64> = smoothed_minus_dm
+        .f64()
+        .unwrap()
+        .into_no_null_iter()
+        .collect();
 
     let mut dx_vals = vec![f64::NAN; n];
 
     for i in 0..n {
-        let tr_val = tr_v.get(i).unwrap_or(f64::NAN);
-        let pdm_val = pdm_v.get(i).unwrap_or(f64::NAN);
-        let mdm_val = mdm_v.get(i).unwrap_or(f64::NAN);
+        let pdm_val = pdm_v[i];
+        let mdm_val = mdm_v[i];
+        let di_sum = pdm_val + mdm_val;
 
-        if !tr_val.is_nan() && tr_val != 0.0 {
-            let plus_di = (pdm_val / tr_val) * 100.0;
-            let minus_di = (mdm_val / tr_val) * 100.0;
-            let di_sum = plus_di + minus_di;
-            if di_sum != 0.0 {
-                dx_vals[i] = ((plus_di - minus_di).abs() / di_sum) * 100.0;
-            } else {
-                dx_vals[i] = 0.0;
-            }
+        if !di_sum.is_nan() && di_sum != 0.0 {
+            dx_vals[i] = ((pdm_val - mdm_val).abs() / di_sum) * 100.0;
+        } else if di_sum == 0.0 {
+            dx_vals[i] = 0.0;
         }
     }
 
@@ -819,12 +861,10 @@ pub async fn macd(
     let fast_ema = ema_series(&close, fastperiod);
     let slow_ema = ema_series(&close, slowperiod);
 
-    // Get values preserving NaN positions (use f64 directly, not into_no_null_iter)
-    let fast_ca: ChunkedArray<Float64Type> = fast_ema.f64().unwrap().clone();
-    let slow_ca: ChunkedArray<Float64Type> = slow_ema.f64().unwrap().clone();
-
-    // Convert to vec maintaining positions (ChunkedArray already has the right length)
     let n = fast_ema.len();
+    let fast_ca = fast_ema.f64().unwrap();
+    let slow_ca = slow_ema.f64().unwrap();
+
     let mut macd_vals: Vec<f64> = vec![f64::NAN; n];
 
     for i in 0..n {
@@ -841,7 +881,7 @@ pub async fn macd(
     let macd_series = Series::new("macd".into(), &macd_vals);
     let signal = ema_series(&macd_series, signalperiod);
 
-    let signal_ca: ChunkedArray<Float64Type> = signal.f64().unwrap().clone();
+    let signal_ca = signal.f64().unwrap();
     let signal_vals: Vec<f64> = (0..n)
         .map(|i| signal_ca.get(i).unwrap_or(f64::NAN))
         .collect();
@@ -856,15 +896,10 @@ pub async fn macd(
         }
     }
 
-    let macd_series_final = Series::new(output_col.into(), &macd_vals);
-    let signal_series = Series::new(output_col_signal.into(), &signal_vals);
-    let hist_series = Series::new(output_col_hist.into(), &hist_vals);
-
     let mut result_df = df;
-    result_df
-        .with_column(macd_series_final.into())?
-        .with_column(signal_series.into())?
-        .with_column(hist_series.into())?;
+    result_df.with_column(Series::new(output_col.into(), macd_vals).into())?;
+    result_df.with_column(Series::new(output_col_signal.into(), signal_vals).into())?;
+    result_df.with_column(Series::new(output_col_hist.into(), hist_vals).into())?;
     Ok(result_df)
 }
 
@@ -901,31 +936,34 @@ pub async fn macdext(
     let fastperiod = fastperiod.unwrap_or(12);
     let slowperiod = slowperiod.unwrap_or(26);
     let signalperiod = signalperiod.unwrap_or(9);
+
+    // MAType: 0=SMA, 1=EMA, 2=RMA (Wilder's)
     let fastmatype = fastmatype.unwrap_or(0);
     let slowmatype = slowmatype.unwrap_or(0);
     let signalmatype = signalmatype.unwrap_or(0);
+
     let output_col = output_col.unwrap_or("macd");
     let output_col_signal = output_col_signal.unwrap_or("macd_signal");
     let output_col_hist = output_col_hist.unwrap_or("macd_hist");
 
     let close = get_close(&df)?;
 
-    // 0 = EMA, 1 = SMA (simplified)
-    let fast_ema = if fastmatype == 0 {
-        ema_series(&close, fastperiod)
-    } else {
-        sma_series(&close, fastperiod)
-    };
-    let slow_ema = if slowmatype == 0 {
-        ema_series(&close, slowperiod)
-    } else {
-        sma_series(&close, slowperiod)
-    };
+    // Helper para despachar tipos de MA
+    fn get_ma(series: &Series, period: usize, ma_type: usize) -> Series {
+        match ma_type {
+            1 => ema_series(series, period),
+            2 => rma_series(series, period),
+            _ => sma_series(series, period), // Default a SMA (0)
+        }
+    }
 
-    let fast_ca: ChunkedArray<Float64Type> = fast_ema.f64().unwrap().clone();
-    let slow_ca: ChunkedArray<Float64Type> = slow_ema.f64().unwrap().clone();
+    let fast_ma = get_ma(&close, fastperiod, fastmatype);
+    let slow_ma = get_ma(&close, slowperiod, slowmatype);
 
-    let n = fast_ema.len();
+    let n = fast_ma.len();
+    let fast_ca = fast_ma.f64().unwrap();
+    let slow_ca = slow_ma.f64().unwrap();
+
     let mut macd_vals: Vec<f64> = vec![f64::NAN; n];
 
     for i in 0..n {
@@ -940,13 +978,9 @@ pub async fn macdext(
     }
 
     let macd_series = Series::new("macd".into(), &macd_vals);
-    let signal = if signalmatype == 0 {
-        ema_series(&macd_series, signalperiod)
-    } else {
-        sma_series(&macd_series, signalperiod)
-    };
+    let signal_series_raw = get_ma(&macd_series, signalperiod, signalmatype);
 
-    let signal_ca: ChunkedArray<Float64Type> = signal.f64().unwrap().clone();
+    let signal_ca = signal_series_raw.f64().unwrap();
     let signal_vals: Vec<f64> = (0..n)
         .map(|i| signal_ca.get(i).unwrap_or(f64::NAN))
         .collect();
@@ -961,15 +995,10 @@ pub async fn macdext(
         }
     }
 
-    let macd_series_final = Series::new(output_col.into(), &macd_vals);
-    let signal_series = Series::new(output_col_signal.into(), &signal_vals);
-    let hist_series = Series::new(output_col_hist.into(), &hist_vals);
-
     let mut result_df = df;
-    result_df
-        .with_column(macd_series_final.into())?
-        .with_column(signal_series.into())?
-        .with_column(hist_series.into())?;
+    result_df.with_column(Series::new(output_col.into(), macd_vals).into())?;
+    result_df.with_column(Series::new(output_col_signal.into(), signal_vals).into())?;
+    result_df.with_column(Series::new(output_col_hist.into(), hist_vals).into())?;
     Ok(result_df)
 }
 
@@ -1018,17 +1047,24 @@ pub async fn mfi(
     let close = get_close(&df)?;
     let volume = get_volume(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
-    let vol_ca: ChunkedArray<Float64Type> = volume.f64().unwrap().clone();
+    let high_ca = high.f64().unwrap();
+    let low_ca = low.f64().unwrap();
+    let close_ca = close.f64().unwrap();
+    let vol_ca = volume.f64().unwrap();
 
+    let n = high_ca.len();
+    if n <= timeperiod {
+        let mut result_df = df;
+        result_df.with_column(Series::new(output_col.into(), vec![f64::NAN; n]).into())?;
+        return Ok(result_df);
+    }
+
+    // Convertir a vectores de f64 para acceso rápido
     let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
     let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
     let vol_vals: Vec<f64> = vol_ca.into_no_null_iter().collect();
 
-    let n = high_vals.len();
     let typical_price: Vec<f64> = high_vals
         .iter()
         .zip(&low_vals)
@@ -1036,34 +1072,44 @@ pub async fn mfi(
         .map(|((h, l), c)| (h + l + c) / 3.0)
         .collect();
 
-    let mut money_flow: Vec<f64> = vec![0.0; n];
-    for i in 0..n {
-        money_flow[i] = typical_price[i] * vol_vals[i];
+    let mut pos_flow = vec![0.0; n];
+    let mut neg_flow = vec![0.0; n];
+
+    for i in 1..n {
+        let raw_money_flow = typical_price[i] * vol_vals[i];
+        if typical_price[i] > typical_price[i - 1] {
+            pos_flow[i] = raw_money_flow;
+        } else if typical_price[i] < typical_price[i - 1] {
+            neg_flow[i] = raw_money_flow;
+        }
+        // Si son iguales, ambos se quedan en 0.0
     }
 
-    let mut mfi_vals: Vec<f64> = vec![f64::NAN; n];
+    let mut mfi_vals = vec![f64::NAN; n];
+    let mut current_pos_sum: f64 = pos_flow[1..=timeperiod].iter().sum();
+    let mut current_neg_sum: f64 = neg_flow[1..=timeperiod].iter().sum();
 
-    for i in timeperiod..n {
-        let mut positive_flow = 0.0;
-        let mut negative_flow = 0.0;
+    // Primer cálculo en el índice 'timeperiod'
+    if current_pos_sum + current_neg_sum != 0.0 {
+        mfi_vals[timeperiod] = 100.0 * current_pos_sum / (current_pos_sum + current_neg_sum);
+    } else {
+        mfi_vals[timeperiod] = 50.0; // Valor neutral si no hay flujo
+    }
 
-        for j in (i - timeperiod + 1)..=i {
-            if typical_price[j] > typical_price[j - 1] {
-                positive_flow += money_flow[j];
-            } else {
-                negative_flow += money_flow[j];
-            }
-        }
+    // Cálculo rodante (O(n))
+    for i in (timeperiod + 1)..n {
+        current_pos_sum = current_pos_sum - pos_flow[i - timeperiod] + pos_flow[i];
+        current_neg_sum = current_neg_sum - neg_flow[i - timeperiod] + neg_flow[i];
 
-        if negative_flow != 0.0 {
-            let money_ratio = positive_flow / negative_flow;
-            mfi_vals[i] = 100.0 - (100.0 / (1.0 + money_ratio));
+        let total_flow = current_pos_sum + current_neg_sum;
+        if total_flow != 0.0 {
+            mfi_vals[i] = 100.0 * current_pos_sum / total_flow;
         } else {
-            mfi_vals[i] = 100.0;
+            mfi_vals[i] = 50.0;
         }
     }
 
-    let mfi_series = Series::new(output_col.into(), &mfi_vals);
+    let mfi_series = Series::new(output_col.into(), mfi_vals);
     let mut result_df = df;
     result_df.with_column(mfi_series.into())?;
     Ok(result_df)
@@ -1232,19 +1278,29 @@ pub async fn mom(
     let output_col = output_col.unwrap_or("mom");
     let close = get_close(&df)?;
 
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
+    let close_ca = close.f64().unwrap();
+    let n = close_ca.len();
+    let mut mom_vals = vec![f64::NAN; n];
 
-    let n = close_vals.len();
-    let mut mom_vals: Vec<f64> = vec![f64::NAN; n];
+    if n > timeperiod {
+        // Convertimos a vector manejando nulos para evitar desalineación
+        let close_vals: Vec<f64> = close_ca
+            .into_iter()
+            .map(|v| v.unwrap_or(f64::NAN))
+            .collect();
 
-    for i in timeperiod..n {
-        mom_vals[i] = close_vals[i] - close_vals[i - timeperiod];
+        for i in timeperiod..n {
+            let curr = close_vals[i];
+            let prev = close_vals[i - timeperiod];
+
+            if !curr.is_nan() && !prev.is_nan() {
+                mom_vals[i] = curr - prev;
+            }
+        }
     }
 
-    let mom_series = Series::new(output_col.into(), &mom_vals);
     let mut result_df = df;
-    result_df.with_column(mom_series.into())?;
+    result_df.with_column(Series::new(output_col.into(), mom_vals).into())?;
     Ok(result_df)
 }
 
@@ -1455,21 +1511,28 @@ pub async fn roc(
     let output_col = output_col.unwrap_or("roc");
     let close = get_close(&df)?;
 
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
-
-    let n = close_vals.len();
+    let close_ca = close.f64().unwrap();
+    let n = close_ca.len();
     let mut roc_vals: Vec<f64> = vec![f64::NAN; n];
 
-    for i in timeperiod..n {
-        if close_vals[i - timeperiod] != 0.0 {
-            roc_vals[i] = ((close_vals[i] / close_vals[i - timeperiod]) - 1.0) * 100.0;
+    if n > timeperiod {
+        let close_vals: Vec<f64> = close_ca
+            .into_iter()
+            .map(|v| v.unwrap_or(f64::NAN))
+            .collect();
+
+        for i in timeperiod..n {
+            let curr = close_vals[i];
+            let prev = close_vals[i - timeperiod];
+
+            if !curr.is_nan() && !prev.is_nan() && prev != 0.0 {
+                roc_vals[i] = ((curr / prev) - 1.0) * 100.0;
+            }
         }
     }
 
-    let roc_series = Series::new(output_col.into(), &roc_vals);
     let mut result_df = df;
-    result_df.with_column(roc_series.into())?;
+    result_df.with_column(Series::new(output_col.into(), roc_vals).into())?;
     Ok(result_df)
 }
 
@@ -1496,22 +1559,28 @@ pub async fn rocp(
     let output_col = output_col.unwrap_or("rocp");
     let close = get_close(&df)?;
 
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
-
-    let n = close_vals.len();
+    let close_ca = close.f64().unwrap();
+    let n = close_ca.len();
     let mut rocp_vals: Vec<f64> = vec![f64::NAN; n];
 
-    for i in timeperiod..n {
-        if close_vals[i - timeperiod] != 0.0 {
-            rocp_vals[i] =
-                (close_vals[i] - close_vals[i - timeperiod]) / close_vals[i - timeperiod];
+    if n > timeperiod {
+        let close_vals: Vec<f64> = close_ca
+            .into_iter()
+            .map(|v| v.unwrap_or(f64::NAN))
+            .collect();
+
+        for i in timeperiod..n {
+            let curr = close_vals[i];
+            let prev = close_vals[i - timeperiod];
+
+            if !curr.is_nan() && !prev.is_nan() && prev != 0.0 {
+                rocp_vals[i] = (curr - prev) / prev;
+            }
         }
     }
 
-    let rocp_series = Series::new(output_col.into(), &rocp_vals);
     let mut result_df = df;
-    result_df.with_column(rocp_series.into())?;
+    result_df.with_column(Series::new(output_col.into(), rocp_vals).into())?;
     Ok(result_df)
 }
 
@@ -1538,21 +1607,28 @@ pub async fn rocr(
     let output_col = output_col.unwrap_or("rocr");
     let close = get_close(&df)?;
 
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
-
-    let n = close_vals.len();
+    let close_ca = close.f64().unwrap();
+    let n = close_ca.len();
     let mut rocr_vals: Vec<f64> = vec![f64::NAN; n];
 
-    for i in timeperiod..n {
-        if close_vals[i - timeperiod] != 0.0 {
-            rocr_vals[i] = close_vals[i] / close_vals[i - timeperiod];
+    if n > timeperiod {
+        let close_vals: Vec<f64> = close_ca
+            .into_iter()
+            .map(|v| v.unwrap_or(f64::NAN))
+            .collect();
+
+        for i in timeperiod..n {
+            let curr = close_vals[i];
+            let prev = close_vals[i - timeperiod];
+
+            if !curr.is_nan() && !prev.is_nan() && prev != 0.0 {
+                rocr_vals[i] = curr / prev;
+            }
         }
     }
 
-    let rocr_series = Series::new(output_col.into(), &rocr_vals);
     let mut result_df = df;
-    result_df.with_column(rocr_series.into())?;
+    result_df.with_column(Series::new(output_col.into(), rocr_vals).into())?;
     Ok(result_df)
 }
 
@@ -1579,21 +1655,28 @@ pub async fn rocr100(
     let output_col = output_col.unwrap_or("rocr100");
     let close = get_close(&df)?;
 
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
-
-    let n = close_vals.len();
+    let close_ca = close.f64().unwrap();
+    let n = close_ca.len();
     let mut rocr100_vals: Vec<f64> = vec![f64::NAN; n];
 
-    for i in timeperiod..n {
-        if close_vals[i - timeperiod] != 0.0 {
-            rocr100_vals[i] = (close_vals[i] / close_vals[i - timeperiod]) * 100.0;
+    if n > timeperiod {
+        let close_vals: Vec<f64> = close_ca
+            .into_iter()
+            .map(|v| v.unwrap_or(f64::NAN))
+            .collect();
+
+        for i in timeperiod..n {
+            let curr = close_vals[i];
+            let prev = close_vals[i - timeperiod];
+
+            if !curr.is_nan() && !prev.is_nan() && prev != 0.0 {
+                rocr100_vals[i] = (curr / prev) * 100.0;
+            }
         }
     }
 
-    let rocr100_series = Series::new(output_col.into(), &rocr100_vals);
     let mut result_df = df;
-    result_df.with_column(rocr100_series.into())?;
+    result_df.with_column(Series::new(output_col.into(), rocr100_vals).into())?;
     Ok(result_df)
 }
 
@@ -1622,46 +1705,70 @@ pub async fn rsi(
     let output_col = output_col.unwrap_or("rsi");
     let close = get_close(&df)?;
 
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
+    let close_ca = close.f64().unwrap();
+    let n = close_ca.len();
 
-    let n = close_vals.len();
-    let mut gain: Vec<f64> = vec![0.0; n];
-    let mut loss: Vec<f64> = vec![0.0; n];
-
-    for i in 1..n {
-        let change = close_vals[i] - close_vals[i - 1];
-        gain[i] = if change > 0.0 { change } else { 0.0 };
-        loss[i] = if change < 0.0 { change.abs() } else { 0.0 };
+    if n <= 1 {
+        let mut result_df = df;
+        result_df.with_column(Series::new(output_col.into(), vec![f64::NAN; n]).into())?;
+        return Ok(result_df);
     }
 
-    let gain_series = Series::new("gain".into(), &gain);
-    let loss_series = Series::new("loss".into(), &loss);
+    // Convertimos a vector manejando nulos para evitar desalineación
+    let close_vals: Vec<f64> = close_ca
+        .into_iter()
+        .map(|v| v.unwrap_or(f64::NAN))
+        .collect();
 
-    let avg_gain = rma_series(&gain_series, timeperiod);
-    let avg_loss = rma_series(&loss_series, timeperiod);
+    let mut gain = vec![0.0; n];
+    let mut loss = vec![0.0; n];
 
-    let avg_gain_ca: ChunkedArray<Float64Type> = avg_gain.f64().unwrap().clone();
-    let avg_loss_ca: ChunkedArray<Float64Type> = avg_loss.f64().unwrap().clone();
-    let gain_vals: Vec<f64> = avg_gain_ca.into_no_null_iter().collect();
-    let loss_vals: Vec<f64> = avg_loss_ca.into_no_null_iter().collect();
+    for i in 1..n {
+        let curr = close_vals[i];
+        let prev = close_vals[i - 1];
 
-    let mut rsi_vals: Vec<f64> = vec![f64::NAN; n];
-
-    for i in 0..n {
-        if !gain_vals[i].is_nan() && !loss_vals[i].is_nan() {
-            if loss_vals[i] == 0.0 {
-                rsi_vals[i] = 100.0;
-            } else {
-                let rs = gain_vals[i] / loss_vals[i];
-                rsi_vals[i] = 100.0 - (100.0 / (1.0 + rs));
+        if !curr.is_nan() && !prev.is_nan() {
+            let change = curr - prev;
+            if change > 0.0 {
+                gain[i] = change;
+            } else if change < 0.0 {
+                loss[i] = change.abs();
             }
         }
     }
 
-    let rsi_series = Series::new(output_col.into(), &rsi_vals);
+    // Usamos rma_series sobre las ganancias y pérdidas
+    let gain_series = Series::new("gain".into(), gain);
+    let loss_series = Series::new("loss".into(), loss);
+
+    let avg_gain_series = rma_series(&gain_series, timeperiod);
+    let avg_loss_series = rma_series(&loss_series, timeperiod);
+
+    let avg_gain_ca = avg_gain_series.f64().unwrap();
+    let avg_loss_ca = avg_loss_series.f64().unwrap();
+
+    let mut rsi_vals = vec![f64::NAN; n];
+
+    for i in 0..n {
+        let g = avg_gain_ca.get(i);
+        let l = avg_loss_ca.get(i);
+
+        if let (Some(g_val), Some(l_val)) = (g, l) {
+            if !g_val.is_nan() && !l_val.is_nan() {
+                if l_val == 0.0 {
+                    rsi_vals[i] = 100.0;
+                } else if g_val == 0.0 {
+                    rsi_vals[i] = 0.0;
+                } else {
+                    let rs = g_val / l_val;
+                    rsi_vals[i] = 100.0 - (100.0 / (1.0 + rs));
+                }
+            }
+        }
+    }
+
     let mut result_df = df;
-    result_df.with_column(rsi_series.into())?;
+    result_df.with_column(Series::new(output_col.into(), rsi_vals).into())?;
     Ok(result_df)
 }
 
@@ -1692,15 +1799,16 @@ pub async fn stoch(
     slowk_period: Option<usize>,
     slowk_matype: Option<usize>,
     slowd_period: Option<usize>,
-    // slowd_matype: Option<usize>,
     output_col_k: Option<&str>,
     output_col_d: Option<&str>,
 ) -> PolarsResult<DataFrame> {
     let fastk_period = fastk_period.unwrap_or(5).max(2);
     let slowk_period = slowk_period.unwrap_or(3).max(2);
     let slowd_period = slowd_period.unwrap_or(3).max(2);
+
+    // MAType: 0=SMA, 1=EMA (para consistencia con otros indicadores)
     let slowk_matype = slowk_matype.unwrap_or(0);
-    // let slowd_matype = slowd_matype.unwrap_or(0);
+
     let output_col_k = output_col_k.unwrap_or("slow_k");
     let output_col_d = output_col_d.unwrap_or("slow_d");
 
@@ -1708,65 +1816,68 @@ pub async fn stoch(
     let low = get_low(&df)?;
     let close = get_close(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
+    let high_ca = high.f64().unwrap();
+    let low_ca = low.f64().unwrap();
+    let close_ca = close.f64().unwrap();
 
     let n = df.height();
     let mut k_vals: Vec<f64> = vec![f64::NAN; n];
+
+    // Helper para obtener valores manejando nulos
+    let h_v: Vec<f64> = high_ca.into_iter().map(|v| v.unwrap_or(f64::NAN)).collect();
+    let l_v: Vec<f64> = low_ca.into_iter().map(|v| v.unwrap_or(f64::NAN)).collect();
+    let c_v: Vec<f64> = close_ca
+        .into_iter()
+        .map(|v| v.unwrap_or(f64::NAN))
+        .collect();
 
     for i in (fastk_period - 1)..n {
         let mut hh = f64::NEG_INFINITY;
         let mut ll = f64::INFINITY;
         let mut valid = true;
 
-        for j in (i - fastk_period + 1)..=i {
-            match (high_ca.get(j), low_ca.get(j), close_ca.get(j)) {
-                (Some(h), Some(l), Some(c)) => {
-                    if h > hh {
-                        hh = h;
-                    }
-                    if l < ll {
-                        ll = l;
-                    }
-                }
-                _ => {
-                    valid = false;
-                    break;
-                }
+        let start_j = i + 1 - fastk_period;
+        for j in start_j..=i {
+            let h = h_v[j];
+            let l = l_v[j];
+            if h.is_nan() || l.is_nan() {
+                valid = false;
+                break;
+            }
+            if h > hh {
+                hh = h;
+            }
+            if l < ll {
+                ll = l;
             }
         }
 
         if valid && hh != ll {
-            if let Some(c) = close_ca.get(i) {
-                k_vals[i] = ((c - ll) / (hh - ll)) * 100.0;
+            let curr_c = c_v[i];
+            if !curr_c.is_nan() {
+                k_vals[i] = ((curr_c - ll) / (hh - ll)) * 100.0;
             }
         }
     }
 
     // Apply slowk smoothing
-    let k_series = Series::new("k_raw".into(), &k_vals);
-    let k_smooth = if slowk_matype == 0 {
-        ema_series(&k_series, slowk_period)
+    let k_series_raw = Series::new("k_raw".into(), &k_vals);
+    let mut k_smooth_series = if slowk_matype == 1 {
+        ema_series(&k_series_raw, slowk_period)
     } else {
-        sma_series(&k_series, slowk_period)
+        sma_series(&k_series_raw, slowk_period)
     };
 
     // Calculate %D as SMA of %K
-    let d_smooth = sma_series(&k_smooth, slowd_period);
+    let mut d_smooth_series = sma_series(&k_smooth_series, slowd_period);
 
-    let k_ca: ChunkedArray<Float64Type> = k_smooth.f64().unwrap().clone();
-    let d_ca: ChunkedArray<Float64Type> = d_smooth.f64().unwrap().clone();
-    let k_final: Vec<f64> = k_ca.into_no_null_iter().collect();
-    let d_final: Vec<f64> = d_ca.into_no_null_iter().collect();
-
-    let k_series_final = Series::new(output_col_k.into(), &k_final);
-    let d_series_final = Series::new(output_col_d.into(), &d_final);
+    k_smooth_series.rename(output_col_k.into());
+    d_smooth_series.rename(output_col_d.into());
 
     let mut result_df = df;
-    result_df
-        .with_column(k_series_final.into())?
-        .with_column(d_series_final.into())?;
+    result_df.with_column(k_smooth_series.into())?;
+    result_df.with_column(d_smooth_series.into())?;
+
     Ok(result_df)
 }
 
@@ -1798,7 +1909,10 @@ pub async fn stochf(
 ) -> PolarsResult<DataFrame> {
     let fastk_period = fastk_period.unwrap_or(5).max(2);
     let fastd_period = fastd_period.unwrap_or(3).max(2);
+
+    // MAType: 0=SMA, 1=EMA (para consistencia)
     let fastd_matype = fastd_matype.unwrap_or(0);
+
     let output_col_k = output_col_k.unwrap_or("fast_k");
     let output_col_d = output_col_d.unwrap_or("fast_d");
 
@@ -1806,59 +1920,63 @@ pub async fn stochf(
     let low = get_low(&df)?;
     let close = get_close(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
+    let high_ca = high.f64().unwrap();
+    let low_ca = low.f64().unwrap();
+    let close_ca = close.f64().unwrap();
 
     let n = df.height();
     let mut fastk_vals: Vec<f64> = vec![f64::NAN; n];
+
+    // Helper para obtener valores manejando nulos
+    let h_v: Vec<f64> = high_ca.into_iter().map(|v| v.unwrap_or(f64::NAN)).collect();
+    let l_v: Vec<f64> = low_ca.into_iter().map(|v| v.unwrap_or(f64::NAN)).collect();
+    let c_v: Vec<f64> = close_ca
+        .into_iter()
+        .map(|v| v.unwrap_or(f64::NAN))
+        .collect();
 
     for i in (fastk_period - 1)..n {
         let mut hh = f64::NEG_INFINITY;
         let mut ll = f64::INFINITY;
         let mut valid = true;
 
-        for j in (i - fastk_period + 1)..=i {
-            match (high_ca.get(j), low_ca.get(j)) {
-                (Some(h), Some(l)) => {
-                    if h > hh {
-                        hh = h;
-                    }
-                    if l < ll {
-                        ll = l;
-                    }
-                }
-                _ => {
-                    valid = false;
-                    break;
-                }
+        let start_j = i + 1 - fastk_period;
+        for j in start_j..=i {
+            let h = h_v[j];
+            let l = l_v[j];
+            if h.is_nan() || l.is_nan() {
+                valid = false;
+                break;
+            }
+            if h > hh {
+                hh = h;
+            }
+            if l < ll {
+                ll = l;
             }
         }
 
         if valid && hh != ll {
-            if let Some(c) = close_ca.get(i) {
-                fastk_vals[i] = ((c - ll) / (hh - ll)) * 100.0;
+            let curr_c = c_v[i];
+            if !curr_c.is_nan() {
+                fastk_vals[i] = ((curr_c - ll) / (hh - ll)) * 100.0;
             }
         }
     }
 
-    let fastk_series = Series::new("fast_k".into(), &fastk_vals);
-    let fastd = if fastd_matype == 0 {
+    let fastk_series = Series::new(output_col_k.into(), &fastk_vals);
+    let mut fastd_series = if fastd_matype == 1 {
         ema_series(&fastk_series, fastd_period)
     } else {
         sma_series(&fastk_series, fastd_period)
     };
 
-    let fastd_ca: ChunkedArray<Float64Type> = fastd.f64().unwrap().clone();
-    let fastd_final: Vec<f64> = fastd_ca.into_no_null_iter().collect();
-
-    let fastk_series_final = Series::new(output_col_k.into(), &fastk_vals);
-    let fastd_series_final = Series::new(output_col_d.into(), &fastd_final);
+    fastd_series.rename(output_col_d.into());
 
     let mut result_df = df;
-    result_df
-        .with_column(fastk_series_final.into())?
-        .with_column(fastd_series_final.into())?;
+    result_df.with_column(fastk_series.into())?;
+    result_df.with_column(fastd_series.into())?;
+
     Ok(result_df)
 }
 
@@ -1893,71 +2011,70 @@ pub async fn stochrsi(
     let timeperiod = timeperiod.unwrap_or(14).max(2);
     let fastk_period = fastk_period.unwrap_or(3).max(2);
     let fastd_period = fastd_period.unwrap_or(3).max(2);
+
+    // MAType: 0=SMA, 1=EMA
     let fastd_matype = fastd_matype.unwrap_or(0);
+
     let output_col_k = output_col_k.unwrap_or("stochrsi_k");
     let output_col_d = output_col_d.unwrap_or("stochrsi_d");
 
-    let rsi_df = rsi(df.clone(), Some(timeperiod), None).await?;
-    let rsi_col = rsi_df.column("rsi").unwrap();
-    let rsi_ca: ChunkedArray<Float64Type> = rsi_col.f64().unwrap().clone();
+    // Calculamos el RSI (usando una copia para no alterar el original antes de tiempo)
+    let rsi_df = rsi(df.clone(), Some(timeperiod), Some("temp_rsi")).await?;
+    let rsi_col = rsi_df.column("temp_rsi")?;
+    let rsi_ca = rsi_col.f64()?;
 
     let n = df.height();
     let mut stochrsi_vals: Vec<f64> = vec![f64::NAN; n];
+
+    // Helper para obtener valores manejando nulos
+    let rsi_v: Vec<f64> = rsi_ca.into_iter().map(|v| v.unwrap_or(f64::NAN)).collect();
 
     for i in (fastk_period - 1)..n {
         let mut hh = f64::NEG_INFINITY;
         let mut ll = f64::INFINITY;
         let mut valid = true;
 
-        for j in (i - fastk_period + 1)..=i {
-            if let Some(rsi_val) = rsi_ca.get(j) {
-                if !rsi_val.is_nan() {
-                    if rsi_val > hh {
-                        hh = rsi_val;
-                    }
-                    if rsi_val < ll {
-                        ll = rsi_val;
-                    }
-                } else {
-                    valid = false;
-                    break;
-                }
-            } else {
+        let start_j = i + 1 - fastk_period;
+        for j in start_j..=i {
+            let rsi_val = rsi_v[j];
+            if rsi_val.is_nan() {
                 valid = false;
                 break;
+            }
+            if rsi_val > hh {
+                hh = rsi_val;
+            }
+            if rsi_val < ll {
+                ll = rsi_val;
             }
         }
 
         if valid && hh != ll {
-            if let Some(rsi_val) = rsi_ca.get(i) {
-                if !rsi_val.is_nan() {
-                    stochrsi_vals[i] = (rsi_val - ll) / (hh - ll);
-                }
+            let curr_rsi = rsi_v[i];
+            if !curr_rsi.is_nan() {
+                stochrsi_vals[i] = (curr_rsi - ll) / (hh - ll);
             }
+        } else if valid && hh == ll {
+            stochrsi_vals[i] = 0.5; // Valor neutral si no hay rango
         }
     }
 
-    let stochrsi_series = Series::new("stochrsi_raw".into(), &stochrsi_vals);
-    let fastk = if fastd_matype == 0 {
-        ema_series(&stochrsi_series, fastk_period)
+    let k_series_raw = Series::new("stochrsi_raw".into(), &stochrsi_vals);
+    let mut k_smooth_series = if fastd_matype == 1 {
+        ema_series(&k_series_raw, fastk_period)
     } else {
-        sma_series(&stochrsi_series, fastk_period)
+        sma_series(&k_series_raw, fastk_period)
     };
 
-    let fastd = sma_series(&fastk, fastd_period);
+    let mut d_smooth_series = sma_series(&k_smooth_series, fastd_period);
 
-    let fastk_ca: ChunkedArray<Float64Type> = fastk.f64().unwrap().clone();
-    let fastd_ca: ChunkedArray<Float64Type> = fastd.f64().unwrap().clone();
-    let k_final: Vec<f64> = fastk_ca.into_no_null_iter().collect();
-    let d_final: Vec<f64> = fastd_ca.into_no_null_iter().collect();
-
-    let k_series_final = Series::new(output_col_k.into(), &k_final);
-    let d_series_final = Series::new(output_col_d.into(), &d_final);
+    k_smooth_series.rename(output_col_k.into());
+    d_smooth_series.rename(output_col_d.into());
 
     let mut result_df = df;
-    result_df
-        .with_column(k_series_final.into())?
-        .with_column(d_series_final.into())?;
+    result_df.with_column(k_smooth_series.into())?;
+    result_df.with_column(d_smooth_series.into())?;
+
     Ok(result_df)
 }
 
@@ -1990,21 +2107,25 @@ pub async fn trix(
     let ema2 = ema_series(&ema1, timeperiod);
     let ema3 = ema_series(&ema2, timeperiod);
 
-    let ema3_ca: ChunkedArray<Float64Type> = ema3.f64().unwrap().clone();
-    let ema3_vals: Vec<f64> = ema3_ca.into_no_null_iter().collect();
+    let n = ema3.len();
+    let ema3_ca = ema3.f64().unwrap();
 
-    let n = ema3_vals.len();
+    // Convertimos a vector manejando nulos para evitar desalineación
+    let ema3_vals: Vec<f64> = ema3_ca.into_iter().map(|v| v.unwrap_or(f64::NAN)).collect();
+
     let mut trix_vals: Vec<f64> = vec![f64::NAN; n];
 
     for i in 1..n {
-        if !ema3_vals[i].is_nan() && !ema3_vals[i - 1].is_nan() && ema3_vals[i - 1] != 0.0 {
-            trix_vals[i] = ((ema3_vals[i] - ema3_vals[i - 1]) / ema3_vals[i - 1]) * 100.0;
+        let curr = ema3_vals[i];
+        let prev = ema3_vals[i - 1];
+
+        if !curr.is_nan() && !prev.is_nan() && prev != 0.0 {
+            trix_vals[i] = ((curr - prev) / prev) * 100.0;
         }
     }
 
-    let trix_series = Series::new(output_col.into(), &trix_vals);
     let mut result_df = df;
-    result_df.with_column(trix_series.into())?;
+    result_df.with_column(Series::new(output_col.into(), trix_vals).into())?;
     Ok(result_df)
 }
 
@@ -2034,69 +2155,91 @@ pub async fn ultosc(
     timeperiod3: Option<usize>,
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
-    let timeperiod1 = timeperiod1.unwrap_or(7).max(2);
-    let timeperiod2 = timeperiod2.unwrap_or(14).max(2);
-    let timeperiod3 = timeperiod3.unwrap_or(28).max(2);
+    let t1 = timeperiod1.unwrap_or(7);
+    let t2 = timeperiod2.unwrap_or(14);
+    let t3 = timeperiod3.unwrap_or(28);
     let output_col = output_col.unwrap_or("ultosc");
 
     let high = get_high(&df)?;
     let low = get_low(&df)?;
     let close = get_close(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
-
+    let h_ca = high.f64()?;
+    let l_ca = low.f64()?;
+    let c_ca = close.f64()?;
     let n = df.height();
-    let mut bp: Vec<f64> = vec![0.0; n];
-    let mut tr: Vec<f64> = vec![0.0; n];
+
+    let mut bp = vec![0.0; n];
+    let mut tr = vec![0.0; n];
+
+    // Acceso rápido a valores manejando nulos
+    let h_v: Vec<f64> = h_ca.into_iter().map(|v| v.unwrap_or(f64::NAN)).collect();
+    let l_v: Vec<f64> = l_ca.into_iter().map(|v| v.unwrap_or(f64::NAN)).collect();
+    let c_v: Vec<f64> = c_ca.into_iter().map(|v| v.unwrap_or(f64::NAN)).collect();
 
     for i in 1..n {
-        match (
-            close_ca.get(i),
-            low_ca.get(i),
-            high_ca.get(i),
-            close_ca.get(i - 1),
-        ) {
-            (Some(c), Some(l), Some(h), Some(prev_c)) => {
-                bp[i] = c - l.min(prev_c);
-                let tr1 = h - l;
-                let tr2 = (h - prev_c).abs();
-                let tr3 = (l - prev_c).abs();
-                tr[i] = tr1.max(tr2).max(tr3);
-            }
-            _ => {
-                bp[i] = 0.0;
-                tr[i] = 0.0;
-            }
+        let curr_c = c_v[i];
+        let curr_h = h_v[i];
+        let curr_l = l_v[i];
+        let prev_c = c_v[i - 1];
+
+        if !curr_c.is_nan() && !curr_h.is_nan() && !curr_l.is_nan() && !prev_c.is_nan() {
+            let min_l_pc = curr_l.min(prev_c);
+            let max_h_pc = curr_h.max(prev_c);
+
+            bp[i] = curr_c - min_l_pc;
+            tr[i] = max_h_pc - min_l_pc;
         }
     }
 
-    fn sum_bp_tr(bp: &[f64], tr: &[f64], start: usize, end: usize) -> (f64, f64) {
-        if start > end || end >= bp.len() {
-            return (0.0, 0.0);
+    let mut ultosc_vals = vec![f64::NAN; n];
+    let max_period = t1.max(t2).max(t3);
+
+    if n > max_period {
+        // Sumas rodantes para cada periodo
+        let mut sum_bp1: f64 = bp[1..=t1].iter().sum();
+        let mut sum_tr1: f64 = tr[1..=t1].iter().sum();
+        let mut sum_bp2: f64 = bp[1..=t2].iter().sum();
+        let mut sum_tr2: f64 = tr[1..=t2].iter().sum();
+        let mut sum_bp3: f64 = bp[1..=t3].iter().sum();
+        let mut sum_tr3: f64 = tr[1..=t3].iter().sum();
+
+        for i in max_period..n {
+            // Actualizamos sumas rodantes si i > period
+            if i > t1 {
+                sum_bp1 = sum_bp1 - bp[i - t1] + bp[i];
+                sum_tr1 = sum_tr1 - tr[i - t1] + tr[i];
+            }
+            if i > t2 {
+                sum_bp2 = sum_bp2 - bp[i - t2] + bp[i];
+                sum_tr2 = sum_tr2 - tr[i - t2] + tr[i];
+            }
+            if i > t3 {
+                sum_bp3 = sum_bp3 - bp[i - t3] + bp[i];
+                sum_tr3 = sum_tr3 - tr[i - t3] + tr[i];
+            }
+
+            let avg1 = if sum_tr1 != 0.0 {
+                sum_bp1 / sum_tr1
+            } else {
+                0.0
+            };
+            let avg2 = if sum_tr2 != 0.0 {
+                sum_bp2 / sum_tr2
+            } else {
+                0.0
+            };
+            let avg3 = if sum_tr3 != 0.0 {
+                sum_bp3 / sum_tr3
+            } else {
+                0.0
+            };
+
+            ultosc_vals[i] = 100.0 * (4.0 * avg1 + 2.0 * avg2 + avg3) / 7.0;
         }
-        let sum_bp: f64 = bp[start..=end].iter().sum();
-        let sum_tr: f64 = tr[start..=end].iter().sum();
-        (sum_bp, sum_tr)
     }
 
-    let mut ultosc_vals: Vec<f64> = vec![f64::NAN; n];
-
-    let min_start = (timeperiod1 + timeperiod2).max(timeperiod3);
-    for i in min_start..n {
-        let (bp1, tr1_val) = sum_bp_tr(&bp, &tr, i - timeperiod1 + 1, i);
-        let (bp2, tr2_val) = sum_bp_tr(&bp, &tr, i - timeperiod2 + 1, i);
-        let (bp3, tr3_val) = sum_bp_tr(&bp, &tr, i - timeperiod3 + 1, i);
-
-        let avg1 = if tr1_val != 0.0 { bp1 / tr1_val } else { 0.0 };
-        let avg2 = if tr2_val != 0.0 { bp2 / tr2_val } else { 0.0 };
-        let avg3 = if tr3_val != 0.0 { bp3 / tr3_val } else { 0.0 };
-
-        ultosc_vals[i] = 100.0 * (4.0 * avg1 + 2.0 * avg2 + avg3) / 7.0;
-    }
-
-    let ultosc_series = Series::new(output_col.into(), &ultosc_vals);
+    let ultosc_series = Series::new(output_col.into(), ultosc_vals);
     let mut result_df = df;
     result_df.with_column(ultosc_series.into())?;
     Ok(result_df)
@@ -2128,33 +2271,63 @@ pub async fn willr(
     let low = get_low(&df)?;
     let close = get_close(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
+    let high_ca = high.f64()?;
+    let low_ca = low.f64()?;
+    let close_ca = close.f64()?;
 
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
-
-    let n = high_vals.len();
+    let n = high_ca.len();
     let mut willr_vals: Vec<f64> = vec![f64::NAN; n];
 
-    for i in (timeperiod - 1)..n {
-        let hh = high_vals[i - timeperiod + 1..=i]
-            .iter()
-            .fold(f64::NEG_INFINITY, |a, &b| a.max(b));
-        let ll = low_vals[i - timeperiod + 1..=i]
-            .iter()
-            .fold(f64::INFINITY, |a, &b| a.min(b));
+    // Convertimos a vectores manejando nulos para asegurar la alineación
+    let h_v: Vec<f64> = high_ca.into_iter().map(|v| v.unwrap_or(f64::NAN)).collect();
+    let l_v: Vec<f64> = low_ca.into_iter().map(|v| v.unwrap_or(f64::NAN)).collect();
+    let c_v: Vec<f64> = close_ca
+        .into_iter()
+        .map(|v| v.unwrap_or(f64::NAN))
+        .collect();
 
-        if hh != ll {
-            willr_vals[i] = ((hh - close_vals[i]) / (hh - ll)) * -100.0;
+    for i in (timeperiod - 1)..n {
+        let start_j = i + 1 - timeperiod;
+        let window_h = &h_v[start_j..=i];
+        let window_l = &l_v[start_j..=i];
+
+        let mut hh = f64::NEG_INFINITY;
+        let mut ll = f64::INFINITY;
+        let mut valid = true;
+
+        for &val in window_h {
+            if val.is_nan() {
+                valid = false;
+                break;
+            }
+            if val > hh {
+                hh = val;
+            }
+        }
+        if !valid {
+            continue;
+        }
+
+        for &val in window_l {
+            if val.is_nan() {
+                valid = false;
+                break;
+            }
+            if val < ll {
+                ll = val;
+            }
+        }
+
+        if valid && hh != ll {
+            let curr_c = c_v[i];
+            if !curr_c.is_nan() {
+                willr_vals[i] = ((hh - curr_c) / (hh - ll)) * -100.0;
+            }
         }
     }
 
-    let willr_series = Series::new(output_col.into(), &willr_vals);
     let mut result_df = df;
-    result_df.with_column(willr_series.into())?;
+    result_df.with_column(Series::new(output_col.into(), willr_vals).into())?;
     Ok(result_df)
 }
 
@@ -2250,7 +2423,7 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn test_bop() {
         match load_data().await {
-            Ok(df) => match bop(df, None).await {
+            Ok(df) => match bop(df, None, None).await {
                 Ok(result) => {
                     save_data(&result, "download/test_bop.csv").await.unwrap();
                 }
