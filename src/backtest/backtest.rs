@@ -7,6 +7,7 @@ use crate::api::trades::insert_trades;
 use crate::backtest::datos::Datos;
 use crate::backtest::trade::Trade;
 use crate::indicators::cycle::*;
+use crate::indicators::momentum::*;
 use crate::indicators::overlap::*;
 use crate::indicators::pattern::*;
 use crate::strategy::strategy::Strategy;
@@ -350,6 +351,249 @@ impl Backtest {
                 "CDLUNIQUE3RIVER" => cdlunique3river(df, Some(&indicator.nombre)).await?,
                 "CDLUPSIDEGAP2CROWS" => cdlupsidegap2crows(df, Some(&indicator.nombre)).await?,
                 "CDLXSIDEGAP3METHODS" => cdlxsidegap3methods(df, Some(&indicator.nombre)).await?,
+                "ADX" => {
+                    let params: AdxParams =
+                        serde_json::from_value::<AdxParams>(indicator.parametros.clone()).unwrap();
+                    adx(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "ADXR" => {
+                    let params: AdxrParams =
+                        serde_json::from_value::<AdxrParams>(indicator.parametros.clone()).unwrap();
+                    adxr(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "APO" => {
+                    let params: ApoParams =
+                        serde_json::from_value::<ApoParams>(indicator.parametros.clone()).unwrap();
+                    apo(
+                        df,
+                        Some(params.fastperiod),
+                        Some(params.slowperiod),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "AROON" => {
+                    let params: AroonParams =
+                        serde_json::from_value::<AroonParams>(indicator.parametros.clone())
+                            .unwrap();
+                    aroon(
+                        df,
+                        Some(params.timeperiod),
+                        Some(format!("{}_col_up", &indicator.nombre).as_str()),
+                        Some(format!("{}_col_down", &indicator.nombre).as_str()),
+                    )
+                    .await?
+                }
+                "AROONOSC" => {
+                    let params: AroonoscParams =
+                        serde_json::from_value::<AroonoscParams>(indicator.parametros.clone())
+                            .unwrap();
+                    aroonosc(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "BOP" => {
+                    let params: BopParams =
+                        serde_json::from_value::<BopParams>(indicator.parametros.clone()).unwrap();
+                    bop(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "CCI" => {
+                    let params: CciParams =
+                        serde_json::from_value::<CciParams>(indicator.parametros.clone()).unwrap();
+                    cci(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "CMO" => {
+                    let params: CmoParams =
+                        serde_json::from_value::<CmoParams>(indicator.parametros.clone()).unwrap();
+                    cmo(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "DX" => {
+                    let params: DxParams =
+                        serde_json::from_value::<DxParams>(indicator.parametros.clone()).unwrap();
+                    dx(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "MACD" => {
+                    let params: MacdParams =
+                        serde_json::from_value::<MacdParams>(indicator.parametros.clone()).unwrap();
+                    macd(
+                        df,
+                        Some(params.timeperiod),
+                        Some(params.slowperiod),
+                        Some(params.signalperiod),
+                        Some(&indicator.nombre),
+                        Some(format!("{}_col_signal", &indicator.nombre).as_str()),
+                        Some(format!("{}_col_hist", &indicator.nombre).as_str()),
+                    )
+                    .await?
+                }
+                "MACDEXT" => {
+                    let params: MacdextParams =
+                        serde_json::from_value::<MacdextParams>(indicator.parametros.clone())
+                            .unwrap();
+                    macdext(
+                        df,
+                        Some(params.fastperiod),
+                        Some(params.slowperiod),
+                        Some(params.signalperiod),
+                        Some(params.fastmatype),
+                        Some(params.slowmatype),
+                        Some(params.signalmatype),
+                        Some(&indicator.nombre),
+                        Some(format!("{}_col_signal", &indicator.nombre).as_str()),
+                        Some(format!("{}_col_hist", &indicator.nombre).as_str()),
+                    )
+                    .await?
+                }
+                "MACDFIX" => {
+                    let params: MacdfixParams =
+                        serde_json::from_value::<MacdfixParams>(indicator.parametros.clone())
+                            .unwrap();
+                    macdfix(
+                        df,
+                        Some(params.signalperiod),
+                        Some(&indicator.nombre),
+                        Some(format!("{}_col_signal", &indicator.nombre).as_str()),
+                        Some(format!("{}_col_hist", &indicator.nombre).as_str()),
+                    )
+                    .await?
+                }
+                "MFI" => {
+                    let params: MfiParams =
+                        serde_json::from_value::<MfiParams>(indicator.parametros.clone()).unwrap();
+                    mfi(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "MINUS_DI" => {
+                    let params: MinusDiParams =
+                        serde_json::from_value::<MinusDiParams>(indicator.parametros.clone())
+                            .unwrap();
+                    minus_di(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "MINUS_DM" => {
+                    let params: MinusDmParams =
+                        serde_json::from_value::<MinusDmParams>(indicator.parametros.clone())
+                            .unwrap();
+                    minus_dm(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "MOM" => {
+                    let params: MomParams =
+                        serde_json::from_value::<MomParams>(indicator.parametros.clone()).unwrap();
+                    mom(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "PLUS_DI" => {
+                    let params: PlusDiParams =
+                        serde_json::from_value::<PlusDiParams>(indicator.parametros.clone())
+                            .unwrap();
+                    plus_di(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "PLUS_DM" => {
+                    let params: PlusDmParams =
+                        serde_json::from_value::<PlusDmParams>(indicator.parametros.clone())
+                            .unwrap();
+                    plus_dm(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "PPO" => {
+                    let params: PpoParams =
+                        serde_json::from_value::<PpoParams>(indicator.parametros.clone()).unwrap();
+                    ppo(
+                        df,
+                        Some(params.fastperiod),
+                        Some(params.slowperiod),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "ROC" => {
+                    let params: RocParams =
+                        serde_json::from_value::<RocParams>(indicator.parametros.clone()).unwrap();
+                    roc(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "ROCP" => {
+                    let params: RocpParams =
+                        serde_json::from_value::<RocpParams>(indicator.parametros.clone()).unwrap();
+                    rocp(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "ROCR" => {
+                    let params: RocrParams =
+                        serde_json::from_value::<RocrParams>(indicator.parametros.clone()).unwrap();
+                    rocr(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "ROCR100" => {
+                    let params: Roc100Params =
+                        serde_json::from_value::<Roc100Params>(indicator.parametros.clone())
+                            .unwrap();
+                    rocr100(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "RSI" => {
+                    let params: RsiParams =
+                        serde_json::from_value::<RsiParams>(indicator.parametros.clone()).unwrap();
+                    rsi(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "STOCH" => {
+                    let params: StochParams =
+                        serde_json::from_value::<StochParams>(indicator.parametros.clone())
+                            .unwrap();
+                    stoch(
+                        df,
+                        Some(params.fastk_period),
+                        Some(params.slowk_period),
+                        Some(params.slowk_matype),
+                        Some(params.slowd_period),
+                        Some(format!("{}_col_k", &indicator.nombre).as_str()),
+                        Some(format!("{}_col_d", &indicator.nombre).as_str()),
+                    )
+                    .await?
+                }
+                "STOCHF" => {
+                    let params: StochfParams =
+                        serde_json::from_value::<StochfParams>(indicator.parametros.clone())
+                            .unwrap();
+                    stochf(
+                        df,
+                        Some(params.fastk_period),
+                        Some(params.fastd_period),
+                        Some(params.fastd_matype),
+                        Some(format!("{}_col_k", &indicator.nombre).as_str()),
+                        Some(format!("{}_col_d", &indicator.nombre).as_str()),
+                    )
+                    .await?
+                }
+                "STOCHRSI" => {
+                    let params: StochRsiParams =
+                        serde_json::from_value::<StochRsiParams>(indicator.parametros.clone())
+                            .unwrap();
+                    stochrsi(
+                        df,
+                        Some(params.timeperiod),
+                        Some(params.fastk_period),
+                        Some(params.fastd_period),
+                        Some(params.fastd_matype),
+                        Some(format!("{}_col_k", &indicator.nombre).as_str()),
+                        Some(format!("{}_col_d", &indicator.nombre).as_str()),
+                    )
+                    .await?
+                }
+                "TRIX" => {
+                    let params: TrixParams =
+                        serde_json::from_value::<TrixParams>(indicator.parametros.clone()).unwrap();
+                    trix(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "ULTOSC" => {
+                    let params: UltoscParams =
+                        serde_json::from_value::<UltoscParams>(indicator.parametros.clone())
+                            .unwrap();
+                    ultosc(
+                        df,
+                        Some(params.timeperiod1),
+                        Some(params.timeperiod2),
+                        Some(params.timeperiod3),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "WILLR" => {
+                    let params: WillrParams =
+                        serde_json::from_value::<WillrParams>(indicator.parametros.clone())
+                            .unwrap();
+                    willr(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
                 _ => df,
             }
         }

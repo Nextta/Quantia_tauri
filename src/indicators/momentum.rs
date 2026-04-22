@@ -1,4 +1,5 @@
 use polars::prelude::*;
+use serde::{Deserialize, Serialize};
 
 /// Lista de indicadores:
 /// ADX                  Average Directional Movement Index
@@ -182,6 +183,11 @@ fn get_volume(df: &DataFrame) -> PolarsResult<Series> {
     Ok(s.cast(&DataType::Float64)?.take_materialized_series())
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AdxParams {
+    pub timeperiod: usize,
+}
+
 /// ADX - Average Directional Movement Index
 ///
 /// Mide la fuerza de la tendencia actual, independientemente de su dirección.
@@ -296,6 +302,11 @@ pub async fn adx(
     Ok(result_df)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AdxrParams {
+    pub timeperiod: usize,
+}
+
 /// ADXR - Average Directional Movement Index Rating
 ///
 /// Variante del ADX que es menos sensible y produce menos señales falsas.
@@ -339,6 +350,12 @@ pub async fn adxr(
     let mut result_df = df;
     result_df.with_column(adxr_series.into())?;
     Ok(result_df)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ApoParams {
+    pub fastperiod: usize,
+    pub slowperiod: usize,
 }
 
 /// APO - Absolute Price Oscillator
@@ -385,6 +402,11 @@ pub async fn apo(
     let mut result_df = df;
     result_df.with_column(apo_series.into())?;
     Ok(result_df)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AroonParams {
+    pub timeperiod: usize,
 }
 
 /// AROON - Aroon Indicator
@@ -472,6 +494,11 @@ pub async fn aroon(
     Ok(result_df)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AroonoscParams {
+    pub timeperiod: usize,
+}
+
 /// AROONOSC - Aroon Oscillator
 ///
 /// Oscilador derivado de Aroon que mide la diferencia entre Aroon Up y Aroon Down.
@@ -509,6 +536,11 @@ pub async fn aroonosc(
     let mut result_df = df;
     result_df.with_column(aroonosc_series.into())?;
     Ok(result_df)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct BopParams {
+    pub timeperiod: usize,
 }
 
 /// BOP - Balance Of Power
@@ -550,6 +582,11 @@ pub async fn bop(
     let mut result_df = df;
     result_df.with_column(bop_smoothed.into())?;
     Ok(result_df)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CciParams {
+    pub timeperiod: usize,
 }
 
 /// CCI - Commodity Channel Index
@@ -641,6 +678,11 @@ pub async fn cci(
     Ok(result_df)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CmoParams {
+    pub timeperiod: usize,
+}
+
 /// CMO - Chande Momentum Oscillator
 ///
 /// Oscilador de momentum que mide la fuerza de los movimientos alcistas vs bajistas.
@@ -708,6 +750,11 @@ pub async fn cmo(
     let mut result_df = df;
     result_df.with_column(cmo_series.into())?;
     Ok(result_df)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DxParams {
+    pub timeperiod: usize,
 }
 
 /// DX - Directional Movement Index
@@ -820,6 +867,13 @@ pub async fn dx(
     Ok(result_df)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MacdParams {
+    pub timeperiod: usize,
+    pub slowperiod: usize,
+    pub signalperiod: usize,
+}
+
 /// MACD - Moving Average Convergence/Divergence
 ///
 /// Indicador de tendencia que muestra la relación entre dos EMAs.
@@ -901,6 +955,16 @@ pub async fn macd(
     result_df.with_column(Series::new(output_col_signal.into(), signal_vals).into())?;
     result_df.with_column(Series::new(output_col_hist.into(), hist_vals).into())?;
     Ok(result_df)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MacdextParams {
+    pub fastperiod: usize,
+    pub slowperiod: usize,
+    pub signalperiod: usize,
+    pub fastmatype: usize,
+    pub slowmatype: usize,
+    pub signalmatype: usize,
 }
 
 /// MACDEXT - MACD with controllable MA type
@@ -1002,6 +1066,11 @@ pub async fn macdext(
     Ok(result_df)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MacdfixParams {
+    pub signalperiod: usize,
+}
+
 /// MACDFIX - Moving Average Convergence/Divergence Fix 12/26
 ///
 /// Variante del MACD con períodos fijos en 12 y 26.
@@ -1012,9 +1081,32 @@ pub async fn macdext(
 ///
 /// # Retorna
 /// DataFrame con columnas "macd", "macd_signal" y "macd_hist" añadidas
-pub async fn macdfix(df: DataFrame, signalperiod: Option<usize>) -> PolarsResult<DataFrame> {
+pub async fn macdfix(
+    df: DataFrame,
+    signalperiod: Option<usize>,
+    output_col: Option<&str>,
+    output_col_signal: Option<&str>,
+    output_col_hist: Option<&str>,
+) -> PolarsResult<DataFrame> {
     let signalperiod = signalperiod.unwrap_or(9);
-    macd(df, Some(12), Some(26), Some(signalperiod), None, None, None).await
+    let output_col = output_col.unwrap_or("macd");
+    let output_col_signal = output_col_signal.unwrap_or("macd_signal");
+    let output_col_hist = output_col_hist.unwrap_or("macd_hist");
+    macd(
+        df,
+        Some(12),
+        Some(26),
+        Some(signalperiod),
+        Some(output_col),
+        Some(output_col_signal),
+        Some(output_col_hist),
+    )
+    .await
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MfiParams {
+    pub timeperiod: usize,
 }
 
 /// MFI - Money Flow Index
@@ -1115,6 +1207,11 @@ pub async fn mfi(
     Ok(result_df)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MinusDiParams {
+    pub timeperiod: usize,
+}
+
 /// MINUS_DI - Minus Directional Indicator
 ///
 /// Indica la fuerza de la tendencia bajista.
@@ -1201,6 +1298,11 @@ pub async fn minus_di(
     Ok(result_df)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MinusDmParams {
+    pub timeperiod: usize,
+}
+
 /// MINUS_DM - Minus Directional Movement
 ///
 /// Movimiento direccional negativo suavizado (RMA).
@@ -1255,6 +1357,11 @@ pub async fn minus_dm(
     Ok(result_df)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MomParams {
+    pub timeperiod: usize,
+}
+
 /// MOM - Momentum
 ///
 /// Mide la tasa de cambio del precio en un período.
@@ -1302,6 +1409,11 @@ pub async fn mom(
     let mut result_df = df;
     result_df.with_column(Series::new(output_col.into(), mom_vals).into())?;
     Ok(result_df)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PlusDiParams {
+    pub timeperiod: usize,
 }
 
 /// PLUS_DI - Plus Directional Indicator
@@ -1390,6 +1502,11 @@ pub async fn plus_di(
     Ok(result_df)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PlusDmParams {
+    pub timeperiod: usize,
+}
+
 /// PLUS_DM - Plus Directional Movement
 ///
 /// Movimiento direccional positivo suavizado (RMA).
@@ -1444,6 +1561,12 @@ pub async fn plus_dm(
     Ok(result_df)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PpoParams {
+    pub fastperiod: usize,
+    pub slowperiod: usize,
+}
+
 /// PPO - Percentage Price Oscillator
 ///
 /// Oscilador de precio porcentual que muestra la diferencia entre dos EMAs.
@@ -1486,6 +1609,11 @@ pub async fn ppo(
     let mut result_df = df;
     result_df.with_column(ppo_series.into())?;
     Ok(result_df)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RocParams {
+    pub timeperiod: usize,
 }
 
 /// ROC - Rate of change
@@ -1536,6 +1664,11 @@ pub async fn roc(
     Ok(result_df)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RocpParams {
+    pub timeperiod: usize,
+}
+
 /// ROCP - Rate of change Percentage
 ///
 /// Variante del ROC que devuelve el cambio decimal en lugar de porcentual.
@@ -1582,6 +1715,11 @@ pub async fn rocp(
     let mut result_df = df;
     result_df.with_column(Series::new(output_col.into(), rocp_vals).into())?;
     Ok(result_df)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RocrParams {
+    pub timeperiod: usize,
 }
 
 /// ROCR - Rate of change ratio
@@ -1632,6 +1770,11 @@ pub async fn rocr(
     Ok(result_df)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Roc100Params {
+    pub timeperiod: usize,
+}
+
 /// ROCR100 - Rate of change ratio 100 scale
 ///
 /// ROCR multiplicado por 100 para dar una escala más legible.
@@ -1678,6 +1821,11 @@ pub async fn rocr100(
     let mut result_df = df;
     result_df.with_column(Series::new(output_col.into(), rocr100_vals).into())?;
     Ok(result_df)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RsiParams {
+    pub timeperiod: usize,
 }
 
 /// RSI - Relative Strength Index
@@ -1770,6 +1918,15 @@ pub async fn rsi(
     let mut result_df = df;
     result_df.with_column(Series::new(output_col.into(), rsi_vals).into())?;
     Ok(result_df)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StochParams {
+    pub fastk_period: usize,
+    pub slowk_period: usize,
+    pub slowk_matype: usize,
+    pub slowd_period: usize,
+    pub slowd_matype: usize,
 }
 
 /// STOCH - Stochastic
@@ -1881,6 +2038,13 @@ pub async fn stoch(
     Ok(result_df)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StochfParams {
+    pub fastk_period: usize,
+    pub fastd_period: usize,
+    pub fastd_matype: usize,
+}
+
 /// STOCHF - Stochastic Fast
 ///
 /// Versión rápida del Stochastic que no suaviza %K.
@@ -1978,6 +2142,14 @@ pub async fn stochf(
     result_df.with_column(fastd_series.into())?;
 
     Ok(result_df)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StochRsiParams {
+    pub timeperiod: usize,
+    pub fastk_period: usize,
+    pub fastd_period: usize,
+    pub fastd_matype: usize,
 }
 
 /// STOCHRSI - Stochastic Relative Strength Index
@@ -2078,6 +2250,11 @@ pub async fn stochrsi(
     Ok(result_df)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TrixParams {
+    pub timeperiod: usize,
+}
+
 /// TRIX - Triple EMA Rate of Change
 ///
 /// Oscilador de momento que muestra el ritmo de cambio de una triple EMA.
@@ -2127,6 +2304,13 @@ pub async fn trix(
     let mut result_df = df;
     result_df.with_column(Series::new(output_col.into(), trix_vals).into())?;
     Ok(result_df)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UltoscParams {
+    pub timeperiod1: usize,
+    pub timeperiod2: usize,
+    pub timeperiod3: usize,
 }
 
 /// ULTOSC - Ultimate Oscillator
@@ -2243,6 +2427,11 @@ pub async fn ultosc(
     let mut result_df = df;
     result_df.with_column(ultosc_series.into())?;
     Ok(result_df)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct WillrParams {
+    pub timeperiod: usize,
 }
 
 /// WILLR - Williams' %R
@@ -2504,7 +2693,7 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn test_macdfix() {
         match load_data().await {
-            Ok(df) => match macdfix(df, None).await {
+            Ok(df) => match macdfix(df, None, None, None, None).await {
                 Ok(result) => {
                     save_data(&result, "download/test_macdfix.csv")
                         .await
