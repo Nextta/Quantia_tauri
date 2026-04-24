@@ -61,7 +61,7 @@ fn get_open(df: &DataFrame) -> PolarsResult<Series> {
 /// ```rust
 /// let df_with_avg = avgprice(df, None).await?;
 /// ```
-pub async fn avgprice(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub async fn avgprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("avgprice");
 
     let open = get_open(&df)?;
@@ -69,28 +69,16 @@ pub async fn avgprice(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
     let low = get_low(&df)?;
     let close = get_close(&df)?;
 
-    let open_ca: ChunkedArray<Float64Type> = open.f64().unwrap().clone();
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
+    let sum1 = (&open + &high)?;
+    let sum2 = (&sum1 + &low)?;
+    let sum3 = (&sum2 + &close)?;
+    let avgprice_series = sum3 / 4.0;
 
-    let open_vals: Vec<f64> = open_ca.into_no_null_iter().collect();
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
+    let mut avgprice_series = avgprice_series;
+    avgprice_series.rename(output_col.into());
 
-    let avgprice_vals: Vec<f64> = open_vals
-        .iter()
-        .zip(&high_vals)
-        .zip(&low_vals)
-        .zip(&close_vals)
-        .map(|(((o, h), l), c)| (o + h + l + c) / 4.0)
-        .collect();
-
-    let avgprice_series = Series::new(output_col.into(), &avgprice_vals);
-    let mut result_df = df;
-    result_df.with_column(avgprice_series.into())?;
-    Ok(result_df)
+    df.with_column(avgprice_series.into())?;
+    Ok(df)
 }
 
 // ============================================================================
@@ -119,28 +107,20 @@ pub async fn avgprice(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
 /// ```rust
 /// let df_with_med = medprice(df, None).await?;
 /// ```
-pub async fn medprice(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub async fn medprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("medprice");
 
     let high = get_high(&df)?;
     let low = get_low(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
+    let sum = (&high + &low)?;
+    let medprice_series = sum / 2.0;
 
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
+    let mut medprice_series = medprice_series;
+    medprice_series.rename(output_col.into());
 
-    let medprice_vals: Vec<f64> = high_vals
-        .iter()
-        .zip(&low_vals)
-        .map(|(h, l)| (h + l) / 2.0)
-        .collect();
-
-    let medprice_series = Series::new(output_col.into(), &medprice_vals);
-    let mut result_df = df;
-    result_df.with_column(medprice_series.into())?;
-    Ok(result_df)
+    df.with_column(medprice_series.into())?;
+    Ok(df)
 }
 
 // ============================================================================
@@ -169,32 +149,22 @@ pub async fn medprice(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
 /// ```rust
 /// let df_with_typ = typprice(df, None).await?;
 /// ```
-pub async fn typprice(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub async fn typprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("typprice");
 
     let high = get_high(&df)?;
     let low = get_low(&df)?;
     let close = get_close(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
+    let sum1 = (&high + &low)?;
+    let sum2 = (&sum1 + &close)?;
+    let typprice_series = sum2 / 3.0;
 
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
+    let mut typprice_series = typprice_series;
+    typprice_series.rename(output_col.into());
 
-    let typprice_vals: Vec<f64> = high_vals
-        .iter()
-        .zip(&low_vals)
-        .zip(&close_vals)
-        .map(|((h, l), c)| (h + l + c) / 3.0)
-        .collect();
-
-    let typprice_series = Series::new(output_col.into(), &typprice_vals);
-    let mut result_df = df;
-    result_df.with_column(typprice_series.into())?;
-    Ok(result_df)
+    df.with_column(typprice_series.into())?;
+    Ok(df)
 }
 
 // ============================================================================
@@ -224,32 +194,23 @@ pub async fn typprice(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
 /// ```rust
 /// let df_with_wcl = wclprice(df, None).await?;
 /// ```
-pub async fn wclprice(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub async fn wclprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("wclprice");
 
     let high = get_high(&df)?;
     let low = get_low(&df)?;
     let close = get_close(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
+    let close_weighted = &close * 2.0;
+    let sum1 = (&high + &low)?;
+    let sum2 = (&sum1 + &close_weighted)?;
+    let wclprice_series = sum2 / 4.0;
 
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
+    let mut wclprice_series = wclprice_series;
+    wclprice_series.rename(output_col.into());
 
-    let wclprice_vals: Vec<f64> = high_vals
-        .iter()
-        .zip(&low_vals)
-        .zip(&close_vals)
-        .map(|((h, l), c)| (h + l + 2.0 * c) / 4.0)
-        .collect();
-
-    let wclprice_series = Series::new(output_col.into(), &wclprice_vals);
-    let mut result_df = df;
-    result_df.with_column(wclprice_series.into())?;
-    Ok(result_df)
+    df.with_column(wclprice_series.into())?;
+    Ok(df)
 }
 
 #[cfg(test)]
