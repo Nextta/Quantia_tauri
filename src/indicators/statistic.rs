@@ -21,7 +21,8 @@ use polars::prelude::*;
 /// * `output_col` - Nombre de la columna de salida (por defecto: "beta")
 ///
 /// # Fórmula
-/// β = Cov(A, B) / Var(A) = Σ(Ai - Ā)(Bi - B̄) / Σ(Ai - Ā)²
+/// β = Cov(Ri, Rm) / Var(Rm)
+/// donde Ri son los retornos del activo y Rm los retornos del mercado.
 pub async fn beta(
     df: DataFrame,
     col_real0: &str,
@@ -30,37 +31,74 @@ pub async fn beta(
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("beta");
+
+    // Obtenemos los precios
     let series_a = df.column(col_real0)?.f64()?;
     let series_b = df.column(col_real1)?.f64()?;
 
     let len = series_a.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
-    for i in timeperiod..=len {
-        let start = i - timeperiod;
-        let window_a: Vec<f64> = (start..i).filter_map(|j| series_a.get(j)).collect();
-        let window_b: Vec<f64> = (start..i).filter_map(|j| series_b.get(j)).collect();
+    // Necesitamos al menos timeperiod + 1 datos para calcular retornos y luego la ventana
+    if len <= timeperiod {
+        let mut result_df = df;
+        result_df.with_column(Series::new(output_name.into(), result).into())?;
+        return Ok(result_df);
+    }
 
-        if window_a.len() == timeperiod && window_b.len() == timeperiod {
-            let mean_a = window_a.iter().sum::<f64>() / timeperiod as f64;
-            let mean_b = window_b.iter().sum::<f64>() / timeperiod as f64;
+    // Calculamos los retornos: r_t = (p_t / p_{t-1}) - 1
+    let mut returns_a: Vec<f64> = Vec::with_capacity(len - 1);
+    let mut returns_b: Vec<f64> = Vec::with_capacity(len - 1);
 
-            let cov_ab: f64 = window_a
-                .iter()
-                .zip(window_b.iter())
-                .map(|(a, b)| (a - mean_a) * (b - mean_b))
-                .sum();
-            let var_a: f64 = window_a.iter().map(|a| (a - mean_a).powi(2)).sum();
+    for i in 1..len {
+        let a_t = series_a.get(i);
+        let a_t1 = series_a.get(i - 1);
+        let b_t = series_b.get(i);
+        let b_t1 = series_b.get(i - 1);
 
-            if var_a != 0.0 {
-                result[i - 1] = Some(cov_ab / var_a);
+        if let (Some(at), Some(at1), Some(bt), Some(bt1)) = (a_t, a_t1, b_t, b_t1) {
+            if at1 != 0.0 && bt1 != 0.0 {
+                returns_a.push((at / at1) - 1.0);
+                returns_b.push((bt / bt1) - 1.0);
+            } else {
+                returns_a.push(0.0);
+                returns_b.push(0.0);
             }
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
-        .collect()
+    // El cálculo de Beta sobre los retornos
+    // i empieza en timeperiod porque necesitamos 'timeperiod' retornos.
+    // Como los retornos están desplazados 1 índice respecto a los precios originales,
+    // el retorno en el índice j corresponde al precio en el índice j+1.
+    for i in timeperiod..=returns_a.len() {
+        let start = i - timeperiod;
+        let window_a = &returns_a[start..i];
+        let window_b = &returns_b[start..i];
+
+        let mean_a = window_a.iter().sum::<f64>() / timeperiod as f64;
+        let mean_b = window_b.iter().sum::<f64>() / timeperiod as f64;
+
+        let mut cov_ab = 0.0;
+        let mut var_b = 0.0;
+
+        for j in 0..timeperiod {
+            let diff_a = window_a[j] - mean_a;
+            let diff_b = window_b[j] - mean_b;
+            cov_ab += diff_a * diff_b;
+            var_b += diff_b.powi(2);
+        }
+
+        if var_b != 0.0 {
+            // El resultado se asigna al índice i en el array original de precios
+            // (que es el final de la ventana de retornos que termina en el precio i)
+            result[i] = Some(cov_ab / var_b);
+        }
+    }
+
+    let mut result_df = df;
+    result_df.with_column(Series::new(output_name.into(), result).into())?;
+    Ok(result_df)
 }
 
 /// Calcula el coeficiente de correlación de Pearson entre dos series con ventana deslizante.
@@ -88,22 +126,43 @@ pub async fn correl(
     let len = series_a.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
+    if len < timeperiod {
+        let mut result_df = df;
+        result_df.with_column(Series::new(output_name.into(), result).into())?;
+        return Ok(result_df);
+    }
+
     for i in timeperiod..=len {
         let start = i - timeperiod;
-        let window_a: Vec<f64> = (start..i).filter_map(|j| series_a.get(j)).collect();
-        let window_b: Vec<f64> = (start..i).filter_map(|j| series_b.get(j)).collect();
+        let mut window_a = Vec::with_capacity(timeperiod);
+        let mut window_b = Vec::with_capacity(timeperiod);
+
+        for j in start..i {
+            if let (Some(a), Some(b)) = (series_a.get(j), series_b.get(j)) {
+                if !a.is_nan() && !b.is_nan() {
+                    window_a.push(a);
+                    window_b.push(b);
+                }
+            }
+        }
 
         if window_a.len() == timeperiod && window_b.len() == timeperiod {
-            let mean_a = window_a.iter().sum::<f64>() / timeperiod as f64;
-            let mean_b = window_b.iter().sum::<f64>() / timeperiod as f64;
+            let sum_a: f64 = window_a.iter().sum();
+            let sum_b: f64 = window_b.iter().sum();
+            let mean_a = sum_a / timeperiod as f64;
+            let mean_b = sum_b / timeperiod as f64;
 
-            let cov_ab: f64 = window_a
-                .iter()
-                .zip(window_b.iter())
-                .map(|(a, b)| (a - mean_a) * (b - mean_b))
-                .sum();
-            let var_a: f64 = window_a.iter().map(|a| (a - mean_a).powi(2)).sum();
-            let var_b: f64 = window_b.iter().map(|b| (b - mean_b).powi(2)).sum();
+            let mut cov_ab = 0.0;
+            let mut var_a = 0.0;
+            let mut var_b = 0.0;
+
+            for j in 0..timeperiod {
+                let diff_a = window_a[j] - mean_a;
+                let diff_b = window_b[j] - mean_b;
+                cov_ab += diff_a * diff_b;
+                var_a += diff_a.powi(2);
+                var_b += diff_b.powi(2);
+            }
 
             let denom = (var_a * var_b).sqrt();
             if denom != 0.0 {
@@ -112,11 +171,10 @@ pub async fn correl(
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
-        .collect()
+    let mut result_df = df;
+    result_df.with_column(Series::new(output_name.into(), result).into())?;
+    Ok(result_df)
 }
-
 /// Calcula la regresión lineal con ventana deslizante.
 ///
 /// # Parámetros
@@ -139,41 +197,41 @@ pub async fn linearreg(
     let len = series.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
+    if len < timeperiod {
+        let mut result_df = df;
+        result_df.with_column(Series::new(output_name.into(), result).into())?;
+        return Ok(result_df);
+    }
+
     let sum_t: f64 = (0..timeperiod).map(|t| t as f64).sum();
     let sum_t2: f64 = (0..timeperiod).map(|t| (t as f64).powi(2)).sum();
     let denom = timeperiod as f64 * sum_t2 - sum_t * sum_t;
 
     for i in timeperiod..=len {
         let start = i - timeperiod;
-        let window: Vec<f64> = (start..i).filter_map(|j| series.get(j)).collect();
+        let window = series.slice(start as i64, timeperiod);
 
-        if window.len() == timeperiod && denom != 0.0 {
-            let sum_y: f64 = window.iter().sum();
-            let sum_ty: f64 = window.iter().enumerate().map(|(t, y)| t as f64 * y).sum();
+        if window.null_count() == 0 && denom != 0.0 {
+            let sum_y: f64 = window.sum().unwrap();
+            let sum_ty: f64 = window
+                .into_no_null_iter()
+                .enumerate()
+                .map(|(t, y)| t as f64 * y)
+                .sum();
 
             let m = (timeperiod as f64 * sum_ty - sum_t * sum_y) / denom;
             let c = (sum_y - m * sum_t) / timeperiod as f64;
 
-            // Valor en el último punto (t = timeperiod - 1)
             result[i - 1] = Some(m * (timeperiod as f64 - 1.0) + c);
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
-        .collect()
+    let mut result_df = df;
+    result_df.with_column(Series::new(output_name.into(), result).into())?;
+    Ok(result_df)
 }
 
 /// Calcula el ángulo de la regresión lineal con ventana deslizante.
-///
-/// # Parámetros
-/// * `df` - DataFrame que contiene la columna de datos
-/// * `col_real` - Nombre de la columna de entrada
-/// * `timeperiod` - Período de la ventana deslizante
-/// * `output_col` - Nombre de la columna de salida (por defecto: "linearreg_angle")
-///
-/// # Fórmula
-/// Ángulo = arctan(m) * (180 / π) en grados
 pub async fn linearreg_angle(
     df: DataFrame,
     col_real: &str,
@@ -186,39 +244,39 @@ pub async fn linearreg_angle(
     let len = series.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
+    if len < timeperiod {
+        let mut result_df = df;
+        result_df.with_column(Series::new(output_name.into(), result).into())?;
+        return Ok(result_df);
+    }
+
     let sum_t: f64 = (0..timeperiod).map(|t| t as f64).sum();
     let sum_t2: f64 = (0..timeperiod).map(|t| (t as f64).powi(2)).sum();
     let denom = timeperiod as f64 * sum_t2 - sum_t * sum_t;
 
     for i in timeperiod..=len {
         let start = i - timeperiod;
-        let window: Vec<f64> = (start..i).filter_map(|j| series.get(j)).collect();
+        let window = series.slice(start as i64, timeperiod);
 
-        if window.len() == timeperiod && denom != 0.0 {
-            let sum_y: f64 = window.iter().sum();
-            let sum_ty: f64 = window.iter().enumerate().map(|(t, y)| t as f64 * y).sum();
+        if window.null_count() == 0 && denom != 0.0 {
+            let sum_y: f64 = window.sum().unwrap();
+            let sum_ty: f64 = window
+                .into_no_null_iter()
+                .enumerate()
+                .map(|(t, y)| t as f64 * y)
+                .sum();
 
             let m = (timeperiod as f64 * sum_ty - sum_t * sum_y) / denom;
-
             result[i - 1] = Some(m.atan() * 180.0 / std::f64::consts::PI);
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
-        .collect()
+    let mut result_df = df;
+    result_df.with_column(Series::new(output_name.into(), result).into())?;
+    Ok(result_df)
 }
 
 /// Calcula la intersección de la regresión lineal con ventana deslizante.
-///
-/// # Parámetros
-/// * `df` - DataFrame que contiene la columna de datos
-/// * `col_real` - Nombre de la columna de entrada
-/// * `timeperiod` - Período de la ventana deslizante
-/// * `output_col` - Nombre de la columna de salida (por defecto: "linearreg_intercept")
-///
-/// # Fórmula
-/// c = Ȳ - m * t̄
 pub async fn linearreg_intercept(
     df: DataFrame,
     col_real: &str,
@@ -231,40 +289,40 @@ pub async fn linearreg_intercept(
     let len = series.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
+    if len < timeperiod {
+        let mut result_df = df;
+        result_df.with_column(Series::new(output_name.into(), result).into())?;
+        return Ok(result_df);
+    }
+
     let sum_t: f64 = (0..timeperiod).map(|t| t as f64).sum();
     let sum_t2: f64 = (0..timeperiod).map(|t| (t as f64).powi(2)).sum();
     let denom = timeperiod as f64 * sum_t2 - sum_t * sum_t;
 
     for i in timeperiod..=len {
         let start = i - timeperiod;
-        let window: Vec<f64> = (start..i).filter_map(|j| series.get(j)).collect();
+        let window = series.slice(start as i64, timeperiod);
 
-        if window.len() == timeperiod && denom != 0.0 {
-            let sum_y: f64 = window.iter().sum();
-            let sum_ty: f64 = window.iter().enumerate().map(|(t, y)| t as f64 * y).sum();
+        if window.null_count() == 0 && denom != 0.0 {
+            let sum_y: f64 = window.sum().unwrap();
+            let sum_ty: f64 = window
+                .into_no_null_iter()
+                .enumerate()
+                .map(|(t, y)| t as f64 * y)
+                .sum();
 
             let m = (timeperiod as f64 * sum_ty - sum_t * sum_y) / denom;
             let c = (sum_y - m * sum_t) / timeperiod as f64;
-
             result[i - 1] = Some(c);
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
-        .collect()
+    let mut result_df = df;
+    result_df.with_column(Series::new(output_name.into(), result).into())?;
+    Ok(result_df)
 }
 
 /// Calcula la pendiente (slope) de la regresión lineal con ventana deslizante.
-///
-/// # Parámetros
-/// * `df` - DataFrame que contiene la columna de datos
-/// * `col_real` - Nombre de la columna de entrada
-/// * `timeperiod` - Período de la ventana deslizante
-/// * `output_col` - Nombre de la columna de salida (por defecto: "linearreg_slope")
-///
-/// # Fórmula
-/// m = (N * Σ(t * Pt) - Σt * ΣPt) / (N * Σt² - (Σt)²)
 pub async fn linearreg_slope(
     df: DataFrame,
     col_real: &str,
@@ -277,40 +335,39 @@ pub async fn linearreg_slope(
     let len = series.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
+    if len < timeperiod {
+        let mut result_df = df;
+        result_df.with_column(Series::new(output_name.into(), result).into())?;
+        return Ok(result_df);
+    }
+
     let sum_t: f64 = (0..timeperiod).map(|t| t as f64).sum();
     let sum_t2: f64 = (0..timeperiod).map(|t| (t as f64).powi(2)).sum();
     let denom = timeperiod as f64 * sum_t2 - sum_t * sum_t;
 
     for i in timeperiod..=len {
         let start = i - timeperiod;
-        let window: Vec<f64> = (start..i).filter_map(|j| series.get(j)).collect();
+        let window = series.slice(start as i64, timeperiod);
 
-        if window.len() == timeperiod && denom != 0.0 {
-            let sum_y: f64 = window.iter().sum();
-            let sum_ty: f64 = window.iter().enumerate().map(|(t, y)| t as f64 * y).sum();
+        if window.null_count() == 0 && denom != 0.0 {
+            let sum_y: f64 = window.sum().unwrap();
+            let sum_ty: f64 = window
+                .into_no_null_iter()
+                .enumerate()
+                .map(|(t, y)| t as f64 * y)
+                .sum();
 
             let m = (timeperiod as f64 * sum_ty - sum_t * sum_y) / denom;
-
             result[i - 1] = Some(m);
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
-        .collect()
+    let mut result_df = df;
+    result_df.with_column(Series::new(output_name.into(), result).into())?;
+    Ok(result_df)
 }
 
 /// Calcula la desviación estándar con ventana deslizante.
-///
-/// # Parámetros
-/// * `df` - DataFrame que contiene la columna de datos
-/// * `col_real` - Nombre de la columna de entrada
-/// * `timeperiod` - Período de la ventana deslizante
-/// * `nbdev` - Número de desviaciones (por defecto: 1.0)
-/// * `output_col` - Nombre de la columna de salida (por defecto: "stddev")
-///
-/// # Fórmula
-/// stddev = nbdev * sqrt(Σ(Pt - P̄)² / N)
 pub async fn stddev(
     df: DataFrame,
     col_real: &str,
@@ -325,34 +382,34 @@ pub async fn stddev(
     let len = series.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
+    if len < timeperiod {
+        let mut result_df = df;
+        result_df.with_column(Series::new(output_name.into(), result).into())?;
+        return Ok(result_df);
+    }
+
     for i in timeperiod..=len {
         let start = i - timeperiod;
-        let window: Vec<f64> = (start..i).filter_map(|j| series.get(j)).collect();
+        let window = series.slice(start as i64, timeperiod);
 
-        if window.len() == timeperiod {
-            let mean = window.iter().sum::<f64>() / timeperiod as f64;
-            let variance: f64 =
-                window.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / timeperiod as f64;
+        if window.null_count() == 0 {
+            let mean = window.sum().unwrap() / timeperiod as f64;
+            let variance: f64 = window
+                .into_no_null_iter()
+                .map(|v| (v - mean).powi(2))
+                .sum::<f64>()
+                / timeperiod as f64;
 
             result[i - 1] = Some(nbdev * variance.sqrt());
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
-        .collect()
+    let mut result_df = df;
+    result_df.with_column(Series::new(output_name.into(), result).into())?;
+    Ok(result_df)
 }
 
 /// Calcula la previsión de serie temporal (Time Series Forecast) con ventana deslizante.
-///
-/// # Parámetros
-/// * `df` - DataFrame que contiene la columna de datos
-/// * `col_real` - Nombre de la columna de entrada
-/// * `timeperiod` - Período de la ventana deslizante
-/// * `output_col` - Nombre de la columna de salida (por defecto: "tsf")
-///
-/// # Fórmula
-/// TSF = m * N + c (valor extrapolado para el próximo período)
 pub async fn tsf(
     df: DataFrame,
     col_real: &str,
@@ -365,42 +422,42 @@ pub async fn tsf(
     let len = series.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
+    if len < timeperiod {
+        let mut result_df = df;
+        result_df.with_column(Series::new(output_name.into(), result).into())?;
+        return Ok(result_df);
+    }
+
     let sum_t: f64 = (0..timeperiod).map(|t| t as f64).sum();
     let sum_t2: f64 = (0..timeperiod).map(|t| (t as f64).powi(2)).sum();
     let denom = timeperiod as f64 * sum_t2 - sum_t * sum_t;
 
     for i in timeperiod..=len {
         let start = i - timeperiod;
-        let window: Vec<f64> = (start..i).filter_map(|j| series.get(j)).collect();
+        let window = series.slice(start as i64, timeperiod);
 
-        if window.len() == timeperiod && denom != 0.0 {
-            let sum_y: f64 = window.iter().sum();
-            let sum_ty: f64 = window.iter().enumerate().map(|(t, y)| t as f64 * y).sum();
+        if window.null_count() == 0 && denom != 0.0 {
+            let sum_y: f64 = window.sum().unwrap();
+            let sum_ty: f64 = window
+                .into_no_null_iter()
+                .enumerate()
+                .map(|(t, y)| t as f64 * y)
+                .sum();
 
             let m = (timeperiod as f64 * sum_ty - sum_t * sum_y) / denom;
             let c = (sum_y - m * sum_t) / timeperiod as f64;
 
-            // Extrapolación al siguiente período (t = timeperiod)
+            // Previsión para el próximo período (x = timeperiod)
             result[i - 1] = Some(m * timeperiod as f64 + c);
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
-        .collect()
+    let mut result_df = df;
+    result_df.with_column(Series::new(output_name.into(), result).into())?;
+    Ok(result_df)
 }
 
 /// Calcula la varianza con ventana deslizante.
-///
-/// # Parámetros
-/// * `df` - DataFrame que contiene la columna de datos
-/// * `col_real` - Nombre de la columna de entrada
-/// * `timeperiod` - Período de la ventana deslizante
-/// * `nbdev` - Número de desviaciones (por defecto: 1.0)
-/// * `output_col` - Nombre de la columna de salida (por defecto: "var")
-///
-/// # Fórmula
-/// var = nbdev * (Σ(Pt - P̄)² / N)
 pub async fn var(
     df: DataFrame,
     col_real: &str,
@@ -415,30 +472,37 @@ pub async fn var(
     let len = series.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
+    if len < timeperiod {
+        let mut result_df = df;
+        result_df.with_column(Series::new(output_name.into(), result).into())?;
+        return Ok(result_df);
+    }
+
     for i in timeperiod..=len {
         let start = i - timeperiod;
-        let window: Vec<f64> = (start..i).filter_map(|j| series.get(j)).collect();
+        let window = series.slice(start as i64, timeperiod);
 
-        if window.len() == timeperiod {
-            let mean = window.iter().sum::<f64>() / timeperiod as f64;
-            let variance: f64 =
-                window.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / timeperiod as f64;
+        if window.null_count() == 0 {
+            let mean = window.sum().unwrap() / timeperiod as f64;
+            let variance: f64 = window
+                .into_no_null_iter()
+                .map(|v| (v - mean).powi(2))
+                .sum::<f64>()
+                / timeperiod as f64;
 
             result[i - 1] = Some(nbdev * variance);
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result.as_slice())))
-        .collect()
+    let mut result_df = df;
+    result_df.with_column(Series::new(output_name.into(), result).into())?;
+    Ok(result_df)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    //Para los test crear una carpeta llamada download en la raiz de este proyecto
-    // y llamar a los datos test.csv
     async fn load_data() -> PolarsResult<DataFrame> {
         let df = CsvReadOptions::default()
             .try_into_reader_with_file_path(Some("download/test.csv".into()))
@@ -505,6 +569,23 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread")]
+    async fn test_stddev() {
+        match load_data().await {
+            Ok(df) => {
+                match stddev(df, "close", 20, None, None).await {
+                    Ok(result) => {
+                        save_data(&result, "download/test_stddev.csv")
+                            .await
+                            .unwrap();
+                    }
+                    Err(e) => panic!("Failed to calculate stddev: {:?}", e),
+                };
+            }
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        };
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
     async fn test_linearreg_angle() {
         match load_data().await {
             Ok(df) => {
@@ -549,23 +630,6 @@ mod tests {
                             .unwrap();
                     }
                     Err(e) => panic!("Failed to calculate linearreg_slope: {:?}", e),
-                };
-            }
-            Err(e) => panic!("Failed to load data: {:?}", e),
-        };
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_stddev() {
-        match load_data().await {
-            Ok(df) => {
-                match stddev(df, "close", 20, None, None).await {
-                    Ok(result) => {
-                        save_data(&result, "download/test_stddev.csv")
-                            .await
-                            .unwrap();
-                    }
-                    Err(e) => panic!("Failed to calculate stddev: {:?}", e),
                 };
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
