@@ -28,49 +28,88 @@ fn get_close(df: &DataFrame) -> PolarsResult<Series> {
 }
 
 /// Calculate True Range for each bar
-fn calc_true_range(high_vals: &[f64], low_vals: &[f64], close_vals: &[f64]) -> Vec<f64> {
-    let n = high_vals.len();
-    let mut tr_vals = vec![0.0; n];
+fn calc_true_range(high: &Series, low: &Series, close: &Series) -> PolarsResult<Series> {
+    let n = high.len();
+    let high_ca = high.f64()?;
+    let low_ca = low.f64()?;
+    let close_ca = close.f64()?;
+
+    let mut tr_vals = Vec::with_capacity(n);
 
     for i in 0..n {
         if i == 0 {
             // First bar: TR = High - Low
-            tr_vals[i] = high_vals[i] - low_vals[i];
+            let h = high_ca.get(i);
+            let l = low_ca.get(i);
+            if let (Some(hv), Some(lv)) = (h, l) {
+                tr_vals.push(Some(hv - lv));
+            } else {
+                tr_vals.push(None);
+            }
         } else {
             // TR = max(High - Low, |High - PrevClose|, |Low - PrevClose|)
-            let tr1 = high_vals[i] - low_vals[i];
-            let tr2 = (high_vals[i] - close_vals[i - 1]).abs();
-            let tr3 = (low_vals[i] - close_vals[i - 1]).abs();
-            tr_vals[i] = tr1.max(tr2).max(tr3);
+            let h = high_ca.get(i);
+            let l = low_ca.get(i);
+            let pc = close_ca.get(i - 1);
+
+            if let (Some(hv), Some(lv), Some(pcv)) = (h, l, pc) {
+                let tr1 = hv - lv;
+                let tr2 = (hv - pcv).abs();
+                let tr3 = (lv - pcv).abs();
+                tr_vals.push(Some(tr1.max(tr2).max(tr3)));
+            } else {
+                tr_vals.push(None);
+            }
         }
     }
 
-    tr_vals
+    Ok(Series::new("trange".into(), tr_vals))
 }
 
 /// Wilder's RMA (Running Moving Average) for ATR calculation
-fn rma_series(values: &[f64], period: usize) -> Vec<f64> {
-    let n = values.len();
+fn rma_series(values: &Series, period: usize) -> PolarsResult<Series> {
+    let ca = values.f64()?;
+    let n = ca.len();
     let mut rma_values = vec![f64::NAN; n];
 
     if n < period {
-        return rma_values;
+        return Ok(Series::new("rma".into(), &rma_values));
     }
 
     let alpha = 1.0 / period as f64;
+    let vals: Vec<f64> = ca.into_iter().map(|v| v.unwrap_or(f64::NAN)).collect();
 
     // Initialize with SMA
-    let sum: f64 = values[..period].iter().sum();
-    let mut current_rma = sum / period as f64;
-    rma_values[period - 1] = current_rma;
+    let mut sum = 0.0;
+    let mut count = 0;
+    let mut first_valid_idx = None;
 
-    // Continue with Wilder's smoothing
-    for i in period..n {
-        current_rma = values[i] * alpha + current_rma * (1.0 - alpha);
-        rma_values[i] = current_rma;
+    for i in 0..n {
+        if !vals[i].is_nan() {
+            sum += vals[i];
+            count += 1;
+            if count == period {
+                let initial_sma = sum / period as f64;
+                rma_values[i] = initial_sma;
+                first_valid_idx = Some(i);
+                break;
+            }
+        }
     }
 
-    rma_values
+    if let Some(start_idx) = first_valid_idx {
+        let mut current_rma = rma_values[start_idx];
+        for i in (start_idx + 1)..n {
+            if !vals[i].is_nan() {
+                current_rma = vals[i] * alpha + current_rma * (1.0 - alpha);
+                rma_values[i] = current_rma;
+            } else {
+                rma_values[i] = f64::NAN;
+            }
+        }
+    }
+
+    Ok(Series::new("rma".into(), &rma_values))
 }
 
 // ============================================================================
@@ -78,54 +117,18 @@ fn rma_series(values: &[f64], period: usize) -> Vec<f64> {
 // ============================================================================
 
 /// TRANGE - True Range
-///
-/// Mide el rango verdadero de movimiento del precio para cada barra.
-/// El True Range es la máxima diferencia entre:
-/// - El máximo y el mínimo actual
-/// - El máximo y el cierre anterior
-/// - El mínimo y el cierre anterior
-///
-/// Este indicador es la base para calcular el ATR y otras medidas de volatilidad.
-///
-/// # Parámetros
-/// * `df` - DataFrame con columnas: high, low, close (case insensitive)
-/// * `output_col` - Nombre de la columna de salida (default: "trange")
-///
-/// # Retorna
-/// DataFrame con columna "trange" añadida
-///
-/// # Fórmula
-/// TR = max(
-///     high - low,
-///     |high - prev_close|,
-///     |low - prev_close|
-/// )
-///
-/// # Ejemplo
-/// ```rust
-/// let df_with_tr = trange(df, None).await?;
-/// ```
-pub async fn trange(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub async fn trange(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("trange");
 
     let high = get_high(&df)?;
     let low = get_low(&df)?;
     let close = get_close(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
+    let mut tr_series = calc_true_range(&high, &low, &close)?;
+    tr_series.rename(output_col.into());
 
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
-
-    let tr_vals = calc_true_range(&high_vals, &low_vals, &close_vals);
-
-    let tr_series = Series::new(output_col.into(), &tr_vals);
-    let mut result_df = df;
-    result_df.with_column(tr_series.into())?;
-    Ok(result_df)
+    df.with_column(tr_series.into())?;
+    Ok(df)
 }
 
 // ============================================================================
@@ -133,33 +136,8 @@ pub async fn trange(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
 // ============================================================================
 
 /// ATR - Average True Range
-///
-/// Promedio del rango verdadero de movimiento del precio durante un período.
-/// Mide la volatilidad del mercado: valores altos indican alta volatilidad,
-/// valores bajos indican baja volatilidad.
-///
-/// Desarrollado por J. Welles Wilder Jr., utiliza su método de suavizado RMA
-/// (Running Moving Average) que es similar a una EMA pero con diferente factor.
-///
-/// # Parámetros
-/// * `df` - DataFrame con columnas: high, low, close (case insensitive)
-/// * `timeperiod` - Período de cálculo (default: 14)
-/// * `output_col` - Nombre de la columna de salida (default: "atr")
-///
-/// # Retorna
-/// DataFrame con columna "atr" añadida
-///
-/// # Fórmula
-/// TR = max(high - low, |high - prev_close|, |low - prev_close|)
-/// ATR = RMA(TR, timeperiod)
-/// donde RMA es el Running Moving Average de Wilder
-///
-/// # Ejemplo
-/// ```rust
-/// let df_with_atr = atr(df, Some(14), None).await?;
-/// ```
 pub async fn atr(
-    df: DataFrame,
+    mut df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
@@ -170,24 +148,12 @@ pub async fn atr(
     let low = get_low(&df)?;
     let close = get_close(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
+    let tr_series = calc_true_range(&high, &low, &close)?;
+    let mut atr_series = rma_series(&tr_series, timeperiod)?;
+    atr_series.rename(output_col.into());
 
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
-
-    // Calculate True Range
-    let tr_vals = calc_true_range(&high_vals, &low_vals, &close_vals);
-
-    // Calculate ATR using Wilder's RMA
-    let atr_vals = rma_series(&tr_vals, timeperiod);
-
-    let atr_series = Series::new(output_col.into(), &atr_vals);
-    let mut result_df = df;
-    result_df.with_column(atr_series.into())?;
-    Ok(result_df)
+    df.with_column(atr_series.into())?;
+    Ok(df)
 }
 
 // ============================================================================
@@ -195,35 +161,8 @@ pub async fn atr(
 // ============================================================================
 
 /// NATR - Normalized Average True Range
-///
-/// Versión normalizada del ATR que expresa la volatilidad como porcentaje
-/// del precio de cierre. Esto permite comparar la volatilidad entre
-/// diferentes activos independientemente de su precio absoluto.
-///
-/// Útil para:
-/// - Comparar volatilidad entre activos con precios diferentes
-/// - Ajustar stops y posición sizing según volatilidad relativa
-/// - Identificar cambios en el régimen de volatilidad
-///
-/// # Parámetros
-/// * `df` - DataFrame con columnas: high, low, close (case insensitive)
-/// * `timeperiod` - Período de cálculo (default: 14)
-/// * `output_col` - Nombre de la columna de salida (default: "natr")
-///
-/// # Retorna
-/// DataFrame con columna "natr" añadida
-///
-/// # Fórmula
-/// TR = max(high - low, |high - prev_close|, |low - prev_close|)
-/// ATR = RMA(TR, timeperiod)
-/// NATR = (ATR / close) * 100
-///
-/// # Ejemplo
-/// ```rust
-/// let df_with_natr = natr(df, Some(14), None).await?;
-/// ```
 pub async fn natr(
-    df: DataFrame,
+    mut df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
@@ -234,45 +173,22 @@ pub async fn natr(
     let low = get_low(&df)?;
     let close = get_close(&df)?;
 
-    let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
-    let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
-    let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
+    let tr_series = calc_true_range(&high, &low, &close)?;
+    let atr_series = rma_series(&tr_series, timeperiod)?;
 
-    let high_vals: Vec<f64> = high_ca.into_no_null_iter().collect();
-    let low_vals: Vec<f64> = low_ca.into_no_null_iter().collect();
-    let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
+    // (ATR / close) * 100
+    let natr_series = (&atr_series / &close)?;
+    let mut natr_series = &natr_series * 100.0;
+    natr_series.rename(output_col.into());
 
-    // Calculate True Range
-    let tr_vals = calc_true_range(&high_vals, &low_vals, &close_vals);
-
-    // Calculate ATR using Wilder's RMA
-    let atr_vals = rma_series(&tr_vals, timeperiod);
-
-    // Normalize by close price
-    let natr_vals: Vec<f64> = atr_vals
-        .iter()
-        .zip(close_vals.iter())
-        .map(|(&atr, &close)| {
-            if atr.is_nan() || close == 0.0 {
-                f64::NAN
-            } else {
-                (atr / close) * 100.0
-            }
-        })
-        .collect();
-
-    let natr_series = Series::new(output_col.into(), &natr_vals);
-    let mut result_df = df;
-    result_df.with_column(natr_series.into())?;
-    Ok(result_df)
+    df.with_column(natr_series.into())?;
+    Ok(df)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    //Para los test crear una carpeta llamada download en la raiz de este proyecto
-    // y llamar a los datos test.csv
     async fn load_data() -> PolarsResult<DataFrame> {
         let df = CsvReadOptions::default()
             .try_into_reader_with_file_path(Some("download/test.csv".into()))
