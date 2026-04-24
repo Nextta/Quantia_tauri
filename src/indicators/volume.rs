@@ -1,4 +1,5 @@
 use polars::prelude::*;
+use serde::{Deserialize, Serialize};
 
 /// Lista de indicadores:
 /// AD                   Chaikin A/D Line
@@ -142,6 +143,12 @@ pub async fn ad(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
     let ad_series = Series::new(output_col.into(), ad_vals);
     df.with_column(ad_series.into())?;
     Ok(df)
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AdoscParams {
+    pub fastperiod: usize,
+    pub slowperiod: usize,
 }
 
 // ============================================================================

@@ -1,4 +1,5 @@
 use polars::prelude::*;
+use serde::{Deserialize, Serialize};
 
 /// Lista de indicadores:
 /// ATR                  Average True Range
@@ -131,6 +132,11 @@ pub async fn trange(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult
     Ok(df)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AtrParams {
+    pub timeperiod: usize,
+}
+
 // ============================================================================
 // ATR - Average True Range
 // ============================================================================
@@ -154,6 +160,11 @@ pub async fn atr(
 
     df.with_column(atr_series.into())?;
     Ok(df)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NatrParams {
+    pub timeperiod: usize,
 }
 
 // ============================================================================

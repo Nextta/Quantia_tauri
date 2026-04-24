@@ -10,6 +10,10 @@ use crate::indicators::cycle::*;
 use crate::indicators::momentum::*;
 use crate::indicators::overlap::*;
 use crate::indicators::pattern::*;
+use crate::indicators::price::*;
+use crate::indicators::statistic::*;
+use crate::indicators::volatility::*;
+use crate::indicators::volume::*;
 use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_options::{StrategyOptions, TradingDirection};
 use serde::Serialize;
@@ -594,6 +598,150 @@ impl Backtest {
                             .unwrap();
                     willr(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
                 }
+                "AVGPRICE" => avgprice(df, Some(&indicator.nombre)).await?,
+                "MEDPRICE" => medprice(df, Some(&indicator.nombre)).await?,
+                "TYPPRICE" => typprice(df, Some(&indicator.nombre)).await?,
+                "WCLPRICE" => wclprice(df, Some(&indicator.nombre)).await?,
+                "BETA" => {
+                    let params: BetaParams =
+                        serde_json::from_value::<BetaParams>(indicator.parametros.clone()).unwrap();
+                    beta(
+                        df,
+                        &params.col_real0,
+                        &params.col_real1,
+                        Some(params.timeperiod),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "CORREL" => {
+                    let params: CorrelParams =
+                        serde_json::from_value::<CorrelParams>(indicator.parametros.clone())
+                            .unwrap();
+                    correl(
+                        df,
+                        &params.col_real0,
+                        &params.col_real1,
+                        Some(params.timeperiod),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "LINEARREG" => {
+                    let params: LinearRegParams =
+                        serde_json::from_value::<LinearRegParams>(indicator.parametros.clone())
+                            .unwrap();
+                    linearreg(
+                        df,
+                        &params.col_real,
+                        Some(params.timeperiod),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "LINEARREG_ANGLE" => {
+                    let params: LinearRegAngleParams =
+                        serde_json::from_value::<LinearRegAngleParams>(
+                            indicator.parametros.clone(),
+                        )
+                        .unwrap();
+                    linearreg_angle(
+                        df,
+                        &params.col_real,
+                        Some(params.timeperiod),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "LINEARREG_INTERCEPT" => {
+                    let params: LinearRegInterceptParams =
+                        serde_json::from_value::<LinearRegInterceptParams>(
+                            indicator.parametros.clone(),
+                        )
+                        .unwrap();
+                    linearreg_intercept(
+                        df,
+                        &params.col_real,
+                        Some(params.timeperiod),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "LINEARREG_SLOPE" => {
+                    let params: LinearRegSlopeParams =
+                        serde_json::from_value::<LinearRegSlopeParams>(
+                            indicator.parametros.clone(),
+                        )
+                        .unwrap();
+                    linearreg_slope(
+                        df,
+                        &params.col_real,
+                        Some(params.timeperiod),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "STDDEV" => {
+                    let params: StddevParams =
+                        serde_json::from_value::<StddevParams>(indicator.parametros.clone())
+                            .unwrap();
+                    stddev(
+                        df,
+                        &params.col_real,
+                        Some(params.timeperiod),
+                        Some(params.nbdev),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "TSF" => {
+                    let params: TsfParams =
+                        serde_json::from_value::<TsfParams>(indicator.parametros.clone()).unwrap();
+                    tsf(
+                        df,
+                        &params.col_real,
+                        Some(params.timeperiod),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "VAR" => {
+                    let params: VarParams =
+                        serde_json::from_value::<VarParams>(indicator.parametros.clone()).unwrap();
+                    var(
+                        df,
+                        &params.col_real,
+                        Some(params.timeperiod),
+                        Some(params.nbdev),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "TRANGE" => trange(df, Some(&indicator.nombre)).await?,
+                "ATR" => {
+                    let params: AtrParams =
+                        serde_json::from_value::<AtrParams>(indicator.parametros.clone()).unwrap();
+                    atr(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "NATR" => {
+                    let params: NatrParams =
+                        serde_json::from_value::<NatrParams>(indicator.parametros.clone()).unwrap();
+                    natr(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                }
+                "AD" => ad(df, Some(&indicator.nombre)).await?,
+                "ADOSC" => {
+                    let params: AdoscParams =
+                        serde_json::from_value::<AdoscParams>(indicator.parametros.clone())
+                            .unwrap();
+                    adosc(
+                        df,
+                        Some(params.fastperiod),
+                        Some(params.slowperiod),
+                        Some(&indicator.nombre),
+                    )
+                    .await?
+                }
+                "OBV" => obv(df, Some(&indicator.nombre)).await?,
                 _ => df,
             }
         }

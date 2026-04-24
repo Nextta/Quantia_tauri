@@ -12,10 +12,10 @@ Terminadas:
 -Añadir a la api las funciones para strategy_options y crear sus test.
 -Verificar los test y corregir los test fallidos de strategies.
 -Crear indicadores basicos por ahora.
+-Añadir los indicadores a backtest.
 
 
 TODO:
--Añadir los indicadores a backtest.
 -Crear la logica para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
 -Crear plantillas para que genere el código en MQL5.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.

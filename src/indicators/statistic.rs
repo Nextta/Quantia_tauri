@@ -1,4 +1,5 @@
 use polars::prelude::*;
+use serde::{Deserialize, Serialize};
 
 /// Lista de indicadores:
 /// BETA                 Beta
@@ -10,6 +11,13 @@ use polars::prelude::*;
 /// STDDEV               Standard Deviation
 /// TSF                  Time Series Forecast
 /// VAR                  Variance
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BetaParams {
+    pub col_real0: String,
+    pub col_real1: String,
+    pub timeperiod: usize,
+}
 
 /// Calcula el coeficiente Beta entre dos series de datos con ventana deslizante.
 ///
@@ -27,9 +35,10 @@ pub async fn beta(
     df: DataFrame,
     col_real0: &str,
     col_real1: &str,
-    timeperiod: usize,
+    timeperiod: Option<usize>,
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(20);
     let output_name = output_col.unwrap_or("beta");
 
     // Obtenemos los precios
@@ -101,6 +110,13 @@ pub async fn beta(
     Ok(result_df)
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CorrelParams {
+    pub col_real0: String,
+    pub col_real1: String,
+    pub timeperiod: usize,
+}
+
 /// Calcula el coeficiente de correlación de Pearson entre dos series con ventana deslizante.
 ///
 /// # Parámetros
@@ -116,9 +132,10 @@ pub async fn correl(
     df: DataFrame,
     col_real0: &str,
     col_real1: &str,
-    timeperiod: usize,
+    timeperiod: Option<usize>,
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(20);
     let output_name = output_col.unwrap_or("correl");
     let series_a = df.column(col_real0)?.f64()?;
     let series_b = df.column(col_real1)?.f64()?;
@@ -175,6 +192,13 @@ pub async fn correl(
     result_df.with_column(Series::new(output_name.into(), result).into())?;
     Ok(result_df)
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LinearRegParams {
+    pub col_real: String,
+    pub timeperiod: usize,
+}
+
 /// Calcula la regresión lineal con ventana deslizante.
 ///
 /// # Parámetros
@@ -188,9 +212,10 @@ pub async fn correl(
 pub async fn linearreg(
     df: DataFrame,
     col_real: &str,
-    timeperiod: usize,
+    timeperiod: Option<usize>,
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(20);
     let output_name = output_col.unwrap_or("linearreg");
     let series = df.column(col_real)?.f64()?;
 
@@ -231,13 +256,20 @@ pub async fn linearreg(
     Ok(result_df)
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LinearRegAngleParams {
+    pub col_real: String,
+    pub timeperiod: usize,
+}
+
 /// Calcula el ángulo de la regresión lineal con ventana deslizante.
 pub async fn linearreg_angle(
     df: DataFrame,
     col_real: &str,
-    timeperiod: usize,
+    timeperiod: Option<usize>,
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(20);
     let output_name = output_col.unwrap_or("linearreg_angle");
     let series = df.column(col_real)?.f64()?;
 
@@ -276,13 +308,20 @@ pub async fn linearreg_angle(
     Ok(result_df)
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LinearRegInterceptParams {
+    pub col_real: String,
+    pub timeperiod: usize,
+}
+
 /// Calcula la intersección de la regresión lineal con ventana deslizante.
 pub async fn linearreg_intercept(
     df: DataFrame,
     col_real: &str,
-    timeperiod: usize,
+    timeperiod: Option<usize>,
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(20);
     let output_name = output_col.unwrap_or("linearreg_intercept");
     let series = df.column(col_real)?.f64()?;
 
@@ -322,13 +361,20 @@ pub async fn linearreg_intercept(
     Ok(result_df)
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LinearRegSlopeParams {
+    pub col_real: String,
+    pub timeperiod: usize,
+}
+
 /// Calcula la pendiente (slope) de la regresión lineal con ventana deslizante.
 pub async fn linearreg_slope(
     df: DataFrame,
     col_real: &str,
-    timeperiod: usize,
+    timeperiod: Option<usize>,
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(20);
     let output_name = output_col.unwrap_or("linearreg_slope");
     let series = df.column(col_real)?.f64()?;
 
@@ -367,14 +413,22 @@ pub async fn linearreg_slope(
     Ok(result_df)
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct StddevParams {
+    pub col_real: String,
+    pub timeperiod: usize,
+    pub nbdev: f64,
+}
+
 /// Calcula la desviación estándar con ventana deslizante.
 pub async fn stddev(
     df: DataFrame,
     col_real: &str,
-    timeperiod: usize,
+    timeperiod: Option<usize>,
     nbdev: Option<f64>,
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(1);
     let output_name = output_col.unwrap_or("stddev");
     let nbdev = nbdev.unwrap_or(1.0);
     let series = df.column(col_real)?.f64()?;
@@ -409,13 +463,20 @@ pub async fn stddev(
     Ok(result_df)
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TsfParams {
+    pub col_real: String,
+    pub timeperiod: usize,
+}
+
 /// Calcula la previsión de serie temporal (Time Series Forecast) con ventana deslizante.
 pub async fn tsf(
     df: DataFrame,
     col_real: &str,
-    timeperiod: usize,
+    timeperiod: Option<usize>,
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(20);
     let output_name = output_col.unwrap_or("tsf");
     let series = df.column(col_real)?.f64()?;
 
@@ -457,14 +518,22 @@ pub async fn tsf(
     Ok(result_df)
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct VarParams {
+    pub col_real: String,
+    pub timeperiod: usize,
+    pub nbdev: f64,
+}
+
 /// Calcula la varianza con ventana deslizante.
 pub async fn var(
     df: DataFrame,
     col_real: &str,
-    timeperiod: usize,
+    timeperiod: Option<usize>,
     nbdev: Option<f64>,
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
+    let timeperiod = timeperiod.unwrap_or(20);
     let output_name = output_col.unwrap_or("var");
     let nbdev = nbdev.unwrap_or(1.0);
     let series = df.column(col_real)?.f64()?;
@@ -523,7 +592,7 @@ mod tests {
     async fn test_beta() {
         match load_data().await {
             Ok(df) => {
-                match beta(df, "close", "open", 20, Some("beta")).await {
+                match beta(df, "close", "open", None, Some("beta")).await {
                     Ok(result) => {
                         save_data(&result, "download/test_beta.csv").await.unwrap();
                     }
@@ -538,7 +607,7 @@ mod tests {
     async fn test_correl() {
         match load_data().await {
             Ok(df) => {
-                match correl(df, "close", "open", 20, None).await {
+                match correl(df, "close", "open", None, None).await {
                     Ok(result) => {
                         save_data(&result, "download/test_correl.csv")
                             .await
@@ -555,7 +624,7 @@ mod tests {
     async fn test_linearreg() {
         match load_data().await {
             Ok(df) => {
-                match linearreg(df, "close", 20, None).await {
+                match linearreg(df, "close", None, None).await {
                     Ok(result) => {
                         save_data(&result, "download/test_linearreg.csv")
                             .await
@@ -572,7 +641,7 @@ mod tests {
     async fn test_stddev() {
         match load_data().await {
             Ok(df) => {
-                match stddev(df, "close", 20, None, None).await {
+                match stddev(df, "close", None, None, None).await {
                     Ok(result) => {
                         save_data(&result, "download/test_stddev.csv")
                             .await
@@ -589,7 +658,7 @@ mod tests {
     async fn test_linearreg_angle() {
         match load_data().await {
             Ok(df) => {
-                match linearreg_angle(df, "close", 20, None).await {
+                match linearreg_angle(df, "close", None, None).await {
                     Ok(result) => {
                         save_data(&result, "download/test_linearreg_angle.csv")
                             .await
@@ -606,7 +675,7 @@ mod tests {
     async fn test_linearreg_intercept() {
         match load_data().await {
             Ok(df) => {
-                match linearreg_intercept(df, "close", 20, None).await {
+                match linearreg_intercept(df, "close", None, None).await {
                     Ok(result) => {
                         save_data(&result, "download/test_linearreg_intercept.csv")
                             .await
@@ -623,7 +692,7 @@ mod tests {
     async fn test_linearreg_slope() {
         match load_data().await {
             Ok(df) => {
-                match linearreg_slope(df, "close", 20, None).await {
+                match linearreg_slope(df, "close", None, None).await {
                     Ok(result) => {
                         save_data(&result, "download/test_linearreg_slope.csv")
                             .await
@@ -640,7 +709,7 @@ mod tests {
     async fn test_tsf() {
         match load_data().await {
             Ok(df) => {
-                match tsf(df, "close", 20, None).await {
+                match tsf(df, "close", None, None).await {
                     Ok(result) => {
                         save_data(&result, "download/test_tsf.csv").await.unwrap();
                     }
@@ -655,7 +724,7 @@ mod tests {
     async fn test_var() {
         match load_data().await {
             Ok(df) => {
-                match var(df, "close", 20, None, None).await {
+                match var(df, "close", None, None, None).await {
                     Ok(result) => {
                         save_data(&result, "download/test_var.csv").await.unwrap();
                     }
