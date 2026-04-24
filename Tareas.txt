@@ -11,12 +11,11 @@ Terminadas:
 -Repasar todos los test  de api y mejorarlos antes de continuar con todas las demas tareas.
 -Añadir a la api las funciones para strategy_options y crear sus test.
 -Verificar los test y corregir los test fallidos de strategies.
+-Crear indicadores basicos por ahora.
 
 
 TODO:
--Crear indicadores basicos por ahora:
-    Promt para verificar los indicadores: Quiero que busque en internet como se calcula el indicador de trading X y compruebes la función que yo tengo programada para que verifiques que mi función hace bien los calculos de ese indicador. En caso de que no lo este calculando bien, corrige los calculos de mi función para que calcule bien el indicador. Mi funcion es X.
-
+-Añadir los indicadores a backtest.
 -Crear la logica para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
 -Crear plantillas para que genere el código en MQL5.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.
