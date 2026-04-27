@@ -5,6 +5,7 @@ use crate::api::strategies::{
 };
 use crate::api::trades::insert_trades;
 use crate::backtest::datos::Datos;
+use crate::backtest::symbol::SymbolInfoCFD;
 use crate::backtest::trade::Trade;
 use crate::indicators::cycle::*;
 use crate::indicators::momentum::*;
@@ -16,30 +17,86 @@ use crate::indicators::volatility::*;
 use crate::indicators::volume::*;
 use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_options::{StrategyOptions, TradingDirection};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 // use polars::datatypes::DataType;
 use polars::prelude::*;
-// use std::collections::HashMap;
+use std::collections::HashMap;
 use std::time::Instant;
 
 #[derive(Debug, Clone)]
 pub enum GestionStrategy {
     Formula,
+    Fijo,
+    Kelly,
+    PocertajeEquity,
+    PorcentajeBalance,
 }
 
 impl ToString for GestionStrategy {
     fn to_string(&self) -> String {
         match self {
             GestionStrategy::Formula => "Formula".to_string(),
+            GestionStrategy::Fijo => "Fijo".to_string(),
+            GestionStrategy::Kelly => "Kelly".to_string(),
+            GestionStrategy::PocertajeEquity => "PocertajeEquity".to_string(),
+            GestionStrategy::PorcentajeBalance => "PorcentajeBalance".to_string(),
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+enum BeTipo {
+    Tick,
+    Pip,
+    Punto,
+    Porcentaje,
+    PrecioEntrada,
+    Precio,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct BeParams {
+    tipo: BeTipo,
+    valor: f64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+enum TlTipo {
+    Tick,
+    Pip,
+    Punto,
+    Porcentaje,
+    Indicador,
+    Velas,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+enum ItTipo {
+    Open,
+    Close,
+    High,
+    Low,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct TlParams {
+    tipo: TlTipo,
+    valor: f64,
+    activacion_tipo: TlTipo,
+    activacion_valor: f64,
+    indicador_nombre: String,
+    columna_nombre: String,
+    indicador_tipo: ItTipo,
 }
 
 #[derive(Serialize, Debug)]
 pub struct GestionFormula {
     pub multiplicador: f64,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct GestionParams {}
 
 #[derive(Debug, Clone)]
 pub struct Backtest {
@@ -749,28 +806,181 @@ impl Backtest {
         Ok(df)
     }
 
-    async fn backtest(&mut self, df: DataFrame) -> Result<String, Box<dyn std::error::Error>> {
-        // Foma de optener un dato: df.column(&columna)?.get(row_idx)?;
-        for i in 0..df.height() {}
-        Ok("Backtest ejecutado correctamente".to_string())
-    }
-
-    async fn backtest_long(&mut self, df: DataFrame) -> Result<String, Box<dyn std::error::Error>> {
-        // Foma de optener un dato: df.column(&columna)?.get(row_idx)?;
-        for i in 0..df.height() {}
-        Ok("Backtest ejecutado correctamente".to_string())
-    }
-
-    async fn backtest_short(
+    async fn backtest(
         &mut self,
         df: DataFrame,
+        symbol: SymbolInfoCFD,
     ) -> Result<String, Box<dyn std::error::Error>> {
-        // Foma de optener un dato: df.column(&columna)?.get(row_idx)?;
-        for i in 0..df.height() {}
+        let mut openTrades: Vec<Trade> = Vec::new();
+        let mut entry_options = true;
+        // Forma de optener un dato: df.column(&columna)?.get(row_idx)?;
+        for i in 0..df.height() {
+            // Optenemos las acciones de entrada.
+
+            for accion in self
+                .estrategia
+                .acciones
+                .iter()
+                .filter(|acc| acc.tipo_signal == "Entry")
+            {
+                match accion.tipo.as_str() {
+                    "buy" => {
+                        if self.estrategia.opciones.trading_direccion == TradingDirection::Long
+                            || self.estrategia.opciones.trading_direccion == TradingDirection::Both
+                        {
+                            if !self.estrategia.opciones.multiples_tardes && !openTrades.is_empty()
+                            {
+                                entry_options = false;
+                            } else {
+                                entry_options = true;
+                            }
+
+                            if entry_options {
+                                let mut condiciones_map: HashMap<String, bool> = HashMap::new();
+                                self.estrategia
+                                    .condiciones
+                                    .iter()
+                                    .filter(|condicion| condicion.action_id == accion.id)
+                                    .for_each(|condicion| {
+                                        let campo_a = df
+                                            .column(&condicion.campo_a)
+                                            .unwrap()
+                                            .get(i - condicion.shift_a as usize)
+                                            .unwrap();
+                                        let campo_b = df
+                                            .column(&condicion.campo_b)
+                                            .unwrap()
+                                            .get(i - condicion.shift_b as usize)
+                                            .unwrap();
+                                        let resultado = match condicion.operador.as_str() {
+                                            ">" => campo_a > campo_b,
+                                            "<" => campo_a < campo_b,
+                                            "==" => campo_a == campo_b,
+                                            _ => false,
+                                        };
+
+                                        condiciones_map.insert(condicion.logica.clone(), resultado);
+                                    });
+
+                                let mut all_true = true;
+                                let mut key_anterior = "none".to_string();
+                                let mut resultado_anterior = true;
+                                for (key, resultado) in condiciones_map.iter() {
+                                    if key_anterior == "none".to_string() {
+                                        key_anterior = key.clone();
+                                        resultado_anterior = *resultado;
+                                    } else {
+                                        match key.as_str() {
+                                            "AND" => all_true = resultado_anterior == *resultado,
+                                            "OR" => {
+                                                all_true = resultado_anterior != *resultado
+                                                    || resultado_anterior == *resultado
+                                            }
+                                            _ => all_true = false,
+                                        }
+
+                                        if !all_true {
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if all_true {
+                                    let trade: Trade = Trade::new(self.id, symbol.clone()).await;
+                                    let precio_entrada =
+                                        df.column("Open").unwrap().get(i + 1).unwrap();
+
+                                    let t0 = df.column("TimeStamp").unwrap().get(i + 1).unwrap();
+
+                                    trade.buy(
+                                        match self.gestion_strategy {
+                                            GestionStrategy::Fijo => 0.0,
+                                            GestionStrategy::Formula => 0.0,
+                                            GestionStrategy::Kelly => 0.0,
+                                            GestionStrategy::PocertajeEquity => 0.0,
+                                            GestionStrategy::PorcentajeBalance => 0.0,
+                                            _ => 0.0,
+                                        },
+                                        1.0,
+                                        t0,
+                                        precio_entrada,
+                                        tp,
+                                        sl,
+                                        backtest,
+                                    );
+
+                                    openTrades.push(trade);
+                                }
+                            }
+                        }
+                    }
+                    "sell" => {
+                        if self.estrategia.opciones.trading_direccion == TradingDirection::Short
+                            || self.estrategia.opciones.trading_direccion == TradingDirection::Both
+                        {
+                        }
+                    }
+                    _ => {}
+                };
+            }
+
+            if !openTrades.is_empty() {
+                self.estrategia
+                    .acciones
+                    .iter()
+                    .filter(|acc| acc.tipo_signal == "Exit")
+                    .for_each(|accion| match accion.tipo.as_str() {
+                        "exit_buy" => {}
+                        "exit_sell" => {}
+                        _ => {}
+                    });
+
+                self.estrategia
+                    .acciones
+                    .iter()
+                    .filter(|acc| acc.tipo_signal == "BE")
+                    .for_each(|accion| {
+                        let parametros: BeParams =
+                            serde_json::from_value(accion.parametros.clone()).unwrap();
+
+                        match parametros.tipo {
+                            BeTipo::Tick => {}
+                            BeTipo::Pip => {}
+                            BeTipo::Punto => {}
+                            BeTipo::Porcentaje => {}
+                            BeTipo::Precio => {}
+                            _ => {}
+                        }
+                    });
+
+                self.estrategia
+                    .acciones
+                    .iter()
+                    .filter(|acc| acc.tipo_signal == "TL")
+                    .for_each(|accion| {
+                        let parametros: TlParams =
+                            serde_json::from_value(accion.parametros.clone()).unwrap();
+
+                        match parametros.activacion_tipo {
+                            TlTipo::Tick => {}
+                            TlTipo::Pip => {}
+                            TlTipo::Punto => {}
+                            TlTipo::Porcentaje => {}
+                            TlTipo::Indicador => {}
+                            TlTipo::Velas => {}
+                            _ => {}
+                        }
+                    });
+            }
+        }
         Ok("Backtest ejecutado correctamente".to_string())
     }
 
-    pub async fn run(&mut self, id_startegy: i32) -> Result<String, Box<dyn std::error::Error>> {
+    pub async fn run(
+        &mut self,
+        id_startegy: i32,
+        symbol: SymbolInfoCFD,
+    ) -> Result<String, Box<dyn std::error::Error>> {
         let inicio = Instant::now();
         self.estrategia = match get_strategies_by_id(id_startegy).await {
             Ok(strategy) => {
@@ -835,18 +1045,8 @@ impl Backtest {
                 }
             };
 
-            //TODO: 2-Verificamos la direccion operativa que la estrategia nos permite operar. Long, Short o Both.
-            match self.estrategia.opciones.trading_direccion {
-                TradingDirection::Long => {
-                    self.backtest_long(df.clone()).await.unwrap();
-                }
-                TradingDirection::Short => {
-                    self.backtest_short(df.clone()).await.unwrap();
-                }
-                _ => {
-                    self.backtest(df.clone()).await.unwrap();
-                }
-            }
+            //TODO: Backtest de la estrategia con los datos del DataFrame.
+            self.backtest(df.clone(), symbol.clone()).await.unwrap();
         }
 
         let duracion = inicio.elapsed();
