@@ -1,6 +1,7 @@
 pub mod api;
 pub mod backtest;
 pub mod estrategias;
+pub mod indicators;
 pub mod strategy;
 pub mod utils;
 

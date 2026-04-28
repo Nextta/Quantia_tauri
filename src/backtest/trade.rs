@@ -1,5 +1,5 @@
 use crate::api::trades::table_trades;
-use crate::backtest::backtest::Backtest;
+use crate::backtest::backtest::{Backtest, GestionParams, GestionStrategy};
 use crate::backtest::dias::Dias;
 use crate::backtest::symbol::SymbolInfoCFD;
 use crate::utils::tools::truncate_decimal;
@@ -72,18 +72,22 @@ impl Trade {
         }
     }
 
-    pub fn set_lotaje(&mut self, lotaje: f64, precio: f64, backtest: &Backtest) {
-        if lotaje <= 0.0 {
-            let m_lote = self.lotaje_quantia(precio, backtest);
+    fn lotaje_formato(&mut self, lotaje: f64) {
+        let mut lote: Decimal = lotaje.to_string().parse().unwrap();
 
-            let mut lote: Decimal = m_lote.to_string().parse().unwrap();
+        lote = truncate_decimal(lote, 2);
 
-            lote = truncate_decimal(lote, 2);
+        let lote_truncado: f64 = lote.to_string().parse().unwrap();
 
-            self.lotaje = lote.to_string().parse().unwrap();
-        } else {
-            self.lotaje = lotaje;
-        };
+        self.lotaje = lote_truncado;
+
+        if self.symbol.lotaje_maximo < self.lotaje {
+            self.lotaje = self.symbol.lotaje_maximo;
+        }
+
+        if self.lotaje < self.symbol.lotaje_minimo {
+            self.lotaje = self.symbol.lotaje_minimo
+        }
     }
 
     /// Funciones
@@ -102,49 +106,59 @@ impl Trade {
 
     pub fn buy(
         &mut self,
-        lotaje: f64,
-        multiplicador: f64,
         t0: String,
         precio_entrada: f64,
-        tp: f64,
-        sl: f64,
+        gestion: GestionStrategy,
+        parametros: GestionParams,
         backtest: &Backtest,
+        tp: Option<f64>,
+        sl: Option<f64>,
     ) {
         self.tipo = "Buy".to_string();
-        self.multiplicador = multiplicador;
         self.t0 = t0;
         self.precio_entrada = precio_entrada + self.random_spread();
-        self.tp = tp;
-        self.sl = sl;
+        self.tp = tp.unwrap_or(0.0);
+        self.sl = sl.unwrap_or(0.0);
 
-        if lotaje <= 0.0 {
-            self.set_lotaje(lotaje, precio_entrada, backtest);
-        } else {
-            self.lotaje = lotaje;
+        match gestion {
+            GestionStrategy::Fijo => self.lotaje = parametros.lotaje_fijo,
+            GestionStrategy::Formula => {
+                self.multiplicador = parametros.multiplicador;
+                self.lotaje_quantia(precio_entrada, backtest);
+            }
+            // GestionStrategy::Kelly => 0.0,
+            // GestionStrategy::PocertajeEquity => 0.0,
+            // GestionStrategy::PorcentajeBalance => 0.0,
+            _ => self.lotaje = 0.01,
         }
     }
 
     pub fn sell(
         &mut self,
-        lotaje: f64,
-        multiplicador: f64,
         t0: String,
         precio_entrada: f64,
-        tp: f64,
-        sl: f64,
+        gestion: GestionStrategy,
+        parametros: GestionParams,
         backtest: &Backtest,
+        tp: Option<f64>,
+        sl: Option<f64>,
     ) {
         self.tipo = "Sell".to_string();
-        self.multiplicador = multiplicador;
         self.t0 = t0;
         self.precio_entrada = precio_entrada;
-        self.tp = tp;
-        self.sl = sl;
+        self.tp = tp.unwrap_or(0.0);
+        self.sl = sl.unwrap_or(0.0);
 
-        if lotaje <= 0.0 {
-            self.set_lotaje(lotaje, precio_entrada, backtest);
-        } else {
-            self.lotaje = lotaje;
+        match gestion {
+            GestionStrategy::Fijo => self.lotaje = parametros.lotaje_fijo,
+            GestionStrategy::Formula => {
+                self.multiplicador = parametros.multiplicador;
+                self.lotaje_quantia(precio_entrada, backtest);
+            }
+            // GestionStrategy::Kelly => 0.0,
+            // GestionStrategy::PocertajeEquity => 0.0,
+            // GestionStrategy::PorcentajeBalance => 0.0,
+            _ => self.lotaje = 0.01,
         }
     }
 
@@ -168,19 +182,11 @@ impl Trade {
     ///    precio (float): El precio de entrada de la operación.
     ///Returns:
     ///    float: El lotaje calculado, ajustado a los límites y redondeado a dos decimales.
-    pub fn lotaje_quantia(&self, precio: f64, backtest: &Backtest) -> f64 {
-        let mut lotaje =
+    pub fn lotaje_quantia(&mut self, precio: f64, backtest: &Backtest) {
+        let lotaje =
             (backtest.balance / (precio * self.symbol.valor_contrato)) * self.multiplicador;
 
-        if self.symbol.lotaje_maximo < lotaje {
-            lotaje = self.symbol.lotaje_maximo;
-        }
-
-        if lotaje < self.symbol.lotaje_minimo {
-            lotaje = self.symbol.lotaje_minimo
-        }
-
-        lotaje
+        self.lotaje_formato(lotaje);
     }
 
     fn calcular_duración(&mut self) {

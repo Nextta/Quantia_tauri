@@ -22,7 +22,7 @@ pub struct StrategyOptions {
     pub hora_cierre_limite: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TradingDirection {
     Long,
     Short,

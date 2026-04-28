@@ -1,4 +1,4 @@
-use crate::backtest::backtest::Backtest;
+use crate::backtest::backtest::{Backtest, GestionParams, GestionStrategy};
 use crate::backtest::datos::Datos;
 use crate::backtest::resultados::Resultados;
 use crate::backtest::symbol::SymbolInfoCFD;
@@ -73,7 +73,14 @@ pub async fn run_backtest(
     symbol: SymbolInfoCFD,
 ) -> PolarsResult<()> {
     // Creamos el backtest
-    let mut backtest: Backtest = Backtest::new(titulo.to_string(), balance, tipo.to_string()).await; // Hacer un Enum para los tipos de activos
+    let mut backtest: Backtest = Backtest::new(
+        titulo.to_string(),
+        balance,
+        tipo.to_string(),
+        GestionStrategy::Formula,
+        serde_json::from_str("{}").unwrap(),
+    )
+    .await; // Hacer un Enum para los tipos de activos
 
     // Añadimos los datos al backtest
     let df: Datos = backtest
@@ -125,13 +132,16 @@ pub async fn run_backtest(
                 state.contador_belas = 0;
 
                 trade.sell(
-                    0.0,
-                    10.0,
                     time_str.clone(),
                     close,
-                    state.tp,
-                    state.sl,
+                    GestionStrategy::Formula,
+                    GestionParams {
+                        multiplicador: 1.0,
+                        lotaje_fijo: 10.0,
+                    },
                     &backtest,
+                    Some(state.tp),
+                    Some(state.sl),
                 );
                 // println!("Operación en Short abierta");
             } else if data.close[i - 1] < data.low[i - 2]
@@ -146,13 +156,16 @@ pub async fn run_backtest(
                 state.contador_belas = 0;
 
                 trade.buy(
-                    0.0,
-                    10.0,
                     time_str.clone(),
                     close,
-                    state.tp,
-                    state.sl,
+                    GestionStrategy::Formula,
+                    GestionParams {
+                        multiplicador: 1.0,
+                        lotaje_fijo: 10.0,
+                    },
                     &backtest,
+                    Some(state.tp),
+                    Some(state.sl),
                 );
                 // println!("Operación en Long abierta");
             }
