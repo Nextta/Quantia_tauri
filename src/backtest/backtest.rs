@@ -816,7 +816,7 @@ impl Backtest {
         df: DataFrame,
         symbol: SymbolInfoCFD,
     ) -> Result<String, Box<dyn std::error::Error>> {
-        let mut openTrades: Vec<Trade> = Vec::new();
+        let mut open_trades: Vec<Trade> = Vec::new();
         let mut entry_options = true;
         // Forma de optener un dato: df.column(&columna)?.get(row_idx)?;
         for i in 0..df.height() {
@@ -833,7 +833,7 @@ impl Backtest {
                         if self.estrategia.opciones.trading_direccion == TradingDirection::Long
                             || self.estrategia.opciones.trading_direccion == TradingDirection::Both
                         {
-                            if !self.estrategia.opciones.multiples_tardes && !openTrades.is_empty()
+                            if !self.estrategia.opciones.multiples_tardes && !open_trades.is_empty()
                             {
                                 entry_options = false;
                             } else {
@@ -922,7 +922,7 @@ impl Backtest {
                                         None,
                                     );
 
-                                    openTrades.push(trade);
+                                    open_trades.push(trade);
                                 }
                             }
                         }
@@ -931,7 +931,7 @@ impl Backtest {
                         if self.estrategia.opciones.trading_direccion == TradingDirection::Short
                             || self.estrategia.opciones.trading_direccion == TradingDirection::Both
                         {
-                            if !self.estrategia.opciones.multiples_tardes && !openTrades.is_empty()
+                            if !self.estrategia.opciones.multiples_tardes && !open_trades.is_empty()
                             {
                                 entry_options = false;
                             } else {
@@ -1020,16 +1020,20 @@ impl Backtest {
                                         None,
                                     );
 
-                                    openTrades.push(trade);
+                                    open_trades.push(trade);
                                 }
                             }
                         }
                     }
+                    "buy_limit" => {}
+                    "sell_limit" => {}
+                    "buy_stop" => {}
+                    "sell_stop" => {}
                     _ => {}
                 };
             }
 
-            if !openTrades.is_empty() {
+            if !open_trades.is_empty() {
                 self.estrategia
                     .acciones
                     .iter()
@@ -1037,6 +1041,10 @@ impl Backtest {
                     .for_each(|accion| match accion.tipo.as_str() {
                         "exit_buy" => {}
                         "exit_sell" => {}
+                        "Tp" => {}
+                        "Sl" => {}
+                        "N_bars" => {}
+                        "Close_all_rule" => {}
                         _ => {}
                     });
 
