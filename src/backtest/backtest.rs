@@ -16,7 +16,10 @@ use crate::indicators::statistic::*;
 use crate::indicators::volatility::*;
 use crate::indicators::volume::*;
 use crate::strategy::strategy::Strategy;
+use crate::strategy::strategy_action::StrategyAction;
+use crate::strategy::strategy_condition::StrategyCondition;
 use crate::strategy::strategy_options::{StrategyOptions, TradingDirection};
+
 use serde::{Deserialize, Serialize};
 // use polars::datatypes::DataType;
 use chrono::DateTime;
@@ -811,15 +814,93 @@ impl Backtest {
         Ok(df)
     }
 
+    async fn test_conditions(&self, df: DataFrame, accion: StrategyAction, i: usize) -> bool {
+        let mut condiciones_map: HashMap<String, bool> = HashMap::new();
+        self.estrategia
+            .condiciones
+            .iter()
+            .filter(|condicion| condicion.action_id == accion.id)
+            .for_each(|condicion| {
+                let campo_a = df
+                    .column(&condicion.campo_a)
+                    .unwrap()
+                    .get(i - condicion.shift_a as usize)
+                    .unwrap();
+                let campo_b = df
+                    .column(&condicion.campo_b)
+                    .unwrap()
+                    .get(i - condicion.shift_b as usize)
+                    .unwrap();
+                let resultado = match condicion.operador.as_str() {
+                    ">" => campo_a > campo_b,
+                    "<" => campo_a < campo_b,
+                    "==" => campo_a == campo_b,
+                    _ => false,
+                };
+
+                condiciones_map.insert(condicion.logica.clone(), resultado);
+            });
+
+        let mut all_true = true;
+        let mut key_anterior = "none".to_string();
+        let mut resultado_anterior = true;
+        for (key, resultado) in condiciones_map.iter() {
+            if key_anterior == "none".to_string() {
+                key_anterior = key.clone();
+                resultado_anterior = *resultado;
+            } else {
+                match key.as_str() {
+                    "AND" => all_true = resultado_anterior == *resultado,
+                    "OR" => {
+                        all_true =
+                            resultado_anterior != *resultado || resultado_anterior == *resultado
+                    }
+                    _ => all_true = false,
+                }
+
+                if !all_true {
+                    break;
+                }
+            }
+        }
+
+        all_true
+    }
+
+    fn entry_options(&self, open_trades: &Vec<Trade>) -> bool {
+        let mut entry_options: bool;
+        if !self.estrategia.opciones.multiples_tardes && !open_trades.is_empty() {
+            entry_options = false;
+        } else {
+            entry_options = true;
+        }
+        entry_options
+    }
+
     async fn backtest(
         &mut self,
         df: DataFrame,
         symbol: SymbolInfoCFD,
     ) -> Result<String, Box<dyn std::error::Error>> {
         let mut open_trades: Vec<Trade> = Vec::new();
-        let mut entry_options = true;
+        let mut entry_options: bool;
+
+        let mut buy_limits: Vec<f64> = Vec::new();
+        let mut sell_limits: Vec<f64> = Vec::new();
+
+        let mut buy_stops: Vec<f64> = Vec::new();
+        let mut sell_stops: Vec<f64> = Vec::new();
+
         // Forma de optener un dato: df.column(&columna)?.get(row_idx)?;
         for i in 0..df.height() {
+            if !buy_limits.is_empty() {}
+
+            if !buy_stops.is_empty() {}
+
+            if !sell_limits.is_empty() {}
+
+            if !sell_stops.is_empty() {}
+
             // Optenemos las acciones de entrada.
 
             for accion in self
@@ -833,97 +914,40 @@ impl Backtest {
                         if self.estrategia.opciones.trading_direccion == TradingDirection::Long
                             || self.estrategia.opciones.trading_direccion == TradingDirection::Both
                         {
-                            if !self.estrategia.opciones.multiples_tardes && !open_trades.is_empty()
+                            if self.entry_options(&open_trades)
+                                && self.test_conditions(df.clone(), accion.clone(), i).await
                             {
-                                entry_options = false;
-                            } else {
-                                entry_options = true;
-                            }
+                                let mut trade: Trade = Trade::new(self.id, symbol.clone()).await;
+                                let precio_entrada: f64 = df
+                                    .column("open")
+                                    .unwrap()
+                                    .get(i + 1)
+                                    .unwrap()
+                                    .try_extract::<f64>()
+                                    .unwrap();
 
-                            if entry_options {
-                                let mut condiciones_map: HashMap<String, bool> = HashMap::new();
-                                self.estrategia
-                                    .condiciones
-                                    .iter()
-                                    .filter(|condicion| condicion.action_id == accion.id)
-                                    .for_each(|condicion| {
-                                        let campo_a = df
-                                            .column(&condicion.campo_a)
-                                            .unwrap()
-                                            .get(i - condicion.shift_a as usize)
-                                            .unwrap();
-                                        let campo_b = df
-                                            .column(&condicion.campo_b)
-                                            .unwrap()
-                                            .get(i - condicion.shift_b as usize)
-                                            .unwrap();
-                                        let resultado = match condicion.operador.as_str() {
-                                            ">" => campo_a > campo_b,
-                                            "<" => campo_a < campo_b,
-                                            "==" => campo_a == campo_b,
-                                            _ => false,
-                                        };
+                                let time_str = df
+                                    .column("timestamp")
+                                    .unwrap()
+                                    .get(i + 1)
+                                    .unwrap()
+                                    .try_extract::<i64>()
+                                    .unwrap();
+                                let naive_time = DateTime::from_timestamp_millis(time_str)
+                                    .expect("timestamp inválido");
+                                let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
-                                        condiciones_map.insert(condicion.logica.clone(), resultado);
-                                    });
+                                trade.buy(
+                                    t0,
+                                    precio_entrada,
+                                    self.gestion_strategy.clone(),
+                                    self.parametros_gestion.clone(),
+                                    &self,
+                                    None,
+                                    None,
+                                );
 
-                                let mut all_true = true;
-                                let mut key_anterior = "none".to_string();
-                                let mut resultado_anterior = true;
-                                for (key, resultado) in condiciones_map.iter() {
-                                    if key_anterior == "none".to_string() {
-                                        key_anterior = key.clone();
-                                        resultado_anterior = *resultado;
-                                    } else {
-                                        match key.as_str() {
-                                            "AND" => all_true = resultado_anterior == *resultado,
-                                            "OR" => {
-                                                all_true = resultado_anterior != *resultado
-                                                    || resultado_anterior == *resultado
-                                            }
-                                            _ => all_true = false,
-                                        }
-
-                                        if !all_true {
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                if all_true {
-                                    let mut trade: Trade =
-                                        Trade::new(self.id, symbol.clone()).await;
-                                    let precio_entrada: f64 = df
-                                        .column("open")
-                                        .unwrap()
-                                        .get(i + 1)
-                                        .unwrap()
-                                        .try_extract::<f64>()
-                                        .unwrap();
-
-                                    let time_str = df
-                                        .column("timestamp")
-                                        .unwrap()
-                                        .get(i + 1)
-                                        .unwrap()
-                                        .try_extract::<i64>()
-                                        .unwrap();
-                                    let naive_time = DateTime::from_timestamp_millis(time_str)
-                                        .expect("timestamp inválido");
-                                    let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
-
-                                    trade.buy(
-                                        t0,
-                                        precio_entrada,
-                                        self.gestion_strategy.clone(),
-                                        self.parametros_gestion.clone(),
-                                        &self,
-                                        None,
-                                        None,
-                                    );
-
-                                    open_trades.push(trade);
-                                }
+                                open_trades.push(trade);
                             }
                         }
                     }
@@ -931,104 +955,87 @@ impl Backtest {
                         if self.estrategia.opciones.trading_direccion == TradingDirection::Short
                             || self.estrategia.opciones.trading_direccion == TradingDirection::Both
                         {
-                            if !self.estrategia.opciones.multiples_tardes && !open_trades.is_empty()
+                            if self.entry_options(&open_trades)
+                                && self.test_conditions(df.clone(), accion.clone(), i).await
                             {
-                                entry_options = false;
-                            } else {
-                                entry_options = true;
-                            }
+                                let mut trade: Trade = Trade::new(self.id, symbol.clone()).await;
+                                let precio_entrada: f64 = df
+                                    .column("open")
+                                    .unwrap()
+                                    .get(i + 1)
+                                    .unwrap()
+                                    .try_extract::<f64>()
+                                    .unwrap();
 
-                            if entry_options {
-                                let mut condiciones_map: HashMap<String, bool> = HashMap::new();
-                                self.estrategia
-                                    .condiciones
-                                    .iter()
-                                    .filter(|condicion| condicion.action_id == accion.id)
-                                    .for_each(|condicion| {
-                                        let campo_a = df
-                                            .column(&condicion.campo_a)
-                                            .unwrap()
-                                            .get(i - condicion.shift_a as usize)
-                                            .unwrap();
-                                        let campo_b = df
-                                            .column(&condicion.campo_b)
-                                            .unwrap()
-                                            .get(i - condicion.shift_b as usize)
-                                            .unwrap();
-                                        let resultado = match condicion.operador.as_str() {
-                                            ">" => campo_a > campo_b,
-                                            "<" => campo_a < campo_b,
-                                            "==" => campo_a == campo_b,
-                                            _ => false,
-                                        };
+                                let time_str = df
+                                    .column("timestamp")
+                                    .unwrap()
+                                    .get(i + 1)
+                                    .unwrap()
+                                    .try_extract::<i64>()
+                                    .unwrap();
+                                let naive_time = DateTime::from_timestamp_millis(time_str)
+                                    .expect("timestamp inválido");
+                                let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
-                                        condiciones_map.insert(condicion.logica.clone(), resultado);
-                                    });
+                                trade.sell(
+                                    t0,
+                                    precio_entrada,
+                                    self.gestion_strategy.clone(),
+                                    self.parametros_gestion.clone(),
+                                    &self,
+                                    None,
+                                    None,
+                                );
 
-                                let mut all_true = true;
-                                let mut key_anterior = "none".to_string();
-                                let mut resultado_anterior = true;
-                                for (key, resultado) in condiciones_map.iter() {
-                                    if key_anterior == "none".to_string() {
-                                        key_anterior = key.clone();
-                                        resultado_anterior = *resultado;
-                                    } else {
-                                        match key.as_str() {
-                                            "AND" => all_true = resultado_anterior == *resultado,
-                                            "OR" => {
-                                                all_true = resultado_anterior != *resultado
-                                                    || resultado_anterior == *resultado
-                                            }
-                                            _ => all_true = false,
-                                        }
-
-                                        if !all_true {
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                if all_true {
-                                    let mut trade: Trade =
-                                        Trade::new(self.id, symbol.clone()).await;
-                                    let precio_entrada: f64 = df
-                                        .column("open")
-                                        .unwrap()
-                                        .get(i + 1)
-                                        .unwrap()
-                                        .try_extract::<f64>()
-                                        .unwrap();
-
-                                    let time_str = df
-                                        .column("timestamp")
-                                        .unwrap()
-                                        .get(i + 1)
-                                        .unwrap()
-                                        .try_extract::<i64>()
-                                        .unwrap();
-                                    let naive_time = DateTime::from_timestamp_millis(time_str)
-                                        .expect("timestamp inválido");
-                                    let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
-
-                                    trade.sell(
-                                        t0,
-                                        precio_entrada,
-                                        self.gestion_strategy.clone(),
-                                        self.parametros_gestion.clone(),
-                                        &self,
-                                        None,
-                                        None,
-                                    );
-
-                                    open_trades.push(trade);
-                                }
+                                open_trades.push(trade);
                             }
                         }
                     }
-                    "buy_limit" => {}
-                    "sell_limit" => {}
-                    "buy_stop" => {}
-                    "sell_stop" => {}
+                    "buy_limit" => {
+                        if self.estrategia.opciones.trading_direccion == TradingDirection::Long
+                            || self.estrategia.opciones.trading_direccion == TradingDirection::Both
+                        {
+                            if self.entry_options(&open_trades)
+                                && self.test_conditions(df.clone(), accion.clone(), i).await
+                            {
+                                todo!("Optener los parametros del acction");
+                            }
+                        }
+                    }
+                    "sell_limit" => {
+                        if self.estrategia.opciones.trading_direccion == TradingDirection::Short
+                            || self.estrategia.opciones.trading_direccion == TradingDirection::Both
+                        {
+                            if self.entry_options(&open_trades)
+                                && self.test_conditions(df.clone(), accion.clone(), i).await
+                            {
+                                todo!("Optener los parametros del acction");
+                            }
+                        }
+                    }
+                    "buy_stop" => {
+                        if self.estrategia.opciones.trading_direccion == TradingDirection::Long
+                            || self.estrategia.opciones.trading_direccion == TradingDirection::Both
+                        {
+                            if self.entry_options(&open_trades)
+                                && self.test_conditions(df.clone(), accion.clone(), i).await
+                            {
+                                todo!("Optener los parametros del acction");
+                            }
+                        }
+                    }
+                    "sell_stop" => {
+                        if self.estrategia.opciones.trading_direccion == TradingDirection::Short
+                            || self.estrategia.opciones.trading_direccion == TradingDirection::Both
+                        {
+                            if self.entry_options(&open_trades)
+                                && self.test_conditions(df.clone(), accion.clone(), i).await
+                            {
+                                todo!("Optener los parametros del acction");
+                            }
+                        }
+                    }
                     _ => {}
                 };
             }
