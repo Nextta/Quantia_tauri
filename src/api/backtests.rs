@@ -1,6 +1,6 @@
 use crate::api::resultados::delete_resultados_by_backtest;
 use crate::api::trades::{delete_trades_by_backtest, get_trades_by_backtest};
-use crate::backtest::backtest::{Backtest, GestionStrategy};
+use crate::backtest::backtest::{Backtest, GestionParams, GestionStrategy};
 use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_options::StrategyOptions;
 use dotenvy::dotenv;
@@ -139,7 +139,7 @@ pub async fn get_backtests() -> Result<Vec<Backtest>> {
     while let Some(row) = rows.next().await? {
         let trades = get_trades_by_backtest(row.get::<i32>(0)?).await.unwrap();
 
-        let mut parametros_gestion: Value = serde_json::from_str("{}")?;
+        let mut parametros_gestion: GestionParams = serde_json::from_str("{}")?;
 
         let gestion_strategy = match row.get::<String>(4)?.as_str() {
             "Formula" => {
@@ -209,7 +209,7 @@ pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>> {
     while let Some(row) = rows.next().await? {
         let trades = get_trades_by_backtest(row.get::<i32>(0)?).await.unwrap();
 
-        let mut parametros_gestion: Value = serde_json::from_str("{}")?;
+        let mut parametros_gestion: GestionParams = serde_json::from_str("{}")?;
 
         let gestion_strategy = match row.get::<String>(4)?.as_str() {
             "Formula" => {
@@ -279,7 +279,7 @@ pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
     while let Some(row) = rows.next().await? {
         let trades = get_trades_by_backtest(row.get::<i32>(0)?).await.unwrap();
 
-        let mut parametros_gestion: Value = serde_json::from_str("{}")?;
+        let mut parametros_gestion: GestionParams = serde_json::from_str("{}")?;
 
         let gestion_strategy = match row.get::<String>(4)?.as_str() {
             "Formula" => {
@@ -349,7 +349,7 @@ pub async fn get_backtests_by_tipo(tipo: String) -> Result<Vec<Backtest>> {
     while let Some(row) = rows.next().await? {
         let trades = get_trades_by_backtest(row.get::<i32>(0)?).await.unwrap();
 
-        let mut parametros_gestion: Value = serde_json::from_str("{}")?;
+        let mut parametros_gestion: GestionParams = serde_json::from_str("{}")?;
 
         let gestion_strategy = match row.get::<String>(4)?.as_str() {
             "Formula" => {

@@ -1,4 +1,4 @@
-use crate::backtest::backtest::{Backtest, GestionStrategy};
+use crate::backtest::backtest::{Backtest, GestionParams, GestionStrategy};
 use crate::backtest::datos::Datos;
 use crate::backtest::resultados::Resultados;
 use crate::backtest::symbol::SymbolInfoCFD;
@@ -129,13 +129,16 @@ pub async fn run_backtest(
                 state.trade_type = "Sell".to_string();
 
                 trade.sell(
-                    0.0,
-                    1.0,
                     time_str.clone(),
                     close,
-                    state.tp,
-                    state.sl,
+                    GestionStrategy::Fijo,
+                    GestionParams {
+                        lotaje_fijo: 0.01,
+                        multiplicador: 1.0,
+                    },
                     &backtest,
+                    Some(state.tp),
+                    Some(state.sl),
                 );
                 // println!("Operación en Short abierta");
             } else if data.close[i - 1] < data.low[i - 2]
@@ -149,13 +152,16 @@ pub async fn run_backtest(
                 state.trade_type = "Buy".to_string();
 
                 trade.buy(
-                    0.0,
-                    1.0,
                     time_str.clone(),
                     close,
-                    state.tp,
-                    state.sl,
+                    GestionStrategy::Fijo,
+                    GestionParams {
+                        lotaje_fijo: 0.01,
+                        multiplicador: 1.0,
+                    },
                     &backtest,
+                    Some(state.tp),
+                    Some(state.sl),
                 );
                 // println!("Operación en Long abierta");
             }
