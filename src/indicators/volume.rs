@@ -104,9 +104,9 @@ fn calc_ema(values: &[f64], period: usize) -> Vec<f64> {
 ///
 /// # Ejemplo
 /// ```rust
-/// let df_with_ad = ad(df, Some("mi_ad")).await?;
+/// let df_with_ad = ad(df, Some("mi_ad"))?;
 /// ```
-pub async fn ad(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn ad(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("ad");
 
     let high = get_high(&df)?;
@@ -174,9 +174,9 @@ pub struct AdoscParams {
 ///
 /// # Ejemplo
 /// ```rust
-/// let df_with_adosc = adosc(df, Some(3), Some(10), None).await?;
+/// let df_with_adosc = adosc(df, Some(3), Some(10), None)?;
 /// ```
-pub async fn adosc(
+pub fn adosc(
     mut df: DataFrame,
     fastperiod: Option<usize>,
     slowperiod: Option<usize>,
@@ -186,7 +186,7 @@ pub async fn adosc(
     let slowperiod = slowperiod.unwrap_or(10);
     let output_col = output_col.unwrap_or("adosc");
 
-    let ad_df = ad(df.clone(), Some("temp_ad")).await?;
+    let ad_df = ad(df.clone(), Some("temp_ad"))?;
     let ad_series = ad_df.column("temp_ad")?;
 
     let ad_vals: Vec<f64> = ad_series
@@ -238,9 +238,9 @@ pub async fn adosc(
 ///
 /// # Ejemplo
 /// ```rust
-/// let df_with_obv = obv(df, None).await?;
+/// let df_with_obv = obv(df, None)?;
 /// ```
-pub async fn obv(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn obv(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("obv");
 
     let close = get_close(&df)?;
@@ -291,7 +291,7 @@ pub async fn obv(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<Da
 mod tests {
     use super::*;
 
-    async fn load_data() -> PolarsResult<DataFrame> {
+    fn load_data() -> PolarsResult<DataFrame> {
         let df = CsvReadOptions::default()
             .try_into_reader_with_file_path(Some("download/test.csv".into()))
             .unwrap()
@@ -300,36 +300,36 @@ mod tests {
         Ok(df)
     }
 
-    async fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
+    fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
         let mut df: DataFrame = df_result.clone();
         let mut file = std::fs::File::create(path).unwrap();
         CsvWriter::new(&mut file).finish(&mut df).unwrap();
         Ok(())
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_ad() {
-        if let Ok(df) = load_data().await {
-            if let Ok(result) = ad(df, None).await {
-                let _ = save_data(&result, "download/test_ad.csv").await;
+    #[test]
+    fn test_ad() {
+        if let Ok(df) = load_data() {
+            if let Ok(result) = ad(df, None) {
+                let _ = save_data(&result, "download/test_ad.csv");
             }
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_adosc() {
-        if let Ok(df) = load_data().await {
-            if let Ok(result) = adosc(df, None, None, None).await {
-                let _ = save_data(&result, "download/test_adosc.csv").await;
+    #[test]
+    fn test_adosc() {
+        if let Ok(df) = load_data() {
+            if let Ok(result) = adosc(df, None, None, None) {
+                let _ = save_data(&result, "download/test_adosc.csv");
             }
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_obv() {
-        if let Ok(df) = load_data().await {
-            if let Ok(result) = obv(df, None).await {
-                let _ = save_data(&result, "download/test_obv.csv").await;
+    #[test]
+    fn test_obv() {
+        if let Ok(df) = load_data() {
+            if let Ok(result) = obv(df, None) {
+                let _ = save_data(&result, "download/test_obv.csv");
             }
         }
     }

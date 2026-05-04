@@ -59,7 +59,7 @@ fn get_open(df: &DataFrame) -> PolarsResult<Series> {
 ///
 /// # Ejemplo
 /// ```rust
-/// let df_with_avg = avgprice(df, None).await?;
+/// let df_with_avg = avgprice(df, None)?;
 /// ```
 pub fn avgprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("avgprice");
@@ -105,7 +105,7 @@ pub fn avgprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
 ///
 /// # Ejemplo
 /// ```rust
-/// let df_with_med = medprice(df, None).await?;
+/// let df_with_med = medprice(df, None)?;
 /// ```
 pub fn medprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("medprice");
@@ -147,7 +147,7 @@ pub fn medprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
 ///
 /// # Ejemplo
 /// ```rust
-/// let df_with_typ = typprice(df, None).await?;
+/// let df_with_typ = typprice(df, None)?;
 /// ```
 pub fn typprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("typprice");
@@ -192,7 +192,7 @@ pub fn typprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
 ///
 /// # Ejemplo
 /// ```rust
-/// let df_with_wcl = wclprice(df, None).await?;
+/// let df_with_wcl = wclprice(df, None)?;
 /// ```
 pub fn wclprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("wclprice");
@@ -229,7 +229,7 @@ pub fn wclprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
 ///
 /// # Ejemplo
 /// ```rust
-/// let df_daily = daily_ohlc(df, None, None, None, None).await?;
+/// let df_daily = daily_ohlc(df, None, None, None, None)?;
 /// ```
 pub fn daily_ohlc(
     df: DataFrame,
@@ -297,7 +297,7 @@ pub fn daily_ohlc(
 ///
 /// # Ejemplo
 /// ```rust
-/// let df_weekly = weekly_ohlc(df, None, None, None, None).await?;
+/// let df_weekly = weekly_ohlc(df, None, None, None, None)?;
 /// ```
 pub fn weekly_ohlc(
     df: DataFrame,

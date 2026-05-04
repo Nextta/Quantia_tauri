@@ -202,7 +202,7 @@ pub struct AdxParams {
 ///
 /// # Fórmula
 /// ADX = EMA(DX), donde DX = ((+|DI| - |DI|) / (+|DI| + |DI|)) * 100
-pub async fn adx(
+pub fn adx(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -320,7 +320,7 @@ pub struct AdxrParams {
 ///
 /// # Fórmula
 /// ADXR = (ADX + ADX[timeperiod]) / 2
-pub async fn adxr(
+pub fn adxr(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -329,7 +329,7 @@ pub async fn adxr(
     let output_name = output_col.unwrap_or("adxr");
 
     // Calcular ADX primero
-    let adx_df = adx(df.clone(), Some(timeperiod), Some("temp_adx")).await?;
+    let adx_df = adx(df.clone(), Some(timeperiod), Some("temp_adx"))?;
     let adx_col = adx_df.column("temp_adx").unwrap().f64().unwrap();
 
     let n = adx_col.len();
@@ -373,7 +373,7 @@ pub struct ApoParams {
 ///
 /// # Fórmula
 /// APO = EMA(fast) - EMA(slow)
-pub async fn apo(
+pub fn apo(
     df: DataFrame,
     fastperiod: Option<usize>,
     slowperiod: Option<usize>,
@@ -426,7 +426,7 @@ pub struct AroonParams {
 /// # Fórmula
 /// Aroon Up = ((timeperiod - períodos desde máximo) / timeperiod) * 100
 /// Aroon Down = ((timeperiod - períodos desde mínimo) / timeperiod) * 100
-pub async fn aroon(
+pub fn aroon(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col_up: Option<&str>,
@@ -513,7 +513,7 @@ pub struct AroonoscParams {
 ///
 /// # Fórmula
 /// AROONOSC = Aroon Up - Aroon Down
-pub async fn aroonosc(
+pub fn aroonosc(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -525,7 +525,7 @@ pub async fn aroonosc(
     let temp_up = "temp_aroon_up";
     let temp_down = "temp_aroon_down";
 
-    let aroon_df = aroon(df.clone(), Some(timeperiod), Some(temp_up), Some(temp_down)).await?;
+    let aroon_df = aroon(df.clone(), Some(timeperiod), Some(temp_up), Some(temp_down))?;
 
     let up_col = aroon_df.column(temp_up)?;
     let down_col = aroon_df.column(temp_down)?;
@@ -557,7 +557,7 @@ pub struct BopParams {
 ///
 /// # Fórmula
 /// BOP = SMA((close - open) / (high - low), timeperiod)
-pub async fn bop(
+pub fn bop(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -604,7 +604,7 @@ pub struct CciParams {
 /// # Fórmula
 /// CCI = (Typical Price - SMA(Typical Price)) / (0.015 * Mean Deviation)
 /// Typical Price = (high + low + close) / 3
-pub async fn cci(
+pub fn cci(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -699,7 +699,7 @@ pub struct CmoParams {
 /// CMO = 100 * ((sum_up - sum_down) / (sum_up + sum_down))
 /// sum_up = suma de precios que subieron
 /// sum_down = suma de precios que bajaron
-pub async fn cmo(
+pub fn cmo(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -771,7 +771,7 @@ pub struct DxParams {
 ///
 /// # Fórmula
 /// DX = (|+DI - -DI| / (+DI + -DI)) * 100
-pub async fn dx(
+pub fn dx(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -895,7 +895,7 @@ pub struct MacdParams {
 /// MACD = EMA(fast) - EMA(slow)
 /// Signal = EMA(MACD, signalperiod)
 /// Histogram = MACD - Signal
-pub async fn macd(
+pub fn macd(
     df: DataFrame,
     fastperiod: Option<usize>,
     slowperiod: Option<usize>,
@@ -985,7 +985,7 @@ pub struct MacdextParams {
 ///
 /// # Retorna
 /// DataFrame con columnas "macd", "macd_signal" y "macd_hist" añadidas
-pub async fn macdext(
+pub fn macdext(
     df: DataFrame,
     fastperiod: Option<usize>,
     slowperiod: Option<usize>,
@@ -1081,7 +1081,7 @@ pub struct MacdfixParams {
 ///
 /// # Retorna
 /// DataFrame con columnas "macd", "macd_signal" y "macd_hist" añadidas
-pub async fn macdfix(
+pub fn macdfix(
     df: DataFrame,
     signalperiod: Option<usize>,
     output_col: Option<&str>,
@@ -1101,7 +1101,6 @@ pub async fn macdfix(
         Some(output_col_signal),
         Some(output_col_hist),
     )
-    .await
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1127,7 +1126,7 @@ pub struct MfiParams {
 /// Money Flow = Typical Price * Volume
 /// Money Ratio = Positive Flow / Negative Flow
 /// MFI = 100 - (100 / (1 + Money Ratio))
-pub async fn mfi(
+pub fn mfi(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -1226,7 +1225,7 @@ pub struct MinusDiParams {
 ///
 /// # Fórmula
 /// -DI = (Smoothed -DM / Smoothed TR) * 100
-pub async fn minus_di(
+pub fn minus_di(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -1317,7 +1316,7 @@ pub struct MinusDmParams {
 ///
 /// # Fórmula
 /// -DM = RMA(Max(high - low, high - prev_close, prev_close - low))
-pub async fn minus_dm(
+pub fn minus_dm(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -1376,7 +1375,7 @@ pub struct MomParams {
 ///
 /// # Fórmula
 /// MOM = close[i] - close[i - timeperiod]
-pub async fn mom(
+pub fn mom(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -1430,7 +1429,7 @@ pub struct PlusDiParams {
 ///
 /// # Fórmula
 /// +DI = (Smoothed +DM / Smoothed TR) * 100
-pub async fn plus_di(
+pub fn plus_di(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -1521,7 +1520,7 @@ pub struct PlusDmParams {
 ///
 /// # Fórmula
 /// +DM = RMA(Max(high - low, high - prev_close, prev_close - low))
-pub async fn plus_dm(
+pub fn plus_dm(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -1582,7 +1581,7 @@ pub struct PpoParams {
 ///
 /// # Fórmula
 /// PPO = ((EMA(fast) - EMA(slow)) / EMA(slow)) * 100
-pub async fn ppo(
+pub fn ppo(
     df: DataFrame,
     fastperiod: Option<usize>,
     slowperiod: Option<usize>,
@@ -1630,7 +1629,7 @@ pub struct RocParams {
 ///
 /// # Fórmula
 /// ROC = ((close[i] / close[i - timeperiod]) - 1) * 100
-pub async fn roc(
+pub fn roc(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -1683,7 +1682,7 @@ pub struct RocpParams {
 ///
 /// # Fórmula
 /// ROCP = (close[i] - close[i - timeperiod]) / close[i - timeperiod]
-pub async fn rocp(
+pub fn rocp(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -1736,7 +1735,7 @@ pub struct RocrParams {
 ///
 /// # Fórmula
 /// ROCR = close[i] / close[i - timeperiod]
-pub async fn rocr(
+pub fn rocr(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -1789,7 +1788,7 @@ pub struct Roc100Params {
 ///
 /// # Fórmula
 /// ROCR100 = (close[i] / close[i - timeperiod]) * 100
-pub async fn rocr100(
+pub fn rocr100(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -1844,7 +1843,7 @@ pub struct RsiParams {
 /// # Fórmula
 /// RSI = 100 - (100 / (1 + RS))
 /// RS = Average Gain / Average Loss
-pub async fn rsi(
+pub fn rsi(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -1950,7 +1949,7 @@ pub struct StochParams {
 /// # Fórmula
 /// %K = ((close - lowest_low) / (highest_high - lowest_low)) * 100
 /// %D = SMA(%K, slowd_period)
-pub async fn stoch(
+pub fn stoch(
     df: DataFrame,
     fastk_period: Option<usize>,
     slowk_period: Option<usize>,
@@ -2063,7 +2062,7 @@ pub struct StochfParams {
 /// # Fórmula
 /// %K = ((close - lowest_low) / (highest_high - lowest_low)) * 100
 /// %D = EMA(%K, fastd_period)
-pub async fn stochf(
+pub fn stochf(
     df: DataFrame,
     fastk_period: Option<usize>,
     fastd_period: Option<usize>,
@@ -2171,7 +2170,7 @@ pub struct StochRsiParams {
 /// # Fórmula
 /// %K = (RSI - lowest_RSI) / (highest_RSI - lowest_RSI)
 /// %D = SMA(%K, fastd_period)
-pub async fn stochrsi(
+pub fn stochrsi(
     df: DataFrame,
     timeperiod: Option<usize>,
     fastk_period: Option<usize>,
@@ -2191,7 +2190,7 @@ pub async fn stochrsi(
     let output_col_d = output_col_d.unwrap_or("stochrsi_d");
 
     // Calculamos el RSI (usando una copia para no alterar el original antes de tiempo)
-    let rsi_df = rsi(df.clone(), Some(timeperiod), Some("temp_rsi")).await?;
+    let rsi_df = rsi(df.clone(), Some(timeperiod), Some("temp_rsi"))?;
     let rsi_col = rsi_df.column("temp_rsi")?;
     let rsi_ca = rsi_col.f64()?;
 
@@ -2271,7 +2270,7 @@ pub struct TrixParams {
 /// # Fórmula
 /// TRIX = ((EMA3[t] - EMA3[t-1]) / EMA3[t-1]) * 100
 /// donde EMA3 = EMA(EMA(EMA(close)))
-pub async fn trix(
+pub fn trix(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -2332,7 +2331,7 @@ pub struct UltoscParams {
 /// TR = max(high, prev_close) - min(low, prev_close)
 /// Avg = sum(BP) / sum(TR)
 /// ULTOSC = 100 * (4*Avg1 + 2*Avg2 + Avg3) / 7
-pub async fn ultosc(
+pub fn ultosc(
     df: DataFrame,
     timeperiod1: Option<usize>,
     timeperiod2: Option<usize>,
@@ -2449,7 +2448,7 @@ pub struct WillrParams {
 ///
 /// # Fórmula
 /// %R = ((highest_high - close) / (highest_high - lowest_low)) * -100
-pub async fn willr(
+pub fn willr(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -2526,7 +2525,7 @@ mod tests {
 
     //Para los test crear una carpeta llamada download en la raiz de este proyecto
     // y llamar a los datos test.csv
-    async fn load_data() -> PolarsResult<DataFrame> {
+    fn load_data() -> PolarsResult<DataFrame> {
         let df = CsvReadOptions::default()
             .try_into_reader_with_file_path(Some("download/test.csv".into()))
             .unwrap()
@@ -2535,19 +2534,19 @@ mod tests {
         Ok(df)
     }
 
-    async fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
+    fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
         let mut df: DataFrame = df_result.clone();
         let mut file = std::fs::File::create(path).unwrap();
         CsvWriter::new(&mut file).finish(&mut df).unwrap();
         Ok(())
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_adx() {
-        match load_data().await {
-            Ok(df) => match adx(df, Some(14), None).await {
+    #[test]
+    fn test_adx() {
+        match load_data() {
+            Ok(df) => match adx(df, Some(14), None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_adx.csv").await.unwrap();
+                    save_data(&result, "download/test_adx.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute ADX: {:?}", e),
             },
@@ -2555,12 +2554,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_adxr() {
-        match load_data().await {
-            Ok(df) => match adxr(df, Some(14), None).await {
+    #[test]
+    fn test_adxr() {
+        match load_data() {
+            Ok(df) => match adxr(df, Some(14), None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_adxr.csv").await.unwrap();
+                    save_data(&result, "download/test_adxr.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute ADXR: {:?}", e),
             },
@@ -2568,12 +2567,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_apo() {
-        match load_data().await {
-            Ok(df) => match apo(df, Some(12), Some(26), None).await {
+    #[test]
+    fn test_apo() {
+        match load_data() {
+            Ok(df) => match apo(df, Some(12), Some(26), None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_apo.csv").await.unwrap();
+                    save_data(&result, "download/test_apo.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute APO: {:?}", e),
             },
@@ -2581,12 +2580,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_aroon() {
-        match load_data().await {
-            Ok(df) => match aroon(df, Some(14), None, None).await {
+    #[test]
+    fn test_aroon() {
+        match load_data() {
+            Ok(df) => match aroon(df, Some(14), None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_aroon.csv").await.unwrap();
+                    save_data(&result, "download/test_aroon.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute Aroon: {:?}", e),
             },
@@ -2594,14 +2593,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_aroonosc() {
-        match load_data().await {
-            Ok(df) => match aroonosc(df, Some(14), None).await {
+    #[test]
+    fn test_aroonosc() {
+        match load_data() {
+            Ok(df) => match aroonosc(df, Some(14), None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_aroonosc.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_aroonosc.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute Aroon Oscillator: {:?}", e),
             },
@@ -2609,12 +2606,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_bop() {
-        match load_data().await {
-            Ok(df) => match bop(df, None, None).await {
+    #[test]
+    fn test_bop() {
+        match load_data() {
+            Ok(df) => match bop(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_bop.csv").await.unwrap();
+                    save_data(&result, "download/test_bop.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute BOP: {:?}", e),
             },
@@ -2622,12 +2619,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cci() {
-        match load_data().await {
-            Ok(df) => match cci(df, None, None).await {
+    #[test]
+    fn test_cci() {
+        match load_data() {
+            Ok(df) => match cci(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_cci.csv").await.unwrap();
+                    save_data(&result, "download/test_cci.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute CCI: {:?}", e),
             },
@@ -2635,12 +2632,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cmo() {
-        match load_data().await {
-            Ok(df) => match cmo(df, None, None).await {
+    #[test]
+    fn test_cmo() {
+        match load_data() {
+            Ok(df) => match cmo(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_cmo.csv").await.unwrap();
+                    save_data(&result, "download/test_cmo.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute CMO: {:?}", e),
             },
@@ -2648,12 +2645,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_dx() {
-        match load_data().await {
-            Ok(df) => match dx(df, None, None).await {
+    #[test]
+    fn test_dx() {
+        match load_data() {
+            Ok(df) => match dx(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_dx.csv").await.unwrap();
+                    save_data(&result, "download/test_dx.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute DX: {:?}", e),
             },
@@ -2661,12 +2658,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_macd() {
-        match load_data().await {
-            Ok(df) => match macd(df, Some(12), Some(26), Some(9), None, None, None).await {
+    #[test]
+    fn test_macd() {
+        match load_data() {
+            Ok(df) => match macd(df, Some(12), Some(26), Some(9), None, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_macd.csv").await.unwrap();
+                    save_data(&result, "download/test_macd.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute MACD: {:?}", e),
             },
@@ -2674,15 +2671,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_macdext() {
-        match load_data().await {
-            Ok(df) => match macdext(df, None, None, None, None, None, None, None, None, None).await
-            {
+    #[test]
+    fn test_macdext() {
+        match load_data() {
+            Ok(df) => match macdext(df, None, None, None, None, None, None, None, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_macdext.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_macdext.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute macdext: {:?}", e),
             },
@@ -2690,14 +2684,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_macdfix() {
-        match load_data().await {
-            Ok(df) => match macdfix(df, None, None, None, None).await {
+    #[test]
+    fn test_macdfix() {
+        match load_data() {
+            Ok(df) => match macdfix(df, None, None, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_macdfix.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_macdfix.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute macdfix: {:?}", e),
             },
@@ -2705,12 +2697,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_mfi() {
-        match load_data().await {
-            Ok(df) => match mfi(df, None, None).await {
+    #[test]
+    fn test_mfi() {
+        match load_data() {
+            Ok(df) => match mfi(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_mfi.csv").await.unwrap();
+                    save_data(&result, "download/test_mfi.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute mfi: {:?}", e),
             },
@@ -2718,14 +2710,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_minus_di() {
-        match load_data().await {
-            Ok(df) => match minus_di(df, None, None).await {
+    #[test]
+    fn test_minus_di() {
+        match load_data() {
+            Ok(df) => match minus_di(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_minus_di.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_minus_di.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute minus_di: {:?}", e),
             },
@@ -2733,14 +2723,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_minus_dm() {
-        match load_data().await {
-            Ok(df) => match minus_dm(df, None, None).await {
+    #[test]
+    fn test_minus_dm() {
+        match load_data() {
+            Ok(df) => match minus_dm(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_minus_dm.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_minus_dm.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute minus_dm: {:?}", e),
             },
@@ -2748,12 +2736,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_mom() {
-        match load_data().await {
-            Ok(df) => match mom(df, None, None).await {
+    #[test]
+    fn test_mom() {
+        match load_data() {
+            Ok(df) => match mom(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_mom.csv").await.unwrap();
+                    save_data(&result, "download/test_mom.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute mom: {:?}", e),
             },
@@ -2761,14 +2749,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_plus_di() {
-        match load_data().await {
-            Ok(df) => match plus_di(df, None, None).await {
+    #[test]
+    fn test_plus_di() {
+        match load_data() {
+            Ok(df) => match plus_di(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_plus_di.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_plus_di.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute plus_di: {:?}", e),
             },
@@ -2776,14 +2762,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_plus_dm() {
-        match load_data().await {
-            Ok(df) => match plus_dm(df, None, None).await {
+    #[test]
+    fn test_plus_dm() {
+        match load_data() {
+            Ok(df) => match plus_dm(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_plus_dm.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_plus_dm.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute plus_dm: {:?}", e),
             },
@@ -2791,12 +2775,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_ppo() {
-        match load_data().await {
-            Ok(df) => match ppo(df, None, None, None).await {
+    #[test]
+    fn test_ppo() {
+        match load_data() {
+            Ok(df) => match ppo(df, None, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_ppo.csv").await.unwrap();
+                    save_data(&result, "download/test_ppo.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute ppo: {:?}", e),
             },
@@ -2804,12 +2788,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_roc() {
-        match load_data().await {
-            Ok(df) => match roc(df, None, None).await {
+    #[test]
+    fn test_roc() {
+        match load_data() {
+            Ok(df) => match roc(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_roc.csv").await.unwrap();
+                    save_data(&result, "download/test_roc.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute roc: {:?}", e),
             },
@@ -2817,12 +2801,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_rocp() {
-        match load_data().await {
-            Ok(df) => match rocp(df, None, None).await {
+    #[test]
+    fn test_rocp() {
+        match load_data() {
+            Ok(df) => match rocp(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_rocp.csv").await.unwrap();
+                    save_data(&result, "download/test_rocp.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute rocp: {:?}", e),
             },
@@ -2830,12 +2814,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_rocr() {
-        match load_data().await {
-            Ok(df) => match rocr(df, None, None).await {
+    #[test]
+    fn test_rocr() {
+        match load_data() {
+            Ok(df) => match rocr(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_rocr.csv").await.unwrap();
+                    save_data(&result, "download/test_rocr.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute rocr: {:?}", e),
             },
@@ -2843,14 +2827,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_rocr100() {
-        match load_data().await {
-            Ok(df) => match rocr100(df, None, None).await {
+    #[test]
+    fn test_rocr100() {
+        match load_data() {
+            Ok(df) => match rocr100(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_rocr100.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_rocr100.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute rocr100: {:?}", e),
             },
@@ -2858,12 +2840,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_rsi() {
-        match load_data().await {
-            Ok(df) => match rsi(df, None, None).await {
+    #[test]
+    fn test_rsi() {
+        match load_data() {
+            Ok(df) => match rsi(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_rsi.csv").await.unwrap();
+                    save_data(&result, "download/test_rsi.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute rsi: {:?}", e),
             },
@@ -2871,12 +2853,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_stoch() {
-        match load_data().await {
-            Ok(df) => match stoch(df, None, None, None, None, None, None).await {
+    #[test]
+    fn test_stoch() {
+        match load_data() {
+            Ok(df) => match stoch(df, None, None, None, None, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_stoch.csv").await.unwrap();
+                    save_data(&result, "download/test_stoch.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute stoch: {:?}", e),
             },
@@ -2884,14 +2866,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_stochf() {
-        match load_data().await {
-            Ok(df) => match stochf(df, None, None, None, None, None).await {
+    #[test]
+    fn test_stochf() {
+        match load_data() {
+            Ok(df) => match stochf(df, None, None, None, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_stochf.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_stochf.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute stochf: {:?}", e),
             },
@@ -2899,14 +2879,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_stochrsi() {
-        match load_data().await {
-            Ok(df) => match stochrsi(df, None, None, None, None, None, None).await {
+    #[test]
+    fn test_stochrsi() {
+        match load_data() {
+            Ok(df) => match stochrsi(df, None, None, None, None, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_stochrsi.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_stochrsi.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute stochrsi: {:?}", e),
             },
@@ -2914,12 +2892,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_trix() {
-        match load_data().await {
-            Ok(df) => match trix(df, None, None).await {
+    #[test]
+    fn test_trix() {
+        match load_data() {
+            Ok(df) => match trix(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_trix.csv").await.unwrap();
+                    save_data(&result, "download/test_trix.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute trix: {:?}", e),
             },
@@ -2927,14 +2905,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_ultosc() {
-        match load_data().await {
-            Ok(df) => match ultosc(df, None, None, None, None).await {
+    #[test]
+    fn test_ultosc() {
+        match load_data() {
+            Ok(df) => match ultosc(df, None, None, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_ultosc.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_ultosc.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute ultosc: {:?}", e),
             },
@@ -2942,12 +2918,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_willr() {
-        match load_data().await {
-            Ok(df) => match willr(df, None, None).await {
+    #[test]
+    fn test_willr() {
+        match load_data() {
+            Ok(df) => match willr(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_willr.csv").await.unwrap();
+                    save_data(&result, "download/test_willr.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute willr: {:?}", e),
             },

@@ -39,7 +39,7 @@ fn candle_color(open: f64, close: f64) -> i32 {
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdl2crows(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdl2crows(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdl2crows");
     let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -100,7 +100,7 @@ pub async fn cdl2crows(df: DataFrame, output_col: Option<&str>) -> PolarsResult<
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdl3blackcrows(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdl3blackcrows(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdl3blackcrows");
     let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -157,7 +157,7 @@ pub async fn cdl3blackcrows(df: DataFrame, output_col: Option<&str>) -> PolarsRe
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdl3inside(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdl3inside(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdl3inside");
     let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -220,7 +220,7 @@ pub async fn cdl3inside(df: DataFrame, output_col: Option<&str>) -> PolarsResult
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdl3linestrike(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdl3linestrike(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdl3linestrike");
     let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -285,7 +285,7 @@ pub async fn cdl3linestrike(df: DataFrame, output_col: Option<&str>) -> PolarsRe
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdl3outside(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdl3outside(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdl3outside");
     let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -345,7 +345,7 @@ pub async fn cdl3outside(df: DataFrame, output_col: Option<&str>) -> PolarsResul
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdl3starsinsouth(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdl3starsinsouth(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdl3starsinsouth");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -431,7 +431,7 @@ pub async fn cdl3starsinsouth(df: DataFrame, output_col: Option<&str>) -> Polars
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdl3whitesoldiers(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdl3whitesoldiers(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdl3whitesoldiers");
     let (open_s, high_s, _low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -503,7 +503,7 @@ pub async fn cdl3whitesoldiers(df: DataFrame, output_col: Option<&str>) -> Polar
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlabandonedbaby(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlabandonedbaby(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlabandonedbaby");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -587,7 +587,7 @@ pub async fn cdlabandonedbaby(df: DataFrame, output_col: Option<&str>) -> Polars
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdladvanceblock(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdladvanceblock(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdladvanceblock");
     let (open_s, high_s, _low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -664,7 +664,7 @@ pub async fn cdladvanceblock(df: DataFrame, output_col: Option<&str>) -> PolarsR
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlbelthold(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlbelthold(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlbelthold");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -730,7 +730,7 @@ pub async fn cdlbelthold(df: DataFrame, output_col: Option<&str>) -> PolarsResul
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlbreakaway(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlbreakaway(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlbreakaway");
     let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -799,10 +799,7 @@ pub async fn cdlbreakaway(df: DataFrame, output_col: Option<&str>) -> PolarsResu
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlclosingmarubuzo(
-    df: DataFrame,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn cdlclosingmarubuzo(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlclosingmarubozu");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -859,10 +856,7 @@ pub async fn cdlclosingmarubuzo(
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlconcealbabyswall(
-    df: DataFrame,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn cdlconcealbabyswall(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlconcealbabyswall");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -928,7 +922,7 @@ pub async fn cdlconcealbabyswall(
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlcounterattack(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlcounterattack(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlcounterattack");
     let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -991,7 +985,7 @@ pub async fn cdlcounterattack(df: DataFrame, output_col: Option<&str>) -> Polars
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdldarkcloudcover(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdldarkcloudcover(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdldarkcloudcover");
     let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -1046,7 +1040,7 @@ pub async fn cdldarkcloudcover(df: DataFrame, output_col: Option<&str>) -> Polar
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdldoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdldoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdldoji");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -1091,7 +1085,7 @@ pub async fn cdldoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Da
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdldojistar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdldojistar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdldojistar");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -1160,7 +1154,7 @@ pub async fn cdldojistar(df: DataFrame, output_col: Option<&str>) -> PolarsResul
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdldragonflydoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdldragonflydoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdldragonflydoji");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -1210,7 +1204,7 @@ pub async fn cdldragonflydoji(df: DataFrame, output_col: Option<&str>) -> Polars
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlengulfing(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlengulfing(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlengulfing");
     let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -1263,10 +1257,7 @@ pub async fn cdlengulfing(df: DataFrame, output_col: Option<&str>) -> PolarsResu
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdleveningdojistar(
-    df: DataFrame,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn cdleveningdojistar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdleveningdojistar");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -1334,7 +1325,7 @@ pub async fn cdleveningdojistar(
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdleveningstar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdleveningstar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdleveningstar");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -1397,10 +1388,7 @@ pub async fn cdleveningstar(df: DataFrame, output_col: Option<&str>) -> PolarsRe
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlgapsidesidewhite(
-    df: DataFrame,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn cdlgapsidesidewhite(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlgapsidesidewhite");
     let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -1463,7 +1451,7 @@ pub async fn cdlgapsidesidewhite(
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlgravestonedoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlgravestonedoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlgravestonedoji");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -1512,7 +1500,7 @@ pub async fn cdlgravestonedoji(df: DataFrame, output_col: Option<&str>) -> Polar
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlhammer(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlhammer(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlhammer");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -1566,7 +1554,7 @@ pub async fn cdlhammer(df: DataFrame, output_col: Option<&str>) -> PolarsResult<
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlhangingman(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlhangingman(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlhangingman");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -1623,7 +1611,7 @@ pub async fn cdlhangingman(df: DataFrame, output_col: Option<&str>) -> PolarsRes
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlharami(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlharami(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlharami");
     let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -1683,7 +1671,7 @@ pub async fn cdlharami(df: DataFrame, output_col: Option<&str>) -> PolarsResult<
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlharamicross(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlharamicross(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlharamicross");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -1756,7 +1744,7 @@ pub async fn cdlharamicross(df: DataFrame, output_col: Option<&str>) -> PolarsRe
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlhighwave(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlhighwave(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlhighwave");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -1813,7 +1801,7 @@ pub async fn cdlhighwave(df: DataFrame, output_col: Option<&str>) -> PolarsResul
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlhikkake(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlhikkake(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlhikkake");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let high = high_s.f64()?;
@@ -1880,7 +1868,7 @@ pub async fn cdlhikkake(df: DataFrame, output_col: Option<&str>) -> PolarsResult
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlhikkakemod(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlhikkakemod(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlhikkakemod");
     let (_open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let high = high_s.f64()?;
@@ -1976,7 +1964,7 @@ pub async fn cdlhikkakemod(df: DataFrame, output_col: Option<&str>) -> PolarsRes
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlhomingpigeon(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlhomingpigeon(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlhomingpigeon");
     let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -2030,10 +2018,7 @@ pub async fn cdlhomingpigeon(df: DataFrame, output_col: Option<&str>) -> PolarsR
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlidentical3crows(
-    df: DataFrame,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn cdlidentical3crows(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlidentical3crows");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -2115,7 +2100,7 @@ pub async fn cdlidentical3crows(
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlinneck(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlinneck(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlinneck");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -2178,7 +2163,7 @@ pub async fn cdlinneck(df: DataFrame, output_col: Option<&str>) -> PolarsResult<
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlinvertedhammer(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlinvertedhammer(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlinvertedhammer");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -2239,7 +2224,7 @@ pub async fn cdlinvertedhammer(df: DataFrame, output_col: Option<&str>) -> Polar
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlkicking(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlkicking(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlkicking");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -2314,10 +2299,7 @@ pub async fn cdlkicking(df: DataFrame, output_col: Option<&str>) -> PolarsResult
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlkickingbylength(
-    df: DataFrame,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn cdlkickingbylength(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlkickingbylength");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -2394,7 +2376,7 @@ pub async fn cdlkickingbylength(
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdladderbottom(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdladderbottom(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdladderbottom");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -2471,7 +2453,7 @@ pub async fn cdladderbottom(df: DataFrame, output_col: Option<&str>) -> PolarsRe
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdllongleggeddoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdllongleggeddoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdllongleggeddoji");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -2523,7 +2505,7 @@ pub async fn cdllongleggeddoji(df: DataFrame, output_col: Option<&str>) -> Polar
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdllongline(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdllongline(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdllongline");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -2574,7 +2556,7 @@ pub async fn cdllongline(df: DataFrame, output_col: Option<&str>) -> PolarsResul
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlmarubozu(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlmarubozu(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlmarubozu");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -2630,7 +2612,7 @@ pub async fn cdlmarubozu(df: DataFrame, output_col: Option<&str>) -> PolarsResul
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlmatchinglow(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlmatchinglow(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlmatchinglow");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -2699,7 +2681,7 @@ pub async fn cdlmatchinglow(df: DataFrame, output_col: Option<&str>) -> PolarsRe
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub async fn cdlmathold(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlmathold(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlmathold");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -2779,7 +2761,7 @@ pub struct MorningDojiStar {
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 (nada) o 100 (alcista).
-pub async fn cdlmorningdojistar(
+pub fn cdlmorningdojistar(
     df: DataFrame,
     penetration: Option<f64>,
     output_col: Option<&str>,
@@ -2882,7 +2864,7 @@ pub struct MorningStar {
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 (nada) o 100 (alcista).
-pub async fn cdlmorningstar(
+pub fn cdlmorningstar(
     df: DataFrame,
     penetration: Option<f64>,
     output_col: Option<&str>,
@@ -2973,7 +2955,7 @@ pub async fn cdlmorningstar(
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 (nada) o -100 (bajista).
-pub async fn cdlonneck(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlonneck(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlonneck");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -3050,7 +3032,7 @@ pub struct Piercing {
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 (nada) o 100 (alcista).
-pub async fn cdlpiercing(
+pub fn cdlpiercing(
     df: DataFrame,
     penetration: Option<f64>,
     output_col: Option<&str>,
@@ -3122,7 +3104,7 @@ pub async fn cdlpiercing(
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 (nada) o 100 (indecisión/neutral).
-pub async fn cdlrickshawman(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlrickshawman(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlrickshawman");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -3184,10 +3166,7 @@ pub async fn cdlrickshawman(df: DataFrame, output_col: Option<&str>) -> PolarsRe
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
-pub async fn cdlrisefall3methods(
-    df: DataFrame,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn cdlrisefall3methods(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlrisefall3methods");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -3300,10 +3279,7 @@ pub async fn cdlrisefall3methods(
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
-pub async fn cdlseparatinglines(
-    df: DataFrame,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn cdlseparatinglines(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlseparatinglines");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -3372,7 +3348,7 @@ pub async fn cdlseparatinglines(
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 o -100 (bajista).
-pub async fn cdlshootingstar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlshootingstar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlshootingstar");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -3442,7 +3418,7 @@ pub async fn cdlshootingstar(df: DataFrame, output_col: Option<&str>) -> PolarsR
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
-pub async fn cdlshortline(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlshortline(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlshortline");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -3501,7 +3477,7 @@ pub async fn cdlshortline(df: DataFrame, output_col: Option<&str>) -> PolarsResu
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
-pub async fn cdlspinningtop(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlspinningtop(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlspinningtop");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -3562,7 +3538,7 @@ pub async fn cdlspinningtop(df: DataFrame, output_col: Option<&str>) -> PolarsRe
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 o -100 (bajista).
-pub async fn cdlstalledpattern(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlstalledpattern(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlstalledpattern");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -3641,7 +3617,7 @@ pub async fn cdlstalledpattern(df: DataFrame, output_col: Option<&str>) -> Polar
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 o 100 (alcista).
-pub async fn cdlsticksandwich(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlsticksandwich(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlsticksandwich");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -3709,7 +3685,7 @@ pub async fn cdlsticksandwich(df: DataFrame, output_col: Option<&str>) -> Polars
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 o 100 (alcista).
-pub async fn cdltakuri(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdltakuri(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdltakuri");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -3775,7 +3751,7 @@ pub async fn cdltakuri(df: DataFrame, output_col: Option<&str>) -> PolarsResult<
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
-pub async fn cdltasukigap(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdltasukigap(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdltasukigap");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -3846,7 +3822,7 @@ pub async fn cdltasukigap(df: DataFrame, output_col: Option<&str>) -> PolarsResu
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 o -100 (bajista).
-pub async fn cdlthrusting(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlthrusting(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlthrusting");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -3921,7 +3897,7 @@ pub async fn cdlthrusting(df: DataFrame, output_col: Option<&str>) -> PolarsResu
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
-pub async fn cdltristar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdltristar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdltristar");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -4005,7 +3981,7 @@ pub async fn cdltristar(df: DataFrame, output_col: Option<&str>) -> PolarsResult
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 o 100 (alcista).
-pub async fn cdlunique3river(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlunique3river(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlunique3river");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -4086,10 +4062,7 @@ pub async fn cdlunique3river(df: DataFrame, output_col: Option<&str>) -> PolarsR
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 o -100 (bajista).
-pub async fn cdlupsidegap2crows(
-    df: DataFrame,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn cdlupsidegap2crows(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlupsidegap2crows");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -4172,10 +4145,7 @@ pub async fn cdlupsidegap2crows(
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
-pub async fn cdlxsidegap3methods(
-    df: DataFrame,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn cdlxsidegap3methods(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlxsidegap3methods");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
@@ -4245,7 +4215,7 @@ pub async fn cdlxsidegap3methods(
 mod tests {
     use super::*;
 
-    async fn load_data() -> PolarsResult<DataFrame> {
+    fn load_data() -> PolarsResult<DataFrame> {
         let df = CsvReadOptions::default()
             .try_into_reader_with_file_path(Some("download/test.csv".into()))
             .unwrap()
@@ -4254,22 +4224,20 @@ mod tests {
         Ok(df)
     }
 
-    async fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
+    fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
         let mut df: DataFrame = df_result.clone();
         let mut file = std::fs::File::create(path).unwrap();
         CsvWriter::new(&mut file).finish(&mut df).unwrap();
         Ok(())
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdl2crows() {
-        match load_data().await {
+    #[test]
+    fn test_cdl2crows() {
+        match load_data() {
             Ok(df) => {
-                match cdl2crows(df, Some("cdl2crows")).await {
+                match cdl2crows(df, Some("cdl2crows")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdl2crows.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdl2crows.csv").unwrap();
                         println!("CDL2CROWS calculated and saved to download/test_cdl2crows.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdl2crows: {:?}", e),
@@ -4279,15 +4247,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdl3blackcrows() {
-        match load_data().await {
+    #[test]
+    fn test_cdl3blackcrows() {
+        match load_data() {
             Ok(df) => {
-                match cdl3blackcrows(df, Some("cdl3blackcrows")).await {
+                match cdl3blackcrows(df, Some("cdl3blackcrows")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdl3blackcrows.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdl3blackcrows.csv").unwrap();
                         println!("CDL3BLACKCROWS calculated and saved to download/test_cdl3blackcrows.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdl3blackcrows: {:?}", e),
@@ -4297,15 +4263,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdl3inside() {
-        match load_data().await {
+    #[test]
+    fn test_cdl3inside() {
+        match load_data() {
             Ok(df) => {
-                match cdl3inside(df, Some("cdl3inside")).await {
+                match cdl3inside(df, Some("cdl3inside")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdl3inside.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdl3inside.csv").unwrap();
                         println!("CDL3INSIDE calculated and saved to download/test_cdl3inside.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdl3inside: {:?}", e),
@@ -4315,15 +4279,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdl3linestrike() {
-        match load_data().await {
+    #[test]
+    fn test_cdl3linestrike() {
+        match load_data() {
             Ok(df) => {
-                match cdl3linestrike(df, Some("cdl3linestrike")).await {
+                match cdl3linestrike(df, Some("cdl3linestrike")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdl3linestrike.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdl3linestrike.csv").unwrap();
                         println!("CDL3LINESTRIKE calculated and saved to download/test_cdl3linestrike.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdl3linestrike: {:?}", e),
@@ -4333,15 +4295,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdl3outside() {
-        match load_data().await {
+    #[test]
+    fn test_cdl3outside() {
+        match load_data() {
             Ok(df) => {
-                match cdl3outside(df, Some("cdl3outside")).await {
+                match cdl3outside(df, Some("cdl3outside")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdl3outside.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdl3outside.csv").unwrap();
                         println!(
                             "CDL3OUTSIDE calculated and saved to download/test_cdl3outside.csv"
                         );
@@ -4353,15 +4313,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdl3starsinsouth() {
-        match load_data().await {
+    #[test]
+    fn test_cdl3starsinsouth() {
+        match load_data() {
             Ok(df) => {
-                match cdl3starsinsouth(df, Some("cdl3starsinsouth")).await {
+                match cdl3starsinsouth(df, Some("cdl3starsinsouth")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdl3starsinsouth.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdl3starsinsouth.csv").unwrap();
                         println!("CDL3STARSINSOUTH calculated and saved to download/test_cdl3starsinsouth.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdl3starsinsouth: {:?}", e),
@@ -4371,15 +4329,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdl3whitesoldiers() {
-        match load_data().await {
+    #[test]
+    fn test_cdl3whitesoldiers() {
+        match load_data() {
             Ok(df) => {
-                match cdl3whitesoldiers(df, Some("cdl3whitesoldiers")).await {
+                match cdl3whitesoldiers(df, Some("cdl3whitesoldiers")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdl3whitesoldiers.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdl3whitesoldiers.csv").unwrap();
                         println!("CDL3WHITESOLDIERS calculated and saved to download/test_cdl3whitesoldiers.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdl3whitesoldiers: {:?}", e),
@@ -4389,15 +4345,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlabandonedbaby() {
-        match load_data().await {
+    #[test]
+    fn test_cdlabandonedbaby() {
+        match load_data() {
             Ok(df) => {
-                match cdlabandonedbaby(df, Some("cdlabandonedbaby")).await {
+                match cdlabandonedbaby(df, Some("cdlabandonedbaby")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlabandonedbaby.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlabandonedbaby.csv").unwrap();
                         println!("CDLABANDONEDBABY calculated and saved to download/test_cdlabandonedbaby.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlabandonedbaby: {:?}", e),
@@ -4407,15 +4361,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdladvanceblock() {
-        match load_data().await {
+    #[test]
+    fn test_cdladvanceblock() {
+        match load_data() {
             Ok(df) => {
-                match cdladvanceblock(df, Some("cdladvanceblock")).await {
+                match cdladvanceblock(df, Some("cdladvanceblock")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdladvanceblock.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdladvanceblock.csv").unwrap();
                         println!("CDLADVANCEBLOCK calculated and saved to download/test_cdladvanceblock.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdladvanceblock: {:?}", e),
@@ -4425,15 +4377,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlbelthold() {
-        match load_data().await {
+    #[test]
+    fn test_cdlbelthold() {
+        match load_data() {
             Ok(df) => {
-                match cdlbelthold(df, Some("cdlbelthold")).await {
+                match cdlbelthold(df, Some("cdlbelthold")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlbelthold.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlbelthold.csv").unwrap();
                         println!(
                             "CDLBELTHOLD calculated and saved to download/test_cdlbelthold.csv"
                         );
@@ -4445,15 +4395,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlbreakaway() {
-        match load_data().await {
+    #[test]
+    fn test_cdlbreakaway() {
+        match load_data() {
             Ok(df) => {
-                match cdlbreakaway(df, Some("cdlbreakaway")).await {
+                match cdlbreakaway(df, Some("cdlbreakaway")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlbreakaway.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlbreakaway.csv").unwrap();
                         println!(
                             "CDLBREAKAWAY calculated and saved to download/test_cdlbreakaway.csv"
                         );
@@ -4465,15 +4413,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlclosingmarubuzo() {
-        match load_data().await {
+    #[test]
+    fn test_cdlclosingmarubuzo() {
+        match load_data() {
             Ok(df) => {
-                match cdlclosingmarubuzo(df, Some("cdlclosingmarubuzo")).await {
+                match cdlclosingmarubuzo(df, Some("cdlclosingmarubuzo")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlclosingmarubuzo.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlclosingmarubuzo.csv").unwrap();
                         println!("CDLCLOSINGMARUBOZU calculated and saved to download/test_cdlclosingmarubuzo.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlclosingmarubuzo: {:?}", e),
@@ -4483,15 +4429,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlconcealbabyswall() {
-        match load_data().await {
+    #[test]
+    fn test_cdlconcealbabyswall() {
+        match load_data() {
             Ok(df) => {
-                match cdlconcealbabyswall(df, Some("cdlconcealbabyswall")).await {
+                match cdlconcealbabyswall(df, Some("cdlconcealbabyswall")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlconcealbabyswall.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlconcealbabyswall.csv").unwrap();
                         println!("CDLCONCEALBABYSWALL calculated and saved to download/test_cdlconcealbabyswall.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlconcealbabyswall: {:?}", e),
@@ -4501,15 +4445,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlcounterattack() {
-        match load_data().await {
+    #[test]
+    fn test_cdlcounterattack() {
+        match load_data() {
             Ok(df) => {
-                match cdlcounterattack(df, Some("cdlcounterattack")).await {
+                match cdlcounterattack(df, Some("cdlcounterattack")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlcounterattack.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlcounterattack.csv").unwrap();
                         println!("CDLCOUNTERATTACK calculated and saved to download/test_cdlcounterattack.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlcounterattack: {:?}", e),
@@ -4519,15 +4461,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdldarkcloudcover() {
-        match load_data().await {
+    #[test]
+    fn test_cdldarkcloudcover() {
+        match load_data() {
             Ok(df) => {
-                match cdldarkcloudcover(df, Some("cdldarkcloudcover")).await {
+                match cdldarkcloudcover(df, Some("cdldarkcloudcover")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdldarkcloudcover.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdldarkcloudcover.csv").unwrap();
                         println!("CDLDARKCLOUDCOVER calculated and saved to download/test_cdldarkcloudcover.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdldarkcloudcover: {:?}", e),
@@ -4537,15 +4477,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdldoji() {
-        match load_data().await {
+    #[test]
+    fn test_cdldoji() {
+        match load_data() {
             Ok(df) => {
-                match cdldoji(df, Some("cdldoji")).await {
+                match cdldoji(df, Some("cdldoji")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdldoji.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdldoji.csv").unwrap();
                         println!("CDLDOJI calculated and saved to download/test_cdldoji.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdldoji: {:?}", e),
@@ -4555,15 +4493,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdldojistar() {
-        match load_data().await {
+    #[test]
+    fn test_cdldojistar() {
+        match load_data() {
             Ok(df) => {
-                match cdldojistar(df, Some("cdldojistar")).await {
+                match cdldojistar(df, Some("cdldojistar")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdldojistar.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdldojistar.csv").unwrap();
                         println!(
                             "CDLDOJISTAR calculated and saved to download/test_cdldojistar.csv"
                         );
@@ -4575,15 +4511,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdldragonflydoji() {
-        match load_data().await {
+    #[test]
+    fn test_cdldragonflydoji() {
+        match load_data() {
             Ok(df) => {
-                match cdldragonflydoji(df, Some("cdldragonflydoji")).await {
+                match cdldragonflydoji(df, Some("cdldragonflydoji")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdldragonflydoji.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdldragonflydoji.csv").unwrap();
                         println!("CDLDRAGONFLYDOJI calculated and saved to download/test_cdldragonflydoji.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdldragonflydoji: {:?}", e),
@@ -4593,15 +4527,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlengulfing() {
-        match load_data().await {
+    #[test]
+    fn test_cdlengulfing() {
+        match load_data() {
             Ok(df) => {
-                match cdlengulfing(df, Some("cdlengulfing")).await {
+                match cdlengulfing(df, Some("cdlengulfing")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlengulfing.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlengulfing.csv").unwrap();
                         println!(
                             "CDLENGULFING calculated and saved to download/test_cdlengulfing.csv"
                         );
@@ -4613,15 +4545,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdleveningdojistar() {
-        match load_data().await {
+    #[test]
+    fn test_cdleveningdojistar() {
+        match load_data() {
             Ok(df) => {
-                match cdleveningdojistar(df, Some("cdleveningdojistar")).await {
+                match cdleveningdojistar(df, Some("cdleveningdojistar")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdleveningdojistar.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdleveningdojistar.csv").unwrap();
                         println!("CDLEVENINGDOJISTAR calculated and saved to download/test_cdleveningdojistar.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdleveningdojistar: {:?}", e),
@@ -4631,15 +4561,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlmorningdojistar() {
-        match load_data().await {
+    #[test]
+    fn test_cdlmorningdojistar() {
+        match load_data() {
             Ok(df) => {
-                match cdlmorningdojistar(df, None, Some("cdlmorningdojistar")).await {
+                match cdlmorningdojistar(df, None, Some("cdlmorningdojistar")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlmorningdojistar.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlmorningdojistar.csv").unwrap();
                         println!("CDLMORNINGDOJISTAR calculated and saved to download/test_cdlmorningdojistar.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlmorningdojistar: {:?}", e),
@@ -4649,15 +4577,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlmorningstar() {
-        match load_data().await {
+    #[test]
+    fn test_cdlmorningstar() {
+        match load_data() {
             Ok(df) => {
-                match cdlmorningstar(df, None, Some("cdlmorningstar")).await {
+                match cdlmorningstar(df, None, Some("cdlmorningstar")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlmorningstar.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlmorningstar.csv").unwrap();
                         println!(
                             "CDLMORNINGSTAR calculated and saved to download/test_cdlmorningstar.csv"
                         );
@@ -4669,15 +4595,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlonneck() {
-        match load_data().await {
+    #[test]
+    fn test_cdlonneck() {
+        match load_data() {
             Ok(df) => {
-                match cdlonneck(df, Some("cdlonneck")).await {
+                match cdlonneck(df, Some("cdlonneck")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlonneck.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlonneck.csv").unwrap();
                         println!("CDLONNECK calculated and saved to download/test_cdlonneck.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlonneck: {:?}", e),
@@ -4687,15 +4611,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlpiercing() {
-        match load_data().await {
+    #[test]
+    fn test_cdlpiercing() {
+        match load_data() {
             Ok(df) => {
-                match cdlpiercing(df, None, Some("cdlpiercing")).await {
+                match cdlpiercing(df, None, Some("cdlpiercing")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlpiercing.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlpiercing.csv").unwrap();
                         println!(
                             "CDLPIERCING calculated and saved to download/test_cdlpiercing.csv"
                         );
@@ -4707,15 +4629,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlrickshawman() {
-        match load_data().await {
+    #[test]
+    fn test_cdlrickshawman() {
+        match load_data() {
             Ok(df) => {
-                match cdlrickshawman(df, Some("cdlrickshawman")).await {
+                match cdlrickshawman(df, Some("cdlrickshawman")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlrickshawman.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlrickshawman.csv").unwrap();
                         println!(
                             "CDLRICKSHAWMAN calculated and saved to download/test_cdlrickshawman.csv"
                         );
@@ -4727,15 +4647,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlrisefall3methods() {
-        match load_data().await {
+    #[test]
+    fn test_cdlrisefall3methods() {
+        match load_data() {
             Ok(df) => {
-                match cdlrisefall3methods(df, Some("cdlrisefall3methods")).await {
+                match cdlrisefall3methods(df, Some("cdlrisefall3methods")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlrisefall3methods.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlrisefall3methods.csv").unwrap();
                         println!("CDLRISEFALL3METHODS calculated and saved to download/test_cdlrisefall3methods.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlrisefall3methods: {:?}", e),
@@ -4745,15 +4663,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlseparatinglines() {
-        match load_data().await {
+    #[test]
+    fn test_cdlseparatinglines() {
+        match load_data() {
             Ok(df) => {
-                match cdlseparatinglines(df, Some("cdlseparatinglines")).await {
+                match cdlseparatinglines(df, Some("cdlseparatinglines")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlseparatinglines.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlseparatinglines.csv").unwrap();
                         println!("CDLSEPARATINGLINES calculated and saved to download/test_cdlseparatinglines.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlseparatinglines: {:?}", e),
@@ -4763,15 +4679,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlshootingstar() {
-        match load_data().await {
+    #[test]
+    fn test_cdlshootingstar() {
+        match load_data() {
             Ok(df) => {
-                match cdlshootingstar(df, Some("cdlshootingstar")).await {
+                match cdlshootingstar(df, Some("cdlshootingstar")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlshootingstar.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlshootingstar.csv").unwrap();
                         println!(
                             "CDLSHOOTINGSTAR calculated and saved to download/test_cdlshootingstar.csv"
                         );
@@ -4783,15 +4697,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlshortline() {
-        match load_data().await {
+    #[test]
+    fn test_cdlshortline() {
+        match load_data() {
             Ok(df) => {
-                match cdlshortline(df, Some("cdlshortline")).await {
+                match cdlshortline(df, Some("cdlshortline")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlshortline.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlshortline.csv").unwrap();
                         println!(
                             "CDLSHORTLINE calculated and saved to download/test_cdlshortline.csv"
                         );
@@ -4803,15 +4715,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlspinningtop() {
-        match load_data().await {
+    #[test]
+    fn test_cdlspinningtop() {
+        match load_data() {
             Ok(df) => {
-                match cdlspinningtop(df, Some("cdlspinningtop")).await {
+                match cdlspinningtop(df, Some("cdlspinningtop")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlspinningtop.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlspinningtop.csv").unwrap();
                         println!("CDLSPINNINGTOP calculated and saved to download/test_cdlspinningtop.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlspinningtop: {:?}", e),
@@ -4821,15 +4731,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlstalledpattern() {
-        match load_data().await {
+    #[test]
+    fn test_cdlstalledpattern() {
+        match load_data() {
             Ok(df) => {
-                match cdlstalledpattern(df, Some("cdlstalledpattern")).await {
+                match cdlstalledpattern(df, Some("cdlstalledpattern")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlstalledpattern.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlstalledpattern.csv").unwrap();
                         println!("CDLSTALLEDPATTERN calculated and saved to download/test_cdlstalledpattern.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlstalledpattern: {:?}", e),
@@ -4839,15 +4747,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlsticksandwich() {
-        match load_data().await {
+    #[test]
+    fn test_cdlsticksandwich() {
+        match load_data() {
             Ok(df) => {
-                match cdlsticksandwich(df, Some("cdlsticksandwich")).await {
+                match cdlsticksandwich(df, Some("cdlsticksandwich")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlsticksandwich.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlsticksandwich.csv").unwrap();
                         println!("CDLSTICKSANDWICH calculated and saved to download/test_cdlsticksandwich.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlsticksandwich: {:?}", e),
@@ -4857,15 +4763,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdltakuri() {
-        match load_data().await {
+    #[test]
+    fn test_cdltakuri() {
+        match load_data() {
             Ok(df) => {
-                match cdltakuri(df, Some("cdltakuri")).await {
+                match cdltakuri(df, Some("cdltakuri")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdltakuri.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdltakuri.csv").unwrap();
                         println!("CDLTAKURI calculated and saved to download/test_cdltakuri.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdltakuri: {:?}", e),
@@ -4875,15 +4779,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdltasukigap() {
-        match load_data().await {
+    #[test]
+    fn test_cdltasukigap() {
+        match load_data() {
             Ok(df) => {
-                match cdltasukigap(df, Some("cdltasukigap")).await {
+                match cdltasukigap(df, Some("cdltasukigap")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdltasukigap.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdltasukigap.csv").unwrap();
                         println!(
                             "CDLTASUKIGAP calculated and saved to download/test_cdltasukigap.csv"
                         );
@@ -4895,15 +4797,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlthrusting() {
-        match load_data().await {
+    #[test]
+    fn test_cdlthrusting() {
+        match load_data() {
             Ok(df) => {
-                match cdlthrusting(df, Some("cdlthrusting")).await {
+                match cdlthrusting(df, Some("cdlthrusting")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlthrusting.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlthrusting.csv").unwrap();
                         println!(
                             "CDLTHRUSTING calculated and saved to download/test_cdlthrusting.csv"
                         );
@@ -4915,15 +4815,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdltristar() {
-        match load_data().await {
+    #[test]
+    fn test_cdltristar() {
+        match load_data() {
             Ok(df) => {
-                match cdltristar(df, Some("cdltristar")).await {
+                match cdltristar(df, Some("cdltristar")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdltristar.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdltristar.csv").unwrap();
                         println!("CDLTRISTAR calculated and saved to download/test_cdltristar.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdltristar: {:?}", e),
@@ -4933,15 +4831,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlunique3river() {
-        match load_data().await {
+    #[test]
+    fn test_cdlunique3river() {
+        match load_data() {
             Ok(df) => {
-                match cdlunique3river(df, Some("cdlunique3river")).await {
+                match cdlunique3river(df, Some("cdlunique3river")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlunique3river.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlunique3river.csv").unwrap();
                         println!("CDLUNIQUE3RIVER calculated and saved to download/test_cdlunique3river.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlunique3river: {:?}", e),
@@ -4951,15 +4847,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlupsidegap2crows() {
-        match load_data().await {
+    #[test]
+    fn test_cdlupsidegap2crows() {
+        match load_data() {
             Ok(df) => {
-                match cdlupsidegap2crows(df, Some("cdlupsidegap2crows")).await {
+                match cdlupsidegap2crows(df, Some("cdlupsidegap2crows")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlupsidegap2crows.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlupsidegap2crows.csv").unwrap();
                         println!("CDLUPSIDEGAP2CROWS calculated and saved to download/test_cdlupsidegap2crows.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlupsidegap2crows: {:?}", e),
@@ -4969,15 +4863,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlxsidegap3methods() {
-        match load_data().await {
+    #[test]
+    fn test_cdlxsidegap3methods() {
+        match load_data() {
             Ok(df) => {
-                match cdlxsidegap3methods(df, Some("cdlxsidegap3methods")).await {
+                match cdlxsidegap3methods(df, Some("cdlxsidegap3methods")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlxsidegap3methods.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlxsidegap3methods.csv").unwrap();
                         println!("CDLXSIDEGAP3METHODS calculated and saved to download/test_cdlxsidegap3methods.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlxsidegap3methods: {:?}", e),
@@ -4987,15 +4879,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdleveningstar() {
-        match load_data().await {
+    #[test]
+    fn test_cdleveningstar() {
+        match load_data() {
             Ok(df) => {
-                match cdleveningstar(df, Some("cdleveningstar")).await {
+                match cdleveningstar(df, Some("cdleveningstar")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdleveningstar.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdleveningstar.csv").unwrap();
                         println!("CDLEVENINGSTAR calculated and saved to download/test_cdleveningstar.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdleveningstar: {:?}", e),
@@ -5005,15 +4895,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlgapsidesidewhite() {
-        match load_data().await {
+    #[test]
+    fn test_cdlgapsidesidewhite() {
+        match load_data() {
             Ok(df) => {
-                match cdlgapsidesidewhite(df, Some("cdlgapsidesidewhite")).await {
+                match cdlgapsidesidewhite(df, Some("cdlgapsidesidewhite")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlgapsidesidewhite.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlgapsidesidewhite.csv").unwrap();
                         println!("CDLGAPSIDESIDEWHITE calculated and saved to download/test_cdlgapsidesidewhite.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlgapsidesidewhite: {:?}", e),
@@ -5023,15 +4911,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlgravestonedoji() {
-        match load_data().await {
+    #[test]
+    fn test_cdlgravestonedoji() {
+        match load_data() {
             Ok(df) => {
-                match cdlgravestonedoji(df, Some("cdlgravestonedoji")).await {
+                match cdlgravestonedoji(df, Some("cdlgravestonedoji")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlgravestonedoji.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlgravestonedoji.csv").unwrap();
                         println!("CDLGRAVESTONEDOJI calculated and saved to download/test_cdlgravestonedoji.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlgravestonedoji: {:?}", e),
@@ -5041,15 +4927,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlhammer() {
-        match load_data().await {
+    #[test]
+    fn test_cdlhammer() {
+        match load_data() {
             Ok(df) => {
-                match cdlhammer(df, Some("cdlhammer")).await {
+                match cdlhammer(df, Some("cdlhammer")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlhammer.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlhammer.csv").unwrap();
                         println!("CDLHAMMER calculated and saved to download/test_cdlhammer.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlhammer: {:?}", e),
@@ -5059,15 +4943,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlhangingman() {
-        match load_data().await {
+    #[test]
+    fn test_cdlhangingman() {
+        match load_data() {
             Ok(df) => {
-                match cdlhangingman(df, Some("cdlhangingman")).await {
+                match cdlhangingman(df, Some("cdlhangingman")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlhangingman.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlhangingman.csv").unwrap();
                         println!(
                             "CDLHANGINGMAN calculated and saved to download/test_cdlhangingman.csv"
                         );
@@ -5079,15 +4961,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlharami() {
-        match load_data().await {
+    #[test]
+    fn test_cdlharami() {
+        match load_data() {
             Ok(df) => {
-                match cdlharami(df, Some("cdlharami")).await {
+                match cdlharami(df, Some("cdlharami")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlharami.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlharami.csv").unwrap();
                         println!("CDLHARAMI calculated and saved to download/test_cdlharami.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlharami: {:?}", e),
@@ -5097,15 +4977,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlharamicross() {
-        match load_data().await {
+    #[test]
+    fn test_cdlharamicross() {
+        match load_data() {
             Ok(df) => {
-                match cdlharamicross(df, Some("cdlharamicross")).await {
+                match cdlharamicross(df, Some("cdlharamicross")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlharamicross.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlharamicross.csv").unwrap();
                         println!("CDLHARAMICROSS calculated and saved to download/test_cdlharamicross.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlharamicross: {:?}", e),
@@ -5115,15 +4993,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlhighwave() {
-        match load_data().await {
+    #[test]
+    fn test_cdlhighwave() {
+        match load_data() {
             Ok(df) => {
-                match cdlhighwave(df, Some("cdlhighwave")).await {
+                match cdlhighwave(df, Some("cdlhighwave")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlhighwave.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlhighwave.csv").unwrap();
                         println!(
                             "CDLHIGHWAVE calculated and saved to download/test_cdlhighwave.csv"
                         );
@@ -5135,15 +5011,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlhikkake() {
-        match load_data().await {
+    #[test]
+    fn test_cdlhikkake() {
+        match load_data() {
             Ok(df) => {
-                match cdlhikkake(df, Some("cdlhikkake")).await {
+                match cdlhikkake(df, Some("cdlhikkake")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlhikkake.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlhikkake.csv").unwrap();
                         println!("CDLHIKKAKE calculated and saved to download/test_cdlhikkake.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlhikkake: {:?}", e),
@@ -5153,15 +5027,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlhikkakemod() {
-        match load_data().await {
+    #[test]
+    fn test_cdlhikkakemod() {
+        match load_data() {
             Ok(df) => {
-                match cdlhikkakemod(df, Some("cdlhikkakemod")).await {
+                match cdlhikkakemod(df, Some("cdlhikkakemod")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlhikkakemod.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlhikkakemod.csv").unwrap();
                         println!(
                             "CDLHIKKAKEMOD calculated and saved to download/test_cdlhikkakemod.csv"
                         );
@@ -5173,15 +5045,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlhomingpigeon() {
-        match load_data().await {
+    #[test]
+    fn test_cdlhomingpigeon() {
+        match load_data() {
             Ok(df) => {
-                match cdlhomingpigeon(df, Some("cdlhomingpigeon")).await {
+                match cdlhomingpigeon(df, Some("cdlhomingpigeon")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlhomingpigeon.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlhomingpigeon.csv").unwrap();
                         println!("CDLHOMINGPIGEON calculated and saved to download/test_cdlhomingpigeon.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlhomingpigeon: {:?}", e),
@@ -5191,15 +5061,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlidentical3crows() {
-        match load_data().await {
+    #[test]
+    fn test_cdlidentical3crows() {
+        match load_data() {
             Ok(df) => {
-                match cdlidentical3crows(df, Some("cdlidentical3crows")).await {
+                match cdlidentical3crows(df, Some("cdlidentical3crows")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlidentical3crows.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlidentical3crows.csv").unwrap();
                         println!("CDLIDENTICAL3CROWS calculated and saved to download/test_cdlidentical3crows.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlidentical3crows: {:?}", e),
@@ -5209,15 +5077,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlinneck() {
-        match load_data().await {
+    #[test]
+    fn test_cdlinneck() {
+        match load_data() {
             Ok(df) => {
-                match cdlinneck(df, Some("cdlinneck")).await {
+                match cdlinneck(df, Some("cdlinneck")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlinneck.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlinneck.csv").unwrap();
                         println!("CDLINNECK calculated and saved to download/test_cdlinneck.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlinneck: {:?}", e),
@@ -5227,15 +5093,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlinvertedhammer() {
-        match load_data().await {
+    #[test]
+    fn test_cdlinvertedhammer() {
+        match load_data() {
             Ok(df) => {
-                match cdlinvertedhammer(df, Some("cdlinvertedhammer")).await {
+                match cdlinvertedhammer(df, Some("cdlinvertedhammer")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlinvertedhammer.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlinvertedhammer.csv").unwrap();
                         println!("CDLINVERTEDHAMMER calculated and saved to download/test_cdlinvertedhammer.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlinvertedhammer: {:?}", e),
@@ -5245,15 +5109,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlkicking() {
-        match load_data().await {
+    #[test]
+    fn test_cdlkicking() {
+        match load_data() {
             Ok(df) => {
-                match cdlkicking(df, Some("cdlkicking")).await {
+                match cdlkicking(df, Some("cdlkicking")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlkicking.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlkicking.csv").unwrap();
                         println!("CDLKICKING calculated and saved to download/test_cdlkicking.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlkicking: {:?}", e),
@@ -5263,15 +5125,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlkickingbylength() {
-        match load_data().await {
+    #[test]
+    fn test_cdlkickingbylength() {
+        match load_data() {
             Ok(df) => {
-                match cdlkickingbylength(df, Some("cdlkickingbylength")).await {
+                match cdlkickingbylength(df, Some("cdlkickingbylength")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlkickingbylength.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlkickingbylength.csv").unwrap();
                         println!("CDLKICKINGBYLENGTH calculated and saved to download/test_cdlkickingbylength.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlkickingbylength: {:?}", e),
@@ -5281,15 +5141,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdladderbottom() {
-        match load_data().await {
+    #[test]
+    fn test_cdladderbottom() {
+        match load_data() {
             Ok(df) => {
-                match cdladderbottom(df, Some("cdladderbottom")).await {
+                match cdladderbottom(df, Some("cdladderbottom")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdladderbottom.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdladderbottom.csv").unwrap();
                         println!("CDLLADDERBOTTOM calculated and saved to download/test_cdladderbottom.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdladderbottom: {:?}", e),
@@ -5299,15 +5157,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdllongleggeddoji() {
-        match load_data().await {
+    #[test]
+    fn test_cdllongleggeddoji() {
+        match load_data() {
             Ok(df) => {
-                match cdllongleggeddoji(df, Some("cdllongleggeddoji")).await {
+                match cdllongleggeddoji(df, Some("cdllongleggeddoji")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdllongleggeddoji.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdllongleggeddoji.csv").unwrap();
                         println!("CDLLONGLEGGEDDOJI calculated and saved to download/test_cdllongleggeddoji.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdllongleggeddoji: {:?}", e),
@@ -5317,15 +5173,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdllongline() {
-        match load_data().await {
+    #[test]
+    fn test_cdllongline() {
+        match load_data() {
             Ok(df) => {
-                match cdllongline(df, Some("cdllongline")).await {
+                match cdllongline(df, Some("cdllongline")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdllongline.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdllongline.csv").unwrap();
                         println!(
                             "CDLLONGLINE calculated and saved to download/test_cdllongline.csv"
                         );
@@ -5337,15 +5191,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlmarubozu() {
-        match load_data().await {
+    #[test]
+    fn test_cdlmarubozu() {
+        match load_data() {
             Ok(df) => {
-                match cdlmarubozu(df, Some("cdlmarubozu")).await {
+                match cdlmarubozu(df, Some("cdlmarubozu")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlmarubozu.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlmarubozu.csv").unwrap();
                         println!(
                             "CDLMARUBOZU calculated and saved to download/test_cdlmarubozu.csv"
                         );
@@ -5357,15 +5209,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlmatchinglow() {
-        match load_data().await {
+    #[test]
+    fn test_cdlmatchinglow() {
+        match load_data() {
             Ok(df) => {
-                match cdlmatchinglow(df, Some("cdlmatchinglow")).await {
+                match cdlmatchinglow(df, Some("cdlmatchinglow")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlmatchinglow.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlmatchinglow.csv").unwrap();
                         println!("CDLMATCHINGLOW calculated and saved to download/test_cdlmatchinglow.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlmatchinglow: {:?}", e),
@@ -5375,15 +5225,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_cdlmathold() {
-        match load_data().await {
+    #[test]
+    fn test_cdlmathold() {
+        match load_data() {
             Ok(df) => {
-                match cdlmathold(df, Some("cdlmathold")).await {
+                match cdlmathold(df, Some("cdlmathold")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_cdlmathold.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_cdlmathold.csv").unwrap();
                         println!("CDLMATHOLD calculated and saved to download/test_cdlmathold.csv");
                     }
                     Err(e) => panic!("Failed to calculate cdlmathold: {:?}", e),

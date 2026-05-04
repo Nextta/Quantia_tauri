@@ -201,25 +201,19 @@ impl Backtest {
         //TODO: Añadir los indicadores de la estrategia al dataframe de datos.
         for indicator in &self.estrategia.indicadores {
             df = match indicator.tipo.as_str() {
-                "HT_DCPERIOD" => ht_dcperiod(df, Some(&indicator.nombre)).await?,
-                "HT_DCPHASE" => ht_dcphase(df, Some(&indicator.nombre)).await?,
-                "HT_PHASOR" => {
-                    ht_phasor(
-                        df,
-                        Some(format!("{}_in_phase", &indicator.nombre).as_str()),
-                        Some(format!("{}_quadrature", &indicator.nombre).as_str()),
-                    )
-                    .await?
-                }
-                "HT_SINE" => {
-                    ht_sine(
-                        df,
-                        Some(format!("{}_sine", &indicator.nombre).as_str()),
-                        Some(format!("{}_lead_sine", &indicator.nombre).as_str()),
-                    )
-                    .await?
-                }
-                "HT_TRENDMODE" => ht_trendmode(df, Some(&indicator.nombre)).await?,
+                "HT_DCPERIOD" => ht_dcperiod(df, Some(&indicator.nombre))?,
+                "HT_DCPHASE" => ht_dcphase(df, Some(&indicator.nombre))?,
+                "HT_PHASOR" => ht_phasor(
+                    df,
+                    Some(format!("{}_in_phase", &indicator.nombre).as_str()),
+                    Some(format!("{}_quadrature", &indicator.nombre).as_str()),
+                )?,
+                "HT_SINE" => ht_sine(
+                    df,
+                    Some(format!("{}_sine", &indicator.nombre).as_str()),
+                    Some(format!("{}_lead_sine", &indicator.nombre).as_str()),
+                )?,
+                "HT_TRENDMODE" => ht_trendmode(df, Some(&indicator.nombre))?,
                 "BBANDS" => {
                     let parametros =
                         serde_json::from_value::<BbandsParams>(indicator.parametros.clone())
@@ -233,23 +227,22 @@ impl Backtest {
                         Some(format!("{}_bb_upper", &indicator.nombre).as_str()),
                         Some(format!("{}_bb_upper", &indicator.nombre).as_str()),
                         Some(format!("{}_bb_upper", &indicator.nombre).as_str()),
-                    )
-                    .await?
+                    )?
                 }
                 "DEMA" => {
                     let parametros =
                         serde_json::from_value::<DemaParams>(indicator.parametros.clone()).unwrap();
-                    dema(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                    dema(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
                 "EMA" => {
                     let parametros =
                         serde_json::from_value::<EmaParams>(indicator.parametros.clone()).unwrap();
-                    ema(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                    ema(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
                 "KAMA" => {
                     let parametros =
                         serde_json::from_value::<KamaParams>(indicator.parametros.clone()).unwrap();
-                    kama(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                    kama(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
                 "MA" => {
                     let parametros =
@@ -259,8 +252,7 @@ impl Backtest {
                         Some(parametros.timeperiod),
                         Some(parametros.matype),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
                 "MAMA" => {
                     let parametros =
@@ -271,20 +263,19 @@ impl Backtest {
                         Some(parametros.slowlimit),
                         Some(format!("{}_mama", &indicator.nombre).as_str()),
                         Some(format!("{}_fama", &indicator.nombre).as_str()),
-                    )
-                    .await?
+                    )?
                 }
                 "MIDPOINT" => {
                     let parametros =
                         serde_json::from_value::<MidpointParams>(indicator.parametros.clone())
                             .unwrap();
-                    midpoint(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                    midpoint(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
                 "MIDPRICE" => {
                     let parametros =
                         serde_json::from_value::<MidpriceParams>(indicator.parametros.clone())
                             .unwrap();
-                    midprice(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                    midprice(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
                 "SAR" => {
                     let parametros =
@@ -294,8 +285,7 @@ impl Backtest {
                         Some(parametros.acceleration),
                         Some(parametros.maximum),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
                 "SAREXT" => {
                     let parametros =
@@ -309,13 +299,12 @@ impl Backtest {
                         Some(parametros.blockonlong),
                         Some(parametros.blockonshort),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
                 "SMA" => {
                     let parametros =
                         serde_json::from_value::<SmaParams>(indicator.parametros.clone()).unwrap();
-                    sma(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                    sma(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
                 "T3" => {
                     let parametros =
@@ -325,111 +314,108 @@ impl Backtest {
                         Some(parametros.timeperiod),
                         Some(parametros.vfactor),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
                 "TEMA" => {
                     let parametros =
                         serde_json::from_value::<TemaParams>(indicator.parametros.clone()).unwrap();
-                    tema(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                    tema(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
                 "TRIMA" => {
                     let parametros =
                         serde_json::from_value::<TrimaParams>(indicator.parametros.clone())
                             .unwrap();
-                    trima(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                    trima(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
                 "WMA" => {
                     let parametros =
                         serde_json::from_value::<WmaParams>(indicator.parametros.clone()).unwrap();
-                    wma(df, Some(parametros.timeperiod), Some(&indicator.nombre)).await?
+                    wma(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
-                "CDL2CROWS" => cdlupsidegap2crows(df, Some(&indicator.nombre)).await?,
-                "CDL3BLACKCROWS" => cdl3blackcrows(df, Some(&indicator.nombre)).await?,
-                "CDL3INSIDE" => cdl3inside(df, Some(&indicator.nombre)).await?,
-                "CDL3LINESTRIKE" => cdl3linestrike(df, Some(&indicator.nombre)).await?,
-                "CDL3OUTSIDE" => cdl3outside(df, Some(&indicator.nombre)).await?,
-                "CDL3STARSINSOUTH" => cdl3starsinsouth(df, Some(&indicator.nombre)).await?,
-                "CDL3WHITESOLDIERS" => cdl3whitesoldiers(df, Some(&indicator.nombre)).await?,
-                "CDLABANDONEDBABY" => cdlabandonedbaby(df, Some(&indicator.nombre)).await?,
-                "CDLADVANCEBLOCK" => cdladvanceblock(df, Some(&indicator.nombre)).await?,
-                "CDLBELTHOLD" => cdlbelthold(df, Some(&indicator.nombre)).await?,
-                "CDLBREAKAWAY" => cdlbreakaway(df, Some(&indicator.nombre)).await?,
-                "CDLCLOSINGMARUBOZU" => cdlclosingmarubuzo(df, Some(&indicator.nombre)).await?,
-                "CDLCONCEALBABYSWALL" => cdlconcealbabyswall(df, Some(&indicator.nombre)).await?,
-                "CDLCOUNTERATTACK" => cdlcounterattack(df, Some(&indicator.nombre)).await?,
-                "CDLDARKCLOUDCOVER" => cdldarkcloudcover(df, Some(&indicator.nombre)).await?,
-                "CDLDOJI" => cdldoji(df, Some(&indicator.nombre)).await?,
-                "CDLDOJISTAR" => cdldojistar(df, Some(&indicator.nombre)).await?,
-                "CDLDRAGONFLYDOJI" => cdldragonflydoji(df, Some(&indicator.nombre)).await?,
-                "CDLENGULFING" => cdlengulfing(df, Some(&indicator.nombre)).await?,
-                "CDLEVENINGDOJISTAR" => cdleveningdojistar(df, Some(&indicator.nombre)).await?,
-                "CDLEVENINGSTAR" => cdleveningstar(df, Some(&indicator.nombre)).await?,
-                "CDLGAPSIDESIDEWHITE" => cdlgapsidesidewhite(df, Some(&indicator.nombre)).await?,
-                "CDLGRAVESTONEDOJI" => cdlgravestonedoji(df, Some(&indicator.nombre)).await?,
-                "CDLHAMMER" => cdlhammer(df, Some(&indicator.nombre)).await?,
-                "CDLHANGINGMAN" => cdlhangingman(df, Some(&indicator.nombre)).await?,
-                "CDLHARAMI" => cdlharami(df, Some(&indicator.nombre)).await?,
-                "CDLHARAMICROSS" => cdlharamicross(df, Some(&indicator.nombre)).await?,
-                "CDLHIGHWAVE" => cdlhighwave(df, Some(&indicator.nombre)).await?,
-                "CDLHIKKAKE" => cdlhikkake(df, Some(&indicator.nombre)).await?,
-                "CDLHIKKAKEMOD" => cdlhikkakemod(df, Some(&indicator.nombre)).await?,
-                "CDLHOMINGPIGEON" => cdlhomingpigeon(df, Some(&indicator.nombre)).await?,
-                "CDLIDENTICAL3CROWS" => cdlidentical3crows(df, Some(&indicator.nombre)).await?,
-                "CDLINNECK" => cdlinneck(df, Some(&indicator.nombre)).await?,
-                "CDLINVERTEDHAMMER" => cdlinvertedhammer(df, Some(&indicator.nombre)).await?,
-                "CDLKICKING" => cdlkicking(df, Some(&indicator.nombre)).await?,
-                "CDLKICKINGBYLENGTH" => cdlkickingbylength(df, Some(&indicator.nombre)).await?,
-                "CDLLADDERBOTTOM" => cdladderbottom(df, Some(&indicator.nombre)).await?,
-                "CDLLONGLEGGEDDOJI" => cdllongleggeddoji(df, Some(&indicator.nombre)).await?,
-                "CDLLONGLINE" => cdllongline(df, Some(&indicator.nombre)).await?,
-                "CDLMARUBOZU" => cdlmarubozu(df, Some(&indicator.nombre)).await?,
-                "CDLMATCHINGLOW" => cdlmatchinglow(df, Some(&indicator.nombre)).await?,
-                "CDLMATHOLD" => cdlmathold(df, Some(&indicator.nombre)).await?,
+                "CDL2CROWS" => cdlupsidegap2crows(df, Some(&indicator.nombre))?,
+                "CDL3BLACKCROWS" => cdl3blackcrows(df, Some(&indicator.nombre))?,
+                "CDL3INSIDE" => cdl3inside(df, Some(&indicator.nombre))?,
+                "CDL3LINESTRIKE" => cdl3linestrike(df, Some(&indicator.nombre))?,
+                "CDL3OUTSIDE" => cdl3outside(df, Some(&indicator.nombre))?,
+                "CDL3STARSINSOUTH" => cdl3starsinsouth(df, Some(&indicator.nombre))?,
+                "CDL3WHITESOLDIERS" => cdl3whitesoldiers(df, Some(&indicator.nombre))?,
+                "CDLABANDONEDBABY" => cdlabandonedbaby(df, Some(&indicator.nombre))?,
+                "CDLADVANCEBLOCK" => cdladvanceblock(df, Some(&indicator.nombre))?,
+                "CDLBELTHOLD" => cdlbelthold(df, Some(&indicator.nombre))?,
+                "CDLBREAKAWAY" => cdlbreakaway(df, Some(&indicator.nombre))?,
+                "CDLCLOSINGMARUBOZU" => cdlclosingmarubuzo(df, Some(&indicator.nombre))?,
+                "CDLCONCEALBABYSWALL" => cdlconcealbabyswall(df, Some(&indicator.nombre))?,
+                "CDLCOUNTERATTACK" => cdlcounterattack(df, Some(&indicator.nombre))?,
+                "CDLDARKCLOUDCOVER" => cdldarkcloudcover(df, Some(&indicator.nombre))?,
+                "CDLDOJI" => cdldoji(df, Some(&indicator.nombre))?,
+                "CDLDOJISTAR" => cdldojistar(df, Some(&indicator.nombre))?,
+                "CDLDRAGONFLYDOJI" => cdldragonflydoji(df, Some(&indicator.nombre))?,
+                "CDLENGULFING" => cdlengulfing(df, Some(&indicator.nombre))?,
+                "CDLEVENINGDOJISTAR" => cdleveningdojistar(df, Some(&indicator.nombre))?,
+                "CDLEVENINGSTAR" => cdleveningstar(df, Some(&indicator.nombre))?,
+                "CDLGAPSIDESIDEWHITE" => cdlgapsidesidewhite(df, Some(&indicator.nombre))?,
+                "CDLGRAVESTONEDOJI" => cdlgravestonedoji(df, Some(&indicator.nombre))?,
+                "CDLHAMMER" => cdlhammer(df, Some(&indicator.nombre))?,
+                "CDLHANGINGMAN" => cdlhangingman(df, Some(&indicator.nombre))?,
+                "CDLHARAMI" => cdlharami(df, Some(&indicator.nombre))?,
+                "CDLHARAMICROSS" => cdlharamicross(df, Some(&indicator.nombre))?,
+                "CDLHIGHWAVE" => cdlhighwave(df, Some(&indicator.nombre))?,
+                "CDLHIKKAKE" => cdlhikkake(df, Some(&indicator.nombre))?,
+                "CDLHIKKAKEMOD" => cdlhikkakemod(df, Some(&indicator.nombre))?,
+                "CDLHOMINGPIGEON" => cdlhomingpigeon(df, Some(&indicator.nombre))?,
+                "CDLIDENTICAL3CROWS" => cdlidentical3crows(df, Some(&indicator.nombre))?,
+                "CDLINNECK" => cdlinneck(df, Some(&indicator.nombre))?,
+                "CDLINVERTEDHAMMER" => cdlinvertedhammer(df, Some(&indicator.nombre))?,
+                "CDLKICKING" => cdlkicking(df, Some(&indicator.nombre))?,
+                "CDLKICKINGBYLENGTH" => cdlkickingbylength(df, Some(&indicator.nombre))?,
+                "CDLLADDERBOTTOM" => cdladderbottom(df, Some(&indicator.nombre))?,
+                "CDLLONGLEGGEDDOJI" => cdllongleggeddoji(df, Some(&indicator.nombre))?,
+                "CDLLONGLINE" => cdllongline(df, Some(&indicator.nombre))?,
+                "CDLMARUBOZU" => cdlmarubozu(df, Some(&indicator.nombre))?,
+                "CDLMATCHINGLOW" => cdlmatchinglow(df, Some(&indicator.nombre))?,
+                "CDLMATHOLD" => cdlmathold(df, Some(&indicator.nombre))?,
                 "CDLMORNINGDOJISTAR" => {
                     let parametros =
                         serde_json::from_value::<MorningDojiStar>(indicator.parametros.clone())
                             .unwrap();
-                    cdlmorningdojistar(df, Some(parametros.penetration), Some(&indicator.nombre))
-                        .await?
+                    cdlmorningdojistar(df, Some(parametros.penetration), Some(&indicator.nombre))?
                 }
                 "CDLMORNINGSTAR" => {
                     let parametros =
                         serde_json::from_value::<MorningStar>(indicator.parametros.clone())
                             .unwrap();
-                    cdlmorningstar(df, Some(parametros.penetration), Some(&indicator.nombre))
-                        .await?
+                    cdlmorningstar(df, Some(parametros.penetration), Some(&indicator.nombre))?
                 }
-                "CDLONNECK" => cdlonneck(df, Some(&indicator.nombre)).await?,
+                "CDLONNECK" => cdlonneck(df, Some(&indicator.nombre))?,
                 "CDLPIERCING" => {
                     let parametros =
                         serde_json::from_value::<Piercing>(indicator.parametros.clone()).unwrap();
-                    cdlpiercing(df, Some(parametros.penetration), Some(&indicator.nombre)).await?
+                    cdlpiercing(df, Some(parametros.penetration), Some(&indicator.nombre))?
                 }
-                "CDLRICKSHAWMAN" => cdlrickshawman(df, Some(&indicator.nombre)).await?,
-                "CDLRISEFALL3METHODS" => cdlrisefall3methods(df, Some(&indicator.nombre)).await?,
-                "CDLSEPARATINGLINES" => cdlseparatinglines(df, Some(&indicator.nombre)).await?,
-                "CDLSHOOTINGSTAR" => cdlshootingstar(df, Some(&indicator.nombre)).await?,
-                "CDLSHORTLINE" => cdlshortline(df, Some(&indicator.nombre)).await?,
-                "CDLSPINNINGTOP" => cdlspinningtop(df, Some(&indicator.nombre)).await?,
-                "CDLSTALLEDPATTERN" => cdlstalledpattern(df, Some(&indicator.nombre)).await?,
-                "CDLSTICKSANDWICH" => cdlsticksandwich(df, Some(&indicator.nombre)).await?,
-                "CDLTAKURI" => cdltakuri(df, Some(&indicator.nombre)).await?,
-                "CDLTASUKIGAP" => cdltasukigap(df, Some(&indicator.nombre)).await?,
-                "CDLTHRUSTING" => cdlthrusting(df, Some(&indicator.nombre)).await?,
-                "CDLTRISTAR" => cdltristar(df, Some(&indicator.nombre)).await?,
-                "CDLUNIQUE3RIVER" => cdlunique3river(df, Some(&indicator.nombre)).await?,
-                "CDLUPSIDEGAP2CROWS" => cdlupsidegap2crows(df, Some(&indicator.nombre)).await?,
-                "CDLXSIDEGAP3METHODS" => cdlxsidegap3methods(df, Some(&indicator.nombre)).await?,
+                "CDLRICKSHAWMAN" => cdlrickshawman(df, Some(&indicator.nombre))?,
+                "CDLRISEFALL3METHODS" => cdlrisefall3methods(df, Some(&indicator.nombre))?,
+                "CDLSEPARATINGLINES" => cdlseparatinglines(df, Some(&indicator.nombre))?,
+                "CDLSHOOTINGSTAR" => cdlshootingstar(df, Some(&indicator.nombre))?,
+                "CDLSHORTLINE" => cdlshortline(df, Some(&indicator.nombre))?,
+                "CDLSPINNINGTOP" => cdlspinningtop(df, Some(&indicator.nombre))?,
+                "CDLSTALLEDPATTERN" => cdlstalledpattern(df, Some(&indicator.nombre))?,
+                "CDLSTICKSANDWICH" => cdlsticksandwich(df, Some(&indicator.nombre))?,
+                "CDLTAKURI" => cdltakuri(df, Some(&indicator.nombre))?,
+                "CDLTASUKIGAP" => cdltasukigap(df, Some(&indicator.nombre))?,
+                "CDLTHRUSTING" => cdlthrusting(df, Some(&indicator.nombre))?,
+                "CDLTRISTAR" => cdltristar(df, Some(&indicator.nombre))?,
+                "CDLUNIQUE3RIVER" => cdlunique3river(df, Some(&indicator.nombre))?,
+                "CDLUPSIDEGAP2CROWS" => cdlupsidegap2crows(df, Some(&indicator.nombre))?,
+                "CDLXSIDEGAP3METHODS" => cdlxsidegap3methods(df, Some(&indicator.nombre))?,
                 "ADX" => {
                     let params: AdxParams =
                         serde_json::from_value::<AdxParams>(indicator.parametros.clone()).unwrap();
-                    adx(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    adx(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "ADXR" => {
                     let params: AdxrParams =
                         serde_json::from_value::<AdxrParams>(indicator.parametros.clone()).unwrap();
-                    adxr(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    adxr(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "APO" => {
                     let params: ApoParams =
@@ -439,8 +425,7 @@ impl Backtest {
                         Some(params.fastperiod),
                         Some(params.slowperiod),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
                 "AROON" => {
                     let params: AroonParams =
@@ -451,34 +436,33 @@ impl Backtest {
                         Some(params.timeperiod),
                         Some(format!("{}_col_up", &indicator.nombre).as_str()),
                         Some(format!("{}_col_down", &indicator.nombre).as_str()),
-                    )
-                    .await?
+                    )?
                 }
                 "AROONOSC" => {
                     let params: AroonoscParams =
                         serde_json::from_value::<AroonoscParams>(indicator.parametros.clone())
                             .unwrap();
-                    aroonosc(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    aroonosc(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "BOP" => {
                     let params: BopParams =
                         serde_json::from_value::<BopParams>(indicator.parametros.clone()).unwrap();
-                    bop(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    bop(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "CCI" => {
                     let params: CciParams =
                         serde_json::from_value::<CciParams>(indicator.parametros.clone()).unwrap();
-                    cci(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    cci(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "CMO" => {
                     let params: CmoParams =
                         serde_json::from_value::<CmoParams>(indicator.parametros.clone()).unwrap();
-                    cmo(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    cmo(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "DX" => {
                     let params: DxParams =
                         serde_json::from_value::<DxParams>(indicator.parametros.clone()).unwrap();
-                    dx(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    dx(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "MACD" => {
                     let params: MacdParams =
@@ -491,8 +475,7 @@ impl Backtest {
                         Some(&indicator.nombre),
                         Some(format!("{}_col_signal", &indicator.nombre).as_str()),
                         Some(format!("{}_col_hist", &indicator.nombre).as_str()),
-                    )
-                    .await?
+                    )?
                 }
                 "MACDEXT" => {
                     let params: MacdextParams =
@@ -509,8 +492,7 @@ impl Backtest {
                         Some(&indicator.nombre),
                         Some(format!("{}_col_signal", &indicator.nombre).as_str()),
                         Some(format!("{}_col_hist", &indicator.nombre).as_str()),
-                    )
-                    .await?
+                    )?
                 }
                 "MACDFIX" => {
                     let params: MacdfixParams =
@@ -522,42 +504,41 @@ impl Backtest {
                         Some(&indicator.nombre),
                         Some(format!("{}_col_signal", &indicator.nombre).as_str()),
                         Some(format!("{}_col_hist", &indicator.nombre).as_str()),
-                    )
-                    .await?
+                    )?
                 }
                 "MFI" => {
                     let params: MfiParams =
                         serde_json::from_value::<MfiParams>(indicator.parametros.clone()).unwrap();
-                    mfi(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    mfi(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "MINUS_DI" => {
                     let params: MinusDiParams =
                         serde_json::from_value::<MinusDiParams>(indicator.parametros.clone())
                             .unwrap();
-                    minus_di(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    minus_di(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "MINUS_DM" => {
                     let params: MinusDmParams =
                         serde_json::from_value::<MinusDmParams>(indicator.parametros.clone())
                             .unwrap();
-                    minus_dm(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    minus_dm(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "MOM" => {
                     let params: MomParams =
                         serde_json::from_value::<MomParams>(indicator.parametros.clone()).unwrap();
-                    mom(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    mom(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "PLUS_DI" => {
                     let params: PlusDiParams =
                         serde_json::from_value::<PlusDiParams>(indicator.parametros.clone())
                             .unwrap();
-                    plus_di(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    plus_di(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "PLUS_DM" => {
                     let params: PlusDmParams =
                         serde_json::from_value::<PlusDmParams>(indicator.parametros.clone())
                             .unwrap();
-                    plus_dm(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    plus_dm(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "PPO" => {
                     let params: PpoParams =
@@ -567,34 +548,33 @@ impl Backtest {
                         Some(params.fastperiod),
                         Some(params.slowperiod),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
                 "ROC" => {
                     let params: RocParams =
                         serde_json::from_value::<RocParams>(indicator.parametros.clone()).unwrap();
-                    roc(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    roc(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "ROCP" => {
                     let params: RocpParams =
                         serde_json::from_value::<RocpParams>(indicator.parametros.clone()).unwrap();
-                    rocp(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    rocp(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "ROCR" => {
                     let params: RocrParams =
                         serde_json::from_value::<RocrParams>(indicator.parametros.clone()).unwrap();
-                    rocr(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    rocr(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "ROCR100" => {
                     let params: Roc100Params =
                         serde_json::from_value::<Roc100Params>(indicator.parametros.clone())
                             .unwrap();
-                    rocr100(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    rocr100(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "RSI" => {
                     let params: RsiParams =
                         serde_json::from_value::<RsiParams>(indicator.parametros.clone()).unwrap();
-                    rsi(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    rsi(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "STOCH" => {
                     let params: StochParams =
@@ -608,8 +588,7 @@ impl Backtest {
                         Some(params.slowd_period),
                         Some(format!("{}_col_k", &indicator.nombre).as_str()),
                         Some(format!("{}_col_d", &indicator.nombre).as_str()),
-                    )
-                    .await?
+                    )?
                 }
                 "STOCHF" => {
                     let params: StochfParams =
@@ -622,8 +601,7 @@ impl Backtest {
                         Some(params.fastd_matype),
                         Some(format!("{}_col_k", &indicator.nombre).as_str()),
                         Some(format!("{}_col_d", &indicator.nombre).as_str()),
-                    )
-                    .await?
+                    )?
                 }
                 "STOCHRSI" => {
                     let params: StochRsiParams =
@@ -637,13 +615,12 @@ impl Backtest {
                         Some(params.fastd_matype),
                         Some(format!("{}_col_k", &indicator.nombre).as_str()),
                         Some(format!("{}_col_d", &indicator.nombre).as_str()),
-                    )
-                    .await?
+                    )?
                 }
                 "TRIX" => {
                     let params: TrixParams =
                         serde_json::from_value::<TrixParams>(indicator.parametros.clone()).unwrap();
-                    trix(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    trix(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "ULTOSC" => {
                     let params: UltoscParams =
@@ -655,14 +632,13 @@ impl Backtest {
                         Some(params.timeperiod2),
                         Some(params.timeperiod3),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
                 "WILLR" => {
                     let params: WillrParams =
                         serde_json::from_value::<WillrParams>(indicator.parametros.clone())
                             .unwrap();
-                    willr(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    willr(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "AVGPRICE" => avgprice(df, Some(&indicator.nombre))?,
                 "MEDPRICE" => medprice(df, Some(&indicator.nombre))?,
@@ -677,8 +653,7 @@ impl Backtest {
                         &params.col_real1,
                         Some(params.timeperiod),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
                 "CORREL" => {
                     let params: CorrelParams =
@@ -690,8 +665,7 @@ impl Backtest {
                         &params.col_real1,
                         Some(params.timeperiod),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
                 "LINEARREG" => {
                     let params: LinearRegParams =
@@ -702,8 +676,7 @@ impl Backtest {
                         &params.col_real,
                         Some(params.timeperiod),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
                 "LINEARREG_ANGLE" => {
                     let params: LinearRegAngleParams =
@@ -716,8 +689,7 @@ impl Backtest {
                         &params.col_real,
                         Some(params.timeperiod),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
                 "LINEARREG_INTERCEPT" => {
                     let params: LinearRegInterceptParams =
@@ -730,8 +702,7 @@ impl Backtest {
                         &params.col_real,
                         Some(params.timeperiod),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
                 "LINEARREG_SLOPE" => {
                     let params: LinearRegSlopeParams =
@@ -744,8 +715,7 @@ impl Backtest {
                         &params.col_real,
                         Some(params.timeperiod),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
                 "STDDEV" => {
                     let params: StddevParams =
@@ -757,8 +727,7 @@ impl Backtest {
                         Some(params.timeperiod),
                         Some(params.nbdev),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
                 "TSF" => {
                     let params: TsfParams =
@@ -768,8 +737,7 @@ impl Backtest {
                         &params.col_real,
                         Some(params.timeperiod),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
                 "VAR" => {
                     let params: VarParams =
@@ -780,21 +748,20 @@ impl Backtest {
                         Some(params.timeperiod),
                         Some(params.nbdev),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
-                "TRANGE" => trange(df, Some(&indicator.nombre)).await?,
+                "TRANGE" => trange(df, Some(&indicator.nombre))?,
                 "ATR" => {
                     let params: AtrParams =
                         serde_json::from_value::<AtrParams>(indicator.parametros.clone()).unwrap();
-                    atr(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    atr(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "NATR" => {
                     let params: NatrParams =
                         serde_json::from_value::<NatrParams>(indicator.parametros.clone()).unwrap();
-                    natr(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
+                    natr(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
-                "AD" => ad(df, Some(&indicator.nombre)).await?,
+                "AD" => ad(df, Some(&indicator.nombre))?,
                 "ADOSC" => {
                     let params: AdoscParams =
                         serde_json::from_value::<AdoscParams>(indicator.parametros.clone())
@@ -804,10 +771,9 @@ impl Backtest {
                         Some(params.fastperiod),
                         Some(params.slowperiod),
                         Some(&indicator.nombre),
-                    )
-                    .await?
+                    )?
                 }
-                "OBV" => obv(df, Some(&indicator.nombre)).await?,
+                "OBV" => obv(df, Some(&indicator.nombre))?,
                 _ => df,
             }
         }
