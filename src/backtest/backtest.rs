@@ -858,12 +858,7 @@ impl Backtest {
         entry_options
     }
 
-    async fn get_limit(
-        &self,
-        df: DataFrame,
-        params: String,
-        i: usize,
-    ) -> Result<f64, serde_json::Error> {
+    fn get_limit(&self, df: DataFrame, params: String, i: usize) -> Result<f64, serde_json::Error> {
         #[derive(Debug, Clone, Deserialize, Serialize)]
         struct LimitParams {
             tipo: String,       // Tipo de limite: ask, bid, bb, atr... etc
@@ -1048,7 +1043,9 @@ impl Backtest {
                             && self.entry_options(&open_trades)
                             && self.test_conditions(df.clone(), accion.clone(), i).await
                         {
-                            todo!("Optener los parametros del acction");
+                            let precio_limite =
+                                self.get_limit(df.clone(), accion.parametros.to_string(), i)?;
+                            buy_limits.push(precio_limite);
                         }
                     }
                     "sell_limit" => {
@@ -1056,7 +1053,9 @@ impl Backtest {
                             && self.entry_options(&open_trades)
                             && self.test_conditions(df.clone(), accion.clone(), i).await
                         {
-                            todo!("Optener los parametros del acction");
+                            let precio_limite =
+                                self.get_limit(df.clone(), accion.parametros.to_string(), i)?;
+                            sell_limits.push(precio_limite);
                         }
                     }
                     "buy_stop" => {
@@ -1064,7 +1063,9 @@ impl Backtest {
                             && self.entry_options(&open_trades)
                             && self.test_conditions(df.clone(), accion.clone(), i).await
                         {
-                            todo!("Optener los parametros del acction");
+                            let precio_limite =
+                                self.get_limit(df.clone(), accion.parametros.to_string(), i)?;
+                            buy_stops.push(precio_limite);
                         }
                     }
                     "sell_stop" => {
@@ -1072,7 +1073,9 @@ impl Backtest {
                             && self.entry_options(&open_trades)
                             && self.test_conditions(df.clone(), accion.clone(), i).await
                         {
-                            todo!("Optener los parametros del acction");
+                            let precio_limite =
+                                self.get_limit(df.clone(), accion.parametros.to_string(), i)?;
+                            sell_stops.push(precio_limite);
                         }
                     }
                     _ => {}
