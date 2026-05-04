@@ -25,6 +25,7 @@ use serde::{Deserialize, Serialize};
 use chrono::DateTime;
 use polars::prelude::*;
 use std::collections::HashMap;
+use std::thread::panicking;
 use std::time::Instant;
 
 #[derive(Debug, Clone)]
@@ -663,10 +664,10 @@ impl Backtest {
                             .unwrap();
                     willr(df, Some(params.timeperiod), Some(&indicator.nombre)).await?
                 }
-                "AVGPRICE" => avgprice(df, Some(&indicator.nombre)).await?,
-                "MEDPRICE" => medprice(df, Some(&indicator.nombre)).await?,
-                "TYPPRICE" => typprice(df, Some(&indicator.nombre)).await?,
-                "WCLPRICE" => wclprice(df, Some(&indicator.nombre)).await?,
+                "AVGPRICE" => avgprice(df, Some(&indicator.nombre))?,
+                "MEDPRICE" => medprice(df, Some(&indicator.nombre))?,
+                "TYPPRICE" => typprice(df, Some(&indicator.nombre))?,
+                "WCLPRICE" => wclprice(df, Some(&indicator.nombre))?,
                 "BETA" => {
                     let params: BetaParams =
                         serde_json::from_value::<BetaParams>(indicator.parametros.clone()).unwrap();
@@ -889,6 +890,83 @@ impl Backtest {
             entry_options = true;
         }
         entry_options
+    }
+
+    async fn get_limit(
+        &self,
+        df: DataFrame,
+        params: String,
+        i: usize,
+    ) -> Result<f64, serde_json::Error> {
+        #[derive(Debug, Clone, Deserialize, Serialize)]
+        struct LimitParams {
+            tipo: String,       // Tipo de limite: ask, bid, bb, atr... etc
+            direccion: String,  // Direccion del limite: buy, sell
+            nombre_col: String, // Nombre de la columna a usar como limite
+            shift: usize,       // Numero de filas a desplazar
+            valor: f64,         // en caso de ser por pip, ticks o puntos
+        }
+
+        let params: LimitParams = serde_json::from_str(&params).unwrap();
+
+        let valor: f64 = df
+            .column(&params.nombre_col)
+            .unwrap()
+            .f64()
+            .unwrap()
+            .get(i - params.shift)
+            .unwrap_or(0.0);
+
+        let limit: f64 = match params.tipo.as_str() {
+            "pip" => {
+                if params.direccion == "buy" {
+                    valor + params.valor
+                } else if params.direccion == "sell" {
+                    valor - params.valor
+                } else {
+                    0.0
+                }
+            }
+            "tick" => {
+                if params.direccion == "buy" {
+                    valor + params.valor
+                } else if params.direccion == "sell" {
+                    valor - params.valor
+                } else {
+                    0.0
+                }
+            }
+            "punto" => {
+                if params.direccion == "buy" {
+                    valor + params.valor
+                } else if params.direccion == "sell" {
+                    valor - params.valor
+                } else {
+                    0.0
+                }
+            }
+            "porcentaje" => {
+                if params.direccion == "buy" {
+                    valor + (valor * params.valor)
+                } else if params.direccion == "sell" {
+                    valor - (valor * params.valor)
+                } else {
+                    0.0
+                }
+            }
+            "atr" => {
+                if params.direccion == "buy" {
+                    valor + params.valor
+                } else if params.direccion == "sell" {
+                    valor - params.valor
+                } else {
+                    0.0
+                }
+            }
+            _ => valor,
+        };
+
+        Ok(limit)
     }
 
     async fn backtest(

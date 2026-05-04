@@ -61,7 +61,7 @@ fn get_open(df: &DataFrame) -> PolarsResult<Series> {
 /// ```rust
 /// let df_with_avg = avgprice(df, None).await?;
 /// ```
-pub async fn avgprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn avgprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("avgprice");
 
     let open = get_open(&df)?;
@@ -107,7 +107,7 @@ pub async fn avgprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResu
 /// ```rust
 /// let df_with_med = medprice(df, None).await?;
 /// ```
-pub async fn medprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn medprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("medprice");
 
     let high = get_high(&df)?;
@@ -149,7 +149,7 @@ pub async fn medprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResu
 /// ```rust
 /// let df_with_typ = typprice(df, None).await?;
 /// ```
-pub async fn typprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn typprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("typprice");
 
     let high = get_high(&df)?;
@@ -194,7 +194,7 @@ pub async fn typprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResu
 /// ```rust
 /// let df_with_wcl = wclprice(df, None).await?;
 /// ```
-pub async fn wclprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn wclprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("wclprice");
 
     let high = get_high(&df)?;
@@ -213,13 +213,220 @@ pub async fn wclprice(mut df: DataFrame, output_col: Option<&str>) -> PolarsResu
     Ok(df)
 }
 
+/// Calcula las velas OHLC diarias a partir de un DataFrame de velas horarias.
+///
+/// # Argumentos
+///
+/// * `df` - DataFrame de velas horarias.
+/// * `output_col_open` - Nombre de la columna de apertura diaria.
+/// * `output_col_high` - Nombre de la columna de alta diaria.
+/// * `output_col_low` - Nombre de la columna de baja diaria.
+/// * `output_col_close` - Nombre de la columna de cierre diaria.
+///
+/// # Retorna
+///
+/// Un DataFrame con las velas OHLC diarias.
+///
+/// # Ejemplo
+/// ```rust
+/// let df_daily = daily_ohlc(df, None, None, None, None).await?;
+/// ```
+pub fn daily_ohlc(
+    df: DataFrame,
+    output_col_open: Option<&str>,
+    output_col_high: Option<&str>,
+    output_col_low: Option<&str>,
+    output_col_close: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let output_col_open = output_col_open.unwrap_or("open_daily");
+    let output_col_high = output_col_high.unwrap_or("high_daily");
+    let output_col_low = output_col_low.unwrap_or("low_daily");
+    let output_col_close = output_col_close.unwrap_or("close_daily");
+
+    let df_original: DataFrame = df
+        .clone()
+        .lazy()
+        .with_column(
+            (col("timestamp") / lit(86400000i64)) // Convertir ms a días desde epoch
+                .cast(DataType::Date) // Convertir a tipo Date
+                .alias("date"),
+        )
+        .collect()?;
+
+    let ohlc_daily = df_original
+        .clone()
+        .lazy()
+        .group_by([col("date")])
+        .agg([
+            col("open").first().alias(output_col_open),
+            col("high").max().alias(output_col_high),
+            col("low").min().alias(output_col_low),
+            col("close").last().alias(output_col_close),
+        ])
+        .collect()?;
+
+    let mut result: DataFrame = df_original
+        .clone()
+        .lazy()
+        .join(
+            ohlc_daily.lazy(),             // DataFrame derecho (OHLC diario)
+            [col("date")],                 // Clave join izquierdo
+            [col("date")],                 // Clave join derecho
+            JoinArgs::new(JoinType::Left), // Left join para mantener todas las velas
+        )
+        .collect()?;
+
+    result = result.drop("date")?;
+
+    Ok(result)
+}
+
+/// Calcula las velas OHLC semanales a partir de un DataFrame de velas.
+///
+/// # Argumentos
+///
+/// * `df` - DataFrame de velas diarias.
+/// * `output_col_open` - Nombre de la columna de apertura semanal.
+/// * `output_col_high` - Nombre de la columna de alta semanal.
+/// * `output_col_low` - Nombre de la columna de baja semanal.
+/// * `output_col_close` - Nombre de la columna de cierre semanal.
+///
+/// # Retorna
+///
+/// Un DataFrame con las velas OHLC semanales.
+///
+/// # Ejemplo
+/// ```rust
+/// let df_weekly = weekly_ohlc(df, None, None, None, None).await?;
+/// ```
+pub fn weekly_ohlc(
+    df: DataFrame,
+    output_col_open: Option<&str>,
+    output_col_high: Option<&str>,
+    output_col_low: Option<&str>,
+    output_col_close: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let output_col_open = output_col_open.unwrap_or("open_weekly");
+    let output_col_high = output_col_high.unwrap_or("high_weekly");
+    let output_col_low = output_col_low.unwrap_or("low_weekly");
+    let output_col_close = output_col_close.unwrap_or("close_weekly");
+
+    let lf = df.lazy();
+
+    // Crear columna week
+    let df_with_week = lf.with_column(
+        col("timestamp")
+            .cast(DataType::Datetime(TimeUnit::Milliseconds, None))
+            .dt()
+            .truncate(lit("1w"))
+            .alias("week"),
+    );
+
+    // OHLC semanal
+    let ohlc_weekly = df_with_week.clone().group_by([col("week")]).agg([
+        col("open").first().alias(output_col_open),
+        col("high").max().alias(output_col_high),
+        col("low").min().alias(output_col_low),
+        col("close").last().alias(output_col_close),
+    ]);
+
+    // Join
+    let mut result = df_with_week
+        .join(
+            ohlc_weekly,
+            [col("week")],
+            [col("week")],
+            JoinArgs::new(JoinType::Left),
+        )
+        .collect()?;
+
+    result = result.drop("week")?;
+
+    Ok(result)
+}
+
+/// Calcula las velas OHLC mensuales a partir de un DataFrame de velas.
+///
+/// # Argumentos
+///
+/// * `df` - DataFrame de velas diarias.
+/// * `output_col_open` - Nombre de la columna de apertura mensual.
+/// * `output_col_high` - Nombre de la columna de alta mensual.
+/// * `output_col_low` - Nombre de la columna de baja mensual.
+/// * `output_col_close` - Nombre de la columna de cierre mensual.
+///
+/// # Retorna
+///
+/// Un DataFrame con las velas OHLC mensuales.
+///
+/// # Ejemplo
+/// ```rust
+/// let df_monthly = monthly_ohlc(df, None, None, None, None);
+/// ```
+pub fn monthly_ohlc(
+    df: DataFrame,
+    output_col_open: Option<&str>,
+    output_col_high: Option<&str>,
+    output_col_low: Option<&str>,
+    output_col_close: Option<&str>,
+) -> PolarsResult<DataFrame> {
+    let output_col_open = output_col_open.unwrap_or("open_monthly");
+    let output_col_high = output_col_high.unwrap_or("high_monthly");
+    let output_col_low = output_col_low.unwrap_or("low_monthly");
+    let output_col_close = output_col_close.unwrap_or("close_monthly");
+
+    // PASO 1: Crear columna 'month' (fecha inicio mes) desde timestamp
+    let df_original: DataFrame = df
+        .clone()
+        .lazy()
+        .with_column(
+            col("timestamp")
+                .cast(DataType::Datetime(TimeUnit::Milliseconds, None))
+                .dt()
+                .truncate(lit("1mo"))
+                .cast(DataType::Date)
+                .alias("month"),
+        )
+        .collect()?;
+
+    // PASO 2: Group by 'month' → calcular OHLC mensual
+    let ohlc_monthly = df_original
+        .clone()
+        .lazy()
+        .group_by([col("month")])
+        .agg([
+            col("open").first().alias(output_col_open),
+            col("high").max().alias(output_col_high),
+            col("low").min().alias(output_col_low),
+            col("close").last().alias(output_col_close),
+        ])
+        .collect()?;
+
+    // PASO 3: Left join con df original por 'month'
+    let mut result: DataFrame = df_original
+        .clone()
+        .lazy()
+        .join(
+            ohlc_monthly.lazy(),
+            [col("month")],
+            [col("month")],
+            JoinArgs::new(JoinType::Left),
+        )
+        .collect()?;
+
+    // PASO 4: Eliminar columna 'month'
+    result = result.drop("month")?;
+
+    Ok(result)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     //Para los test crear una carpeta llamada download en la raiz de este proyecto
     // y llamar a los datos test.csv
-    async fn load_data() -> PolarsResult<DataFrame> {
+    fn load_data() -> PolarsResult<DataFrame> {
         let df = CsvReadOptions::default()
             .try_into_reader_with_file_path(Some("download/test.csv".into()))
             .unwrap()
@@ -228,21 +435,58 @@ mod tests {
         Ok(df)
     }
 
-    async fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
+    fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
         let mut df: DataFrame = df_result.clone();
         let mut file = std::fs::File::create(path).unwrap();
         CsvWriter::new(&mut file).finish(&mut df).unwrap();
         Ok(())
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_avgprice() {
-        match load_data().await {
-            Ok(df) => match avgprice(df, None).await {
+    #[test]
+    fn test_weekly_ohlc() {
+        match load_data() {
+            Ok(df) => match weekly_ohlc(df, None, None, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_avgprice.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_weekly_ohlc.csv").unwrap();
+                }
+                Err(e) => panic!("Failed to compute weekly_ohlc: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_daily_ohlc() {
+        match load_data() {
+            Ok(df) => match daily_ohlc(df, None, None, None, None) {
+                Ok(result) => {
+                    save_data(&result, "download/test_daily_ohlc.csv").unwrap();
+                }
+                Err(e) => panic!("Failed to compute daily_ohlc: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_monthly_ohlc() {
+        match load_data() {
+            Ok(df) => match monthly_ohlc(df, None, None, None, None) {
+                Ok(result) => {
+                    save_data(&result, "download/test_monthly_ohlc.csv").unwrap();
+                }
+                Err(e) => panic!("Failed to compute monthly_ohlc: {:?}", e),
+            },
+            Err(e) => panic!("Failed to load data: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_avgprice() {
+        match load_data() {
+            Ok(df) => match avgprice(df, None) {
+                Ok(result) => {
+                    save_data(&result, "download/test_avgprice.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute avgprice: {:?}", e),
             },
@@ -250,14 +494,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_medprice() {
-        match load_data().await {
-            Ok(df) => match medprice(df, None).await {
+    #[test]
+    fn test_medprice() {
+        match load_data() {
+            Ok(df) => match medprice(df, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_medprice.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_medprice.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute medprice: {:?}", e),
             },
@@ -265,14 +507,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_typprice() {
-        match load_data().await {
-            Ok(df) => match typprice(df, None).await {
+    #[test]
+    fn test_typprice() {
+        match load_data() {
+            Ok(df) => match typprice(df, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_typprice.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_typprice.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute typprice: {:?}", e),
             },
@@ -280,14 +520,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_wclprice() {
-        match load_data().await {
-            Ok(df) => match wclprice(df, None).await {
+    #[test]
+    fn test_wclprice() {
+        match load_data() {
+            Ok(df) => match wclprice(df, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_wclprice.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_wclprice.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute wclprice: {:?}", e),
             },
