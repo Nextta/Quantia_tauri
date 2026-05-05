@@ -1148,7 +1148,6 @@ impl Backtest {
                 .iter()
                 .filter(|acc| acc.tipo_signal == "Entry")
             {
-                todo("Añadir la funcionalidad de los stops y tp");
                 match accion.tipo.as_str() {
                     "buy" => {
                         if self.direction("buy")
@@ -1268,6 +1267,8 @@ impl Backtest {
                     }
                     _ => {}
                 };
+
+                todo!("Añadir la funcionalidad de los stops y tp");
             }
 
             if !open_trades.is_empty() {
