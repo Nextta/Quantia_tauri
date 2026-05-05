@@ -944,14 +944,201 @@ impl Backtest {
         let mut sell_stops: Vec<f64> = Vec::new();
 
         // Forma de optener un dato: df.column(&columna)?.get(row_idx)?;
+        //
+        // Con tipado:
+        // df.column("close").unwrap().get(i).unwrap().try_extract::<f64>().unwrap();
         for i in 0..df.height() {
-            if !buy_limits.is_empty() {}
+            if !buy_limits.is_empty() {
+                let mut indices: Vec<usize> = Vec::new();
+                let low: f64 = df
+                    .column("low")
+                    .unwrap()
+                    .get(i)
+                    .unwrap()
+                    .try_extract::<f64>()
+                    .unwrap();
 
-            if !buy_stops.is_empty() {}
+                for (idx, limit) in buy_limits
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, limit)| limit > &&low)
+                {
+                    let mut trade: Trade = Trade::new(self.id, symbol.clone()).await;
+                    let precio_entrada: f64 = limit.clone();
 
-            if !sell_limits.is_empty() {}
+                    let time_str = df
+                        .column("timestamp")
+                        .unwrap()
+                        .get(i + 1)
+                        .unwrap()
+                        .try_extract::<i64>()
+                        .unwrap();
+                    let naive_time =
+                        DateTime::from_timestamp_millis(time_str).expect("timestamp inválido");
+                    let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
-            if !sell_stops.is_empty() {}
+                    trade.buy(
+                        t0,
+                        precio_entrada,
+                        self.gestion_strategy.clone(),
+                        self.parametros_gestion.clone(),
+                        &self,
+                        None,
+                        None,
+                    );
+
+                    open_trades.push(trade);
+                    indices.push(idx);
+                }
+
+                for idx in indices.iter().rev() {
+                    buy_limits.remove(*idx);
+                }
+            }
+
+            if !buy_stops.is_empty() {
+                let mut indices: Vec<usize> = Vec::new();
+                let high: f64 = df
+                    .column("high")
+                    .unwrap()
+                    .get(i)
+                    .unwrap()
+                    .try_extract::<f64>()
+                    .unwrap();
+
+                for (idx, limit) in buy_stops
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, limit)| limit < &&high)
+                {
+                    let mut trade: Trade = Trade::new(self.id, symbol.clone()).await;
+                    let precio_entrada: f64 = limit.clone();
+
+                    let time_str = df
+                        .column("timestamp")
+                        .unwrap()
+                        .get(i + 1)
+                        .unwrap()
+                        .try_extract::<i64>()
+                        .unwrap();
+                    let naive_time =
+                        DateTime::from_timestamp_millis(time_str).expect("timestamp inválido");
+                    let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
+                    trade.buy(
+                        t0,
+                        precio_entrada,
+                        self.gestion_strategy.clone(),
+                        self.parametros_gestion.clone(),
+                        &self,
+                        None,
+                        None,
+                    );
+
+                    open_trades.push(trade);
+                    indices.push(idx);
+                }
+
+                for idx in indices.iter().rev() {
+                    buy_stops.remove(*idx);
+                }
+            }
+
+            if !sell_limits.is_empty() {
+                let mut indices: Vec<usize> = Vec::new();
+                let high: f64 = df
+                    .column("high")
+                    .unwrap()
+                    .get(i)
+                    .unwrap()
+                    .try_extract::<f64>()
+                    .unwrap();
+
+                for (idx, limit) in sell_limits
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, limit)| limit < &&high)
+                {
+                    let mut trade: Trade = Trade::new(self.id, symbol.clone()).await;
+                    let precio_entrada: f64 = limit.clone();
+
+                    let time_str = df
+                        .column("timestamp")
+                        .unwrap()
+                        .get(i + 1)
+                        .unwrap()
+                        .try_extract::<i64>()
+                        .unwrap();
+                    let naive_time =
+                        DateTime::from_timestamp_millis(time_str).expect("timestamp inválido");
+                    let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
+                    trade.sell(
+                        t0,
+                        precio_entrada,
+                        self.gestion_strategy.clone(),
+                        self.parametros_gestion.clone(),
+                        &self,
+                        None,
+                        None,
+                    );
+
+                    open_trades.push(trade);
+                    indices.push(idx);
+                }
+
+                for idx in indices.iter().rev() {
+                    sell_limits.remove(*idx);
+                }
+            }
+
+            if !sell_stops.is_empty() {
+                let mut indices: Vec<usize> = Vec::new();
+                let low: f64 = df
+                    .column("low")
+                    .unwrap()
+                    .get(i)
+                    .unwrap()
+                    .try_extract::<f64>()
+                    .unwrap();
+
+                for (idx, limit) in sell_stops
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, limit)| limit > &&low)
+                {
+                    let mut trade: Trade = Trade::new(self.id, symbol.clone()).await;
+                    let precio_entrada: f64 = limit.clone();
+
+                    let time_str = df
+                        .column("timestamp")
+                        .unwrap()
+                        .get(i + 1)
+                        .unwrap()
+                        .try_extract::<i64>()
+                        .unwrap();
+                    let naive_time =
+                        DateTime::from_timestamp_millis(time_str).expect("timestamp inválido");
+                    let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
+                    trade.buy(
+                        t0,
+                        precio_entrada,
+                        self.gestion_strategy.clone(),
+                        self.parametros_gestion.clone(),
+                        &self,
+                        None,
+                        None,
+                    );
+
+                    open_trades.push(trade);
+                    indices.push(idx);
+                }
+
+                for idx in indices.iter().rev() {
+                    sell_stops.remove(*idx);
+                }
+            }
 
             // Optenemos las acciones de entrada.
 
@@ -961,6 +1148,7 @@ impl Backtest {
                 .iter()
                 .filter(|acc| acc.tipo_signal == "Entry")
             {
+                todo("Añadir la funcionalidad de los stops y tp");
                 match accion.tipo.as_str() {
                     "buy" => {
                         if self.direction("buy")
