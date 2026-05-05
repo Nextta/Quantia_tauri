@@ -930,6 +930,48 @@ impl Backtest {
         Ok(limit)
     }
 
+    async fn ejecutar_entry(
+        &self,
+        timestamp: i64,
+        symbol: SymbolInfoCFD,
+        signal: String,
+        precio_entrada: f64,
+        i: usize,
+    ) -> Trade {
+        let mut trade: Trade = Trade::new(self.id.clone(), symbol.clone()).await;
+
+        let naive_time = DateTime::from_timestamp_millis(timestamp).expect("timestamp inválido");
+        let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
+        match signal.as_str() {
+            "buy" => {
+                trade.buy(
+                    t0,
+                    precio_entrada,
+                    self.gestion_strategy.clone(),
+                    self.parametros_gestion.clone(),
+                    &self,
+                    None,
+                    None,
+                );
+            }
+            "sell" => {
+                trade.sell(
+                    t0,
+                    precio_entrada,
+                    self.gestion_strategy.clone(),
+                    self.parametros_gestion.clone(),
+                    &self,
+                    None,
+                    None,
+                );
+            }
+            _ => println!("Especifica la señal de entrada."),
+        }
+
+        trade
+    }
+
     async fn backtest(
         &mut self,
         df: DataFrame,
@@ -963,31 +1005,24 @@ impl Backtest {
                     .enumerate()
                     .filter(|(_, limit)| limit > &&low)
                 {
-                    let mut trade: Trade = Trade::new(self.id, symbol.clone()).await;
-                    let precio_entrada: f64 = limit.clone();
-
-                    let time_str = df
+                    let timestamp = df
                         .column("timestamp")
                         .unwrap()
                         .get(i + 1)
                         .unwrap()
                         .try_extract::<i64>()
                         .unwrap();
-                    let naive_time =
-                        DateTime::from_timestamp_millis(time_str).expect("timestamp inválido");
-                    let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
-                    trade.buy(
-                        t0,
-                        precio_entrada,
-                        self.gestion_strategy.clone(),
-                        self.parametros_gestion.clone(),
-                        &self,
-                        None,
-                        None,
+                    open_trades.push(
+                        self.ejecutar_entry(
+                            timestamp,
+                            symbol.clone(),
+                            "buy".to_string(),
+                            limit.clone(),
+                            i.clone(),
+                        )
+                        .await,
                     );
-
-                    open_trades.push(trade);
                     indices.push(idx);
                 }
 
@@ -1011,31 +1046,24 @@ impl Backtest {
                     .enumerate()
                     .filter(|(_, limit)| limit < &&high)
                 {
-                    let mut trade: Trade = Trade::new(self.id, symbol.clone()).await;
-                    let precio_entrada: f64 = limit.clone();
-
-                    let time_str = df
+                    let timestamp = df
                         .column("timestamp")
                         .unwrap()
                         .get(i + 1)
                         .unwrap()
                         .try_extract::<i64>()
                         .unwrap();
-                    let naive_time =
-                        DateTime::from_timestamp_millis(time_str).expect("timestamp inválido");
-                    let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
-                    trade.buy(
-                        t0,
-                        precio_entrada,
-                        self.gestion_strategy.clone(),
-                        self.parametros_gestion.clone(),
-                        &self,
-                        None,
-                        None,
+                    open_trades.push(
+                        self.ejecutar_entry(
+                            timestamp,
+                            symbol.clone(),
+                            "buy".to_string(),
+                            limit.clone(),
+                            i.clone(),
+                        )
+                        .await,
                     );
-
-                    open_trades.push(trade);
                     indices.push(idx);
                 }
 
@@ -1059,31 +1087,24 @@ impl Backtest {
                     .enumerate()
                     .filter(|(_, limit)| limit < &&high)
                 {
-                    let mut trade: Trade = Trade::new(self.id, symbol.clone()).await;
-                    let precio_entrada: f64 = limit.clone();
-
-                    let time_str = df
+                    let timestamp = df
                         .column("timestamp")
                         .unwrap()
                         .get(i + 1)
                         .unwrap()
                         .try_extract::<i64>()
                         .unwrap();
-                    let naive_time =
-                        DateTime::from_timestamp_millis(time_str).expect("timestamp inválido");
-                    let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
-                    trade.sell(
-                        t0,
-                        precio_entrada,
-                        self.gestion_strategy.clone(),
-                        self.parametros_gestion.clone(),
-                        &self,
-                        None,
-                        None,
+                    open_trades.push(
+                        self.ejecutar_entry(
+                            timestamp,
+                            symbol.clone(),
+                            "sell".to_string(),
+                            limit.clone(),
+                            i.clone(),
+                        )
+                        .await,
                     );
-
-                    open_trades.push(trade);
                     indices.push(idx);
                 }
 
@@ -1107,31 +1128,24 @@ impl Backtest {
                     .enumerate()
                     .filter(|(_, limit)| limit > &&low)
                 {
-                    let mut trade: Trade = Trade::new(self.id, symbol.clone()).await;
-                    let precio_entrada: f64 = limit.clone();
-
-                    let time_str = df
+                    let timestamp = df
                         .column("timestamp")
                         .unwrap()
                         .get(i + 1)
                         .unwrap()
                         .try_extract::<i64>()
                         .unwrap();
-                    let naive_time =
-                        DateTime::from_timestamp_millis(time_str).expect("timestamp inválido");
-                    let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
-                    trade.buy(
-                        t0,
-                        precio_entrada,
-                        self.gestion_strategy.clone(),
-                        self.parametros_gestion.clone(),
-                        &self,
-                        None,
-                        None,
+                    open_trades.push(
+                        self.ejecutar_entry(
+                            timestamp,
+                            symbol.clone(),
+                            "sell".to_string(),
+                            limit.clone(),
+                            i.clone(),
+                        )
+                        .await,
                     );
-
-                    open_trades.push(trade);
                     indices.push(idx);
                 }
 
@@ -1154,7 +1168,6 @@ impl Backtest {
                             && self.entry_options(&open_trades)
                             && self.test_conditions(df.clone(), accion.clone(), i).await
                         {
-                            let mut trade: Trade = Trade::new(self.id, symbol.clone()).await;
                             let precio_entrada: f64 = df
                                 .column("open")
                                 .unwrap()
@@ -1163,28 +1176,24 @@ impl Backtest {
                                 .try_extract::<f64>()
                                 .unwrap();
 
-                            let time_str = df
+                            let timestamp = df
                                 .column("timestamp")
                                 .unwrap()
                                 .get(i + 1)
                                 .unwrap()
                                 .try_extract::<i64>()
                                 .unwrap();
-                            let naive_time = DateTime::from_timestamp_millis(time_str)
-                                .expect("timestamp inválido");
-                            let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
-                            trade.buy(
-                                t0,
-                                precio_entrada,
-                                self.gestion_strategy.clone(),
-                                self.parametros_gestion.clone(),
-                                &self,
-                                None,
-                                None,
+                            open_trades.push(
+                                self.ejecutar_entry(
+                                    timestamp,
+                                    symbol.clone(),
+                                    "buy".to_string(),
+                                    precio_entrada,
+                                    i.clone(),
+                                )
+                                .await,
                             );
-
-                            open_trades.push(trade);
                         }
                     }
                     "sell" => {
@@ -1192,7 +1201,6 @@ impl Backtest {
                             && self.entry_options(&open_trades)
                             && self.test_conditions(df.clone(), accion.clone(), i).await
                         {
-                            let mut trade: Trade = Trade::new(self.id, symbol.clone()).await;
                             let precio_entrada: f64 = df
                                 .column("open")
                                 .unwrap()
@@ -1201,28 +1209,24 @@ impl Backtest {
                                 .try_extract::<f64>()
                                 .unwrap();
 
-                            let time_str = df
+                            let timestamp = df
                                 .column("timestamp")
                                 .unwrap()
                                 .get(i + 1)
                                 .unwrap()
                                 .try_extract::<i64>()
                                 .unwrap();
-                            let naive_time = DateTime::from_timestamp_millis(time_str)
-                                .expect("timestamp inválido");
-                            let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
-                            trade.sell(
-                                t0,
-                                precio_entrada,
-                                self.gestion_strategy.clone(),
-                                self.parametros_gestion.clone(),
-                                &self,
-                                None,
-                                None,
+                            open_trades.push(
+                                self.ejecutar_entry(
+                                    timestamp,
+                                    symbol.clone(),
+                                    "sell".to_string(),
+                                    precio_entrada,
+                                    i.clone(),
+                                )
+                                .await,
                             );
-
-                            open_trades.push(trade);
                         }
                     }
                     "buy_limit" => {
