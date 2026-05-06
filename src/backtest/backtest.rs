@@ -18,7 +18,7 @@ use crate::indicators::volume::*;
 use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_action::StrategyAction;
 // use crate::strategy::strategy_condition::StrategyCondition;s
-use crate::strategy::strategy_options::{StrategyOptions, TradingDirection};
+use crate::strategy::strategy_options::{StopLoss, StrategyOptions, TradingDirection};
 
 use serde::{Deserialize, Serialize};
 // use polars::datatypes::DataType;
@@ -195,6 +195,13 @@ impl Backtest {
         // TODO: Implementar la función para calcular el solapamiento entre los trades y mostrar un grafico.
     }
 
+    /// Añade los indicadores de la estrategia al dataframe de datos.
+    ///
+    /// # Parametros
+    /// datos: Dataframe con los datos.
+    ///
+    /// # Retorna
+    /// DataFrame con los nuevos datos.
     async fn set_indicators_strategy(&mut self, datos: DataFrame) -> PolarsResult<DataFrame> {
         let mut df: DataFrame = datos.clone();
         //TODO: Añadir los indicadores de la estrategia al dataframe de datos.
@@ -780,6 +787,13 @@ impl Backtest {
         Ok(df)
     }
 
+    /// Confirma si se puede operar en una dirección de compra o venta.
+    ///
+    /// # Parametro
+    /// tipo: Si es buy o sell.
+    ///
+    /// # Retorna
+    /// True si se puede operar en la dirección indicada, false en caso contrario.
     fn direction(&self, tipo: &str) -> bool {
         match tipo {
             "buy" => {
@@ -794,6 +808,15 @@ impl Backtest {
         }
     }
 
+    /// Comprueba todas las condiciones de una acción en un índice dado.
+    ///
+    /// # Parametros
+    /// df: Dataframe con los datos.
+    /// accion: Acción a confirmar.
+    /// i: Índice del dataframe.
+    ///
+    /// # Retorna
+    /// True si se puede operar en la dirección indicada, false en caso contrario.
     async fn test_conditions(&self, df: DataFrame, accion: StrategyAction, i: usize) -> bool {
         let mut condiciones_map: HashMap<String, bool> = HashMap::new();
         self.estrategia
@@ -847,6 +870,13 @@ impl Backtest {
         all_true
     }
 
+    /// Comprueba las opciones de entrada de una acción en un índice dado.
+    ///
+    /// # Parametros
+    /// open_trades: Vector con los trades abiertos.
+    ///
+    /// # Retorna
+    /// True si se puede operar en la dirección indicada, false en caso contrario.
     fn entry_options(&self, open_trades: &Vec<Trade>) -> bool {
         let entry_options: bool;
         if !self.estrategia.opciones.multiples_tardes && !open_trades.is_empty() {
@@ -857,6 +887,15 @@ impl Backtest {
         entry_options
     }
 
+    /// Obtiene el límite de una acción en un índice dado.
+    ///
+    /// # Parametros
+    /// df: DataFrame con los datos del índice.
+    /// params: String con los parametros del limite.
+    /// i: Indice del limite a obtener.
+    ///
+    /// # Retorna
+    /// El límite de la acción en el índice dado.
     fn get_limit(&self, df: DataFrame, params: String, i: usize) -> Result<f64, serde_json::Error> {
         #[derive(Debug, Clone, Deserialize, Serialize)]
         struct LimitParams {
@@ -929,6 +968,164 @@ impl Backtest {
         Ok(limit)
     }
 
+    /// Obtiene el stop loss para una operación en un índice dado.
+    ///
+    /// # Arguments
+    ///
+    /// * `df` - El DataFrame con los datos de la operación.
+    /// * `i` - El índice en el DataFrame.
+    ///
+    /// # Returns
+    ///
+    /// El valor del stop loss.
+    fn get_stoploss(&self, df: DataFrame, i: usize) -> f64 {
+        let params = &self.estrategia.opciones.parametros_stoploss.clone();
+
+        let valor: f64 = df
+            .column(&params.nombre_col)
+            .unwrap()
+            .f64()
+            .unwrap()
+            .get(i - &params.shift)
+            .unwrap_or(0.0);
+
+        let sl: f64 = match params.tipo.as_str() {
+            "pip" => {
+                if params.direccion == "buy" {
+                    valor + params.valor
+                } else if params.direccion == "sell" {
+                    valor - params.valor
+                } else {
+                    0.0
+                }
+            }
+            "tick" => {
+                if params.direccion == "buy" {
+                    valor + params.valor
+                } else if params.direccion == "sell" {
+                    valor - params.valor
+                } else {
+                    0.0
+                }
+            }
+            "punto" => {
+                if params.direccion == "buy" {
+                    valor + params.valor
+                } else if params.direccion == "sell" {
+                    valor - params.valor
+                } else {
+                    0.0
+                }
+            }
+            "porcentaje" => {
+                if params.direccion == "buy" {
+                    valor + (valor * params.valor)
+                } else if params.direccion == "sell" {
+                    valor - (valor * params.valor)
+                } else {
+                    0.0
+                }
+            }
+            "atr" => {
+                if params.direccion == "buy" {
+                    valor + params.valor
+                } else if params.direccion == "sell" {
+                    valor - params.valor
+                } else {
+                    0.0
+                }
+            }
+            _ => valor,
+        };
+
+        sl
+    }
+
+    /// Obtiene el take profit para una operación en un índice dado.
+    ///
+    /// # Arguments
+    ///
+    /// * `df` - El DataFrame con los datos de la operación.
+    /// * `i` - El índice en el DataFrame.
+    ///
+    /// # Returns
+    ///
+    /// El valor del take profit.
+    fn get_takeprofit(&self, df: DataFrame, i: usize) -> f64 {
+        let params = &self.estrategia.opciones.parametros_takeprofit.clone();
+
+        let valor: f64 = df
+            .column(&params.nombre_col)
+            .unwrap()
+            .f64()
+            .unwrap()
+            .get(i - &params.shift)
+            .unwrap_or(0.0);
+
+        let tp: f64 = match params.tipo.as_str() {
+            "pip" => {
+                if params.direccion == "buy" {
+                    valor + params.valor
+                } else if params.direccion == "sell" {
+                    valor - params.valor
+                } else {
+                    0.0
+                }
+            }
+            "tick" => {
+                if params.direccion == "buy" {
+                    valor + params.valor
+                } else if params.direccion == "sell" {
+                    valor - params.valor
+                } else {
+                    0.0
+                }
+            }
+            "punto" => {
+                if params.direccion == "buy" {
+                    valor + params.valor
+                } else if params.direccion == "sell" {
+                    valor - params.valor
+                } else {
+                    0.0
+                }
+            }
+            "porcentaje" => {
+                if params.direccion == "buy" {
+                    valor + (valor * params.valor)
+                } else if params.direccion == "sell" {
+                    valor - (valor * params.valor)
+                } else {
+                    0.0
+                }
+            }
+            "atr" => {
+                if params.direccion == "buy" {
+                    valor + params.valor
+                } else if params.direccion == "sell" {
+                    valor - params.valor
+                } else {
+                    0.0
+                }
+            }
+            _ => valor,
+        };
+
+        tp
+    }
+
+    /// Ejecuta una operación de entrada de una acción en un índice dado.
+    ///
+    /// # Parametros
+    /// timestamp: Timestamp de la operación.
+    /// symbol: SymbolInfoCFD con la información del símbolo.
+    /// signal: String con la señal de entrada.
+    /// precio_entrada: Precio de entrada de la acción.
+    /// stoploss: Opcional. Precio de stoploss de la acción.
+    /// takeprofit: Opcional. Precio de takeprofit de la acción.
+    ///
+    /// # Retorna
+    /// El trade ejecutado, si se pudo realizar.
     async fn ejecutar_entry(
         &self,
         timestamp: i64,
@@ -978,6 +1175,14 @@ impl Backtest {
         None
     }
 
+    /// Realiza el backtest de una estrategia en un DataFrame dado.
+    ///
+    /// # Parametros
+    /// df: DataFrame con los datos del índice.
+    /// symbol: SymbolInfoCFD con la información del símbolo.
+    ///
+    /// # Retorna
+    /// Un string con el resultado del backtest.
     async fn backtest(
         &mut self,
         df: DataFrame,

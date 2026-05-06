@@ -9,6 +9,7 @@ pub struct StopLoss {
     pub nombre_col: String, // Nombre de la columna a usar como limite
     pub shift: usize,       // Numero de filas a desplazar
     pub valor: f64,         // en caso de ser por pip, ticks o puntos
+    pub direccion: String,  // Direccion del limite: buy, sell
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -17,15 +18,23 @@ pub struct TakeProfit {
     pub nombre_col: String, // Nombre de la columna a usar como limite
     pub shift: usize,       // Numero de filas a desplazar
     pub valor: f64,         // en caso de ser por pip, ticks o puntos
+    pub direccion: String,  // Direccion del limite: buy, sell
 }
 
 impl StopLoss {
-    pub fn new(tipo: String, nombre_col: String, shift: usize, valor: f64) -> Self {
+    pub fn new(
+        tipo: String,
+        nombre_col: String,
+        shift: usize,
+        valor: f64,
+        direccion: String,
+    ) -> Self {
         Self {
             tipo,
             nombre_col,
             shift,
             valor,
+            direccion,
         }
     }
 
@@ -35,6 +44,7 @@ impl StopLoss {
             nombre_col: String::new(),
             shift: 0,
             valor: 0.0,
+            direccion: "buy".to_string(),
         }
     }
 
@@ -44,12 +54,19 @@ impl StopLoss {
 }
 
 impl TakeProfit {
-    pub fn new(tipo: String, nombre_col: String, shift: usize, valor: f64) -> Self {
+    pub fn new(
+        tipo: String,
+        nombre_col: String,
+        shift: usize,
+        valor: f64,
+        direccion: String,
+    ) -> Self {
         Self {
             tipo,
             nombre_col,
             shift,
             valor,
+            direccion,
         }
     }
 
@@ -59,6 +76,7 @@ impl TakeProfit {
             nombre_col: String::new(),
             shift: 0,
             valor: 0.0,
+            direccion: "buy".to_string(),
         }
     }
 
