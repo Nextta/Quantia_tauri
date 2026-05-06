@@ -1399,6 +1399,38 @@ impl Backtest {
 
             // Optenemos las acciones de entrada.
             if !open_trades.is_empty() {
+                let precio_actual: f64 = df
+                    .column("close")
+                    .unwrap()
+                    .get(i)
+                    .unwrap()
+                    .try_extract::<f64>()
+                    .unwrap();
+                // Recorremos el vactor de operaciones abiertas(open_trades) y comprobamos si
+                // alcanzan los stop-loss o take-profit para cerrarlas.
+                let mut indices: Vec<usize> = Vec::new();
+                for (idx, trade) in open_trades.iter().enumerate() {
+                    match trade.tipo.as_str() {
+                        "buy" => {
+                            if precio_actual <= trade.sl {
+                                indices.push(idx);
+                            }
+                            if precio_actual >= trade.tp {
+                                indices.push(idx);
+                            }
+                        }
+                        "sell" => {
+                            if precio_actual >= trade.sl {
+                                indices.push(idx);
+                            }
+                            if precio_actual <= trade.tp {
+                                indices.push(idx);
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+
                 self.estrategia
                     .acciones
                     .iter()

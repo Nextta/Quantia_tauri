@@ -52,9 +52,11 @@ rand = "0.9.2"
 # sqlx = {version = "0.8.6", features = ["runtime-tokio-native-tls", "sqlite", "migrate"], default-features = false}
 reqwest = { version = "0.11.22", features = ["json", "blocking"] }
 dotenvy = "0.15.7"
-libsql = { git = "https://github.com/tursodatabase/libsql" }
+# libsql = { git = "https://github.com/tursodatabase/libsql" }
 tracing-subscriber = "0.3"
 tracing = "0.1.40"
+sqlite3-parser = "0.16.0"
+libsql = "0.9.30"
 
-[patch.crates-io]
-sqlite3-parser = { git = "https://github.com/LucioFranco/lemon-rs" }
+# [patch.crates-io]
+# sqlite3-parser = { git = "https://github.com/LucioFranco/lemon-rs" }
