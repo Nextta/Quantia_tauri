@@ -935,8 +935,13 @@ impl Backtest {
         symbol: SymbolInfoCFD,
         signal: String,
         precio_entrada: f64,
+        stoploss: Option<f64>,
+        takeprofit: Option<f64>,
     ) -> Option<Trade> {
         let mut trade: Trade = Trade::new(self.id.clone(), symbol.clone()).await;
+
+        let sl = stoploss.unwrap_or(0.0);
+        let tp = takeprofit.unwrap_or(0.0);
 
         let naive_time = DateTime::from_timestamp_millis(timestamp).expect("timestamp inválido");
         let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
@@ -949,8 +954,8 @@ impl Backtest {
                     self.gestion_strategy.clone(),
                     self.parametros_gestion.clone(),
                     &self,
-                    None,
-                    None,
+                    Some(tp),
+                    Some(sl),
                 );
 
                 return Some(trade);
@@ -962,8 +967,8 @@ impl Backtest {
                     self.gestion_strategy.clone(),
                     self.parametros_gestion.clone(),
                     &self,
-                    None,
-                    None,
+                    Some(tp),
+                    Some(sl),
                 );
 
                 return Some(trade);
@@ -1015,7 +1020,14 @@ impl Backtest {
                         .unwrap();
 
                     let trade: Option<Trade> = self
-                        .ejecutar_entry(timestamp, symbol.clone(), "buy".to_string(), limit.clone())
+                        .ejecutar_entry(
+                            timestamp,
+                            symbol.clone(),
+                            "buy".to_string(),
+                            limit.clone(),
+                            None,
+                            None,
+                        )
                         .await;
 
                     if let Some(trade) = trade {
@@ -1054,7 +1066,14 @@ impl Backtest {
                         .unwrap();
 
                     let trade: Option<Trade> = self
-                        .ejecutar_entry(timestamp, symbol.clone(), "buy".to_string(), limit.clone())
+                        .ejecutar_entry(
+                            timestamp,
+                            symbol.clone(),
+                            "buy".to_string(),
+                            limit.clone(),
+                            None,
+                            None,
+                        )
                         .await;
 
                     if let Some(trade) = trade {
@@ -1098,6 +1117,8 @@ impl Backtest {
                             symbol.clone(),
                             "sell".to_string(),
                             limit.clone(),
+                            None,
+                            None,
                         )
                         .await;
 
@@ -1142,6 +1163,8 @@ impl Backtest {
                             symbol.clone(),
                             "sell".to_string(),
                             limit.clone(),
+                            None,
+                            None,
                         )
                         .await;
 
@@ -1193,6 +1216,8 @@ impl Backtest {
                                     symbol.clone(),
                                     "buy".to_string(),
                                     precio_entrada,
+                                    None,
+                                    None,
                                 )
                                 .await;
 
@@ -1228,6 +1253,8 @@ impl Backtest {
                                     symbol.clone(),
                                     "sell".to_string(),
                                     precio_entrada.clone(),
+                                    None,
+                                    None,
                                 )
                                 .await;
 

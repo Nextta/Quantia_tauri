@@ -1,5 +1,71 @@
 use chrono::DateTime;
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
+// use serde_json::Value;
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct StopLoss {
+    pub tipo: String,       // Tipo de limite: ask, bid, bb, atr... etc
+    pub nombre_col: String, // Nombre de la columna a usar como limite
+    pub shift: usize,       // Numero de filas a desplazar
+    pub valor: f64,         // en caso de ser por pip, ticks o puntos
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct TakeProfit {
+    pub tipo: String,       // Tipo de limite: ask, bid, bb, atr... etc
+    pub nombre_col: String, // Nombre de la columna a usar como limite
+    pub shift: usize,       // Numero de filas a desplazar
+    pub valor: f64,         // en caso de ser por pip, ticks o puntos
+}
+
+impl StopLoss {
+    pub fn new(tipo: String, nombre_col: String, shift: usize, valor: f64) -> Self {
+        Self {
+            tipo,
+            nombre_col,
+            shift,
+            valor,
+        }
+    }
+
+    pub fn new_empty() -> Self {
+        Self {
+            tipo: String::new(),
+            nombre_col: String::new(),
+            shift: 0,
+            valor: 0.0,
+        }
+    }
+
+    pub fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap_or_default()
+    }
+}
+
+impl TakeProfit {
+    pub fn new(tipo: String, nombre_col: String, shift: usize, valor: f64) -> Self {
+        Self {
+            tipo,
+            nombre_col,
+            shift,
+            valor,
+        }
+    }
+
+    pub fn new_empty() -> Self {
+        Self {
+            tipo: String::new(),
+            nombre_col: String::new(),
+            shift: 0,
+            valor: 0.0,
+        }
+    }
+
+    pub fn to_json(&self) -> String {
+        serde_json::to_string(self).unwrap_or_default()
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct StrategyOptions {
@@ -20,6 +86,8 @@ pub struct StrategyOptions {
     pub numero_velas_cierre: i32,
     pub cierre_limite_hora: bool,
     pub hora_cierre_limite: DateTime<Utc>,
+    pub parametros_stoploss: StopLoss,
+    pub parametros_takeprofit: TakeProfit,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -58,6 +126,8 @@ impl StrategyOptions {
         numero_velas_cierre: i32,
         cierre_limite_hora: bool,
         hora_cierre_limite: DateTime<Utc>,
+        parametros_stoploss: StopLoss,
+        parametros_takeprofit: TakeProfit,
     ) -> Self {
         Self {
             id,
@@ -77,6 +147,8 @@ impl StrategyOptions {
             numero_velas_cierre,
             cierre_limite_hora,
             hora_cierre_limite,
+            parametros_stoploss,
+            parametros_takeprofit,
         }
     }
 
@@ -99,6 +171,8 @@ impl StrategyOptions {
             numero_velas_cierre: 0,
             cierre_limite_hora: false,
             hora_cierre_limite: Utc::now(),
+            parametros_stoploss: serde_json::from_value(serde_json::json!("{}")).unwrap(),
+            parametros_takeprofit: serde_json::from_value(serde_json::json!("{}")).unwrap(),
         }
     }
 }
