@@ -1224,14 +1224,17 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
+                    let tp: f64 = self.get_takeprofit(df.clone(), i);
+                    let sl: f64 = self.get_stoploss(df.clone(), i);
+
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
                             timestamp,
                             symbol.clone(),
                             "buy".to_string(),
                             limit.clone(),
-                            None,
-                            None,
+                            Some(sl),
+                            Some(tp),
                         )
                         .await;
 
@@ -1270,14 +1273,17 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
+                    let tp: f64 = self.get_takeprofit(df.clone(), i);
+                    let sl: f64 = self.get_stoploss(df.clone(), i);
+
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
                             timestamp,
                             symbol.clone(),
                             "buy".to_string(),
                             limit.clone(),
-                            None,
-                            None,
+                            Some(sl),
+                            Some(tp),
                         )
                         .await;
 
@@ -1316,14 +1322,17 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
+                    let tp: f64 = self.get_takeprofit(df.clone(), i);
+                    let sl: f64 = self.get_stoploss(df.clone(), i);
+
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
                             timestamp,
                             symbol.clone(),
                             "sell".to_string(),
                             limit.clone(),
-                            None,
-                            None,
+                            Some(sl),
+                            Some(tp),
                         )
                         .await;
 
@@ -1362,14 +1371,17 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
+                    let tp: f64 = self.get_takeprofit(df.clone(), i);
+                    let sl: f64 = self.get_stoploss(df.clone(), i);
+
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
                             timestamp,
                             symbol.clone(),
                             "sell".to_string(),
                             limit.clone(),
-                            None,
-                            None,
+                            Some(sl),
+                            Some(tp),
                         )
                         .await;
 
@@ -1386,6 +1398,56 @@ impl Backtest {
             }
 
             // Optenemos las acciones de entrada.
+            if !open_trades.is_empty() {
+                self.estrategia
+                    .acciones
+                    .iter()
+                    .filter(|acc| acc.tipo_signal == "Exit")
+                    .for_each(|accion| match accion.tipo.as_str() {
+                        "exit_buy" => {}
+                        "exit_sell" => {}
+                        "N_bars" => {}
+                        "Close_all_rule" => {}
+                        _ => {}
+                    });
+
+                self.estrategia
+                    .acciones
+                    .iter()
+                    .filter(|acc| acc.tipo_signal == "BE")
+                    .for_each(|accion| {
+                        let parametros: BeParams =
+                            serde_json::from_value(accion.parametros.clone()).unwrap();
+
+                        match parametros.tipo {
+                            BeTipo::Tick => {}
+                            BeTipo::Pip => {}
+                            BeTipo::Punto => {}
+                            BeTipo::Porcentaje => {}
+                            BeTipo::Precio => {}
+                            _ => {}
+                        }
+                    });
+
+                self.estrategia
+                    .acciones
+                    .iter()
+                    .filter(|acc| acc.tipo_signal == "TL")
+                    .for_each(|accion| {
+                        let parametros: TlParams =
+                            serde_json::from_value(accion.parametros.clone()).unwrap();
+
+                        match parametros.activacion_tipo {
+                            TlTipo::Tick => {}
+                            TlTipo::Pip => {}
+                            TlTipo::Punto => {}
+                            TlTipo::Porcentaje => {}
+                            TlTipo::Indicador => {}
+                            TlTipo::Velas => {}
+                            _ => {}
+                        }
+                    });
+            }
 
             for accion in self
                 .estrategia
@@ -1415,14 +1477,17 @@ impl Backtest {
                                 .try_extract::<i64>()
                                 .unwrap();
 
+                            let tp: f64 = self.get_takeprofit(df.clone(), i);
+                            let sl: f64 = self.get_stoploss(df.clone(), i);
+
                             let trade: Option<Trade> = self
                                 .ejecutar_entry(
                                     timestamp,
                                     symbol.clone(),
                                     "buy".to_string(),
                                     precio_entrada,
-                                    None,
-                                    None,
+                                    Some(sl),
+                                    Some(tp),
                                 )
                                 .await;
 
@@ -1452,14 +1517,17 @@ impl Backtest {
                                 .try_extract::<i64>()
                                 .unwrap();
 
+                            let tp: f64 = self.get_takeprofit(df.clone(), i);
+                            let sl: f64 = self.get_stoploss(df.clone(), i);
+
                             let trade: Option<Trade> = self
                                 .ejecutar_entry(
                                     timestamp,
                                     symbol.clone(),
                                     "sell".to_string(),
                                     precio_entrada.clone(),
-                                    None,
-                                    None,
+                                    Some(sl),
+                                    Some(tp),
                                 )
                                 .await;
 
@@ -1510,61 +1578,6 @@ impl Backtest {
                     }
                     _ => {}
                 };
-
-                todo!("Añadir la funcionalidad de los stops y tp");
-            }
-
-            if !open_trades.is_empty() {
-                self.estrategia
-                    .acciones
-                    .iter()
-                    .filter(|acc| acc.tipo_signal == "Exit")
-                    .for_each(|accion| match accion.tipo.as_str() {
-                        "exit_buy" => {}
-                        "exit_sell" => {}
-                        "Tp" => {}
-                        "Sl" => {}
-                        "N_bars" => {}
-                        "Close_all_rule" => {}
-                        _ => {}
-                    });
-
-                self.estrategia
-                    .acciones
-                    .iter()
-                    .filter(|acc| acc.tipo_signal == "BE")
-                    .for_each(|accion| {
-                        let parametros: BeParams =
-                            serde_json::from_value(accion.parametros.clone()).unwrap();
-
-                        match parametros.tipo {
-                            BeTipo::Tick => {}
-                            BeTipo::Pip => {}
-                            BeTipo::Punto => {}
-                            BeTipo::Porcentaje => {}
-                            BeTipo::Precio => {}
-                            _ => {}
-                        }
-                    });
-
-                self.estrategia
-                    .acciones
-                    .iter()
-                    .filter(|acc| acc.tipo_signal == "TL")
-                    .for_each(|accion| {
-                        let parametros: TlParams =
-                            serde_json::from_value(accion.parametros.clone()).unwrap();
-
-                        match parametros.activacion_tipo {
-                            TlTipo::Tick => {}
-                            TlTipo::Pip => {}
-                            TlTipo::Punto => {}
-                            TlTipo::Porcentaje => {}
-                            TlTipo::Indicador => {}
-                            TlTipo::Velas => {}
-                            _ => {}
-                        }
-                    });
             }
         }
         Ok("Backtest ejecutado correctamente".to_string())
