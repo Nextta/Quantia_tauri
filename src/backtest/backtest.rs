@@ -18,7 +18,7 @@ use crate::indicators::volume::*;
 use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_action::StrategyAction;
 // use crate::strategy::strategy_condition::StrategyCondition;s
-use crate::strategy::strategy_options::{StopLoss, StrategyOptions, TradingDirection};
+use crate::strategy::strategy_options::{StrategyOptions, TradingDirection};
 
 use serde::{Deserialize, Serialize};
 // use polars::datatypes::DataType;
@@ -1444,7 +1444,6 @@ impl Backtest {
                             TlTipo::Porcentaje => {}
                             TlTipo::Indicador => {}
                             TlTipo::Velas => {}
-                            _ => {}
                         }
                     });
             }
