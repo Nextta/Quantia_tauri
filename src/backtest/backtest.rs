@@ -17,7 +17,7 @@ use crate::indicators::volatility::*;
 use crate::indicators::volume::*;
 use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_action::StrategyAction;
-use crate::strategy::strategy_condition::StrategyCondition;
+// use crate::strategy::strategy_condition::StrategyCondition;s
 use crate::strategy::strategy_options::{StrategyOptions, TradingDirection};
 
 use serde::{Deserialize, Serialize};
@@ -25,7 +25,6 @@ use serde::{Deserialize, Serialize};
 use chrono::DateTime;
 use polars::prelude::*;
 use std::collections::HashMap;
-use std::thread::panicking;
 use std::time::Instant;
 
 #[derive(Debug, Clone)]
@@ -936,7 +935,6 @@ impl Backtest {
         symbol: SymbolInfoCFD,
         signal: String,
         precio_entrada: f64,
-        i: usize,
     ) -> Trade {
         let mut trade: Trade = Trade::new(self.id.clone(), symbol.clone()).await;
 
@@ -1019,7 +1017,6 @@ impl Backtest {
                             symbol.clone(),
                             "buy".to_string(),
                             limit.clone(),
-                            i.clone(),
                         )
                         .await,
                     );
@@ -1060,7 +1057,6 @@ impl Backtest {
                             symbol.clone(),
                             "buy".to_string(),
                             limit.clone(),
-                            i.clone(),
                         )
                         .await,
                     );
@@ -1101,7 +1097,6 @@ impl Backtest {
                             symbol.clone(),
                             "sell".to_string(),
                             limit.clone(),
-                            i.clone(),
                         )
                         .await,
                     );
@@ -1142,7 +1137,6 @@ impl Backtest {
                             symbol.clone(),
                             "sell".to_string(),
                             limit.clone(),
-                            i.clone(),
                         )
                         .await,
                     );
@@ -1190,7 +1184,6 @@ impl Backtest {
                                     symbol.clone(),
                                     "buy".to_string(),
                                     precio_entrada,
-                                    i.clone(),
                                 )
                                 .await,
                             );
@@ -1223,7 +1216,6 @@ impl Backtest {
                                     symbol.clone(),
                                     "sell".to_string(),
                                     precio_entrada,
-                                    i.clone(),
                                 )
                                 .await,
                             );

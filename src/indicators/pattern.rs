@@ -370,7 +370,7 @@ pub fn cdl3starsinsouth(df: DataFrame, output_col: Option<&str>) -> PolarsResult
         let c0 = close.get(i - 2).unwrap();
 
         let o1 = open.get(i - 1).unwrap();
-        let h1 = high.get(i - 1).unwrap();
+        let _ = high.get(i - 1).unwrap();
         let l1 = low.get(i - 1).unwrap();
         let c1 = close.get(i - 1).unwrap();
 
@@ -1803,7 +1803,7 @@ pub fn cdlhighwave(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Data
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlhikkake(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_name = output_col.unwrap_or("cdlhikkake");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
+    let (_, high_s, low_s, _) = get_ohlc(&df)?;
     let high = high_s.f64()?;
     let low = low_s.f64()?;
 
@@ -2708,12 +2708,12 @@ pub fn cdlmathold(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataF
         let o1 = open.get(i - 3).unwrap();
         let c1 = close.get(i - 3).unwrap();
 
-        let o2 = open.get(i - 2).unwrap();
-        let c2 = close.get(i - 2).unwrap();
+        let _ = open.get(i - 2).unwrap();
+        let _ = close.get(i - 2).unwrap();
         let l2 = low.get(i - 2).unwrap();
 
-        let o3 = open.get(i - 1).unwrap();
-        let c3 = close.get(i - 1).unwrap();
+        let _ = open.get(i - 1).unwrap();
+        let _ = close.get(i - 1).unwrap();
         let l3 = low.get(i - 1).unwrap();
 
         let o4 = open.get(i).unwrap();
@@ -2894,8 +2894,8 @@ pub fn cdlmorningstar(
         let c0 = close.get(i - 2).unwrap();
 
         let o1 = open.get(i - 1).unwrap();
-        let h1 = high.get(i - 1).unwrap();
-        let l1 = low.get(i - 1).unwrap();
+        let _ = high.get(i - 1).unwrap();
+        let _ = low.get(i - 1).unwrap();
         let c1 = close.get(i - 1).unwrap();
 
         let o2 = open.get(i).unwrap();
@@ -3564,7 +3564,7 @@ pub fn cdlstalledpattern(df: DataFrame, output_col: Option<&str>) -> PolarsResul
 
         let o1 = open.get(i - 1).unwrap();
         let c1 = close.get(i - 1).unwrap();
-        let h1 = high.get(i - 1).unwrap();
+        let _ = high.get(i - 1).unwrap();
 
         let o2 = open.get(i).unwrap();
         let c2 = close.get(i).unwrap();
@@ -3755,8 +3755,8 @@ pub fn cdltasukigap(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
     let output_name = output_col.unwrap_or("cdltasukigap");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
+    let _ = high_s.f64()?;
+    let _ = low_s.f64()?;
     let close = close_s.f64()?;
 
     let len = open.len();
@@ -4149,8 +4149,8 @@ pub fn cdlxsidegap3methods(df: DataFrame, output_col: Option<&str>) -> PolarsRes
     let output_name = output_col.unwrap_or("cdlxsidegap3methods");
     let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
     let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
+    let _ = high_s.f64()?;
+    let _ = low_s.f64()?;
     let close = close_s.f64()?;
 
     let len = open.len();

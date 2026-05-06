@@ -832,7 +832,7 @@ pub fn dx(
     let plus_dm_series = Series::new("plus_dm".into(), plus_dm);
     let minus_dm_series = Series::new("minus_dm".into(), minus_dm);
 
-    let smoothed_tr = rma_series(&tr_series, timeperiod);
+    let _ = rma_series(&tr_series, timeperiod);
     let smoothed_plus_dm = rma_series(&plus_dm_series, timeperiod);
     let smoothed_minus_dm = rma_series(&minus_dm_series, timeperiod);
 

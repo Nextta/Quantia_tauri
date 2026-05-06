@@ -709,7 +709,7 @@ fn calc_mama(values: &[f64], fastlimit: f64, slowlimit: f64) -> (Vec<f64>, Vec<f
             prev_smooth_period = smooth_period;
 
             // Phase calculation
-            let mut phase = if i1.abs() > 0.0 {
+            let phase = if i1.abs() > 0.0 {
                 (q1 / i1).atan().to_degrees()
             } else {
                 0.0
