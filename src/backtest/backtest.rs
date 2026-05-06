@@ -935,7 +935,7 @@ impl Backtest {
         symbol: SymbolInfoCFD,
         signal: String,
         precio_entrada: f64,
-    ) -> Trade {
+    ) -> Option<Trade> {
         let mut trade: Trade = Trade::new(self.id.clone(), symbol.clone()).await;
 
         let naive_time = DateTime::from_timestamp_millis(timestamp).expect("timestamp inválido");
@@ -952,6 +952,8 @@ impl Backtest {
                     None,
                     None,
                 );
+
+                return Some(trade);
             }
             "sell" => {
                 trade.sell(
@@ -963,11 +965,12 @@ impl Backtest {
                     None,
                     None,
                 );
+
+                return Some(trade);
             }
             _ => println!("Especifica la señal de entrada."),
         }
-
-        trade
+        None
     }
 
     async fn backtest(
@@ -1011,15 +1014,14 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
-                    open_trades.push(
-                        self.ejecutar_entry(
-                            timestamp,
-                            symbol.clone(),
-                            "buy".to_string(),
-                            limit.clone(),
-                        )
-                        .await,
-                    );
+                    let trade: Option<Trade> = self
+                        .ejecutar_entry(timestamp, symbol.clone(), "buy".to_string(), limit.clone())
+                        .await;
+
+                    if let Some(trade) = trade {
+                        open_trades.push(trade);
+                    }
+
                     indices.push(idx);
                 }
 
@@ -1051,15 +1053,14 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
-                    open_trades.push(
-                        self.ejecutar_entry(
-                            timestamp,
-                            symbol.clone(),
-                            "buy".to_string(),
-                            limit.clone(),
-                        )
-                        .await,
-                    );
+                    let trade: Option<Trade> = self
+                        .ejecutar_entry(timestamp, symbol.clone(), "buy".to_string(), limit.clone())
+                        .await;
+
+                    if let Some(trade) = trade {
+                        open_trades.push(trade);
+                    }
+
                     indices.push(idx);
                 }
 
@@ -1091,15 +1092,19 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
-                    open_trades.push(
-                        self.ejecutar_entry(
+                    let trade: Option<Trade> = self
+                        .ejecutar_entry(
                             timestamp,
                             symbol.clone(),
                             "sell".to_string(),
                             limit.clone(),
                         )
-                        .await,
-                    );
+                        .await;
+
+                    if let Some(trade) = trade {
+                        open_trades.push(trade);
+                    }
+
                     indices.push(idx);
                 }
 
@@ -1131,15 +1136,19 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
-                    open_trades.push(
-                        self.ejecutar_entry(
+                    let trade: Option<Trade> = self
+                        .ejecutar_entry(
                             timestamp,
                             symbol.clone(),
                             "sell".to_string(),
                             limit.clone(),
                         )
-                        .await,
-                    );
+                        .await;
+
+                    if let Some(trade) = trade {
+                        open_trades.push(trade);
+                    }
+
                     indices.push(idx);
                 }
 
@@ -1178,15 +1187,18 @@ impl Backtest {
                                 .try_extract::<i64>()
                                 .unwrap();
 
-                            open_trades.push(
-                                self.ejecutar_entry(
+                            let trade: Option<Trade> = self
+                                .ejecutar_entry(
                                     timestamp,
                                     symbol.clone(),
                                     "buy".to_string(),
                                     precio_entrada,
                                 )
-                                .await,
-                            );
+                                .await;
+
+                            if let Some(trade) = trade {
+                                open_trades.push(trade);
+                            }
                         }
                     }
                     "sell" => {
@@ -1210,15 +1222,18 @@ impl Backtest {
                                 .try_extract::<i64>()
                                 .unwrap();
 
-                            open_trades.push(
-                                self.ejecutar_entry(
+                            let trade: Option<Trade> = self
+                                .ejecutar_entry(
                                     timestamp,
                                     symbol.clone(),
                                     "sell".to_string(),
-                                    precio_entrada,
+                                    precio_entrada.clone(),
                                 )
-                                .await,
-                            );
+                                .await;
+
+                            if let Some(trade) = trade {
+                                open_trades.push(trade);
+                            }
                         }
                     }
                     "buy_limit" => {
