@@ -1397,7 +1397,6 @@ impl Backtest {
                 }
             }
 
-            // Optenemos las acciones de entrada.
             if !open_trades.is_empty() {
                 let precio_actual: f64 = df
                     .column("close")
@@ -1409,25 +1408,87 @@ impl Backtest {
                 // Recorremos el vactor de operaciones abiertas(open_trades) y comprobamos si
                 // alcanzan los stop-loss o take-profit para cerrarlas.
                 let mut indices: Vec<usize> = Vec::new();
-                for (idx, trade) in open_trades.iter().enumerate() {
+                for (idx, trade) in open_trades.iter_mut().enumerate() {
                     match trade.tipo.as_str() {
                         "buy" => {
                             if precio_actual <= trade.sl {
+                                let timestamp: i64 = df
+                                    .column("timestamp")
+                                    .unwrap()
+                                    .get(i + 1)
+                                    .unwrap()
+                                    .try_extract::<i64>()
+                                    .unwrap();
+
+                                let naive_time = DateTime::from_timestamp_millis(timestamp)
+                                    .expect("timestamp inválido");
+                                let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
+                                trade.close(t1, trade.sl);
                                 indices.push(idx);
+                                self.add_trade(trade.clone());
                             }
                             if precio_actual >= trade.tp {
+                                let timestamp: i64 = df
+                                    .column("timestamp")
+                                    .unwrap()
+                                    .get(i + 1)
+                                    .unwrap()
+                                    .try_extract::<i64>()
+                                    .unwrap();
+
+                                let naive_time = DateTime::from_timestamp_millis(timestamp)
+                                    .expect("timestamp inválido");
+                                let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
+                                trade.close(t1, trade.tp);
                                 indices.push(idx);
+                                self.add_trade(trade.clone());
                             }
                         }
                         "sell" => {
                             if precio_actual >= trade.sl {
+                                let timestamp: i64 = df
+                                    .column("timestamp")
+                                    .unwrap()
+                                    .get(i + 1)
+                                    .unwrap()
+                                    .try_extract::<i64>()
+                                    .unwrap();
+
+                                let naive_time = DateTime::from_timestamp_millis(timestamp)
+                                    .expect("timestamp inválido");
+                                let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
+                                trade.close(t1, trade.sl);
                                 indices.push(idx);
+                                self.add_trade(trade.clone());
                             }
                             if precio_actual <= trade.tp {
+                                let timestamp: i64 = df
+                                    .column("timestamp")
+                                    .unwrap()
+                                    .get(i + 1)
+                                    .unwrap()
+                                    .try_extract::<i64>()
+                                    .unwrap();
+
+                                let naive_time = DateTime::from_timestamp_millis(timestamp)
+                                    .expect("timestamp inválido");
+                                let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
+                                trade.close(t1, trade.tp);
                                 indices.push(idx);
+                                self.add_trade(trade.clone());
                             }
                         }
                         _ => {}
+                    }
+                }
+
+                if !indices.is_empty() {
+                    for idx in indices.iter().rev() {
+                        open_trades.remove(*idx);
                     }
                 }
 
@@ -1480,6 +1541,7 @@ impl Backtest {
                     });
             }
 
+            // Optenemos las acciones de entrada.
             for accion in self
                 .estrategia
                 .acciones
