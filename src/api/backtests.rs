@@ -6,7 +6,7 @@ use crate::strategy::strategy_options::StrategyOptions;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
 use serde::Serialize;
-use serde_json::Value;
+// use serde_json::Value;
 use std::env;
 
 #[derive(Serialize, Debug)]

@@ -31,7 +31,7 @@ pub struct BetaParams {
 /// # Fórmula
 /// β = Cov(Ri, Rm) / Var(Rm)
 /// donde Ri son los retornos del activo y Rm los retornos del mercado.
-pub async fn beta(
+pub fn beta(
     df: DataFrame,
     col_real0: &str,
     col_real1: &str,
@@ -128,7 +128,7 @@ pub struct CorrelParams {
 ///
 /// # Fórmula
 /// ρ = Cov(A, B) / (σ_A * σ_B)
-pub async fn correl(
+pub fn correl(
     df: DataFrame,
     col_real0: &str,
     col_real1: &str,
@@ -209,7 +209,7 @@ pub struct LinearRegParams {
 ///
 /// # Fórmula
 /// Valor = m * (N-1) + c (valor en el punto más reciente)
-pub async fn linearreg(
+pub fn linearreg(
     df: DataFrame,
     col_real: &str,
     timeperiod: Option<usize>,
@@ -263,7 +263,7 @@ pub struct LinearRegAngleParams {
 }
 
 /// Calcula el ángulo de la regresión lineal con ventana deslizante.
-pub async fn linearreg_angle(
+pub fn linearreg_angle(
     df: DataFrame,
     col_real: &str,
     timeperiod: Option<usize>,
@@ -315,7 +315,7 @@ pub struct LinearRegInterceptParams {
 }
 
 /// Calcula la intersección de la regresión lineal con ventana deslizante.
-pub async fn linearreg_intercept(
+pub fn linearreg_intercept(
     df: DataFrame,
     col_real: &str,
     timeperiod: Option<usize>,
@@ -368,7 +368,7 @@ pub struct LinearRegSlopeParams {
 }
 
 /// Calcula la pendiente (slope) de la regresión lineal con ventana deslizante.
-pub async fn linearreg_slope(
+pub fn linearreg_slope(
     df: DataFrame,
     col_real: &str,
     timeperiod: Option<usize>,
@@ -421,7 +421,7 @@ pub struct StddevParams {
 }
 
 /// Calcula la desviación estándar con ventana deslizante.
-pub async fn stddev(
+pub fn stddev(
     df: DataFrame,
     col_real: &str,
     timeperiod: Option<usize>,
@@ -470,7 +470,7 @@ pub struct TsfParams {
 }
 
 /// Calcula la previsión de serie temporal (Time Series Forecast) con ventana deslizante.
-pub async fn tsf(
+pub fn tsf(
     df: DataFrame,
     col_real: &str,
     timeperiod: Option<usize>,
@@ -526,7 +526,7 @@ pub struct VarParams {
 }
 
 /// Calcula la varianza con ventana deslizante.
-pub async fn var(
+pub fn var(
     df: DataFrame,
     col_real: &str,
     timeperiod: Option<usize>,
@@ -572,7 +572,7 @@ pub async fn var(
 mod tests {
     use super::*;
 
-    async fn load_data() -> PolarsResult<DataFrame> {
+    fn load_data() -> PolarsResult<DataFrame> {
         let df = CsvReadOptions::default()
             .try_into_reader_with_file_path(Some("download/test.csv".into()))
             .unwrap()
@@ -581,20 +581,20 @@ mod tests {
         Ok(df)
     }
 
-    async fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
+    fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
         let mut df: DataFrame = df_result.clone();
         let mut file = std::fs::File::create(path).unwrap();
         CsvWriter::new(&mut file).finish(&mut df).unwrap();
         Ok(())
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_beta() {
-        match load_data().await {
+    #[test]
+    fn test_beta() {
+        match load_data() {
             Ok(df) => {
-                match beta(df, "close", "open", None, Some("beta")).await {
+                match beta(df, "close", "open", None, Some("beta")) {
                     Ok(result) => {
-                        save_data(&result, "download/test_beta.csv").await.unwrap();
+                        save_data(&result, "download/test_beta.csv").unwrap();
                     }
                     Err(e) => panic!("Failed to calculate beta: {:?}", e),
                 };
@@ -603,15 +603,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_correl() {
-        match load_data().await {
+    #[test]
+    fn test_correl() {
+        match load_data() {
             Ok(df) => {
-                match correl(df, "close", "open", None, None).await {
+                match correl(df, "close", "open", None, None) {
                     Ok(result) => {
-                        save_data(&result, "download/test_correl.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_correl.csv").unwrap();
                     }
                     Err(e) => panic!("Failed to calculate correl: {:?}", e),
                 };
@@ -620,15 +618,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_linearreg() {
-        match load_data().await {
+    #[test]
+    fn test_linearreg() {
+        match load_data() {
             Ok(df) => {
-                match linearreg(df, "close", None, None).await {
+                match linearreg(df, "close", None, None) {
                     Ok(result) => {
-                        save_data(&result, "download/test_linearreg.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_linearreg.csv").unwrap();
                     }
                     Err(e) => panic!("Failed to calculate linearreg: {:?}", e),
                 };
@@ -637,15 +633,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_stddev() {
-        match load_data().await {
+    #[test]
+    fn test_stddev() {
+        match load_data() {
             Ok(df) => {
-                match stddev(df, "close", None, None, None).await {
+                match stddev(df, "close", None, None, None) {
                     Ok(result) => {
-                        save_data(&result, "download/test_stddev.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_stddev.csv").unwrap();
                     }
                     Err(e) => panic!("Failed to calculate stddev: {:?}", e),
                 };
@@ -654,15 +648,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_linearreg_angle() {
-        match load_data().await {
+    #[test]
+    fn test_linearreg_angle() {
+        match load_data() {
             Ok(df) => {
-                match linearreg_angle(df, "close", None, None).await {
+                match linearreg_angle(df, "close", None, None) {
                     Ok(result) => {
-                        save_data(&result, "download/test_linearreg_angle.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_linearreg_angle.csv").unwrap();
                     }
                     Err(e) => panic!("Failed to calculate linearreg_angle: {:?}", e),
                 };
@@ -671,15 +663,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_linearreg_intercept() {
-        match load_data().await {
+    #[test]
+    fn test_linearreg_intercept() {
+        match load_data() {
             Ok(df) => {
-                match linearreg_intercept(df, "close", None, None).await {
+                match linearreg_intercept(df, "close", None, None) {
                     Ok(result) => {
-                        save_data(&result, "download/test_linearreg_intercept.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_linearreg_intercept.csv").unwrap();
                     }
                     Err(e) => panic!("Failed to calculate linearreg_intercept: {:?}", e),
                 };
@@ -688,15 +678,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_linearreg_slope() {
-        match load_data().await {
+    #[test]
+    fn test_linearreg_slope() {
+        match load_data() {
             Ok(df) => {
-                match linearreg_slope(df, "close", None, None).await {
+                match linearreg_slope(df, "close", None, None) {
                     Ok(result) => {
-                        save_data(&result, "download/test_linearreg_slope.csv")
-                            .await
-                            .unwrap();
+                        save_data(&result, "download/test_linearreg_slope.csv").unwrap();
                     }
                     Err(e) => panic!("Failed to calculate linearreg_slope: {:?}", e),
                 };
@@ -705,13 +693,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_tsf() {
-        match load_data().await {
+    #[test]
+    fn test_tsf() {
+        match load_data() {
             Ok(df) => {
-                match tsf(df, "close", None, None).await {
+                match tsf(df, "close", None, None) {
                     Ok(result) => {
-                        save_data(&result, "download/test_tsf.csv").await.unwrap();
+                        save_data(&result, "download/test_tsf.csv").unwrap();
                     }
                     Err(e) => panic!("Failed to calculate tsf: {:?}", e),
                 };
@@ -720,13 +708,13 @@ mod tests {
         };
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_var() {
-        match load_data().await {
+    #[test]
+    fn test_var() {
+        match load_data() {
             Ok(df) => {
-                match var(df, "close", None, None, None).await {
+                match var(df, "close", None, None, None) {
                     Ok(result) => {
-                        save_data(&result, "download/test_var.csv").await.unwrap();
+                        save_data(&result, "download/test_var.csv").unwrap();
                     }
                     Err(e) => panic!("Failed to calculate var: {:?}", e),
                 };

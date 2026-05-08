@@ -315,9 +315,9 @@ impl HTState {
 ///
 /// # Ejemplo
 /// ```rust
-/// let df_with_period = ht_dcperiod(df, None).await?;
+/// let df_with_period = ht_dcperiod(df, None);
 /// ```
-pub async fn ht_dcperiod(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn ht_dcperiod(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("ht_dcperiod");
     let close = get_close(&df)?;
 
@@ -363,9 +363,9 @@ pub async fn ht_dcperiod(df: DataFrame, output_col: Option<&str>) -> PolarsResul
 ///
 /// # Ejemplo
 /// ```rust
-/// let df_with_phase = ht_dcphase(df, None).await?;
+/// let df_with_phase = ht_dcphase(df, None);
 /// ```
-pub async fn ht_dcphase(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn ht_dcphase(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("ht_dcphase");
     let close = get_close(&df)?;
 
@@ -413,9 +413,9 @@ pub async fn ht_dcphase(df: DataFrame, output_col: Option<&str>) -> PolarsResult
 ///
 /// # Ejemplo
 /// ```rust
-/// let df_with_phasors = ht_phasor(df, None, None).await?;
+/// let df_with_phasors = ht_phasor(df, None, None);
 /// ```
-pub async fn ht_phasor(
+pub fn ht_phasor(
     df: DataFrame,
     output_col_in_phase: Option<&str>,
     output_col_quadrature: Option<&str>,
@@ -473,9 +473,9 @@ pub async fn ht_phasor(
 ///
 /// # Ejemplo
 /// ```rust
-/// let df_with_sine = ht_sine(df, None, None).await?;
+/// let df_with_sine = ht_sine(df, None, None);
 /// ```
-pub async fn ht_sine(
+pub fn ht_sine(
     df: DataFrame,
     output_col_sine: Option<&str>,
     output_col_lead_sine: Option<&str>,
@@ -535,9 +535,9 @@ pub async fn ht_sine(
 ///
 /// # Ejemplo
 /// ```rust
-/// let df_with_trend = ht_trendmode(df, None).await?;
+/// let df_with_trend = ht_trendmode(df, None);
 /// ```
-pub async fn ht_trendmode(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn ht_trendmode(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("ht_trendmode");
     let close = get_close(&df)?;
 
@@ -566,7 +566,7 @@ mod tests {
 
     //Para los test crear una carpeta llamada download en la raiz de este proyecto
     // y llamar a los datos test.csv
-    async fn load_data() -> PolarsResult<DataFrame> {
+    fn load_data() -> PolarsResult<DataFrame> {
         let df = CsvReadOptions::default()
             .try_into_reader_with_file_path(Some("download/test.csv".into()))
             .unwrap()
@@ -575,21 +575,19 @@ mod tests {
         Ok(df)
     }
 
-    async fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
+    fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
         let mut df: DataFrame = df_result.clone();
         let mut file = std::fs::File::create(path).unwrap();
         CsvWriter::new(&mut file).finish(&mut df).unwrap();
         Ok(())
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_ht_dcperiod() {
-        match load_data().await {
-            Ok(df) => match ht_dcperiod(df, None).await {
+    #[test]
+    fn test_ht_dcperiod() {
+        match load_data() {
+            Ok(df) => match ht_dcperiod(df, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_ht_dcperiod.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_ht_dcperiod.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute ht_dcperiod: {:?}", e),
             },
@@ -597,14 +595,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_ht_dcphase() {
-        match load_data().await {
-            Ok(df) => match ht_dcphase(df, None).await {
+    #[test]
+    fn test_ht_dcphase() {
+        match load_data() {
+            Ok(df) => match ht_dcphase(df, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_ht_dcphase.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_ht_dcphase.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute ht_dcphase: {:?}", e),
             },
@@ -612,14 +608,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_ht_phasor() {
-        match load_data().await {
-            Ok(df) => match ht_phasor(df, None, None).await {
+    #[test]
+    fn test_ht_phasor() {
+        match load_data() {
+            Ok(df) => match ht_phasor(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_ht_phasor.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_ht_phasor.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute ht_phasor: {:?}", e),
             },
@@ -627,14 +621,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_ht_sine() {
-        match load_data().await {
-            Ok(df) => match ht_sine(df, None, None).await {
+    #[test]
+    fn test_ht_sine() {
+        match load_data() {
+            Ok(df) => match ht_sine(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_ht_sine.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_ht_sine.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute ht_sine: {:?}", e),
             },
@@ -642,14 +634,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_ht_trendmode() {
-        match load_data().await {
-            Ok(df) => match ht_trendmode(df, None).await {
+    #[test]
+    fn test_ht_trendmode() {
+        match load_data() {
+            Ok(df) => match ht_trendmode(df, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_ht_trendmode.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_ht_trendmode.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute ht_trendmode: {:?}", e),
             },

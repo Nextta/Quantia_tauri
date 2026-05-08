@@ -288,7 +288,7 @@ pub struct BbandsParams {
 /// Middle = MA(close, timeperiod, matype)
 /// Upper = Middle + (nbdevup * StdDev(close, timeperiod))
 /// Lower = Middle - (nbdevdn * StdDev(close, timeperiod))
-pub async fn bbands(
+pub fn bbands(
     df: DataFrame,
     timeperiod: Option<usize>,
     nbdevup: Option<f64>,
@@ -371,7 +371,7 @@ pub struct DemaParams {
 ///
 /// # Fórmula
 /// DEMA = 2 * EMA(price) - EMA(EMA(price))
-pub async fn dema(
+pub fn dema(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -429,7 +429,7 @@ pub struct EmaParams {
 /// # Fórmula
 /// EMA(t) = (price(t) - EMA(t-1)) * multiplier + EMA(t-1)
 /// multiplier = 2 / (timeperiod + 1)
-pub async fn ema(
+pub fn ema(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -476,7 +476,7 @@ pub struct KamaParams {
 /// ER = Change / Volatility
 /// SC = [ER * (2/(fast+1) - 2/(slow+1)) + 2/(slow+1)]^2
 /// KAMA = SC * price + (1 - SC) * KAMA_prev
-pub async fn kama(
+pub fn kama(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -519,7 +519,7 @@ pub struct MaParams {
 ///
 /// # Retorna
 /// DataFrame con columna "ma" añadida
-pub async fn ma(
+pub fn ma(
     df: DataFrame,
     timeperiod: Option<usize>,
     matype: Option<i32>,
@@ -571,7 +571,7 @@ pub struct MamaParams {
 /// Aplica Transformada de Hilbert → Calcula fase → Alpha adaptativo →
 /// MAMA = alpha * price + (1 - alpha) * MAMA_prev
 /// FAMA = media móvil de MAMA
-pub async fn mama(
+pub fn mama(
     df: DataFrame,
     fastlimit: Option<f64>,
     slowlimit: Option<f64>,
@@ -709,7 +709,7 @@ fn calc_mama(values: &[f64], fastlimit: f64, slowlimit: f64) -> (Vec<f64>, Vec<f
             prev_smooth_period = smooth_period;
 
             // Phase calculation
-            let mut phase = if i1.abs() > 0.0 {
+            let phase = if i1.abs() > 0.0 {
                 (q1 / i1).atan().to_degrees()
             } else {
                 0.0
@@ -776,7 +776,7 @@ pub struct MidpointParams {
 ///
 /// # Fórmula
 /// MIDPOINT = (max(close, timeperiod) + min(close, timeperiod)) / 2
-pub async fn midpoint(
+pub fn midpoint(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -852,7 +852,7 @@ pub struct MidpriceParams {
 ///
 /// # Fórmula
 /// MIDPRICE = (max(high, timeperiod) + min(low, timeperiod)) / 2
-pub async fn midprice(
+pub fn midprice(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -943,7 +943,7 @@ pub struct SarParams {
 ///
 /// # Retorna
 /// DataFrame con columna "sar" añadida
-pub async fn sar(
+pub fn sar(
     df: DataFrame,
     acceleration: Option<f64>,
     maximum: Option<f64>,
@@ -1064,7 +1064,7 @@ pub struct SarextParams {
 ///
 /// # Retorna
 /// DataFrame con columna "sarext" añadida
-pub async fn sarext(
+pub fn sarext(
     df: DataFrame,
     startvalue: Option<f64>,
     offsetonlong: Option<f64>,
@@ -1187,7 +1187,7 @@ pub struct SmaParams {
 ///
 /// # Fórmula
 /// SMA = sum(close, timeperiod) / timeperiod
-pub async fn sma(
+pub fn sma(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -1246,7 +1246,7 @@ pub struct T3Params {
 /// c2 = 3a^2 + 3a^3
 /// c3 = -6a^2 - 3a - 3a^3
 /// c4 = 1 + 3a + 3a^2 + a^3
-pub async fn t3(
+pub fn t3(
     df: DataFrame,
     timeperiod: Option<usize>,
     vfactor: Option<f64>,
@@ -1349,7 +1349,7 @@ pub struct TemaParams {
 ///
 /// # Fórmula
 /// TEMA = 3 * EMA - 3 * EMA(EMA) + EMA(EMA(EMA))
-pub async fn tema(
+pub fn tema(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -1436,7 +1436,7 @@ pub struct TrimaParams {
 ///
 /// # Fórmula
 /// TRIMA = SMA(SMA(price, ceil(period/2)), floor(period/2)+1)
-pub async fn trima(
+pub fn trima(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -1495,7 +1495,7 @@ pub struct WmaParams {
 ///
 /// # Fórmula
 /// WMA = sum(price[i] * (i+1)) / sum(1..period) para i en 0..period
-pub async fn wma(
+pub fn wma(
     df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -1584,7 +1584,7 @@ mod tests {
 
     //Para los test crear una carpeta llamada download en la raiz de este proyecto
     // y llamar a los datos test.csv
-    async fn load_data() -> PolarsResult<DataFrame> {
+    fn load_data() -> PolarsResult<DataFrame> {
         let df = CsvReadOptions::default()
             .try_into_reader_with_file_path(Some("download/test.csv".into()))
             .unwrap()
@@ -1593,21 +1593,19 @@ mod tests {
         Ok(df)
     }
 
-    async fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
+    fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
         let mut df: DataFrame = df_result.clone();
         let mut file = std::fs::File::create(path).unwrap();
         CsvWriter::new(&mut file).finish(&mut df).unwrap();
         Ok(())
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_bbands() {
-        match load_data().await {
-            Ok(df) => match bbands(df, None, None, None, None, None, None, None).await {
+    #[test]
+    fn test_bbands() {
+        match load_data() {
+            Ok(df) => match bbands(df, None, None, None, None, None, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_bbands.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_bbands.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute bbands: {:?}", e),
             },
@@ -1615,12 +1613,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_dema() {
-        match load_data().await {
-            Ok(df) => match dema(df, None, None).await {
+    #[test]
+    fn test_dema() {
+        match load_data() {
+            Ok(df) => match dema(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_dema.csv").await.unwrap();
+                    save_data(&result, "download/test_dema.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute dema: {:?}", e),
             },
@@ -1628,12 +1626,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_ema() {
-        match load_data().await {
-            Ok(df) => match ema(df, None, None).await {
+    #[test]
+    fn test_ema() {
+        match load_data() {
+            Ok(df) => match ema(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_ema.csv").await.unwrap();
+                    save_data(&result, "download/test_ema.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute ema: {:?}", e),
             },
@@ -1641,12 +1639,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_kama() {
-        match load_data().await {
-            Ok(df) => match kama(df, None, None).await {
+    #[test]
+    fn test_kama() {
+        match load_data() {
+            Ok(df) => match kama(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_kama.csv").await.unwrap();
+                    save_data(&result, "download/test_kama.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute kama: {:?}", e),
             },
@@ -1654,12 +1652,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_ma() {
-        match load_data().await {
-            Ok(df) => match ma(df, None, None, None).await {
+    #[test]
+    fn test_ma() {
+        match load_data() {
+            Ok(df) => match ma(df, None, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_ma.csv").await.unwrap();
+                    save_data(&result, "download/test_ma.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute ma: {:?}", e),
             },
@@ -1667,12 +1665,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_mama() {
-        match load_data().await {
-            Ok(df) => match mama(df, None, None, None, None).await {
+    #[test]
+    fn test_mama() {
+        match load_data() {
+            Ok(df) => match mama(df, None, None, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_mama.csv").await.unwrap();
+                    save_data(&result, "download/test_mama.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute mama: {:?}", e),
             },
@@ -1680,14 +1678,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_midpoint() {
-        match load_data().await {
-            Ok(df) => match midpoint(df, None, None).await {
+    #[test]
+    fn test_midpoint() {
+        match load_data() {
+            Ok(df) => match midpoint(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_midpoint.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_midpoint.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute midpoint: {:?}", e),
             },
@@ -1695,14 +1691,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_midprice() {
-        match load_data().await {
-            Ok(df) => match midprice(df, None, None).await {
+    #[test]
+    fn test_midprice() {
+        match load_data() {
+            Ok(df) => match midprice(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_midprice.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_midprice.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute midprice: {:?}", e),
             },
@@ -1710,12 +1704,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_sar() {
-        match load_data().await {
-            Ok(df) => match sar(df, None, None, None).await {
+    #[test]
+    fn test_sar() {
+        match load_data() {
+            Ok(df) => match sar(df, None, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_sar.csv").await.unwrap();
+                    save_data(&result, "download/test_sar.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute sar: {:?}", e),
             },
@@ -1723,14 +1717,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_sarext() {
-        match load_data().await {
-            Ok(df) => match sarext(df, None, None, None, None, None, None).await {
+    #[test]
+    fn test_sarext() {
+        match load_data() {
+            Ok(df) => match sarext(df, None, None, None, None, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_sarext.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_sarext.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute sarext: {:?}", e),
             },
@@ -1738,12 +1730,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_sma() {
-        match load_data().await {
-            Ok(df) => match sma(df, None, None).await {
+    #[test]
+    fn test_sma() {
+        match load_data() {
+            Ok(df) => match sma(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_sma.csv").await.unwrap();
+                    save_data(&result, "download/test_sma.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute sma: {:?}", e),
             },
@@ -1751,12 +1743,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_t3() {
-        match load_data().await {
-            Ok(df) => match t3(df, None, None, None).await {
+    #[test]
+    fn test_t3() {
+        match load_data() {
+            Ok(df) => match t3(df, None, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_t3.csv").await.unwrap();
+                    save_data(&result, "download/test_t3.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute t3: {:?}", e),
             },
@@ -1764,12 +1756,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_tema() {
-        match load_data().await {
-            Ok(df) => match tema(df, None, None).await {
+    #[test]
+    fn test_tema() {
+        match load_data() {
+            Ok(df) => match tema(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_tema.csv").await.unwrap();
+                    save_data(&result, "download/test_tema.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute tema: {:?}", e),
             },
@@ -1777,12 +1769,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_trima() {
-        match load_data().await {
-            Ok(df) => match trima(df, None, None).await {
+    #[test]
+    fn test_trima() {
+        match load_data() {
+            Ok(df) => match trima(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_trima.csv").await.unwrap();
+                    save_data(&result, "download/test_trima.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute trima: {:?}", e),
             },
@@ -1790,12 +1782,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_wma() {
-        match load_data().await {
-            Ok(df) => match wma(df, None, None).await {
+    #[test]
+    fn test_wma() {
+        match load_data() {
+            Ok(df) => match wma(df, None, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_wma.csv").await.unwrap();
+                    save_data(&result, "download/test_wma.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute wma: {:?}", e),
             },

@@ -118,7 +118,7 @@ fn rma_series(values: &Series, period: usize) -> PolarsResult<Series> {
 // ============================================================================
 
 /// TRANGE - True Range
-pub async fn trange(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn trange(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
     let output_col = output_col.unwrap_or("trange");
 
     let high = get_high(&df)?;
@@ -142,7 +142,7 @@ pub struct AtrParams {
 // ============================================================================
 
 /// ATR - Average True Range
-pub async fn atr(
+pub fn atr(
     mut df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -172,7 +172,7 @@ pub struct NatrParams {
 // ============================================================================
 
 /// NATR - Normalized Average True Range
-pub async fn natr(
+pub fn natr(
     mut df: DataFrame,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
@@ -200,7 +200,7 @@ pub async fn natr(
 mod tests {
     use super::*;
 
-    async fn load_data() -> PolarsResult<DataFrame> {
+    fn load_data() -> PolarsResult<DataFrame> {
         let df = CsvReadOptions::default()
             .try_into_reader_with_file_path(Some("download/test.csv".into()))
             .unwrap()
@@ -209,21 +209,19 @@ mod tests {
         Ok(df)
     }
 
-    async fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
+    fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
         let mut df: DataFrame = df_result.clone();
         let mut file = std::fs::File::create(path).unwrap();
         CsvWriter::new(&mut file).finish(&mut df).unwrap();
         Ok(())
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_trange() {
-        match load_data().await {
-            Ok(df) => match trange(df, None).await {
+    #[test]
+    fn test_trange() {
+        match load_data() {
+            Ok(df) => match trange(df, None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_trange.csv")
-                        .await
-                        .unwrap();
+                    save_data(&result, "download/test_trange.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute trange: {:?}", e),
             },
@@ -231,12 +229,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_atr() {
-        match load_data().await {
-            Ok(df) => match atr(df, Some(14), None).await {
+    #[test]
+    fn test_atr() {
+        match load_data() {
+            Ok(df) => match atr(df, Some(14), None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_atr.csv").await.unwrap();
+                    save_data(&result, "download/test_atr.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute ATR: {:?}", e),
             },
@@ -244,12 +242,12 @@ mod tests {
         }
     }
 
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_natr() {
-        match load_data().await {
-            Ok(df) => match natr(df, Some(14), None).await {
+    #[test]
+    fn test_natr() {
+        match load_data() {
+            Ok(df) => match natr(df, Some(14), None) {
                 Ok(result) => {
-                    save_data(&result, "download/test_natr.csv").await.unwrap();
+                    save_data(&result, "download/test_natr.csv").unwrap();
                 }
                 Err(e) => panic!("Failed to compute NATR: {:?}", e),
             },

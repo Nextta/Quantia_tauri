@@ -60,7 +60,7 @@ struct State {
     entry_price: f64,
     sl: f64,
     tp: f64,
-    vertical_barrier: i32,
+    // vertical_barrier: i32,
     trade_type: String,
 }
 
@@ -95,7 +95,7 @@ pub async fn run_backtest(
         entry_price: 0.0,
         sl: 0.0,
         tp: 0.0,
-        vertical_barrier: 0,
+        // vertical_barrier: 0,
         trade_type: "None".to_string(),
     };
 
@@ -106,10 +106,10 @@ pub async fn run_backtest(
     let inicio = Instant::now();
     // El iterador zip es extremadamente eficiente (se vectoriza con SIMD)
     for i in 0..data.close.len() {
-        let open = data.open[i];
+        // let open = data.open[i];
         let close = data.close[i];
-        let high = data.high[i];
-        let low = data.low[i];
+        // let high = data.high[i];
+        // let low = data.low[i];
         let time = data.time[i];
 
         // Formateamos Unix timestamp en **milisegundos**
