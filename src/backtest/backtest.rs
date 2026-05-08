@@ -202,7 +202,7 @@ impl Backtest {
     ///
     /// # Retorna
     /// DataFrame con los nuevos datos.
-    async fn set_indicators_strategy(&mut self, datos: DataFrame) -> PolarsResult<DataFrame> {
+    fn set_indicators_strategy(&mut self, datos: DataFrame) -> PolarsResult<DataFrame> {
         let mut df: DataFrame = datos.clone();
         //TODO: Añadir los indicadores de la estrategia al dataframe de datos.
         for indicator in &self.estrategia.indicadores {
@@ -817,7 +817,7 @@ impl Backtest {
     ///
     /// # Retorna
     /// True si se puede operar en la dirección indicada, false en caso contrario.
-    async fn test_conditions(&self, df: DataFrame, accion: StrategyAction, i: usize) -> bool {
+    fn test_conditions(&self, df: DataFrame, accion: StrategyAction, i: usize) -> bool {
         let mut condiciones_map: HashMap<String, bool> = HashMap::new();
         self.estrategia
             .condiciones
@@ -1552,7 +1552,7 @@ impl Backtest {
                     "buy" => {
                         if self.direction("buy")
                             && self.entry_options(&open_trades)
-                            && self.test_conditions(df.clone(), accion.clone(), i).await
+                            && self.test_conditions(df.clone(), accion.clone(), i)
                         {
                             let precio_entrada: f64 = df
                                 .column("open")
@@ -1592,7 +1592,7 @@ impl Backtest {
                     "sell" => {
                         if self.direction("sell")
                             && self.entry_options(&open_trades)
-                            && self.test_conditions(df.clone(), accion.clone(), i).await
+                            && self.test_conditions(df.clone(), accion.clone(), i)
                         {
                             let precio_entrada: f64 = df
                                 .column("open")
@@ -1632,7 +1632,7 @@ impl Backtest {
                     "buy_limit" => {
                         if self.direction("buy")
                             && self.entry_options(&open_trades)
-                            && self.test_conditions(df.clone(), accion.clone(), i).await
+                            && self.test_conditions(df.clone(), accion.clone(), i)
                         {
                             let precio_limite =
                                 self.get_limit(df.clone(), accion.parametros.to_string(), i)?;
@@ -1642,7 +1642,7 @@ impl Backtest {
                     "sell_limit" => {
                         if self.direction("sell")
                             && self.entry_options(&open_trades)
-                            && self.test_conditions(df.clone(), accion.clone(), i).await
+                            && self.test_conditions(df.clone(), accion.clone(), i)
                         {
                             let precio_limite =
                                 self.get_limit(df.clone(), accion.parametros.to_string(), i)?;
@@ -1652,7 +1652,7 @@ impl Backtest {
                     "buy_stop" => {
                         if self.direction("buy")
                             && self.entry_options(&open_trades)
-                            && self.test_conditions(df.clone(), accion.clone(), i).await
+                            && self.test_conditions(df.clone(), accion.clone(), i)
                         {
                             let precio_limite =
                                 self.get_limit(df.clone(), accion.parametros.to_string(), i)?;
@@ -1662,7 +1662,7 @@ impl Backtest {
                     "sell_stop" => {
                         if self.direction("sell")
                             && self.entry_options(&open_trades)
-                            && self.test_conditions(df.clone(), accion.clone(), i).await
+                            && self.test_conditions(df.clone(), accion.clone(), i)
                         {
                             let precio_limite =
                                 self.get_limit(df.clone(), accion.parametros.to_string(), i)?;
@@ -1738,7 +1738,7 @@ impl Backtest {
 
         for data in self.datos.clone() {
             // Verificamos los indicadores que tiene la estrategia para añadirlos a los datos del DataFrame
-            let df = match self.set_indicators_strategy(data.get_datos()).await {
+            let df = match self.set_indicators_strategy(data.get_datos()) {
                 Ok(df_result) => df_result,
                 Err(e) => {
                     return Err(Box::new(e));
