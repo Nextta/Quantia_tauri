@@ -106,6 +106,11 @@ impl GestionParams {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct NBarsOptions {
+    valor: f64,
+}
+
 #[derive(Debug, Clone)]
 pub struct Backtest {
     pub id: i32,
@@ -1562,7 +1567,50 @@ impl Backtest {
                                 }
                             }
                         }
-                        "N_bars" => {}
+                        "N_bars" => {
+                            let n_bars: NBarsOptions =
+                                serde_json::from_value(accion.parametros.clone()).unwrap();
+
+                            for (idx, trade) in open_trades.iter_mut().enumerate() {
+                                let timestamp: i64 = df
+                                    .column("timestamp")
+                                    .unwrap()
+                                    .get(i - n_bars.valor as usize)
+                                    .unwrap()
+                                    .try_extract::<i64>()
+                                    .unwrap();
+
+                                let naive_time = DateTime::from_timestamp_millis(timestamp)
+                                    .expect("timestamp inválido");
+                                let time_actual =
+                                    naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
+                                if trade.t0 == time_actual {
+                                    let timestamp: i64 = df
+                                        .column("timestamp")
+                                        .unwrap()
+                                        .get(i + 1)
+                                        .unwrap()
+                                        .try_extract::<i64>()
+                                        .unwrap();
+
+                                    let precio_cierre: f64 = df
+                                        .column("open")
+                                        .unwrap()
+                                        .get(i + 1)
+                                        .unwrap()
+                                        .try_extract::<f64>()
+                                        .unwrap();
+
+                                    let naive_time = DateTime::from_timestamp_millis(timestamp)
+                                        .expect("timestamp inválido");
+                                    let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
+                                    trade.close(t1, precio_cierre);
+                                    indices.push(idx);
+                                }
+                            }
+                        }
                         "Close_all_rule" => {
                             if self.test_conditions(df.clone(), accion.clone(), i) {
                                 for (idx, trade) in open_trades.iter_mut().enumerate() {
