@@ -1491,6 +1491,7 @@ impl Backtest {
                     }
                 }
 
+                // Cerrar trades abiertos basados en las condiciones de salida
                 self.estrategia
                     .acciones
                     .iter()
@@ -1642,6 +1643,7 @@ impl Backtest {
                         _ => {}
                     });
 
+                // Activamos el Breakeven segun las condiciones definidas en las acciones
                 self.estrategia
                     .acciones
                     .iter()
@@ -1660,6 +1662,7 @@ impl Backtest {
                         }
                     });
 
+                // Activamos las opciones de trailing stoploss segun la configuracion de las acciones
                 self.estrategia
                     .acciones
                     .iter()
