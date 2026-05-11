@@ -62,6 +62,7 @@ enum BeTipo {
 struct BeParams {
     tipo: BeTipo,
     valor: f64,
+    be_plus: f64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
