@@ -1181,6 +1181,142 @@ impl Backtest {
         None
     }
 
+    /// Identifica si se da la condición para activar el Breakevent
+    ///
+    /// # Arguments
+    ///
+    /// * `tipo` - Tipo de operación ("buy" o "sell")
+    /// * `unidad` - Unidad de medida ("tick" o "pip")
+    /// * `symbol` - Información del símbolo
+    /// * `valor` - Valor en unidad para saber cuaando activar el BreakEvent
+    /// * `precio_entrada` - Precio de entrada
+    /// * `precio_actual` - Precio actual
+    ///
+    /// # Returns
+    ///
+    /// `true` si se da la condición para activar el Breakevent, `false` en caso contrario
+    fn colocar_be(
+        &self,
+        tipo: &str,
+        unidad: &str,
+        symbol: SymbolInfoCFD,
+        valor: f64,
+        precio_entrada: f64,
+        precio_actual: f64,
+    ) -> bool {
+        let diferencia = match tipo {
+            "buy" => precio_actual - precio_entrada,
+            "sell" => precio_entrada - precio_actual,
+            _ => 0.0,
+        };
+
+        let resultado = match symbol.digitos {
+            1 => match unidad {
+                "tick" => diferencia / 0.1,
+                "pip" => diferencia,
+                "punto" => diferencia / 0.1,
+                "porcentaje" => (diferencia / precio_entrada) * 100.0,
+                _ => diferencia,
+            },
+            2 => match unidad {
+                "tick" => diferencia / 0.01,
+                "pip" => diferencia / 0.1,
+                "punto" => diferencia / 0.01,
+                "porcentaje" => (diferencia / precio_entrada) * 100.0,
+                _ => diferencia,
+            },
+            3 => match unidad {
+                "tick" => diferencia / 0.001,
+                "pip" => diferencia / 0.01,
+                "punto" => diferencia / 0.001,
+                "porcentaje" => (diferencia / precio_entrada) * 100.0,
+                _ => diferencia,
+            },
+            4 => match unidad {
+                "tick" => diferencia / 0.0001,
+                "pip" => diferencia / 0.001,
+                "punto" => diferencia / 0.0001,
+                "porcentaje" => (diferencia / precio_entrada) * 100.0,
+                _ => diferencia,
+            },
+            5 => match unidad {
+                "tick" => diferencia / 0.00001,
+                "pip" => diferencia / 0.0001,
+                "punto" => diferencia / 0.00001,
+                "porcentaje" => (diferencia / precio_entrada) * 100.0,
+                _ => diferencia,
+            },
+            _ => diferencia,
+        };
+
+        if resultado >= valor {
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Calcula el BE+ de un trade basado en la unidad y el símbolo.
+    ///
+    /// # Arguments
+    ///
+    /// * `unidad` - Unidad de medida para el cálculo (tick, pip, punto, porcentaje).
+    /// * `symbol` - Información del símbolo del activo.
+    /// * `valor` - Valor del trade.
+    /// * `precio_entrada` - Precio de entrada del trade.
+    ///
+    /// # Returns
+    ///
+    /// El BE+ calculado como un valor f64.
+    fn calcular_be_plus(
+        &self,
+        unidad: &str,
+        symbol: SymbolInfoCFD,
+        valor: f64,
+        precio_entrada: f64,
+    ) -> f64 {
+        let resultado: f64 = match symbol.digitos {
+            1 => match unidad {
+                "tick" => valor * 0.1,
+                "pip" => valor,
+                "punto" => valor * 0.1,
+                "porcentaje" => (valor / precio_entrada) * 100.0,
+                _ => 0.0,
+            },
+            2 => match unidad {
+                "tick" => valor * 0.01,
+                "pip" => valor * 0.1,
+                "punto" => valor * 0.01,
+                "porcentaje" => (valor / precio_entrada) * 100.0,
+                _ => 0.0,
+            },
+            3 => match unidad {
+                "tick" => valor * 0.001,
+                "pip" => valor * 0.01,
+                "punto" => valor * 0.001,
+                "porcentaje" => (valor / precio_entrada) * 100.0,
+                _ => 0.0,
+            },
+            4 => match unidad {
+                "tick" => valor * 0.0001,
+                "pip" => valor * 0.001,
+                "punto" => valor * 0.0001,
+                "porcentaje" => (valor / precio_entrada) * 100.0,
+                _ => 0.0,
+            },
+            5 => match unidad {
+                "tick" => valor * 0.00001,
+                "pip" => valor * 0.0001,
+                "punto" => valor * 0.00001,
+                "porcentaje" => (valor / precio_entrada) * 100.0,
+                _ => 0.0,
+            },
+            _ => 0.0,
+        };
+
+        resultado
+    }
+
     /// Realiza el backtest de una estrategia en un DataFrame dado.
     ///
     /// # Parametros
@@ -1500,32 +1636,30 @@ impl Backtest {
                     .for_each(|accion| match accion.tipo.as_str() {
                         "exit_buy" => {
                             if self.test_conditions(df.clone(), accion.clone(), i) {
+                                let timestamp: i64 = df
+                                    .column("timestamp")
+                                    .unwrap()
+                                    .get(i + 1)
+                                    .unwrap()
+                                    .try_extract::<i64>()
+                                    .unwrap();
+
+                                let precio_cierre: f64 = df
+                                    .column("open")
+                                    .unwrap()
+                                    .get(i + 1)
+                                    .unwrap()
+                                    .try_extract::<f64>()
+                                    .unwrap();
+
+                                let naive_time = DateTime::from_timestamp_millis(timestamp)
+                                    .expect("timestamp inválido");
+                                let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
                                 for (idx, trade) in open_trades.iter_mut().enumerate() {
                                     match trade.tipo.as_str() {
                                         "buy" => {
-                                            let timestamp: i64 = df
-                                                .column("timestamp")
-                                                .unwrap()
-                                                .get(i + 1)
-                                                .unwrap()
-                                                .try_extract::<i64>()
-                                                .unwrap();
-
-                                            let precio_cierre: f64 = df
-                                                .column("open")
-                                                .unwrap()
-                                                .get(i + 1)
-                                                .unwrap()
-                                                .try_extract::<f64>()
-                                                .unwrap();
-
-                                            let naive_time =
-                                                DateTime::from_timestamp_millis(timestamp)
-                                                    .expect("timestamp inválido");
-                                            let t1 =
-                                                naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
-
-                                            trade.close(t1, precio_cierre);
+                                            trade.close(t1.clone(), precio_cierre);
                                             indices.push(idx);
                                         }
                                         _ => {}
@@ -1535,32 +1669,30 @@ impl Backtest {
                         }
                         "exit_sell" => {
                             if self.test_conditions(df.clone(), accion.clone(), i) {
+                                let timestamp: i64 = df
+                                    .column("timestamp")
+                                    .unwrap()
+                                    .get(i + 1)
+                                    .unwrap()
+                                    .try_extract::<i64>()
+                                    .unwrap();
+
+                                let precio_cierre: f64 = df
+                                    .column("open")
+                                    .unwrap()
+                                    .get(i + 1)
+                                    .unwrap()
+                                    .try_extract::<f64>()
+                                    .unwrap();
+
+                                let naive_time = DateTime::from_timestamp_millis(timestamp)
+                                    .expect("timestamp inválido");
+                                let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
                                 for (idx, trade) in open_trades.iter_mut().enumerate() {
                                     match trade.tipo.as_str() {
                                         "sell" => {
-                                            let timestamp: i64 = df
-                                                .column("timestamp")
-                                                .unwrap()
-                                                .get(i + 1)
-                                                .unwrap()
-                                                .try_extract::<i64>()
-                                                .unwrap();
-
-                                            let precio_cierre: f64 = df
-                                                .column("open")
-                                                .unwrap()
-                                                .get(i + 1)
-                                                .unwrap()
-                                                .try_extract::<f64>()
-                                                .unwrap();
-
-                                            let naive_time =
-                                                DateTime::from_timestamp_millis(timestamp)
-                                                    .expect("timestamp inválido");
-                                            let t1 =
-                                                naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
-
-                                            trade.close(t1, precio_cierre);
+                                            trade.close(t1.clone(), precio_cierre);
                                             indices.push(idx);
                                         }
 
@@ -1573,20 +1705,19 @@ impl Backtest {
                             let n_bars: NBarsOptions =
                                 serde_json::from_value(accion.parametros.clone()).unwrap();
 
+                            let timestamp: i64 = df
+                                .column("timestamp")
+                                .unwrap()
+                                .get(i - n_bars.valor as usize)
+                                .unwrap()
+                                .try_extract::<i64>()
+                                .unwrap();
+
+                            let naive_time = DateTime::from_timestamp_millis(timestamp)
+                                .expect("timestamp inválido");
+                            let time_actual = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
                             for (idx, trade) in open_trades.iter_mut().enumerate() {
-                                let timestamp: i64 = df
-                                    .column("timestamp")
-                                    .unwrap()
-                                    .get(i - n_bars.valor as usize)
-                                    .unwrap()
-                                    .try_extract::<i64>()
-                                    .unwrap();
-
-                                let naive_time = DateTime::from_timestamp_millis(timestamp)
-                                    .expect("timestamp inválido");
-                                let time_actual =
-                                    naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
-
                                 if trade.t0 == time_actual {
                                     let timestamp: i64 = df
                                         .column("timestamp")
@@ -1615,28 +1746,28 @@ impl Backtest {
                         }
                         "Close_all_rule" => {
                             if self.test_conditions(df.clone(), accion.clone(), i) {
+                                let timestamp: i64 = df
+                                    .column("timestamp")
+                                    .unwrap()
+                                    .get(i + 1)
+                                    .unwrap()
+                                    .try_extract::<i64>()
+                                    .unwrap();
+
+                                let precio_cierre: f64 = df
+                                    .column("open")
+                                    .unwrap()
+                                    .get(i + 1)
+                                    .unwrap()
+                                    .try_extract::<f64>()
+                                    .unwrap();
+
+                                let naive_time = DateTime::from_timestamp_millis(timestamp)
+                                    .expect("timestamp inválido");
+                                let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
                                 for (idx, trade) in open_trades.iter_mut().enumerate() {
-                                    let timestamp: i64 = df
-                                        .column("timestamp")
-                                        .unwrap()
-                                        .get(i + 1)
-                                        .unwrap()
-                                        .try_extract::<i64>()
-                                        .unwrap();
-
-                                    let precio_cierre: f64 = df
-                                        .column("open")
-                                        .unwrap()
-                                        .get(i + 1)
-                                        .unwrap()
-                                        .try_extract::<f64>()
-                                        .unwrap();
-
-                                    let naive_time = DateTime::from_timestamp_millis(timestamp)
-                                        .expect("timestamp inválido");
-                                    let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
-
-                                    trade.close(t1, precio_cierre);
+                                    trade.close(t1.clone(), precio_cierre);
                                     indices.push(idx);
                                 }
                             }
@@ -1653,12 +1784,222 @@ impl Backtest {
                         let parametros: BeParams =
                             serde_json::from_value(accion.parametros.clone()).unwrap();
 
+                        let precio_cierre: f64 = df
+                            .column("open")
+                            .unwrap()
+                            .get(i + 1)
+                            .unwrap()
+                            .try_extract::<f64>()
+                            .unwrap();
+
                         match parametros.tipo {
-                            BeTipo::Tick => {}
-                            BeTipo::Pip => {}
-                            BeTipo::Punto => {}
-                            BeTipo::Porcentaje => {}
-                            BeTipo::Precio => {}
+                            BeTipo::Tick => {
+                                for trade in open_trades.iter_mut() {
+                                    match trade.tipo.as_str() {
+                                        "buy" => {
+                                            if self.colocar_be(
+                                                "buy",
+                                                "tick",
+                                                symbol.clone(),
+                                                parametros.valor,
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {
+                                                if parametros.be_plus > 0.0 {
+                                                    trade.sl = trade.precio_entrada
+                                                        + self.calcular_be_plus(
+                                                            "tick",
+                                                            symbol.clone(),
+                                                            parametros.be_plus,
+                                                            trade.precio_entrada,
+                                                        );
+                                                } else {
+                                                    trade.sl = trade.precio_entrada;
+                                                }
+                                            }
+                                        }
+                                        "sell" => {
+                                            if self.colocar_be(
+                                                "sell",
+                                                "tick",
+                                                symbol.clone(),
+                                                parametros.valor,
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {
+                                                if parametros.be_plus > 0.0 {
+                                                    trade.sl = trade.precio_entrada
+                                                        - self.calcular_be_plus(
+                                                            "tick",
+                                                            symbol.clone(),
+                                                            parametros.be_plus,
+                                                            trade.precio_entrada,
+                                                        );
+                                                } else {
+                                                    trade.sl = trade.precio_entrada;
+                                                }
+                                            }
+                                        }
+                                        _ => {}
+                                    }
+                                }
+                            }
+                            BeTipo::Pip => {
+                                for trade in open_trades.iter_mut() {
+                                    match trade.tipo.as_str() {
+                                        "buy" => {
+                                            if self.colocar_be(
+                                                "buy",
+                                                "pip",
+                                                symbol.clone(),
+                                                parametros.valor,
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {
+                                                if parametros.be_plus > 0.0 {
+                                                    trade.sl = trade.precio_entrada
+                                                        + self.calcular_be_plus(
+                                                            "tick",
+                                                            symbol.clone(),
+                                                            parametros.be_plus,
+                                                            trade.precio_entrada,
+                                                        );
+                                                } else {
+                                                    trade.sl = trade.precio_entrada;
+                                                }
+                                            }
+                                        }
+                                        "sell" => {
+                                            if self.colocar_be(
+                                                "sell",
+                                                "pip",
+                                                symbol.clone(),
+                                                parametros.valor,
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {
+                                                if parametros.be_plus > 0.0 {
+                                                    trade.sl = trade.precio_entrada
+                                                        - self.calcular_be_plus(
+                                                            "tick",
+                                                            symbol.clone(),
+                                                            parametros.be_plus,
+                                                            trade.precio_entrada,
+                                                        );
+                                                } else {
+                                                    trade.sl = trade.precio_entrada;
+                                                }
+                                            }
+                                        }
+                                        _ => {}
+                                    }
+                                }
+                            }
+                            BeTipo::Punto => {
+                                for trade in open_trades.iter_mut() {
+                                    match trade.tipo.as_str() {
+                                        "buy" => {
+                                            if self.colocar_be(
+                                                "buy",
+                                                "punto",
+                                                symbol.clone(),
+                                                parametros.valor,
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {
+                                                if parametros.be_plus > 0.0 {
+                                                    trade.sl = trade.precio_entrada
+                                                        + self.calcular_be_plus(
+                                                            "tick",
+                                                            symbol.clone(),
+                                                            parametros.be_plus,
+                                                            trade.precio_entrada,
+                                                        );
+                                                } else {
+                                                    trade.sl = trade.precio_entrada;
+                                                }
+                                            }
+                                        }
+                                        "sell" => {
+                                            if self.colocar_be(
+                                                "sell",
+                                                "punto",
+                                                symbol.clone(),
+                                                parametros.valor,
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {
+                                                if parametros.be_plus > 0.0 {
+                                                    trade.sl = trade.precio_entrada
+                                                        - self.calcular_be_plus(
+                                                            "tick",
+                                                            symbol.clone(),
+                                                            parametros.be_plus,
+                                                            trade.precio_entrada,
+                                                        );
+                                                } else {
+                                                    trade.sl = trade.precio_entrada;
+                                                }
+                                            }
+                                        }
+                                        _ => {}
+                                    }
+                                }
+                            }
+                            BeTipo::Porcentaje => {
+                                for trade in open_trades.iter_mut() {
+                                    match trade.tipo.as_str() {
+                                        "buy" => {
+                                            if self.colocar_be(
+                                                "buy",
+                                                "porcentaje",
+                                                symbol.clone(),
+                                                parametros.valor,
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {
+                                                if parametros.be_plus > 0.0 {
+                                                    trade.sl = trade.precio_entrada
+                                                        + self.calcular_be_plus(
+                                                            "tick",
+                                                            symbol.clone(),
+                                                            parametros.be_plus,
+                                                            trade.precio_entrada,
+                                                        );
+                                                } else {
+                                                    trade.sl = trade.precio_entrada;
+                                                }
+                                            }
+                                        }
+                                        "sell" => {
+                                            if self.colocar_be(
+                                                "sell",
+                                                "porcentaje",
+                                                symbol.clone(),
+                                                parametros.valor,
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {
+                                                if parametros.be_plus > 0.0 {
+                                                    trade.sl = trade.precio_entrada
+                                                        - self.calcular_be_plus(
+                                                            "tick",
+                                                            symbol.clone(),
+                                                            parametros.be_plus,
+                                                            trade.precio_entrada,
+                                                        );
+                                                } else {
+                                                    trade.sl = trade.precio_entrada;
+                                                }
+                                            }
+                                        }
+                                        _ => {}
+                                    }
+                                }
+                            }
+                            BeTipo::Precio => {
+                                todo!("BE en base a precio");
+                            }
                             _ => {}
                         }
                     });
