@@ -2051,7 +2051,7 @@ impl Backtest {
                 self.estrategia
                     .acciones
                     .iter()
-                    .filter(|acc| acc.tipo_signal == "TL")
+                    .filter(|acc| acc.tipo_signal == "TSL")
                     .for_each(|accion| {
                         let parametros: TlParams =
                             serde_json::from_value(accion.parametros.clone()).unwrap();
