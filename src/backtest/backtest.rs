@@ -63,6 +63,7 @@ struct BeParams {
     tipo: BeTipo,
     valor: f64,
     be_plus: f64,
+    col_name: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -1785,9 +1786,9 @@ impl Backtest {
                             serde_json::from_value(accion.parametros.clone()).unwrap();
 
                         let precio_cierre: f64 = df
-                            .column("open")
+                            .column("close")
                             .unwrap()
-                            .get(i + 1)
+                            .get(i)
                             .unwrap()
                             .try_extract::<f64>()
                             .unwrap();
@@ -1859,7 +1860,7 @@ impl Backtest {
                                                 if parametros.be_plus > 0.0 {
                                                     trade.sl = trade.precio_entrada
                                                         + self.calcular_be_plus(
-                                                            "tick",
+                                                            "pip",
                                                             symbol.clone(),
                                                             parametros.be_plus,
                                                             trade.precio_entrada,
@@ -1881,7 +1882,7 @@ impl Backtest {
                                                 if parametros.be_plus > 0.0 {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
-                                                            "tick",
+                                                            "pip",
                                                             symbol.clone(),
                                                             parametros.be_plus,
                                                             trade.precio_entrada,
@@ -1910,7 +1911,7 @@ impl Backtest {
                                                 if parametros.be_plus > 0.0 {
                                                     trade.sl = trade.precio_entrada
                                                         + self.calcular_be_plus(
-                                                            "tick",
+                                                            "punto",
                                                             symbol.clone(),
                                                             parametros.be_plus,
                                                             trade.precio_entrada,
@@ -1932,7 +1933,7 @@ impl Backtest {
                                                 if parametros.be_plus > 0.0 {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
-                                                            "tick",
+                                                            "punto",
                                                             symbol.clone(),
                                                             parametros.be_plus,
                                                             trade.precio_entrada,
@@ -1961,7 +1962,7 @@ impl Backtest {
                                                 if parametros.be_plus > 0.0 {
                                                     trade.sl = trade.precio_entrada
                                                         + self.calcular_be_plus(
-                                                            "tick",
+                                                            "porcentaje",
                                                             symbol.clone(),
                                                             parametros.be_plus,
                                                             trade.precio_entrada,
@@ -1983,7 +1984,7 @@ impl Backtest {
                                                 if parametros.be_plus > 0.0 {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
-                                                            "tick",
+                                                            "porcentaje",
                                                             symbol.clone(),
                                                             parametros.be_plus,
                                                             trade.precio_entrada,
@@ -1998,7 +1999,49 @@ impl Backtest {
                                 }
                             }
                             BeTipo::Precio => {
-                                todo!("BE en base a precio");
+                                if let Some(col_name) = &parametros.col_name {
+                                    let valor = df
+                                        .column(col_name)
+                                        .unwrap()
+                                        .get(i)
+                                        .unwrap()
+                                        .try_extract::<f64>()
+                                        .unwrap();
+
+                                    for trade in open_trades.iter_mut() {
+                                        match trade.tipo.as_str() {
+                                            "buy" => {
+                                                if valor <= precio_cierre {
+                                                    if parametros.be_plus > 0.0 {
+                                                        trade.sl = trade.precio_entrada
+                                                            + self.calcular_be_plus(
+                                                                "tick",
+                                                                symbol.clone(),
+                                                                parametros.be_plus,
+                                                                trade.precio_entrada,
+                                                            );
+                                                    } else {
+                                                        trade.sl = trade.precio_entrada;
+                                                    }
+                                                }
+                                            }
+                                            "sell" => {
+                                                if parametros.be_plus > 0.0 {
+                                                    trade.sl = trade.precio_entrada
+                                                        - self.calcular_be_plus(
+                                                            "tick",
+                                                            symbol.clone(),
+                                                            parametros.be_plus,
+                                                            trade.precio_entrada,
+                                                        );
+                                                } else {
+                                                    trade.sl = trade.precio_entrada;
+                                                }
+                                            }
+                                            _ => {}
+                                        }
+                                    }
+                                }
                             }
                             _ => {}
                         }
