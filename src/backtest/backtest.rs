@@ -18,7 +18,7 @@ use crate::indicators::volume::*;
 use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_action::StrategyAction;
 // use crate::strategy::strategy_condition::StrategyCondition;s
-use crate::strategy::strategy_options::{StrategyOptions, TradingDirection};
+use crate::strategy::strategy_options::TradingDirection;
 
 use serde::{Deserialize, Serialize};
 // use polars::datatypes::DataType;
@@ -55,7 +55,7 @@ enum BeTipo {
     Punto,
     Porcentaje,
     PrecioEntrada,
-    Precio,
+    Indicador,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -1998,7 +1998,7 @@ impl Backtest {
                                     }
                                 }
                             }
-                            BeTipo::Precio => {
+                            BeTipo::Indicador => {
                                 if let Some(col_name) = &parametros.col_name {
                                     let valor = df
                                         .column(col_name)
@@ -2252,19 +2252,8 @@ impl Backtest {
                 estrategia
             }
             Err(e) => {
-                println!("Error al obtener estrategia: {:?}", e);
-                Strategy {
-                    id: 0,
-                    id_user: 0,
-                    nombre: String::new(),
-                    descripcion: None,
-                    activa: false,
-                    creada_en: String::new(),
-                    indicadores: Vec::new(),
-                    condiciones: Vec::new(),
-                    acciones: Vec::new(),
-                    opciones: StrategyOptions::new_empty(),
-                }
+                let error = format!("Error al obtener estrategia: {:?}", e);
+                return Err(Box::new(error)).unwrap();
             }
         };
 
