@@ -1,6 +1,8 @@
 use crate::api::resultados::delete_resultados_by_backtest;
 use crate::api::trades::{delete_trades_by_backtest, get_trades_by_backtest};
-use crate::backtest::backtest::{Backtest, GestionParams, GestionStrategy};
+use crate::enums::gestion::GestionStrategy;
+
+use crate::backtest::backtest::{Backtest, GestionParams};
 use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_options::StrategyOptions;
 use dotenvy::dotenv;

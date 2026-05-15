@@ -1,6 +1,7 @@
 use crate::api::symbols::get_symbol_cfd_by_id;
 use crate::backtest::symbol::SymbolInfoCFD;
 use crate::backtest::trade::Trade;
+use crate::enums::entry::EntryDirection;
 use crate::utils::tools::truncate_decimal;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
@@ -127,7 +128,7 @@ pub async fn insert_trades(id_backtest: i32, trade: &Trade) -> Result<i32> {
         id_backtest,
         trade.symbol.id,
         trade.symbol.name.clone(),
-        trade.tipo.clone(),
+        trade.tipo.to_string().clone(),
         trade.lotaje,
         trade.multiplicador,
         trade.t0.clone(),
@@ -197,7 +198,11 @@ pub async fn get_trades_by_backtest(id_backtest: i32) -> Result<Vec<Trade>> {
 
         trade.id = row.get::<i32>(0)?;
         trade.id_symbol = row.get::<i32>(2)?;
-        trade.tipo = row.get::<String>(4)?;
+        trade.tipo = if row.get::<String>(4)? == "Buy" {
+            EntryDirection::Buy
+        } else {
+            EntryDirection::Sell
+        };
         trade.lotaje = row.get::<f64>(5)?;
         trade.multiplicador = row.get::<f64>(6)?;
         trade.t0 = row.get::<String>(7)?;
@@ -312,7 +317,7 @@ mod tests {
 
         trade.id = 1;
         trade.id_symbol = 1;
-        trade.tipo = "Sell".to_string();
+        trade.tipo = EntryDirection::Sell;
         trade.lotaje = 1.0;
         trade.multiplicador = 1.0;
         trade.t0 = "12-12-2000".to_string();
