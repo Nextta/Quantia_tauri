@@ -28,16 +28,7 @@ use std::collections::HashMap;
 use std::time::Instant;
 
 use crate::enums::gestion::GestionStrategy;
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-enum BeTipo {
-    Tick,
-    Pip,
-    Punto,
-    Porcentaje,
-    PrecioEntrada,
-    Indicador,
-}
+use crate::enums::tipos::{BeTipo, ItTipo, TlTipo};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct BeParams {
@@ -45,24 +36,6 @@ struct BeParams {
     valor: f64,
     be_plus: f64,
     col_name: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-enum TlTipo {
-    Tick,
-    Pip,
-    Punto,
-    Porcentaje,
-    Indicador,
-    Velas,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-enum ItTipo {
-    Open,
-    Close,
-    High,
-    Low,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
