@@ -792,7 +792,6 @@ impl Backtest {
                 self.estrategia.opciones.trading_direccion == TradingDirection::Short
                     || self.estrategia.opciones.trading_direccion == TradingDirection::Both
             }
-            _ => false,
         }
     }
 
@@ -1158,9 +1157,7 @@ impl Backtest {
 
                 return Some(trade);
             }
-            _ => println!("Especifica la señal de entrada."),
         }
-        None
     }
 
     /// Identifica si se da la condición para activar el Breakevent
@@ -1189,7 +1186,6 @@ impl Backtest {
         let diferencia = match tipo {
             EntryDirection::Buy => precio_actual - precio_entrada,
             EntryDirection::Sell => precio_entrada - precio_actual,
-            _ => 0.0,
         };
 
         let resultado = match symbol.digitos {
@@ -1606,7 +1602,6 @@ impl Backtest {
                                 self.add_trade(trade.clone());
                             }
                         }
-                        _ => {}
                     }
                 }
 
@@ -1822,7 +1817,6 @@ impl Backtest {
                                                 }
                                             }
                                         }
-                                        _ => {}
                                     }
                                 }
                             }
@@ -1873,7 +1867,6 @@ impl Backtest {
                                                 }
                                             }
                                         }
-                                        _ => {}
                                     }
                                 }
                             }
@@ -1924,7 +1917,6 @@ impl Backtest {
                                                 }
                                             }
                                         }
-                                        _ => {}
                                     }
                                 }
                             }
@@ -1975,7 +1967,6 @@ impl Backtest {
                                                 }
                                             }
                                         }
-                                        _ => {}
                                     }
                                 }
                             }
@@ -2019,7 +2010,6 @@ impl Backtest {
                                                     trade.sl = trade.precio_entrada;
                                                 }
                                             }
-                                            _ => {}
                                         }
                                     }
                                 }

@@ -233,7 +233,6 @@ impl Trade {
         let swap_diario = match self.tipo {
             EntryDirection::Buy => self.symbol.swap_long * self.lotaje,
             EntryDirection::Sell => self.symbol.swap_short * self.lotaje,
-            _ => return 0.0,
         };
 
         let mut fecha_actual = t0.date();
