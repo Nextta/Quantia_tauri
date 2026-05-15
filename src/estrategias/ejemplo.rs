@@ -1,4 +1,6 @@
-use crate::backtest::backtest::{Backtest, GestionParams};
+use crate::backtest::backtest::Backtest;
+use crate::structs::parametros::GestionParams;
+
 use crate::backtest::datos::Datos;
 use crate::backtest::resultados::Resultados;
 use crate::backtest::symbol::SymbolInfoCFD;

@@ -1,10 +1,10 @@
 use crate::api::resultados::delete_resultados_by_backtest;
 use crate::api::trades::{delete_trades_by_backtest, get_trades_by_backtest};
+use crate::backtest::backtest::Backtest;
 use crate::enums::gestion::GestionStrategy;
-
-use crate::backtest::backtest::{Backtest, GestionParams};
 use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_options::StrategyOptions;
+use crate::structs::parametros::GestionParams;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
 use serde::Serialize;
@@ -106,7 +106,7 @@ pub async fn insert_backtest_cfd(backtest: Backtest) -> Result<i32> {
 
     conn.query(
         "INSERT INTO backtest (titulo, balance, tipo, gestion_strategy, parametros_gestion) VALUES (?, ?, ?, ?, ?) RETURNING id",
-        params![backtest.titulo, backtest.balance, backtest.tipo, backtest.gestion_strategy.to_string(), backtest.parametros_gestion.to_string()],
+        params![backtest.titulo, backtest.balance, backtest.tipo, backtest.gestion_strategy.to_string(), backtest.parametros_gestion.to_json()],
     )
     .await?;
 

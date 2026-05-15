@@ -29,43 +29,8 @@ use std::time::Instant;
 
 use crate::enums::gestion::GestionStrategy;
 use crate::enums::tipos::{BeTipo, ItTipo, TlTipo};
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct BeParams {
-    tipo: BeTipo,
-    valor: f64,
-    be_plus: f64,
-    col_name: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct TlParams {
-    tipo: TlTipo,
-    valor: f64,
-    activacion_tipo: TlTipo,
-    activacion_valor: f64,
-    indicador_nombre: String,
-    columna_nombre: String,
-    indicador_tipo: ItTipo,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct GestionParams {
-    pub multiplicador: f64,
-    pub lotaje_fijo: f64,
-}
-
-impl GestionParams {
-    pub fn to_string(&self) -> String {
-        let json = serde_json::to_string(self).unwrap();
-        json
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct NBarsOptions {
-    valor: f64,
-}
+use crate::structs::options::NBarsOptions;
+use crate::structs::parametros::{BeParams, GestionParams, TlParams};
 
 #[derive(Debug, Clone)]
 pub struct Backtest {
