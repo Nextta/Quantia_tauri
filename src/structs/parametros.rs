@@ -1,3 +1,4 @@
+use crate::enums::entry::EntryDirection;
 use crate::enums::tipos::{BeTipo, ItTipo, TlTipo};
 use serde::{Deserialize, Serialize};
 
@@ -41,6 +42,22 @@ pub struct GestionParams {
 }
 
 impl GestionParams {
+    pub fn to_json(&self) -> String {
+        let json = serde_json::to_string(self).unwrap();
+        json
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct LimitParams {
+    pub tipo: String,              // Tipo de limite: ask, bid, bb, atr... etc
+    pub direccion: EntryDirection, // Direccion del limite: buy, sell
+    pub nombre_col: String,        // Nombre de la columna a usar como limite
+    pub shift: usize,              // Numero de filas a desplazar
+    pub valor: f64,                // en caso de ser por pip, ticks o puntos
+}
+
+impl LimitParams {
     pub fn to_json(&self) -> String {
         let json = serde_json::to_string(self).unwrap();
         json

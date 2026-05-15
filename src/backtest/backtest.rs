@@ -30,7 +30,7 @@ use std::time::Instant;
 use crate::enums::gestion::GestionStrategy;
 use crate::enums::tipos::{BeTipo, ItTipo, TlTipo};
 use crate::structs::options::NBarsOptions;
-use crate::structs::parametros::{BeParams, GestionParams, TlParams};
+use crate::structs::parametros::{BeParams, GestionParams, LimitParams, TlParams};
 
 #[derive(Debug, Clone)]
 pub struct Backtest {
@@ -822,15 +822,6 @@ impl Backtest {
     /// # Retorna
     /// El límite de la acción en el índice dado.
     fn get_limit(&self, df: DataFrame, params: String, i: usize) -> Result<f64, serde_json::Error> {
-        #[derive(Debug, Clone, Deserialize, Serialize)]
-        struct LimitParams {
-            tipo: String,              // Tipo de limite: ask, bid, bb, atr... etc
-            direccion: EntryDirection, // Direccion del limite: buy, sell
-            nombre_col: String,        // Nombre de la columna a usar como limite
-            shift: usize,              // Numero de filas a desplazar
-            valor: f64,                // en caso de ser por pip, ticks o puntos
-        }
-
         let params: LimitParams = serde_json::from_str(&params).unwrap();
 
         let valor: f64 = df
