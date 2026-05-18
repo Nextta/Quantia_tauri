@@ -5,6 +5,7 @@ use crate::enums::gestion::GestionStrategy;
 use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_options::StrategyOptions;
 use crate::structs::parametros::GestionParams;
+use crate::traits::tparametro::TParametro;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
 use serde::Serialize;

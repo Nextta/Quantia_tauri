@@ -1,5 +1,7 @@
 use crate::enums::entry::EntryDirection;
 use crate::enums::tipos::{BeTipo, ItTipo, TlTipo};
+use crate::traits::tparametro::TParametro;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -10,8 +12,8 @@ pub struct BeParams {
     pub col_name: Option<String>,
 }
 
-impl BeParams {
-    pub fn to_json(&self) -> String {
+impl TParametro for BeParams {
+    fn to_json(&self) -> String {
         let json = serde_json::to_string(self).unwrap();
         json
     }
@@ -28,8 +30,8 @@ pub struct TlParams {
     pub indicador_tipo: ItTipo,
 }
 
-impl TlParams {
-    pub fn to_json(&self) -> String {
+impl TParametro for TlParams {
+    fn to_json(&self) -> String {
         let json = serde_json::to_string(self).unwrap();
         json
     }
@@ -41,8 +43,8 @@ pub struct GestionParams {
     pub lotaje_fijo: f64,
 }
 
-impl GestionParams {
-    pub fn to_json(&self) -> String {
+impl TParametro for GestionParams {
+    fn to_json(&self) -> String {
         let json = serde_json::to_string(self).unwrap();
         json
     }
@@ -57,8 +59,8 @@ pub struct LimitParams {
     pub valor: f64,                // en caso de ser por pip, ticks o puntos
 }
 
-impl LimitParams {
-    pub fn to_json(&self) -> String {
+impl TParametro for LimitParams {
+    fn to_json(&self) -> String {
         let json = serde_json::to_string(self).unwrap();
         json
     }
