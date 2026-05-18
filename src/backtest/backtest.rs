@@ -1226,10 +1226,11 @@ impl Backtest {
 
     fn activar_tsl(
         &self,
+        data: DataFrame,
+        i: usize,
         tipo: EntryDirection,
-        unidad: TlTipo,
+        parametros: TlParams,
         symbol: SymbolInfoCFD,
-        valor: f64,
         precio_entrada: f64,
         precio_actual: f64,
     ) -> bool {
@@ -1238,49 +1239,206 @@ impl Backtest {
             EntryDirection::Sell => precio_entrada - precio_actual,
         };
 
+        let mut indicador: bool = false;
+
         let resultado = match symbol.digitos {
-            1 => match unidad {
+            1 => match parametros.activacion_tipo {
                 TlTipo::Tick => diferencia / 0.1,
                 TlTipo::Pip => diferencia,
                 TlTipo::Punto => diferencia / 0.1,
                 TlTipo::Porcentaje => (diferencia / precio_entrada) * 100.0,
+                TlTipo::Indicador => {
+                    let indicador_price: f64 = data
+                        .column(parametros.columna_nombre.as_str())
+                        .unwrap()
+                        .get(i)
+                        .unwrap()
+                        .try_extract::<f64>()
+                        .unwrap();
+
+                    let resultado: f64 = match tipo {
+                        EntryDirection::Buy => {
+                            if indicador_price <= precio_actual {
+                                indicador = true;
+                                indicador_price
+                            } else {
+                                0.0
+                            }
+                        }
+                        EntryDirection::Sell => {
+                            if indicador_price >= precio_actual {
+                                indicador = true;
+                                indicador_price
+                            } else {
+                                0.0
+                            }
+                        }
+                    };
+
+                    resultado
+                }
+                // TlTipo::Velas => {}
                 _ => diferencia,
             },
-            2 => match unidad {
+            2 => match parametros.activacion_tipo {
                 TlTipo::Tick => diferencia / 0.01,
                 TlTipo::Pip => diferencia / 0.1,
                 TlTipo::Punto => diferencia / 0.01,
                 TlTipo::Porcentaje => (diferencia / precio_entrada) * 100.0,
+                TlTipo::Indicador => {
+                    let indicador_price: f64 = data
+                        .column(parametros.columna_nombre.as_str())
+                        .unwrap()
+                        .get(i)
+                        .unwrap()
+                        .try_extract::<f64>()
+                        .unwrap();
+
+                    let resultado: f64 = match tipo {
+                        EntryDirection::Buy => {
+                            if indicador_price <= precio_actual {
+                                indicador = true;
+                                indicador_price
+                            } else {
+                                0.0
+                            }
+                        }
+                        EntryDirection::Sell => {
+                            if indicador_price >= precio_actual {
+                                indicador = true;
+                                indicador_price
+                            } else {
+                                0.0
+                            }
+                        }
+                    };
+
+                    resultado
+                }
                 _ => diferencia,
             },
-            3 => match unidad {
+            3 => match parametros.activacion_tipo {
                 TlTipo::Tick => diferencia / 0.001,
                 TlTipo::Pip => diferencia / 0.01,
                 TlTipo::Punto => diferencia / 0.001,
                 TlTipo::Porcentaje => (diferencia / precio_entrada) * 100.0,
+                TlTipo::Indicador => {
+                    let indicador_price: f64 = data
+                        .column(parametros.columna_nombre.as_str())
+                        .unwrap()
+                        .get(i)
+                        .unwrap()
+                        .try_extract::<f64>()
+                        .unwrap();
+
+                    let resultado: f64 = match tipo {
+                        EntryDirection::Buy => {
+                            if indicador_price <= precio_actual {
+                                indicador = true;
+                                indicador_price
+                            } else {
+                                0.0
+                            }
+                        }
+                        EntryDirection::Sell => {
+                            if indicador_price >= precio_actual {
+                                indicador = true;
+                                indicador_price
+                            } else {
+                                0.0
+                            }
+                        }
+                    };
+
+                    resultado
+                }
                 _ => diferencia,
             },
-            4 => match unidad {
+            4 => match parametros.activacion_tipo {
                 TlTipo::Tick => diferencia / 0.0001,
                 TlTipo::Pip => diferencia / 0.001,
                 TlTipo::Punto => diferencia / 0.0001,
                 TlTipo::Porcentaje => (diferencia / precio_entrada) * 100.0,
+                TlTipo::Indicador => {
+                    let indicador_price: f64 = data
+                        .column(parametros.columna_nombre.as_str())
+                        .unwrap()
+                        .get(i)
+                        .unwrap()
+                        .try_extract::<f64>()
+                        .unwrap();
+
+                    let resultado: f64 = match tipo {
+                        EntryDirection::Buy => {
+                            if indicador_price <= precio_actual {
+                                indicador = true;
+                                indicador_price
+                            } else {
+                                0.0
+                            }
+                        }
+                        EntryDirection::Sell => {
+                            if indicador_price >= precio_actual {
+                                indicador = true;
+                                indicador_price
+                            } else {
+                                0.0
+                            }
+                        }
+                    };
+
+                    resultado
+                }
                 _ => diferencia,
             },
-            5 => match unidad {
+            5 => match parametros.activacion_tipo {
                 TlTipo::Tick => diferencia / 0.00001,
                 TlTipo::Pip => diferencia / 0.0001,
                 TlTipo::Punto => diferencia / 0.00001,
                 TlTipo::Porcentaje => (diferencia / precio_entrada) * 100.0,
+                TlTipo::Indicador => {
+                    let indicador_price: f64 = data
+                        .column(parametros.columna_nombre.as_str())
+                        .unwrap()
+                        .get(i)
+                        .unwrap()
+                        .try_extract::<f64>()
+                        .unwrap();
+
+                    let resultado: f64 = match tipo {
+                        EntryDirection::Buy => {
+                            if indicador_price <= precio_actual {
+                                indicador = true;
+                                indicador_price
+                            } else {
+                                0.0
+                            }
+                        }
+                        EntryDirection::Sell => {
+                            if indicador_price >= precio_actual {
+                                indicador = true;
+                                indicador_price
+                            } else {
+                                0.0
+                            }
+                        }
+                    };
+
+                    resultado
+                }
                 _ => diferencia,
             },
             _ => diferencia,
         };
 
-        if resultado >= valor {
+        if resultado >= parametros.activacion_valor && !indicador {
             true
         } else {
-            false
+            if indicador {
+                true
+            } else {
+                false
+            }
         }
     }
 

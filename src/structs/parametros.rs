@@ -25,9 +25,7 @@ pub struct TlParams {
     pub valor: f64,
     pub activacion_tipo: TlTipo,
     pub activacion_valor: f64,
-    pub indicador_nombre: String,
     pub columna_nombre: String,
-    pub indicador_tipo: ItTipo,
 }
 
 impl TParametro for TlParams {
