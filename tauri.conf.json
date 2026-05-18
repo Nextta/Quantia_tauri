@@ -6,8 +6,8 @@
   "build": {
     "frontendDist": "Quantia_astro",
     "devUrl": "http://localhost:4321",
-    "beforeDevCommand": "pnpm run dev",
-    "beforeBuildCommand": "pnpm build"
+    "beforeDevCommand": "pnpm --dir Quantia_astro run dev",
+    "beforeBuildCommand": "pnpm --dir Quantia_astro build"
   },
   "app": {
     "windows": [
