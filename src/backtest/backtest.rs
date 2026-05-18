@@ -1224,6 +1224,21 @@ impl Backtest {
         resultado
     }
 
+    /// Activa el TSL (Take Stop Loss) basado en los datos y los parámetros proporcionados.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - El DataFrame que contiene los datos de mercado.
+    /// * `i` - El índice del dato actual.
+    /// * `tipo` - La dirección del trade (compra o venta).
+    /// * `parametros` - Los parámetros de gestión de TSL.
+    /// * `symbol` - La información del símbolo del activo.
+    /// * `precio_entrada` - El precio de entrada del trade.
+    /// * `precio_actual` - El precio actual del activo.
+    ///
+    /// # Returns
+    ///
+    /// `true` si el TSL se activa, `false` en caso contrario.
     fn activar_tsl(
         &self,
         data: DataFrame,
@@ -2174,13 +2189,183 @@ impl Backtest {
                         let parametros: TlParams =
                             serde_json::from_value(accion.parametros.clone()).unwrap();
 
+                        let precio_cierre: f64 = df
+                            .column("close")
+                            .unwrap()
+                            .get(i)
+                            .unwrap()
+                            .try_extract::<f64>()
+                            .unwrap();
+
                         match parametros.activacion_tipo {
-                            TlTipo::Tick => {}
-                            TlTipo::Pip => {}
-                            TlTipo::Punto => {}
-                            TlTipo::Porcentaje => {}
-                            TlTipo::Indicador => {}
-                            TlTipo::Velas => {}
+                            TlTipo::Tick => {
+                                for trade in open_trades.iter_mut() {
+                                    match trade.tipo {
+                                        EntryDirection::Buy => {
+                                            if self.activar_tsl(
+                                                df.clone(),
+                                                i.clone(),
+                                                EntryDirection::Buy,
+                                                parametros.clone(),
+                                                symbol.clone(),
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {}
+                                        }
+                                        EntryDirection::Sell => {
+                                            if self.activar_tsl(
+                                                df.clone(),
+                                                i.clone(),
+                                                EntryDirection::Sell,
+                                                parametros.clone(),
+                                                symbol.clone(),
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {}
+                                        }
+                                    }
+                                }
+                            }
+                            TlTipo::Pip => {
+                                for trade in open_trades.iter_mut() {
+                                    match trade.tipo {
+                                        EntryDirection::Buy => {
+                                            if self.activar_tsl(
+                                                df.clone(),
+                                                i.clone(),
+                                                EntryDirection::Buy,
+                                                parametros.clone(),
+                                                symbol.clone(),
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {}
+                                        }
+                                        EntryDirection::Sell => {
+                                            if self.activar_tsl(
+                                                df.clone(),
+                                                i.clone(),
+                                                EntryDirection::Sell,
+                                                parametros.clone(),
+                                                symbol.clone(),
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {}
+                                        }
+                                    }
+                                }
+                            }
+                            TlTipo::Punto => {
+                                for trade in open_trades.iter_mut() {
+                                    match trade.tipo {
+                                        EntryDirection::Buy => {
+                                            if self.activar_tsl(
+                                                df.clone(),
+                                                i.clone(),
+                                                EntryDirection::Buy,
+                                                parametros.clone(),
+                                                symbol.clone(),
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {}
+                                        }
+                                        EntryDirection::Sell => {
+                                            if self.activar_tsl(
+                                                df.clone(),
+                                                i.clone(),
+                                                EntryDirection::Sell,
+                                                parametros.clone(),
+                                                symbol.clone(),
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {}
+                                        }
+                                    }
+                                }
+                            }
+                            TlTipo::Porcentaje => {
+                                for trade in open_trades.iter_mut() {
+                                    match trade.tipo {
+                                        EntryDirection::Buy => {
+                                            if self.activar_tsl(
+                                                df.clone(),
+                                                i.clone(),
+                                                EntryDirection::Buy,
+                                                parametros.clone(),
+                                                symbol.clone(),
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {}
+                                        }
+                                        EntryDirection::Sell => {
+                                            if self.activar_tsl(
+                                                df.clone(),
+                                                i.clone(),
+                                                EntryDirection::Sell,
+                                                parametros.clone(),
+                                                symbol.clone(),
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {}
+                                        }
+                                    }
+                                }
+                            }
+                            TlTipo::Indicador => {
+                                for trade in open_trades.iter_mut() {
+                                    match trade.tipo {
+                                        EntryDirection::Buy => {
+                                            if self.activar_tsl(
+                                                df.clone(),
+                                                i.clone(),
+                                                EntryDirection::Buy,
+                                                parametros.clone(),
+                                                symbol.clone(),
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {}
+                                        }
+                                        EntryDirection::Sell => {
+                                            if self.activar_tsl(
+                                                df.clone(),
+                                                i.clone(),
+                                                EntryDirection::Sell,
+                                                parametros.clone(),
+                                                symbol.clone(),
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {}
+                                        }
+                                    }
+                                }
+                            }
+                            TlTipo::Velas => {
+                                for trade in open_trades.iter_mut() {
+                                    match trade.tipo {
+                                        EntryDirection::Buy => {
+                                            if self.activar_tsl(
+                                                df.clone(),
+                                                i.clone(),
+                                                EntryDirection::Buy,
+                                                parametros.clone(),
+                                                symbol.clone(),
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {}
+                                        }
+                                        EntryDirection::Sell => {
+                                            if self.activar_tsl(
+                                                df.clone(),
+                                                i.clone(),
+                                                EntryDirection::Sell,
+                                                parametros.clone(),
+                                                symbol.clone(),
+                                                trade.precio_entrada,
+                                                precio_cierre,
+                                            ) {}
+                                        }
+                                    }
+                                }
+                            }
                         }
                     });
 
