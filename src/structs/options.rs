@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NBarsOptions {
-    pub valor: f64,
+    pub valor: usize,
 }
 
 impl TParametro for NBarsOptions {

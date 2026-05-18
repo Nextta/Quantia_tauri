@@ -1292,7 +1292,6 @@ impl Backtest {
 
                     resultado
                 }
-                // TlTipo::Velas => {}
                 _ => diferencia,
             },
             2 => match parametros.activacion_tipo {
@@ -1847,7 +1846,7 @@ impl Backtest {
                             let timestamp: i64 = df
                                 .column("timestamp")
                                 .unwrap()
-                                .get(i - n_bars.valor as usize)
+                                .get(i - n_bars.valor)
                                 .unwrap()
                                 .try_extract::<i64>()
                                 .unwrap();
@@ -1944,7 +1943,9 @@ impl Backtest {
                                                 trade.precio_entrada,
                                                 precio_cierre,
                                             ) {
-                                                if parametros.be_plus > 0.0 {
+                                                if parametros.be_plus > 0.0
+                                                    && trade.sl < trade.precio_entrada
+                                                {
                                                     trade.sl = trade.precio_entrada
                                                         + self.calcular_be_plus(
                                                             BeTipo::Tick,
@@ -1952,7 +1953,7 @@ impl Backtest {
                                                             parametros.be_plus,
                                                             trade.precio_entrada,
                                                         );
-                                                } else {
+                                                } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
                                             }
@@ -1966,7 +1967,9 @@ impl Backtest {
                                                 trade.precio_entrada,
                                                 precio_cierre,
                                             ) {
-                                                if parametros.be_plus > 0.0 {
+                                                if parametros.be_plus > 0.0
+                                                    && trade.sl > trade.precio_entrada
+                                                {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
                                                             BeTipo::Tick,
@@ -1974,7 +1977,7 @@ impl Backtest {
                                                             parametros.be_plus,
                                                             trade.precio_entrada,
                                                         );
-                                                } else {
+                                                } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
                                             }
@@ -1994,7 +1997,9 @@ impl Backtest {
                                                 trade.precio_entrada,
                                                 precio_cierre,
                                             ) {
-                                                if parametros.be_plus > 0.0 {
+                                                if parametros.be_plus > 0.0
+                                                    && trade.sl < trade.precio_entrada
+                                                {
                                                     trade.sl = trade.precio_entrada
                                                         + self.calcular_be_plus(
                                                             BeTipo::Pip,
@@ -2002,7 +2007,7 @@ impl Backtest {
                                                             parametros.be_plus,
                                                             trade.precio_entrada,
                                                         );
-                                                } else {
+                                                } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
                                             }
@@ -2016,7 +2021,9 @@ impl Backtest {
                                                 trade.precio_entrada,
                                                 precio_cierre,
                                             ) {
-                                                if parametros.be_plus > 0.0 {
+                                                if parametros.be_plus > 0.0
+                                                    && trade.sl > trade.precio_entrada
+                                                {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
                                                             BeTipo::Pip,
@@ -2024,7 +2031,7 @@ impl Backtest {
                                                             parametros.be_plus,
                                                             trade.precio_entrada,
                                                         );
-                                                } else {
+                                                } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
                                             }
@@ -2044,7 +2051,9 @@ impl Backtest {
                                                 trade.precio_entrada,
                                                 precio_cierre,
                                             ) {
-                                                if parametros.be_plus > 0.0 {
+                                                if parametros.be_plus > 0.0
+                                                    && trade.sl < trade.precio_entrada
+                                                {
                                                     trade.sl = trade.precio_entrada
                                                         + self.calcular_be_plus(
                                                             BeTipo::Punto,
@@ -2052,7 +2061,7 @@ impl Backtest {
                                                             parametros.be_plus,
                                                             trade.precio_entrada,
                                                         );
-                                                } else {
+                                                } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
                                             }
@@ -2066,7 +2075,9 @@ impl Backtest {
                                                 trade.precio_entrada,
                                                 precio_cierre,
                                             ) {
-                                                if parametros.be_plus > 0.0 {
+                                                if parametros.be_plus > 0.0
+                                                    && trade.sl > trade.precio_entrada
+                                                {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
                                                             BeTipo::Punto,
@@ -2074,7 +2085,7 @@ impl Backtest {
                                                             parametros.be_plus,
                                                             trade.precio_entrada,
                                                         );
-                                                } else {
+                                                } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
                                             }
@@ -2094,7 +2105,9 @@ impl Backtest {
                                                 trade.precio_entrada,
                                                 precio_cierre,
                                             ) {
-                                                if parametros.be_plus > 0.0 {
+                                                if parametros.be_plus > 0.0
+                                                    && trade.sl < trade.precio_entrada
+                                                {
                                                     trade.sl = trade.precio_entrada
                                                         + self.calcular_be_plus(
                                                             BeTipo::Porcentaje,
@@ -2102,7 +2115,7 @@ impl Backtest {
                                                             parametros.be_plus,
                                                             trade.precio_entrada,
                                                         );
-                                                } else {
+                                                } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
                                             }
@@ -2116,7 +2129,9 @@ impl Backtest {
                                                 trade.precio_entrada,
                                                 precio_cierre,
                                             ) {
-                                                if parametros.be_plus > 0.0 {
+                                                if parametros.be_plus > 0.0
+                                                    && trade.sl > trade.precio_entrada
+                                                {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
                                                             BeTipo::Porcentaje,
@@ -2124,7 +2139,7 @@ impl Backtest {
                                                             parametros.be_plus,
                                                             trade.precio_entrada,
                                                         );
-                                                } else {
+                                                } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
                                             }
@@ -2146,7 +2161,9 @@ impl Backtest {
                                         match trade.tipo {
                                             EntryDirection::Buy => {
                                                 if valor <= precio_cierre {
-                                                    if parametros.be_plus > 0.0 {
+                                                    if parametros.be_plus > 0.0
+                                                        && trade.sl < trade.precio_entrada
+                                                    {
                                                         trade.sl = trade.precio_entrada
                                                             + self.calcular_be_plus(
                                                                 BeTipo::Tick,
@@ -2154,13 +2171,15 @@ impl Backtest {
                                                                 parametros.be_plus,
                                                                 trade.precio_entrada,
                                                             );
-                                                    } else {
+                                                    } else if trade.sl != trade.precio_entrada {
                                                         trade.sl = trade.precio_entrada;
                                                     }
                                                 }
                                             }
                                             EntryDirection::Sell => {
-                                                if parametros.be_plus > 0.0 {
+                                                if parametros.be_plus > 0.0
+                                                    && trade.sl > trade.precio_entrada
+                                                {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
                                                             BeTipo::Tick,
@@ -2168,7 +2187,7 @@ impl Backtest {
                                                             parametros.be_plus,
                                                             trade.precio_entrada,
                                                         );
-                                                } else {
+                                                } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
                                             }
@@ -2339,29 +2358,24 @@ impl Backtest {
                                 }
                             }
                             TlTipo::Velas => {
-                                for trade in open_trades.iter_mut() {
-                                    match trade.tipo {
-                                        EntryDirection::Buy => {
-                                            if self.activar_tsl(
-                                                df.clone(),
-                                                i.clone(),
-                                                EntryDirection::Buy,
-                                                parametros.clone(),
-                                                symbol.clone(),
-                                                trade.precio_entrada,
-                                                precio_cierre,
-                                            ) {}
-                                        }
-                                        EntryDirection::Sell => {
-                                            if self.activar_tsl(
-                                                df.clone(),
-                                                i.clone(),
-                                                EntryDirection::Sell,
-                                                parametros.clone(),
-                                                symbol.clone(),
-                                                trade.precio_entrada,
-                                                precio_cierre,
-                                            ) {}
+                                let timestamp: i64 = df
+                                    .column("timestamp")
+                                    .unwrap()
+                                    .get(i - parametros.valor as usize)
+                                    .unwrap()
+                                    .try_extract::<i64>()
+                                    .unwrap();
+
+                                let naive_time = DateTime::from_timestamp_millis(timestamp)
+                                    .expect("timestamp inválido");
+                                let time_actual =
+                                    naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
+
+                                for (idx, trade) in open_trades.iter_mut().enumerate() {
+                                    if trade.t0 == time_actual {
+                                        match trade.tipo {
+                                            EntryDirection::Buy => {}
+                                            EntryDirection::Sell => {}
                                         }
                                     }
                                 }
