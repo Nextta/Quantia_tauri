@@ -1224,6 +1224,66 @@ impl Backtest {
         resultado
     }
 
+    fn activar_tsl(
+        &self,
+        tipo: EntryDirection,
+        unidad: TlTipo,
+        symbol: SymbolInfoCFD,
+        valor: f64,
+        precio_entrada: f64,
+        precio_actual: f64,
+    ) -> bool {
+        let diferencia = match tipo {
+            EntryDirection::Buy => precio_actual - precio_entrada,
+            EntryDirection::Sell => precio_entrada - precio_actual,
+        };
+
+        let resultado = match symbol.digitos {
+            1 => match unidad {
+                TlTipo::Tick => diferencia / 0.1,
+                TlTipo::Pip => diferencia,
+                TlTipo::Punto => diferencia / 0.1,
+                TlTipo::Porcentaje => (diferencia / precio_entrada) * 100.0,
+                _ => diferencia,
+            },
+            2 => match unidad {
+                TlTipo::Tick => diferencia / 0.01,
+                TlTipo::Pip => diferencia / 0.1,
+                TlTipo::Punto => diferencia / 0.01,
+                TlTipo::Porcentaje => (diferencia / precio_entrada) * 100.0,
+                _ => diferencia,
+            },
+            3 => match unidad {
+                TlTipo::Tick => diferencia / 0.001,
+                TlTipo::Pip => diferencia / 0.01,
+                TlTipo::Punto => diferencia / 0.001,
+                TlTipo::Porcentaje => (diferencia / precio_entrada) * 100.0,
+                _ => diferencia,
+            },
+            4 => match unidad {
+                TlTipo::Tick => diferencia / 0.0001,
+                TlTipo::Pip => diferencia / 0.001,
+                TlTipo::Punto => diferencia / 0.0001,
+                TlTipo::Porcentaje => (diferencia / precio_entrada) * 100.0,
+                _ => diferencia,
+            },
+            5 => match unidad {
+                TlTipo::Tick => diferencia / 0.00001,
+                TlTipo::Pip => diferencia / 0.0001,
+                TlTipo::Punto => diferencia / 0.00001,
+                TlTipo::Porcentaje => (diferencia / precio_entrada) * 100.0,
+                _ => diferencia,
+            },
+            _ => diferencia,
+        };
+
+        if resultado >= valor {
+            true
+        } else {
+            false
+        }
+    }
+
     /// Realiza el backtest de una estrategia en un DataFrame dado.
     ///
     /// # Parametros
