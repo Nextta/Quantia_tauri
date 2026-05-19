@@ -67,7 +67,7 @@ Capa de persistencia con:
 
 ### quantia_desktop
 Aplicación desktop con:
-- Frontend: Astro + TypeScript
+- Frontend: Astro + TypeScript (https://github.com/Nextta/Quantia_astro.git)
 - Backend: Tauri + Rust
 - Interfaz moderna y reactiva
 
