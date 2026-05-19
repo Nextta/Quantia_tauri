@@ -1,6 +1,4 @@
 # QuantiaPro Builder
-
-![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Rust](https://img.shields.io/badge/rust-1.75+-orange.svg)
 
 **Advanced algorithmic trading strategy builder and backtester**
@@ -73,7 +71,7 @@ Aplicación desktop con:
 
 ## 📝 Licencia
 
-Este proyecto está bajo la licencia MIT. Ver el archivo LICENSE para más detalles.
+Me reservo todos los derechos del proyecto.
 
 ## 👥 Contribuciones
 
