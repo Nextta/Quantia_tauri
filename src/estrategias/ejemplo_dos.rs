@@ -1,8 +1,10 @@
-use crate::backtest::backtest::{Backtest, GestionParams, GestionStrategy};
+use crate::backtest::backtest::Backtest;
 use crate::backtest::datos::Datos;
 use crate::backtest::resultados::Resultados;
 use crate::backtest::symbol::SymbolInfoCFD;
 use crate::backtest::trade::Trade;
+use crate::enums::gestion::GestionStrategy;
+use crate::structs::parametros::GestionParams;
 
 use chrono::DateTime;
 use polars::prelude::*;
@@ -108,7 +110,7 @@ pub async fn run_backtest(
     let inicio = Instant::now();
     // El iterador zip es extremadamente eficiente (se vectoriza con SIMD)
     for i in 0..data.close.len() {
-        //let open = data.open[i];
+        let _ = data.open[i];
         let close = data.close[i];
         let high = data.high[i];
         let low = data.low[i];

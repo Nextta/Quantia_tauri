@@ -10,6 +10,8 @@ use libsql::{params, Builder};
 use serde::Serialize;
 use std::env;
 
+use crate::enums::actions::Action;
+
 #[derive(Serialize, Debug)]
 pub struct Error {
     msg: String,
@@ -1283,7 +1285,7 @@ pub async fn insert_strategies_action(action: StrategyAction) -> Result<i32> {
     let parametros = params![
         action.strategy_id,
         action.tipo_signal,
-        action.tipo,
+        action.tipo.to_string(),
         action.parametros.to_string()
     ];
     conn.query(
@@ -1332,7 +1334,16 @@ pub async fn get_strategy_action_by_id(id: i32) -> Result<StrategyAction> {
         id: row.get::<i32>(0)?,
         strategy_id: row.get::<i32>(1)?,
         tipo_signal: row.get::<String>(2)?,
-        tipo: row.get::<String>(3)?,
+        tipo: match row.get::<String>(3)?.as_str() {
+            "Buy" => Action::Buy,
+            "Sell" => Action::Sell,
+            "Buy_limit" => Action::BuyLimit,
+            "Sell_limit" => Action::SellLimit,
+            "Buy_stop" => Action::BuyStop,
+            "Sell_stop" => Action::SellStop,
+            "Close" => Action::Close,
+            _ => Action::Buy,
+        },
         parametros: serde_json::from_str(&row.get::<String>(4)?).unwrap(),
     };
 
@@ -1377,7 +1388,16 @@ pub async fn get_strategies_actions_by_strategy_id(
             id: row.get::<i32>(0)?,
             strategy_id: row.get::<i32>(1)?,
             tipo_signal: row.get::<String>(2)?,
-            tipo: row.get::<String>(3)?,
+            tipo: match row.get::<String>(3)?.as_str() {
+                "Buy" => Action::Buy,
+                "Sell" => Action::Sell,
+                "Buy_limit" => Action::BuyLimit,
+                "Sell_limit" => Action::SellLimit,
+                "Buy_stop" => Action::BuyStop,
+                "Sell_stop" => Action::SellStop,
+                "Close" => Action::Close,
+                _ => Action::Buy,
+            },
             parametros: serde_json::from_str(&row.get::<String>(4)?).unwrap(),
         };
         actions.push(action);
@@ -2108,7 +2128,7 @@ mod tests {
                                     id: 1,
                                     strategy_id: id,
                                     tipo_signal: "Buy".to_string(),
-                                    tipo: "Close".to_string(),
+                                    tipo: Action::Close,
                                     parametros: serde_json::Value::String(
                                         "{parametro:20}".to_string(),
                                     ),

@@ -1,7 +1,10 @@
 use crate::api::trades::table_trades;
-use crate::backtest::backtest::{Backtest, GestionParams, GestionStrategy};
+use crate::backtest::backtest::Backtest;
 use crate::backtest::dias::Dias;
 use crate::backtest::symbol::SymbolInfoCFD;
+use crate::enums::entry::EntryDirection;
+use crate::enums::gestion::GestionStrategy;
+use crate::structs::parametros::GestionParams;
 use crate::utils::tools::truncate_decimal;
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -15,7 +18,7 @@ pub struct Trade {
     pub id_backtest: i32,
     pub id_symbol: i32,
     pub symbol: SymbolInfoCFD,
-    pub tipo: String, // tipo = Tipo de operación (buy/sell)
+    pub tipo: EntryDirection, // tipo = Tipo de operación (buy/sell)
     pub lotaje: f64,
     pub multiplicador: f64, // Multiplicador del lotaje por operación.
     pub t0: String,         // t0 = Fecha y hora de entrada
@@ -50,7 +53,7 @@ impl Trade {
             id_backtest,
             id_symbol: symbol.id,
             symbol,
-            tipo: "none".to_string(),
+            tipo: EntryDirection::Buy,
             lotaje: 0.0,
             multiplicador: 1.0,
             t0: "0000-00-00 00:00:00".to_string(),
@@ -114,7 +117,7 @@ impl Trade {
         tp: Option<f64>,
         sl: Option<f64>,
     ) {
-        self.tipo = "Buy".to_string();
+        self.tipo = EntryDirection::Buy;
         self.t0 = t0;
         self.precio_entrada = precio_entrada + self.random_spread();
         self.tp = tp.unwrap_or(0.0);
@@ -143,7 +146,7 @@ impl Trade {
         tp: Option<f64>,
         sl: Option<f64>,
     ) {
-        self.tipo = "Sell".to_string();
+        self.tipo = EntryDirection::Sell;
         self.t0 = t0;
         self.precio_entrada = precio_entrada;
         self.tp = tp.unwrap_or(0.0);
@@ -200,14 +203,14 @@ impl Trade {
     }
 
     fn calcular_pl(&mut self) {
-        if self.tipo == "Sell" {
+        if self.tipo == EntryDirection::Sell {
             self.plsc = (self.precio_entrada - self.precio_cierre)
                 * self.lotaje
                 * self.symbol.valor_contrato;
             self.pips_pl = (self.precio_entrada - self.precio_cierre) * 10000.0;
             self.pl = (self.plsc + (self.symbol.comision_lote * self.lotaje))
                 + self.calcular_comision_swap();
-        } else if self.tipo == "Buy" {
+        } else if self.tipo == EntryDirection::Buy {
             self.plsc = (self.precio_cierre - self.precio_entrada)
                 * self.lotaje
                 * self.symbol.valor_contrato;
@@ -227,10 +230,9 @@ impl Trade {
         let t0 = NaiveDateTime::parse_from_str(&self.t0, "%Y-%m-%d %H:%M:%S").unwrap();
         let t1 = NaiveDateTime::parse_from_str(&self.t1, "%Y-%m-%d %H:%M:%S").unwrap();
 
-        let swap_diario = match self.tipo.as_str() {
-            "Buy" => self.symbol.swap_long * self.lotaje,
-            "Sell" => self.symbol.swap_short * self.lotaje,
-            _ => return 0.0,
+        let swap_diario = match self.tipo {
+            EntryDirection::Buy => self.symbol.swap_long * self.lotaje,
+            EntryDirection::Sell => self.symbol.swap_short * self.lotaje,
         };
 
         let mut fecha_actual = t0.date();

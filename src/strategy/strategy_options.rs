@@ -1,24 +1,27 @@
 use chrono::DateTime;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+
+use crate::enums::entry::EntryDirection;
+
 // use serde_json::Value;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct StopLoss {
-    pub tipo: String,       // Tipo de limite: ask, bid, bb, atr... etc
-    pub nombre_col: String, // Nombre de la columna a usar como limite
-    pub shift: usize,       // Numero de filas a desplazar
-    pub valor: f64,         // en caso de ser por pip, ticks o puntos
-    pub direccion: String,  // Direccion del limite: buy, sell
+    pub tipo: String,              // Tipo de limite: ask, bid, bb, atr... etc
+    pub nombre_col: String,        // Nombre de la columna a usar como limite
+    pub shift: usize,              // Numero de filas a desplazar
+    pub valor: f64,                // en caso de ser por pip, ticks o puntos
+    pub direccion: EntryDirection, // Direccion del limite: buy, sell
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct TakeProfit {
-    pub tipo: String,       // Tipo de limite: ask, bid, bb, atr... etc
-    pub nombre_col: String, // Nombre de la columna a usar como limite
-    pub shift: usize,       // Numero de filas a desplazar
-    pub valor: f64,         // en caso de ser por pip, ticks o puntos
-    pub direccion: String,  // Direccion del limite: buy, sell
+    pub tipo: String,              // Tipo de limite: ask, bid, bb, atr... etc
+    pub nombre_col: String,        // Nombre de la columna a usar como limite
+    pub shift: usize,              // Numero de filas a desplazar
+    pub valor: f64,                // en caso de ser por pip, ticks o puntos
+    pub direccion: EntryDirection, // Direccion del limite: buy, sell
 }
 
 impl StopLoss {
@@ -27,7 +30,7 @@ impl StopLoss {
         nombre_col: String,
         shift: usize,
         valor: f64,
-        direccion: String,
+        direccion: EntryDirection,
     ) -> Self {
         Self {
             tipo,
@@ -44,7 +47,7 @@ impl StopLoss {
             nombre_col: String::new(),
             shift: 0,
             valor: 0.0,
-            direccion: "buy".to_string(),
+            direccion: EntryDirection::Buy,
         }
     }
 
@@ -59,7 +62,7 @@ impl TakeProfit {
         nombre_col: String,
         shift: usize,
         valor: f64,
-        direccion: String,
+        direccion: EntryDirection,
     ) -> Self {
         Self {
             tipo,
@@ -76,7 +79,7 @@ impl TakeProfit {
             nombre_col: String::new(),
             shift: 0,
             valor: 0.0,
-            direccion: "buy".to_string(),
+            direccion: EntryDirection::Buy,
         }
     }
 
