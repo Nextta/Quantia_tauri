@@ -42,7 +42,7 @@ pub enum TlTipo {
     Punto,
     Porcentaje,
     Indicador,
-    Velas,
+    // Velas, Implementar quizas en el futuro si tiene sentido.
 }
 
 impl TTipos for TlTipo {
@@ -53,7 +53,7 @@ impl TTipos for TlTipo {
             TlTipo::Punto => "Punto".to_string(),
             TlTipo::Porcentaje => "Porcentaje".to_string(),
             TlTipo::Indicador => "Indicador".to_string(),
-            TlTipo::Velas => "Velas".to_string(),
+            // TlTipo::Velas => "Velas".to_string(),
         }
     }
 
@@ -64,7 +64,7 @@ impl TTipos for TlTipo {
             TlTipo::Punto => "Punto",
             TlTipo::Porcentaje => "Porcentaje",
             TlTipo::Indicador => "Indicador",
-            TlTipo::Velas => "Velas",
+            // TlTipo::Velas => "Velas",
         }
     }
 }

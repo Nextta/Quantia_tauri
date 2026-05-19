@@ -1,5 +1,5 @@
 use crate::enums::entry::EntryDirection;
-use crate::enums::tipos::{BeTipo, ItTipo, TlTipo};
+use crate::enums::tipos::{BeTipo, TlTipo};
 use crate::traits::tparametro::TParametro;
 
 use serde::{Deserialize, Serialize};

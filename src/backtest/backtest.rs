@@ -23,12 +23,12 @@ use crate::strategy::strategy_options::TradingDirection;
 
 use chrono::DateTime;
 use polars::prelude::*;
-use serde::{Deserialize, Serialize};
+// use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Instant;
 
 use crate::enums::gestion::GestionStrategy;
-use crate::enums::tipos::{BeTipo, ItTipo, TlTipo};
+use crate::enums::tipos::{BeTipo, TlTipo};
 use crate::structs::options::NBarsOptions;
 use crate::structs::parametros::{BeParams, GestionParams, LimitParams, TlParams};
 
@@ -1292,7 +1292,6 @@ impl Backtest {
 
                     resultado
                 }
-                _ => diferencia,
             },
             2 => match parametros.activacion_tipo {
                 TlTipo::Tick => diferencia / 0.01,
@@ -1329,7 +1328,6 @@ impl Backtest {
 
                     resultado
                 }
-                _ => diferencia,
             },
             3 => match parametros.activacion_tipo {
                 TlTipo::Tick => diferencia / 0.001,
@@ -1366,7 +1364,6 @@ impl Backtest {
 
                     resultado
                 }
-                _ => diferencia,
             },
             4 => match parametros.activacion_tipo {
                 TlTipo::Tick => diferencia / 0.0001,
@@ -1403,7 +1400,6 @@ impl Backtest {
 
                     resultado
                 }
-                _ => diferencia,
             },
             5 => match parametros.activacion_tipo {
                 TlTipo::Tick => diferencia / 0.00001,
@@ -1440,7 +1436,6 @@ impl Backtest {
 
                     resultado
                 }
-                _ => diferencia,
             },
             _ => diferencia,
         };
@@ -2353,29 +2348,6 @@ impl Backtest {
                                                 trade.precio_entrada,
                                                 precio_cierre,
                                             ) {}
-                                        }
-                                    }
-                                }
-                            }
-                            TlTipo::Velas => {
-                                let timestamp: i64 = df
-                                    .column("timestamp")
-                                    .unwrap()
-                                    .get(i - parametros.valor as usize)
-                                    .unwrap()
-                                    .try_extract::<i64>()
-                                    .unwrap();
-
-                                let naive_time = DateTime::from_timestamp_millis(timestamp)
-                                    .expect("timestamp inválido");
-                                let time_actual =
-                                    naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
-
-                                for (idx, trade) in open_trades.iter_mut().enumerate() {
-                                    if trade.t0 == time_actual {
-                                        match trade.tipo {
-                                            EntryDirection::Buy => {}
-                                            EntryDirection::Sell => {}
                                         }
                                     }
                                 }
