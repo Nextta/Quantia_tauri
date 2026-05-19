@@ -1224,6 +1224,168 @@ impl Backtest {
         resultado
     }
 
+    /// Calcula el TLS (Take Loss Stop) basado en el tipo de entrada y los parámetros.
+    ///
+    /// # Arguments
+    ///
+    /// * `tipo` - El tipo de entrada (compra o venta).
+    /// * `symbol` - Información del símbolo.
+    /// * `parametros` - Parámetros del TLS.
+    /// * `trade` - El trade actual.
+    /// * `precio_actual` - Precio actual del símbolo.
+    /// * `precio_anterior` - Precio anterior del símbolo.
+    ///
+    /// # Returns
+    ///
+    /// El valor del TLS calculado.
+    fn calcular_tls(
+        &self,
+        tipo: EntryDirection,
+        symbol: SymbolInfoCFD,
+        parametros: TlParams,
+        trade: Trade,
+        precio_actual: f64,
+        precio_anterior: f64,
+    ) -> f64 {
+        let resultado: f64 = match parametros.tipo {
+            TlTipo::Pip => match tipo {
+                EntryDirection::Buy => {
+                    let diff = precio_actual - precio_anterior;
+
+                    if diff > 0.0 {
+                        let pips = diff / parametros.valor;
+                        if pips > 0.0 {
+                            match symbol.digitos {
+                                1 => trade.sl + (pips * 1.0),
+                                2 => trade.sl + (pips * 0.1),
+                                3 => trade.sl + (pips * 0.01),
+                                4 => trade.sl + (pips * 0.001),
+                                5 => trade.sl + (pips * 0.0001),
+                                _ => 0.0,
+                            }
+                        } else {
+                            0.0
+                        }
+                    } else {
+                        0.0
+                    }
+                }
+                EntryDirection::Sell => {
+                    let diff = precio_anterior - precio_actual;
+
+                    if diff > 0.0 {
+                        let pips = diff / parametros.valor;
+                        if pips > 0.0 {
+                            match symbol.digitos {
+                                1 => trade.sl - (pips * 1.0),
+                                2 => trade.sl - (pips * 0.1),
+                                3 => trade.sl - (pips * 0.01),
+                                4 => trade.sl - (pips * 0.001),
+                                5 => trade.sl - (pips * 0.0001),
+                                _ => 0.0,
+                            }
+                        } else {
+                            0.0
+                        }
+                    } else {
+                        0.0
+                    }
+                }
+            },
+            TlTipo::Tick => match tipo {
+                EntryDirection::Buy => {
+                    let diff = precio_actual - precio_anterior;
+
+                    if diff > 0.0 {
+                        let ticks = diff / parametros.valor;
+                        if ticks > 0.0 {
+                            match symbol.digitos {
+                                1 => trade.sl + (ticks * 0.1),
+                                2 => trade.sl + (ticks * 0.01),
+                                3 => trade.sl + (ticks * 0.001),
+                                4 => trade.sl + (ticks * 0.0001),
+                                5 => trade.sl + (ticks * 0.00001),
+                                _ => 0.0,
+                            }
+                        } else {
+                            0.0
+                        }
+                    } else {
+                        0.0
+                    }
+                }
+                EntryDirection::Sell => {
+                    let diff = precio_anterior - precio_actual;
+
+                    if diff > 0.0 {
+                        let ticks = diff / parametros.valor;
+                        if ticks > 0.0 {
+                            match symbol.digitos {
+                                1 => trade.sl - (ticks * 0.1),
+                                2 => trade.sl - (ticks * 0.01),
+                                3 => trade.sl - (ticks * 0.001),
+                                4 => trade.sl - (ticks * 0.0001),
+                                5 => trade.sl - (ticks * 0.00001),
+                                _ => 0.0,
+                            }
+                        } else {
+                            0.0
+                        }
+                    } else {
+                        0.0
+                    }
+                }
+            },
+            TlTipo::Punto => match tipo {
+                EntryDirection::Buy => {
+                    let diff = precio_actual - precio_anterior;
+
+                    if diff > 0.0 {
+                        let punto = diff / parametros.valor;
+                        if punto > 0.0 {
+                            match symbol.digitos {
+                                1 => trade.sl + (punto * 0.1),
+                                2 => trade.sl + (punto * 0.01),
+                                3 => trade.sl + (punto * 0.001),
+                                4 => trade.sl + (punto * 0.0001),
+                                5 => trade.sl + (punto * 0.00001),
+                                _ => 0.0,
+                            }
+                        } else {
+                            0.0
+                        }
+                    } else {
+                        0.0
+                    }
+                }
+                EntryDirection::Sell => {
+                    let diff = precio_anterior - precio_actual;
+
+                    if diff > 0.0 {
+                        let punto = diff / parametros.valor;
+                        if punto > 0.0 {
+                            match symbol.digitos {
+                                1 => trade.sl - (punto * 0.1),
+                                2 => trade.sl - (punto * 0.01),
+                                3 => trade.sl - (punto * 0.001),
+                                4 => trade.sl - (punto * 0.0001),
+                                5 => trade.sl - (punto * 0.00001),
+                                _ => 0.0,
+                            }
+                        } else {
+                            0.0
+                        }
+                    } else {
+                        0.0
+                    }
+                }
+            },
+            _ => 0.0,
+        };
+
+        resultado
+    }
+
     /// Activa el TSL (Take Stop Loss) basado en los datos y los parámetros proporcionados.
     ///
     /// # Arguments
@@ -2224,7 +2386,32 @@ impl Backtest {
                                                 symbol.clone(),
                                                 trade.precio_entrada,
                                                 precio_cierre,
-                                            ) {}
+                                            ) {
+                                                let precio_actual: f64 = df
+                                                    .column("high")
+                                                    .unwrap()
+                                                    .get(i)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                let precio_anterior: f64 = df
+                                                    .column("high")
+                                                    .unwrap()
+                                                    .get(i - 1)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                trade.sl = self.calcular_tls(
+                                                    EntryDirection::Buy,
+                                                    symbol.clone(),
+                                                    parametros.clone(),
+                                                    trade.clone(),
+                                                    precio_actual,
+                                                    precio_anterior,
+                                                );
+                                            }
                                         }
                                         EntryDirection::Sell => {
                                             if self.activar_tsl(
@@ -2235,7 +2422,32 @@ impl Backtest {
                                                 symbol.clone(),
                                                 trade.precio_entrada,
                                                 precio_cierre,
-                                            ) {}
+                                            ) {
+                                                let precio_actual: f64 = df
+                                                    .column("low")
+                                                    .unwrap()
+                                                    .get(i)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                let precio_anterior: f64 = df
+                                                    .column("low")
+                                                    .unwrap()
+                                                    .get(i - 1)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                trade.sl = self.calcular_tls(
+                                                    EntryDirection::Sell,
+                                                    symbol.clone(),
+                                                    parametros.clone(),
+                                                    trade.clone(),
+                                                    precio_actual,
+                                                    precio_anterior,
+                                                );
+                                            }
                                         }
                                     }
                                 }
@@ -2252,7 +2464,32 @@ impl Backtest {
                                                 symbol.clone(),
                                                 trade.precio_entrada,
                                                 precio_cierre,
-                                            ) {}
+                                            ) {
+                                                let precio_actual: f64 = df
+                                                    .column("high")
+                                                    .unwrap()
+                                                    .get(i)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                let precio_anterior: f64 = df
+                                                    .column("high")
+                                                    .unwrap()
+                                                    .get(i - 1)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                trade.sl = self.calcular_tls(
+                                                    EntryDirection::Buy,
+                                                    symbol.clone(),
+                                                    parametros.clone(),
+                                                    trade.clone(),
+                                                    precio_actual,
+                                                    precio_anterior,
+                                                );
+                                            }
                                         }
                                         EntryDirection::Sell => {
                                             if self.activar_tsl(
@@ -2263,7 +2500,32 @@ impl Backtest {
                                                 symbol.clone(),
                                                 trade.precio_entrada,
                                                 precio_cierre,
-                                            ) {}
+                                            ) {
+                                                let precio_actual: f64 = df
+                                                    .column("low")
+                                                    .unwrap()
+                                                    .get(i)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                let precio_anterior: f64 = df
+                                                    .column("low")
+                                                    .unwrap()
+                                                    .get(i - 1)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                trade.sl = self.calcular_tls(
+                                                    EntryDirection::Sell,
+                                                    symbol.clone(),
+                                                    parametros.clone(),
+                                                    trade.clone(),
+                                                    precio_actual,
+                                                    precio_anterior,
+                                                );
+                                            }
                                         }
                                     }
                                 }
@@ -2280,7 +2542,32 @@ impl Backtest {
                                                 symbol.clone(),
                                                 trade.precio_entrada,
                                                 precio_cierre,
-                                            ) {}
+                                            ) {
+                                                let precio_actual: f64 = df
+                                                    .column("high")
+                                                    .unwrap()
+                                                    .get(i)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                let precio_anterior: f64 = df
+                                                    .column("high")
+                                                    .unwrap()
+                                                    .get(i - 1)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                trade.sl = self.calcular_tls(
+                                                    EntryDirection::Buy,
+                                                    symbol.clone(),
+                                                    parametros.clone(),
+                                                    trade.clone(),
+                                                    precio_actual,
+                                                    precio_anterior,
+                                                );
+                                            }
                                         }
                                         EntryDirection::Sell => {
                                             if self.activar_tsl(
@@ -2291,7 +2578,32 @@ impl Backtest {
                                                 symbol.clone(),
                                                 trade.precio_entrada,
                                                 precio_cierre,
-                                            ) {}
+                                            ) {
+                                                let precio_actual: f64 = df
+                                                    .column("low")
+                                                    .unwrap()
+                                                    .get(i)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                let precio_anterior: f64 = df
+                                                    .column("low")
+                                                    .unwrap()
+                                                    .get(i - 1)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                trade.sl = self.calcular_tls(
+                                                    EntryDirection::Sell,
+                                                    symbol.clone(),
+                                                    parametros.clone(),
+                                                    trade.clone(),
+                                                    precio_actual,
+                                                    precio_anterior,
+                                                );
+                                            }
                                         }
                                     }
                                 }
@@ -2308,7 +2620,32 @@ impl Backtest {
                                                 symbol.clone(),
                                                 trade.precio_entrada,
                                                 precio_cierre,
-                                            ) {}
+                                            ) {
+                                                let precio_actual: f64 = df
+                                                    .column("high")
+                                                    .unwrap()
+                                                    .get(i)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                let precio_anterior: f64 = df
+                                                    .column("high")
+                                                    .unwrap()
+                                                    .get(i - 1)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                trade.sl = self.calcular_tls(
+                                                    EntryDirection::Buy,
+                                                    symbol.clone(),
+                                                    parametros.clone(),
+                                                    trade.clone(),
+                                                    precio_actual,
+                                                    precio_anterior,
+                                                );
+                                            }
                                         }
                                         EntryDirection::Sell => {
                                             if self.activar_tsl(
@@ -2319,7 +2656,32 @@ impl Backtest {
                                                 symbol.clone(),
                                                 trade.precio_entrada,
                                                 precio_cierre,
-                                            ) {}
+                                            ) {
+                                                let precio_actual: f64 = df
+                                                    .column("low")
+                                                    .unwrap()
+                                                    .get(i)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                let precio_anterior: f64 = df
+                                                    .column("low")
+                                                    .unwrap()
+                                                    .get(i - 1)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                trade.sl = self.calcular_tls(
+                                                    EntryDirection::Sell,
+                                                    symbol.clone(),
+                                                    parametros.clone(),
+                                                    trade.clone(),
+                                                    precio_actual,
+                                                    precio_anterior,
+                                                );
+                                            }
                                         }
                                     }
                                 }
@@ -2336,7 +2698,32 @@ impl Backtest {
                                                 symbol.clone(),
                                                 trade.precio_entrada,
                                                 precio_cierre,
-                                            ) {}
+                                            ) {
+                                                let precio_actual: f64 = df
+                                                    .column("high")
+                                                    .unwrap()
+                                                    .get(i)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                let precio_anterior: f64 = df
+                                                    .column("high")
+                                                    .unwrap()
+                                                    .get(i - 1)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                trade.sl = self.calcular_tls(
+                                                    EntryDirection::Buy,
+                                                    symbol.clone(),
+                                                    parametros.clone(),
+                                                    trade.clone(),
+                                                    precio_actual,
+                                                    precio_anterior,
+                                                );
+                                            }
                                         }
                                         EntryDirection::Sell => {
                                             if self.activar_tsl(
@@ -2347,7 +2734,32 @@ impl Backtest {
                                                 symbol.clone(),
                                                 trade.precio_entrada,
                                                 precio_cierre,
-                                            ) {}
+                                            ) {
+                                                let precio_actual: f64 = df
+                                                    .column("low")
+                                                    .unwrap()
+                                                    .get(i)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                let precio_anterior: f64 = df
+                                                    .column("low")
+                                                    .unwrap()
+                                                    .get(i - 1)
+                                                    .unwrap()
+                                                    .try_extract::<f64>()
+                                                    .unwrap();
+
+                                                trade.sl = self.calcular_tls(
+                                                    EntryDirection::Sell,
+                                                    symbol.clone(),
+                                                    parametros.clone(),
+                                                    trade.clone(),
+                                                    precio_actual,
+                                                    precio_anterior,
+                                                );
+                                            }
                                         }
                                     }
                                 }
