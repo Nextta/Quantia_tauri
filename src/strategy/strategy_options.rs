@@ -172,8 +172,8 @@ impl StrategyOptions {
             numero_velas_cierre: 0,
             cierre_limite_hora: false,
             hora_cierre_limite: Utc::now(),
-            parametros_stoploss: serde_json::from_value(serde_json::json!("{}")).unwrap(),
-            parametros_takeprofit: serde_json::from_value(serde_json::json!("{}")).unwrap(),
+            parametros_stoploss: None,
+            parametros_takeprofit: None,
         }
     }
 }
