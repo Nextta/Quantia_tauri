@@ -7,6 +7,7 @@ use crate::backtest::symbol::SymbolInfoCFD;
 use crate::backtest::trade::Trade;
 use crate::enums::gestion::GestionStrategy;
 
+use crate::enums::activos::Activo;
 use chrono::DateTime;
 use polars::prelude::*;
 use std::time::Instant;
@@ -70,7 +71,7 @@ struct State {
 pub async fn run_backtest(
     titulo: &str,
     balance: f64,
-    tipo: &str,
+    tipo: Activo,
     datos_path: &str,
     symbol: SymbolInfoCFD,
 ) -> PolarsResult<()> {
@@ -78,7 +79,7 @@ pub async fn run_backtest(
     let mut backtest: Backtest = Backtest::new(
         titulo.to_string(),
         balance,
-        tipo.to_string(),
+        tipo,
         GestionStrategy::Formula,
         serde_json::from_str("{}").unwrap(),
     )

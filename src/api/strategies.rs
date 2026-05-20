@@ -1769,7 +1769,7 @@ pub async fn table_strategy_options() -> Result<String> {
             cierre_limite_hora BOOLEAN DEFAULT FALSE,
             hora_cierre_limite TEXT DEFAULT 'NULL',
             parametros_stoploss TEXT DEFAULT 'NULL',
-            parametros_takeprofit TEXT DEFAULT 'NULL',
+            parametros_takeprofit TEXT DEFAULT 'NULL'
         )",
         (),
     )
@@ -1817,8 +1817,8 @@ pub async fn insert_strategy_options(options: StrategyOptions) -> Result<i32> {
         options.numero_velas_cierre,
         options.cierre_limite_hora,
         options.hora_cierre_limite.to_string(),
-        options.parametros_stoploss.to_json(),
-        options.parametros_takeprofit.to_json(),
+        options.parametros_stoploss.unwrap().to_json(),
+        options.parametros_takeprofit.unwrap().to_json(),
     ];
 
     conn.execute("INSERT INTO strategy_options (strategy_id, multiples_tardes, trading_direccion, operar_finde, cerrar_fin_de_dia, hora_fin_de_dia, cerrar_viernes, hora_cierre_viernes, rango_operativo, rango_operativo_inicio, rango_operativo_fin, cerrar_fin_rango_operativo, activar_cierre_numero_velas, numero_velas_cierre, cierre_limite_hora, hora_cierre_limite, parametros_stoploss, parametros_takeprofit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", parametros).await?;
@@ -1905,8 +1905,12 @@ pub async fn get_strategy_options_by_id(id: i32) -> Result<StrategyOptions> {
         hora_cierre_limite: DateTime::parse_from_rfc3339(&row.get::<String>(16)?)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
-        parametros_stoploss: serde_json::from_str::<StopLoss>(&row.get::<String>(17)?).unwrap(),
-        parametros_takeprofit: serde_json::from_str::<TakeProfit>(&row.get::<String>(18)?).unwrap(),
+        parametros_stoploss: Some(
+            serde_json::from_str::<StopLoss>(&row.get::<String>(17)?).unwrap(),
+        ),
+        parametros_takeprofit: Some(
+            serde_json::from_str::<TakeProfit>(&row.get::<String>(18)?).unwrap(),
+        ),
     };
 
     Ok(options)
@@ -1990,8 +1994,12 @@ pub async fn get_strategy_options_by_strategy_id(strategy_id: i32) -> Result<Str
         hora_cierre_limite: DateTime::parse_from_rfc3339(&row.get::<String>(16)?)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
-        parametros_stoploss: serde_json::from_str::<StopLoss>(&row.get::<String>(17)?).unwrap(),
-        parametros_takeprofit: serde_json::from_str::<TakeProfit>(&row.get::<String>(18)?).unwrap(),
+        parametros_stoploss: Some(
+            serde_json::from_str::<StopLoss>(&row.get::<String>(17)?).unwrap(),
+        ),
+        parametros_takeprofit: Some(
+            serde_json::from_str::<TakeProfit>(&row.get::<String>(18)?).unwrap(),
+        ),
     };
 
     Ok(options)
@@ -2207,8 +2215,8 @@ mod tests {
                                     numero_velas_cierre: 0,
                                     cierre_limite_hora: false,
                                     hora_cierre_limite: Utc::now(),
-                                    parametros_stoploss: StopLoss::new_empty(),
-                                    parametros_takeprofit: TakeProfit::new_empty(),
+                                    parametros_stoploss: Some(StopLoss::new_empty()),
+                                    parametros_takeprofit: Some(TakeProfit::new_empty()),
                                 };
 
                                 match insert_strategy_options(option.clone()).await {

@@ -3,6 +3,7 @@ use crate::api::strategies::{
     get_strategies_actions_by_strategy_id, get_strategies_by_id,
     get_strategies_conditions_by_strategy_id, get_strategies_indicators_by_strategy_id,
 };
+
 use crate::api::trades::insert_trades;
 use crate::backtest::datos::Datos;
 use crate::backtest::symbol::SymbolInfoCFD;
@@ -27,6 +28,7 @@ use polars::prelude::*;
 use std::collections::HashMap;
 use std::time::Instant;
 
+use crate::enums::activos::Activo;
 use crate::enums::gestion::GestionStrategy;
 use crate::enums::tipos::{BeTipo, TlTipo};
 use crate::structs::options::NBarsOptions;
@@ -37,7 +39,7 @@ pub struct Backtest {
     pub id: i32,
     pub titulo: String,
     pub balance: f64,
-    pub tipo: String, // Tipo de activo ej: Forex, Crypto, Futuros...etc
+    pub tipo: Activo, // Tipo de activo ej: Forex, Crypto, Futuros...etc
     pub gestion_strategy: GestionStrategy,
     pub parametros_gestion: GestionParams,
     pub trades: Vec<Trade>,
@@ -49,7 +51,7 @@ impl Backtest {
     pub async fn new(
         titulo: String,
         balance: f64,
-        tipo: String,
+        tipo: Activo,
         gestion_strategy: GestionStrategy,
         parametros_gestion: GestionParams,
     ) -> Self {
@@ -894,8 +896,13 @@ impl Backtest {
     /// # Returns
     ///
     /// El valor del stop loss.
-    fn get_stoploss(&self, df: DataFrame, i: usize) -> f64 {
-        let params = &self.estrategia.opciones.parametros_stoploss.clone();
+    fn get_stoploss(&self, df: DataFrame, i: usize, direccion: EntryDirection) -> f64 {
+        let params = &self
+            .estrategia
+            .opciones
+            .parametros_stoploss
+            .clone()
+            .unwrap();
 
         let valor: f64 = df
             .column(&params.nombre_col)
@@ -907,45 +914,45 @@ impl Backtest {
 
         let sl: f64 = match params.tipo.as_str() {
             "pip" => {
-                if params.direccion == EntryDirection::Buy {
+                if direccion == EntryDirection::Buy {
                     valor + params.valor
-                } else if params.direccion == EntryDirection::Sell {
+                } else if direccion == EntryDirection::Sell {
                     valor - params.valor
                 } else {
                     0.0
                 }
             }
             "tick" => {
-                if params.direccion == EntryDirection::Buy {
+                if direccion == EntryDirection::Buy {
                     valor + params.valor
-                } else if params.direccion == EntryDirection::Sell {
+                } else if direccion == EntryDirection::Sell {
                     valor - params.valor
                 } else {
                     0.0
                 }
             }
             "punto" => {
-                if params.direccion == EntryDirection::Buy {
+                if direccion == EntryDirection::Buy {
                     valor + params.valor
-                } else if params.direccion == EntryDirection::Sell {
+                } else if direccion == EntryDirection::Sell {
                     valor - params.valor
                 } else {
                     0.0
                 }
             }
             "porcentaje" => {
-                if params.direccion == EntryDirection::Buy {
+                if direccion == EntryDirection::Buy {
                     valor + (valor * params.valor)
-                } else if params.direccion == EntryDirection::Sell {
+                } else if direccion == EntryDirection::Sell {
                     valor - (valor * params.valor)
                 } else {
                     0.0
                 }
             }
             "atr" => {
-                if params.direccion == EntryDirection::Buy {
+                if direccion == EntryDirection::Buy {
                     valor + params.valor
-                } else if params.direccion == EntryDirection::Sell {
+                } else if direccion == EntryDirection::Sell {
                     valor - params.valor
                 } else {
                     0.0
@@ -967,8 +974,13 @@ impl Backtest {
     /// # Returns
     ///
     /// El valor del take profit.
-    fn get_takeprofit(&self, df: DataFrame, i: usize) -> f64 {
-        let params = &self.estrategia.opciones.parametros_takeprofit.clone();
+    fn get_takeprofit(&self, df: DataFrame, i: usize, direccion: EntryDirection) -> f64 {
+        let params = &self
+            .estrategia
+            .opciones
+            .parametros_takeprofit
+            .clone()
+            .unwrap();
 
         let valor: f64 = df
             .column(&params.nombre_col)
@@ -980,45 +992,45 @@ impl Backtest {
 
         let tp: f64 = match params.tipo.as_str() {
             "pip" => {
-                if params.direccion == EntryDirection::Buy {
+                if direccion == EntryDirection::Buy {
                     valor + params.valor
-                } else if params.direccion == EntryDirection::Sell {
+                } else if direccion == EntryDirection::Sell {
                     valor - params.valor
                 } else {
                     0.0
                 }
             }
             "tick" => {
-                if params.direccion == EntryDirection::Buy {
+                if direccion == EntryDirection::Buy {
                     valor + params.valor
-                } else if params.direccion == EntryDirection::Sell {
+                } else if direccion == EntryDirection::Sell {
                     valor - params.valor
                 } else {
                     0.0
                 }
             }
             "punto" => {
-                if params.direccion == EntryDirection::Buy {
+                if direccion == EntryDirection::Buy {
                     valor + params.valor
-                } else if params.direccion == EntryDirection::Sell {
+                } else if direccion == EntryDirection::Sell {
                     valor - params.valor
                 } else {
                     0.0
                 }
             }
             "porcentaje" => {
-                if params.direccion == EntryDirection::Buy {
+                if direccion == EntryDirection::Buy {
                     valor + (valor * params.valor)
-                } else if params.direccion == EntryDirection::Sell {
+                } else if direccion == EntryDirection::Sell {
                     valor - (valor * params.valor)
                 } else {
                     0.0
                 }
             }
             "atr" => {
-                if params.direccion == EntryDirection::Buy {
+                if direccion == EntryDirection::Buy {
                     valor + params.valor
-                } else if params.direccion == EntryDirection::Sell {
+                } else if direccion == EntryDirection::Sell {
                     valor - params.valor
                 } else {
                     0.0
@@ -1662,8 +1674,8 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
-                    let tp: f64 = self.get_takeprofit(df.clone(), i);
-                    let sl: f64 = self.get_stoploss(df.clone(), i);
+                    let tp: f64 = self.get_takeprofit(df.clone(), i, EntryDirection::Buy);
+                    let sl: f64 = self.get_stoploss(df.clone(), i, EntryDirection::Buy);
 
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
@@ -1711,8 +1723,8 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
-                    let tp: f64 = self.get_takeprofit(df.clone(), i);
-                    let sl: f64 = self.get_stoploss(df.clone(), i);
+                    let tp: f64 = self.get_takeprofit(df.clone(), i, EntryDirection::Buy);
+                    let sl: f64 = self.get_stoploss(df.clone(), i, EntryDirection::Buy);
 
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
@@ -1760,8 +1772,8 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
-                    let tp: f64 = self.get_takeprofit(df.clone(), i);
-                    let sl: f64 = self.get_stoploss(df.clone(), i);
+                    let tp: f64 = self.get_takeprofit(df.clone(), i, EntryDirection::Sell);
+                    let sl: f64 = self.get_stoploss(df.clone(), i, EntryDirection::Sell);
 
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
@@ -1809,8 +1821,8 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
-                    let tp: f64 = self.get_takeprofit(df.clone(), i);
-                    let sl: f64 = self.get_stoploss(df.clone(), i);
+                    let tp: f64 = self.get_takeprofit(df.clone(), i, EntryDirection::Sell);
+                    let sl: f64 = self.get_stoploss(df.clone(), i, EntryDirection::Sell);
 
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
@@ -2807,8 +2819,8 @@ impl Backtest {
                                 .try_extract::<i64>()
                                 .unwrap();
 
-                            let tp: f64 = self.get_takeprofit(df.clone(), i);
-                            let sl: f64 = self.get_stoploss(df.clone(), i);
+                            let tp: f64 = self.get_takeprofit(df.clone(), i, EntryDirection::Buy);
+                            let sl: f64 = self.get_stoploss(df.clone(), i, EntryDirection::Buy);
 
                             let trade: Option<Trade> = self
                                 .ejecutar_entry(
@@ -2847,8 +2859,8 @@ impl Backtest {
                                 .try_extract::<i64>()
                                 .unwrap();
 
-                            let tp: f64 = self.get_takeprofit(df.clone(), i);
-                            let sl: f64 = self.get_stoploss(df.clone(), i);
+                            let tp: f64 = self.get_takeprofit(df.clone(), i, EntryDirection::Sell);
+                            let sl: f64 = self.get_stoploss(df.clone(), i, EntryDirection::Sell);
 
                             let trade: Option<Trade> = self
                                 .ejecutar_entry(
@@ -2971,10 +2983,10 @@ impl Backtest {
                 }
             };
 
-            //TODO: Backtest de la estrategia con los datos del DataFrame.
             self.backtest(df.clone(), symbol.clone()).await.unwrap();
         }
 
+        self.guardar_trades().await;
         let duracion = inicio.elapsed();
         Ok(format!("Backtest finalizado en {}", duracion.as_secs_f64()))
     }
@@ -2982,6 +2994,52 @@ impl Backtest {
     pub async fn guardar_trades(&self) {
         for trade in &self.trades {
             insert_trades(self.id, trade).await.unwrap();
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::api::symbols::get_symbol_cfd_by_id;
+    use crate::backtest::dias::Dias;
+
+    #[tokio::test]
+    async fn test_bt_crucemedias() {
+        let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(1).await.unwrap_or(SymbolInfoCFD {
+            id: 1,
+            broker_id: 1,
+            name: "EURUSD".to_string(),
+            valor_contrato: 100000.0,
+            comision_lote: 6.0,
+            swap_long: -7.0,
+            swap_short: 6.0,
+            dia_triple_swap: Dias::Mi,
+            lotaje_minimo: 0.01,
+            lotaje_maximo: 100.0,
+            digitos: 5,
+            open_weekend: false,
+            spread: 0.00020,
+        });
+
+        let gestion: GestionStrategy = GestionStrategy::Formula;
+        let parametros_gestion: GestionParams = GestionParams {
+            multiplicador: 1.0,
+            lotaje_fijo: 0.10,
+        };
+
+        let mut bt: Backtest = Backtest::new(
+            "UnitTest: CruceMedias".to_string(),
+            10000.0,
+            Activo::CDF,
+            gestion,
+            parametros_gestion,
+        )
+        .await;
+
+        match bt.run(1, symbol).await {
+            Ok(_) => assert!(true),
+            Err(e) => assert!(false, "Error: {}", e),
         }
     }
 }

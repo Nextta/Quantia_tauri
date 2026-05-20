@@ -2,42 +2,31 @@ use chrono::DateTime;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
-use crate::enums::entry::EntryDirection;
-
 // use serde_json::Value;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct StopLoss {
-    pub tipo: String,              // Tipo de limite: ask, bid, bb, atr... etc
-    pub nombre_col: String,        // Nombre de la columna a usar como limite
-    pub shift: usize,              // Numero de filas a desplazar
-    pub valor: f64,                // en caso de ser por pip, ticks o puntos
-    pub direccion: EntryDirection, // Direccion del limite: buy, sell
+    pub tipo: String,       // Tipo de limite: ask, bid, bb, atr... etc
+    pub nombre_col: String, // Nombre de la columna a usar como limite
+    pub shift: usize,       // Numero de filas a desplazar
+    pub valor: f64,         // en caso de ser por pip, ticks o puntos
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct TakeProfit {
-    pub tipo: String,              // Tipo de limite: ask, bid, bb, atr... etc
-    pub nombre_col: String,        // Nombre de la columna a usar como limite
-    pub shift: usize,              // Numero de filas a desplazar
-    pub valor: f64,                // en caso de ser por pip, ticks o puntos
-    pub direccion: EntryDirection, // Direccion del limite: buy, sell
+    pub tipo: String,       // Tipo de limite: ask, bid, bb, atr... etc
+    pub nombre_col: String, // Nombre de la columna a usar como limite
+    pub shift: usize,       // Numero de filas a desplazar
+    pub valor: f64,         // en caso de ser por pip, ticks o puntos
 }
 
 impl StopLoss {
-    pub fn new(
-        tipo: String,
-        nombre_col: String,
-        shift: usize,
-        valor: f64,
-        direccion: EntryDirection,
-    ) -> Self {
+    pub fn new(tipo: String, nombre_col: String, shift: usize, valor: f64) -> Self {
         Self {
             tipo,
             nombre_col,
             shift,
             valor,
-            direccion,
         }
     }
 
@@ -47,7 +36,6 @@ impl StopLoss {
             nombre_col: String::new(),
             shift: 0,
             valor: 0.0,
-            direccion: EntryDirection::Buy,
         }
     }
 
@@ -57,19 +45,12 @@ impl StopLoss {
 }
 
 impl TakeProfit {
-    pub fn new(
-        tipo: String,
-        nombre_col: String,
-        shift: usize,
-        valor: f64,
-        direccion: EntryDirection,
-    ) -> Self {
+    pub fn new(tipo: String, nombre_col: String, shift: usize, valor: f64) -> Self {
         Self {
             tipo,
             nombre_col,
             shift,
             valor,
-            direccion,
         }
     }
 
@@ -79,7 +60,6 @@ impl TakeProfit {
             nombre_col: String::new(),
             shift: 0,
             valor: 0.0,
-            direccion: EntryDirection::Buy,
         }
     }
 
@@ -107,8 +87,8 @@ pub struct StrategyOptions {
     pub numero_velas_cierre: i32,
     pub cierre_limite_hora: bool,
     pub hora_cierre_limite: DateTime<Utc>,
-    pub parametros_stoploss: StopLoss,
-    pub parametros_takeprofit: TakeProfit,
+    pub parametros_stoploss: Option<StopLoss>,
+    pub parametros_takeprofit: Option<TakeProfit>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -147,8 +127,8 @@ impl StrategyOptions {
         numero_velas_cierre: i32,
         cierre_limite_hora: bool,
         hora_cierre_limite: DateTime<Utc>,
-        parametros_stoploss: StopLoss,
-        parametros_takeprofit: TakeProfit,
+        parametros_stoploss: Option<StopLoss>,
+        parametros_takeprofit: Option<TakeProfit>,
     ) -> Self {
         Self {
             id,
