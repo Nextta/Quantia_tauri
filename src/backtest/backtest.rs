@@ -6,6 +6,7 @@ use crate::api::strategies::{
 
 use crate::api::trades::insert_trades;
 use crate::backtest::datos::Datos;
+use crate::backtest::resultados::Resultados;
 use crate::backtest::symbol::SymbolInfoCFD;
 use crate::backtest::trade::Trade;
 use crate::enums::actions::Action;
@@ -751,24 +752,26 @@ impl Backtest {
             .iter()
             .filter(|condicion| condicion.action_id == accion.id)
             .for_each(|condicion| {
-                let campo_a = df
-                    .column(&condicion.campo_a)
-                    .unwrap()
-                    .get(i - condicion.shift_a as usize)
-                    .unwrap();
-                let campo_b = df
-                    .column(&condicion.campo_b)
-                    .unwrap()
-                    .get(i - condicion.shift_b as usize)
-                    .unwrap();
-                let resultado = match condicion.operador.as_str() {
-                    ">" => campo_a > campo_b,
-                    "<" => campo_a < campo_b,
-                    "==" => campo_a == campo_b,
-                    _ => false,
-                };
+                if (i as i32 - condicion.shift_b) > 0 {
+                    let campo_a = df
+                        .column(&condicion.campo_a)
+                        .unwrap()
+                        .get(i - condicion.shift_a as usize)
+                        .unwrap();
+                    let campo_b = df
+                        .column(&condicion.campo_b)
+                        .unwrap()
+                        .get(i - condicion.shift_b as usize)
+                        .unwrap();
+                    let resultado = match condicion.operador.as_str() {
+                        ">" => campo_a > campo_b,
+                        "<" => campo_a < campo_b,
+                        "==" => campo_a == campo_b,
+                        _ => false,
+                    };
 
-                condiciones_map.insert(condicion.logica.clone(), resultado);
+                    condiciones_map.insert(condicion.logica.clone(), resultado);
+                }
             });
 
         let mut all_true = true;
@@ -904,13 +907,17 @@ impl Backtest {
             .clone()
             .unwrap();
 
-        let valor: f64 = df
-            .column(&params.nombre_col)
-            .unwrap()
-            .f64()
-            .unwrap()
-            .get(i - &params.shift)
-            .unwrap_or(0.0);
+        let mut valor: f64 = 0.0;
+
+        if (i as i32 - params.shift.clone() as i32) > 0 {
+            valor = df
+                .column(&params.nombre_col)
+                .unwrap()
+                .f64()
+                .unwrap()
+                .get(i - &params.shift)
+                .unwrap_or(0.0);
+        }
 
         let sl: f64 = match params.tipo.as_str() {
             "pip" => {
@@ -982,13 +989,17 @@ impl Backtest {
             .clone()
             .unwrap();
 
-        let valor: f64 = df
-            .column(&params.nombre_col)
-            .unwrap()
-            .f64()
-            .unwrap()
-            .get(i - &params.shift)
-            .unwrap_or(0.0);
+        let mut valor: f64 = 0.0;
+
+        if (i as i32 - params.shift.clone() as i32) > 0 {
+            valor = df
+                .column(&params.nombre_col)
+                .unwrap()
+                .f64()
+                .unwrap()
+                .get(i - &params.shift)
+                .unwrap_or(0.0);
+        }
 
         let tp: f64 = match params.tipo.as_str() {
             "pip" => {
@@ -2987,6 +2998,13 @@ impl Backtest {
         }
 
         self.guardar_trades().await;
+
+        let mut resultados = Resultados::new(self.id).await;
+
+        resultados.calcular_resultados(self.trades.clone(), self.balance.clone());
+
+        resultados.guardar_resultados().await;
+
         let duracion = inicio.elapsed();
         Ok(format!("Backtest finalizado en {}", duracion.as_secs_f64()))
     }
@@ -3036,6 +3054,8 @@ mod tests {
             parametros_gestion,
         )
         .await;
+
+        let _ = bt.add_datos("download/xauusd-h1.csv").unwrap();
 
         match bt.run(1, symbol).await {
             Ok(_) => assert!(true),
