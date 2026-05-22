@@ -1904,7 +1904,7 @@ impl Backtest {
 
                                 trade.close(t1, trade.tp);
                                 indices.push(idx);
-                                self.add_trade(trade.clone());
+                                //self.add_trade(trade.clone());
                             }
                         }
                         EntryDirection::Sell => {
@@ -1923,7 +1923,7 @@ impl Backtest {
 
                                 trade.close(t1, trade.sl);
                                 indices.push(idx);
-                                self.add_trade(trade.clone());
+                                //self.add_trade(trade.clone());
                             }
                             if precio_actual <= trade.tp {
                                 let timestamp: i64 = df
@@ -1940,7 +1940,7 @@ impl Backtest {
 
                                 trade.close(t1, trade.tp);
                                 indices.push(idx);
-                                self.add_trade(trade.clone());
+                                //self.add_trade(trade.clone());
                             }
                         }
                     }
@@ -2846,6 +2846,7 @@ impl Backtest {
 
                             if let Some(trade) = trade {
                                 open_trades.push(trade);
+                                break;
                             }
                         }
                     }
@@ -2886,6 +2887,7 @@ impl Backtest {
 
                             if let Some(trade) = trade {
                                 open_trades.push(trade);
+                                break;
                             }
                         }
                     }
@@ -2897,6 +2899,7 @@ impl Backtest {
                             let precio_limite =
                                 self.get_limit(df.clone(), accion.parametros.to_string(), i)?;
                             buy_limits.push(precio_limite);
+                            break;
                         }
                     }
                     Action::SellLimit => {
@@ -2907,6 +2910,7 @@ impl Backtest {
                             let precio_limite =
                                 self.get_limit(df.clone(), accion.parametros.to_string(), i)?;
                             sell_limits.push(precio_limite);
+                            break;
                         }
                     }
                     Action::BuyStop => {
@@ -2917,6 +2921,7 @@ impl Backtest {
                             let precio_limite =
                                 self.get_limit(df.clone(), accion.parametros.to_string(), i)?;
                             buy_stops.push(precio_limite);
+                            break;
                         }
                     }
                     Action::SellStop => {
@@ -2927,6 +2932,7 @@ impl Backtest {
                             let precio_limite =
                                 self.get_limit(df.clone(), accion.parametros.to_string(), i)?;
                             sell_stops.push(precio_limite);
+                            break;
                         }
                     }
                     _ => {}
