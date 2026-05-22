@@ -1312,9 +1312,9 @@ impl Backtest {
 
         self.add_registro(mensaje);
 
-        let mut all_true = true;
+        let mut all_true = false;
         let mut key_anterior = "none".to_string();
-        let mut resultado_anterior = true;
+        let mut resultado_anterior = false;
         for (key, resultado) in condiciones_map.iter() {
             if key_anterior == "none".to_string() {
                 key_anterior = key.clone();
@@ -1847,7 +1847,7 @@ impl Backtest {
                             ));
                             valor - precio_actual
                         } else {
-                            self.add_registro(format!("limite de venta por atr no valido"));
+                            self.add_registro(format!("limite de atr no valido"));
                             0.0
                         }
                     } else {
@@ -3966,7 +3966,15 @@ impl Backtest {
         for data in self.datos.clone() {
             // Verificamos los indicadores que tiene la estrategia para añadirlos a los datos del DataFrame
             let df = match self.set_indicators_strategy(data.get_datos()) {
-                Ok(df_result) => df_result,
+                Ok(df_result) => {
+                    let df_clean = df_result
+                        .lazy()
+                        .fill_nan(lit(NULL))
+                        .drop_nulls(None) // elimina filas con cualquier null
+                        .collect()?;
+                    self.add_registro(format!("{:?}", &df_clean.head(Some(20))));
+                    df_clean
+                }
                 Err(e) => {
                     return Err(Box::new(e));
                 }
@@ -4002,7 +4010,7 @@ mod tests {
     use crate::api::symbols::get_symbol_cfd_by_id;
     use crate::backtest::dias::Dias;
 
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread")]
     async fn test_bt_crucemedias() {
         let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(1).await.unwrap_or(SymbolInfoCFD {
             id: 1,
