@@ -72,7 +72,7 @@ impl TakeProfit {
 pub struct StrategyOptions {
     pub id: i32,
     pub strategy_id: i32,
-    pub multiples_tardes: bool,
+    pub multiples_trades: bool,
     pub trading_direccion: TradingDirection,
     pub operar_finde: bool,
     pub cerrar_fin_de_dia: bool,
@@ -112,7 +112,7 @@ impl StrategyOptions {
     pub fn new(
         id: i32,
         strategy_id: i32,
-        multiples_tardes: bool,
+        multiples_trades: bool,
         trading_direccion: TradingDirection,
         operar_finde: bool,
         cerrar_fin_de_dia: bool,
@@ -133,7 +133,7 @@ impl StrategyOptions {
         Self {
             id,
             strategy_id,
-            multiples_tardes,
+            multiples_trades,
             trading_direccion,
             operar_finde,
             cerrar_fin_de_dia,
@@ -157,7 +157,7 @@ impl StrategyOptions {
         Self {
             id: 0,
             strategy_id: 0,
-            multiples_tardes: false,
+            multiples_trades: false,
             trading_direccion: TradingDirection::Both,
             operar_finde: false,
             cerrar_fin_de_dia: false,

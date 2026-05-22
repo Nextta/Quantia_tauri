@@ -1753,7 +1753,7 @@ pub async fn table_strategy_options() -> Result<String> {
         "CREATE TABLE IF NOT EXISTS strategy_options (
             id           INTEGER PRIMARY KEY AUTOINCREMENT,
             strategy_id  INTEGER NOT NULL REFERENCES strategies(id),
-            multiples_tardes BOOLEAN DEFAULT FALSE,
+            multiples_trades BOOLEAN DEFAULT FALSE,
             trading_direccion TEXT DEFAULT 'Both',
             operar_finde BOOLEAN DEFAULT FALSE,
             cerrar_fin_de_dia BOOLEAN DEFAULT FALSE,
@@ -1802,7 +1802,7 @@ pub async fn insert_strategy_options(options: StrategyOptions) -> Result<i32> {
 
     let parametros = params![
         options.strategy_id,
-        options.multiples_tardes,
+        options.multiples_trades,
         options.trading_direccion.to_string(),
         options.operar_finde,
         options.cerrar_fin_de_dia,
@@ -1862,7 +1862,7 @@ pub async fn get_strategy_options_by_id(id: i32) -> Result<StrategyOptions> {
     let options = StrategyOptions {
         id: row.get::<i32>(0)?,
         strategy_id: row.get::<i32>(1)?,
-        multiples_tardes: if row.get::<i32>(2)? == 1 { true } else { false },
+        multiples_trades: if row.get::<i32>(2)? == 1 { true } else { false },
         trading_direccion: if row.get::<String>(3)? == "long" {
             TradingDirection::Long
         } else if row.get::<String>(3)? == "short" {
@@ -1951,7 +1951,7 @@ pub async fn get_strategy_options_by_strategy_id(strategy_id: i32) -> Result<Str
     let options = StrategyOptions {
         id: row.get::<i32>(0)?,
         strategy_id: row.get::<i32>(1)?,
-        multiples_tardes: if row.get::<i32>(2)? == 1 { true } else { false },
+        multiples_trades: if row.get::<i32>(2)? == 1 { true } else { false },
         trading_direccion: if row.get::<String>(3)? == "long" {
             TradingDirection::Long
         } else if row.get::<String>(3)? == "short" {
@@ -2200,7 +2200,7 @@ mod tests {
                                 let option: StrategyOptions = StrategyOptions {
                                     id: 1,
                                     strategy_id: id,
-                                    multiples_tardes: false,
+                                    multiples_trades: false,
                                     trading_direccion: TradingDirection::Long,
                                     operar_finde: false,
                                     cerrar_fin_de_dia: false,

@@ -1356,7 +1356,7 @@ impl Backtest {
 
         self.add_registro(format!("Comprobando opciones de entrada"));
 
-        if !self.estrategia.opciones.multiples_tardes && !open_trades.is_empty() {
+        if !self.estrategia.opciones.multiples_trades && !open_trades.is_empty() {
             entry_options = false;
             self.add_registro(format!("No se puede operar con mas de un trade"));
         } else {
