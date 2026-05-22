@@ -1539,7 +1539,10 @@ impl Backtest {
             .parametros_stoploss
             .clone()
             .unwrap();
-        self.add_registro(format!("Obteniendo stop loss para tipo: {}", params.tipo));
+        self.add_registro(format!(
+            "Obteniendo los parametros de stop loss: {:?}",
+            params
+        ));
 
         let mut valor: f64 = 0.0;
 
@@ -1547,132 +1550,145 @@ impl Backtest {
             valor = df
                 .column(&params.nombre_col)
                 .unwrap()
-                .f64()
-                .unwrap()
                 .get(i - &params.shift)
+                .unwrap()
+                .try_extract::<f64>()
                 .unwrap_or(0.0);
-        }
+            self.add_registro(format!(
+                "Valor optenido para calcular el stop loss: {}",
+                valor
+            ));
 
-        let sl: f64 = match params.tipo.as_str() {
-            "pip" => {
-                if direccion == EntryDirection::Buy {
-                    if valor - params.valor >= 0.00000 {
+            let sl: f64 = match params.tipo.as_str() {
+                "pip" => {
+                    if direccion == EntryDirection::Buy {
+                        if valor - params.valor >= 0.00000 {
+                            self.add_registro(format!(
+                                "Obteniendo stop loss por pip: {}",
+                                valor - params.valor
+                            ));
+                            valor - params.valor
+                        } else {
+                            self.add_registro(format!("stop loss por pip no valido"));
+                            0.0
+                        }
+                    } else if direccion == EntryDirection::Sell {
                         self.add_registro(format!(
                             "Obteniendo stop loss por pip: {}",
-                            valor - params.valor
+                            valor + params.valor
                         ));
-                        valor - params.valor
+                        valor + params.valor
                     } else {
                         self.add_registro(format!("stop loss por pip no valido"));
                         0.0
                     }
-                } else if direccion == EntryDirection::Sell {
-                    self.add_registro(format!(
-                        "Obteniendo stop loss por pip: {}",
-                        valor + params.valor
-                    ));
-                    valor + params.valor
-                } else {
-                    self.add_registro(format!("stop loss por pip no valido"));
-                    0.0
                 }
-            }
-            "tick" => {
-                if direccion == EntryDirection::Buy {
-                    if valor - params.valor >= 0.00000 {
+                "tick" => {
+                    if direccion == EntryDirection::Buy {
+                        if valor - params.valor >= 0.00000 {
+                            self.add_registro(format!(
+                                "Obteniendo stop loss por tick: {}",
+                                valor - params.valor
+                            ));
+                            valor - params.valor
+                        } else {
+                            self.add_registro(format!("stop loss por tick no valido"));
+                            0.0
+                        }
+                    } else if direccion == EntryDirection::Sell {
                         self.add_registro(format!(
                             "Obteniendo stop loss por tick: {}",
-                            valor - params.valor
+                            valor + params.valor
                         ));
-                        valor - params.valor
+                        valor + params.valor
                     } else {
                         self.add_registro(format!("stop loss por tick no valido"));
                         0.0
                     }
-                } else if direccion == EntryDirection::Sell {
-                    self.add_registro(format!(
-                        "Obteniendo stop loss por tick: {}",
-                        valor + params.valor
-                    ));
-                    valor + params.valor
-                } else {
-                    self.add_registro(format!("stop loss por tick no valido"));
-                    0.0
                 }
-            }
-            "punto" => {
-                if direccion == EntryDirection::Buy {
-                    if valor - params.valor >= 0.00000 {
+                "punto" => {
+                    if direccion == EntryDirection::Buy {
+                        if valor - params.valor >= 0.00000 {
+                            self.add_registro(format!(
+                                "Obteniendo stop loss por punto: {}",
+                                valor - params.valor
+                            ));
+                            valor - params.valor
+                        } else {
+                            self.add_registro(format!("stop loss por punto no valido"));
+                            0.0
+                        }
+                    } else if direccion == EntryDirection::Sell {
                         self.add_registro(format!(
                             "Obteniendo stop loss por punto: {}",
-                            valor - params.valor
+                            valor + params.valor
                         ));
-                        valor - params.valor
+                        valor + params.valor
                     } else {
                         self.add_registro(format!("stop loss por punto no valido"));
                         0.0
                     }
-                } else if direccion == EntryDirection::Sell {
-                    self.add_registro(format!(
-                        "Obteniendo stop loss por punto: {}",
-                        valor + params.valor
-                    ));
-                    valor + params.valor
-                } else {
-                    self.add_registro(format!("stop loss por punto no valido"));
-                    0.0
                 }
-            }
-            "porcentaje" => {
-                if direccion == EntryDirection::Buy {
-                    if valor - (valor * params.valor) >= 0.00000 {
+                "porcentaje" => {
+                    if direccion == EntryDirection::Buy {
+                        if valor - (valor * params.valor) >= 0.00000 {
+                            self.add_registro(format!(
+                                "Obteniendo stop loss por porcentaje: {}",
+                                valor - (valor * params.valor)
+                            ));
+                            valor - (valor * params.valor)
+                        } else {
+                            self.add_registro(format!("stop loss por porcentaje no valido"));
+                            0.0
+                        }
+                    } else if direccion == EntryDirection::Sell {
                         self.add_registro(format!(
                             "Obteniendo stop loss por porcentaje: {}",
-                            valor - (valor * params.valor)
+                            valor + (valor * params.valor)
                         ));
-                        valor - (valor * params.valor)
+                        valor + (valor * params.valor)
                     } else {
                         self.add_registro(format!("stop loss por porcentaje no valido"));
                         0.0
                     }
-                } else if direccion == EntryDirection::Sell {
-                    self.add_registro(format!(
-                        "Obteniendo stop loss por porcentaje: {}",
-                        valor + (valor * params.valor)
-                    ));
-                    valor + (valor * params.valor)
-                } else {
-                    self.add_registro(format!("stop loss por porcentaje no valido"));
-                    0.0
                 }
-            }
-            "atr" => {
-                if direccion == EntryDirection::Buy {
-                    if valor - params.valor >= 0.00000 {
+                "atr" => {
+                    let precio_actual = df
+                        .column("close")
+                        .unwrap()
+                        .get(i - 1)
+                        .unwrap()
+                        .try_extract::<f64>()
+                        .unwrap_or(0.0);
+
+                    if direccion == EntryDirection::Buy {
+                        if valor - precio_actual >= 0.00000 {
+                            self.add_registro(format!(
+                                "Obteniendo stop loss por atr: {}",
+                                valor - precio_actual
+                            ));
+                            valor - precio_actual
+                        } else {
+                            self.add_registro(format!("stop loss por atr no valido"));
+                            0.0
+                        }
+                    } else if direccion == EntryDirection::Sell {
                         self.add_registro(format!(
                             "Obteniendo stop loss por atr: {}",
-                            valor - params.valor
+                            valor + precio_actual
                         ));
-                        valor - params.valor
+                        valor + precio_actual
                     } else {
                         self.add_registro(format!("stop loss por atr no valido"));
                         0.0
                     }
-                } else if direccion == EntryDirection::Sell {
-                    self.add_registro(format!(
-                        "Obteniendo stop loss por atr: {}",
-                        valor + params.valor
-                    ));
-                    valor + params.valor
-                } else {
-                    self.add_registro(format!("stop loss por atr no valido"));
-                    0.0
                 }
-            }
-            _ => valor,
-        };
+                _ => valor,
+            };
+            return sl;
+        }
 
-        sl
+        valor
     }
 
     /// Obtiene el take profit para una operación en un índice dado.
@@ -1702,136 +1718,149 @@ impl Backtest {
 
         let mut valor: f64 = 0.0;
 
-        if (i as i32 - params.shift.clone() as i32) > 0 {
+        if (i as i32 - params.shift.clone() as i32) >= 0 {
             valor = df
                 .column(&params.nombre_col)
                 .unwrap()
-                .f64()
-                .unwrap()
                 .get(i - &params.shift)
+                .unwrap()
+                .try_extract::<f64>()
                 .unwrap_or(0.0);
-        }
+            self.add_registro(format!(
+                "Valor optenido para calcular el take profit: {}",
+                valor
+            ));
 
-        let tp: f64 = match params.tipo.as_str() {
-            "pip" => {
-                if direccion == EntryDirection::Buy {
-                    self.add_registro(format!(
-                        "Obteniendo limite de compra por pip: {}",
-                        valor + params.valor
-                    ));
-                    valor + params.valor
-                } else if direccion == EntryDirection::Sell {
-                    if valor - params.valor >= 0.00000 {
+            let tp: f64 = match params.tipo.as_str() {
+                "pip" => {
+                    if direccion == EntryDirection::Buy {
                         self.add_registro(format!(
-                            "Obteniendo limite de venta por pip: {}",
-                            valor - params.valor
+                            "Obteniendo limite de compra por pip: {}",
+                            valor + params.valor
                         ));
-                        valor - params.valor
+                        valor + params.valor
+                    } else if direccion == EntryDirection::Sell {
+                        if valor - params.valor >= 0.00000 {
+                            self.add_registro(format!(
+                                "Obteniendo limite de venta por pip: {}",
+                                valor - params.valor
+                            ));
+                            valor - params.valor
+                        } else {
+                            self.add_registro(format!("limite de venta por pip no valido"));
+                            0.0
+                        }
                     } else {
                         self.add_registro(format!("limite de venta por pip no valido"));
                         0.0
                     }
-                } else {
-                    self.add_registro(format!("limite de venta por pip no valido"));
-                    0.0
                 }
-            }
-            "tick" => {
-                if direccion == EntryDirection::Buy {
-                    self.add_registro(format!(
-                        "Obteniendo limite de compra por tick: {}",
-                        valor + params.valor
-                    ));
-                    valor + params.valor
-                } else if direccion == EntryDirection::Sell {
-                    if valor - params.valor >= 0.00000 {
+                "tick" => {
+                    if direccion == EntryDirection::Buy {
                         self.add_registro(format!(
-                            "Obteniendo limite de venta por tick: {}",
-                            valor - params.valor
+                            "Obteniendo limite de compra por tick: {}",
+                            valor + params.valor
                         ));
-                        valor - params.valor
+                        valor + params.valor
+                    } else if direccion == EntryDirection::Sell {
+                        if valor - params.valor >= 0.00000 {
+                            self.add_registro(format!(
+                                "Obteniendo limite de venta por tick: {}",
+                                valor - params.valor
+                            ));
+                            valor - params.valor
+                        } else {
+                            self.add_registro(format!("limite de venta por tick no valido"));
+                            0.0
+                        }
                     } else {
                         self.add_registro(format!("limite de venta por tick no valido"));
                         0.0
                     }
-                } else {
-                    self.add_registro(format!("limite de venta por tick no valido"));
-                    0.0
                 }
-            }
-            "punto" => {
-                if direccion == EntryDirection::Buy {
-                    self.add_registro(format!(
-                        "Obteniendo limite de compra por punto: {}",
-                        valor + params.valor
-                    ));
-                    valor + params.valor
-                } else if direccion == EntryDirection::Sell {
-                    if valor - params.valor >= 0.00000 {
+                "punto" => {
+                    if direccion == EntryDirection::Buy {
                         self.add_registro(format!(
-                            "Obteniendo limite de venta por punto: {}",
-                            valor - params.valor
+                            "Obteniendo limite de compra por punto: {}",
+                            valor + params.valor
                         ));
-                        valor - params.valor
+                        valor + params.valor
+                    } else if direccion == EntryDirection::Sell {
+                        if valor - params.valor >= 0.00000 {
+                            self.add_registro(format!(
+                                "Obteniendo limite de venta por punto: {}",
+                                valor - params.valor
+                            ));
+                            valor - params.valor
+                        } else {
+                            self.add_registro(format!("limite de venta por punto no valido"));
+                            0.0
+                        }
                     } else {
                         self.add_registro(format!("limite de venta por punto no valido"));
                         0.0
                     }
-                } else {
-                    self.add_registro(format!("limite de venta por punto no valido"));
-                    0.0
                 }
-            }
-            "porcentaje" => {
-                if direccion == EntryDirection::Buy {
-                    self.add_registro(format!(
-                        "Obteniendo limite de compra por porcentaje: {}",
-                        valor + (valor * params.valor)
-                    ));
-                    valor + (valor * params.valor)
-                } else if direccion == EntryDirection::Sell {
-                    if valor - (valor * params.valor) >= 0.00000 {
+                "porcentaje" => {
+                    if direccion == EntryDirection::Buy {
                         self.add_registro(format!(
-                            "Obteniendo limite de venta por porcentaje: {}",
-                            valor - (valor * params.valor)
+                            "Obteniendo limite de compra por porcentaje: {}",
+                            valor + (valor * params.valor)
                         ));
-                        valor - (valor * params.valor)
+                        valor + (valor * params.valor)
+                    } else if direccion == EntryDirection::Sell {
+                        if valor - (valor * params.valor) >= 0.00000 {
+                            self.add_registro(format!(
+                                "Obteniendo limite de venta por porcentaje: {}",
+                                valor - (valor * params.valor)
+                            ));
+                            valor - (valor * params.valor)
+                        } else {
+                            self.add_registro(format!("limite de venta por porcentaje no valido"));
+                            0.0
+                        }
                     } else {
                         self.add_registro(format!("limite de venta por porcentaje no valido"));
                         0.0
                     }
-                } else {
-                    self.add_registro(format!("limite de venta por porcentaje no valido"));
-                    0.0
                 }
-            }
-            "atr" => {
-                if direccion == EntryDirection::Buy {
-                    self.add_registro(format!(
-                        "Obteniendo limite de compra por atr: {}",
-                        valor + params.valor
-                    ));
-                    valor + params.valor
-                } else if direccion == EntryDirection::Sell {
-                    if valor - params.valor >= 0.00000 {
+                "atr" => {
+                    let precio_actual = df
+                        .column("close")
+                        .unwrap()
+                        .get(i - 1)
+                        .unwrap()
+                        .try_extract::<f64>()
+                        .unwrap_or(0.0);
+
+                    if direccion == EntryDirection::Buy {
                         self.add_registro(format!(
-                            "Obteniendo limite de venta por atr: {}",
-                            valor - params.valor
+                            "Obteniendo limite de compra por atr: {}",
+                            valor + precio_actual
                         ));
-                        valor - params.valor
+                        valor + precio_actual
+                    } else if direccion == EntryDirection::Sell {
+                        if valor - precio_actual >= 0.00000 {
+                            self.add_registro(format!(
+                                "Obteniendo limite de venta por atr: {}",
+                                valor - precio_actual
+                            ));
+                            valor - precio_actual
+                        } else {
+                            self.add_registro(format!("limite de venta por atr no valido"));
+                            0.0
+                        }
                     } else {
-                        self.add_registro(format!("limite de venta por atr no valido"));
+                        self.add_registro(format!("limite de atr no valido"));
                         0.0
                     }
-                } else {
-                    self.add_registro(format!("limite de atr no valido"));
-                    0.0
                 }
-            }
-            _ => valor,
-        };
+                _ => valor,
+            };
 
-        tp
+            return tp;
+        }
+        valor
     }
 
     /// Ejecuta una operación de entrada de una acción en un índice dado.
