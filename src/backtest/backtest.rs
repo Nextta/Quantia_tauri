@@ -32,6 +32,7 @@ use std::time::Instant;
 use crate::enums::activos::Activo;
 use crate::enums::gestion::GestionStrategy;
 use crate::enums::tipos::{BeTipo, TlTipo};
+use crate::structs::logs::RegistroLog;
 use crate::structs::options::NBarsOptions;
 use crate::structs::parametros::{BeParams, GestionParams, LimitParams, TlParams};
 
@@ -46,6 +47,7 @@ pub struct Backtest {
     pub trades: Vec<Trade>,
     pub datos: Vec<Datos>,
     pub estrategia: Strategy,
+    // pub registro: Vec<RegistroLog>,
 }
 
 impl Backtest {
@@ -69,10 +71,11 @@ impl Backtest {
             datos: Vec::<Datos>::new(),
             estrategia: Strategy::new_empty(),
         };
-
+        backtest.add_registro("Backtest creado".to_string());
         match table {
             Ok(_) => {
                 backtest.id = insert_backtest_cfd(backtest.clone()).await.unwrap();
+                backtest.add_registro("Backtest guardado en la base de datos".to_string());
             }
             Err(e) => println!("TABLE: backtest error: {:?}", e),
         }
@@ -88,11 +91,18 @@ impl Backtest {
 
         let data = Datos::new(df);
         self.datos.push(data.clone());
+        self.add_registro(format!("Datos agregados: {}", ruta));
         Ok(data)
     }
 
     pub fn add_trade(&mut self, trade: Trade) {
+        self.add_registro(format!("Trade agregado: {}", trade.id.clone()));
         self.trades.push(trade);
+    }
+
+    fn add_registro(&mut self, message: String) {
+        let entry = RegistroLog::new(message.to_string());
+        entry.guardar_logs().unwrap();
     }
 
     pub fn add_datos_tbl(&self) {
@@ -133,26 +143,62 @@ impl Backtest {
     /// DataFrame con los nuevos datos.
     fn set_indicators_strategy(&mut self, datos: DataFrame) -> PolarsResult<DataFrame> {
         let mut df: DataFrame = datos.clone();
+        let indicadores = self.estrategia.indicadores.clone();
         //TODO: Añadir los indicadores de la estrategia al dataframe de datos.
-        for indicator in &self.estrategia.indicadores {
+        for indicator in &indicadores {
             df = match indicator.tipo.as_str() {
-                "HT_DCPERIOD" => ht_dcperiod(df, Some(&indicator.nombre))?,
-                "HT_DCPHASE" => ht_dcphase(df, Some(&indicator.nombre))?,
-                "HT_PHASOR" => ht_phasor(
-                    df,
-                    Some(format!("{}_in_phase", &indicator.nombre).as_str()),
-                    Some(format!("{}_quadrature", &indicator.nombre).as_str()),
-                )?,
-                "HT_SINE" => ht_sine(
-                    df,
-                    Some(format!("{}_sine", &indicator.nombre).as_str()),
-                    Some(format!("{}_lead_sine", &indicator.nombre).as_str()),
-                )?,
-                "HT_TRENDMODE" => ht_trendmode(df, Some(&indicator.nombre))?,
+                "HT_DCPERIOD" => {
+                    self.add_registro(format!(
+                        "Indicador HT_DCPERIOD agregado: {}",
+                        indicator.nombre
+                    ));
+
+                    ht_dcperiod(df, Some(&indicator.nombre))?
+                }
+                "HT_DCPHASE" => {
+                    self.add_registro(format!(
+                        "Indicador HT_DCPHASE agregado: {}",
+                        indicator.nombre
+                    ));
+
+                    ht_dcphase(df, Some(&indicator.nombre))?
+                }
+                "HT_PHASOR" => {
+                    self.add_registro(format!(
+                        "Indicador HT_PHASOR agregado: {}",
+                        indicator.nombre
+                    ));
+
+                    ht_phasor(
+                        df,
+                        Some(format!("{}_in_phase", &indicator.nombre).as_str()),
+                        Some(format!("{}_quadrature", &indicator.nombre).as_str()),
+                    )?
+                }
+                "HT_SINE" => {
+                    self.add_registro(format!("Indicador HT_SINE agregado: {}", indicator.nombre));
+
+                    ht_sine(
+                        df,
+                        Some(format!("{}_sine", &indicator.nombre).as_str()),
+                        Some(format!("{}_lead_sine", &indicator.nombre).as_str()),
+                    )?
+                }
+                "HT_TRENDMODE" => {
+                    self.add_registro(format!(
+                        "Indicador HT_TRENDMODE agregado: {}",
+                        indicator.nombre
+                    ));
+
+                    ht_trendmode(df, Some(&indicator.nombre))?
+                }
                 "BBANDS" => {
                     let parametros =
                         serde_json::from_value::<BbandsParams>(indicator.parametros.clone())
                             .unwrap();
+
+                    self.add_registro(format!("Indicador BBANDS agregado: {}", indicator.nombre));
+
                     bbands(
                         df,
                         Some(parametros.timeperiod),
@@ -167,21 +213,29 @@ impl Backtest {
                 "DEMA" => {
                     let parametros =
                         serde_json::from_value::<DemaParams>(indicator.parametros.clone()).unwrap();
+
+                    self.add_registro(format!("Indicador DEMA agregado: {}", indicator.nombre));
                     dema(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
                 "EMA" => {
                     let parametros =
                         serde_json::from_value::<EmaParams>(indicator.parametros.clone()).unwrap();
+
+                    self.add_registro(format!("Indicador EMA agregado: {}", indicator.nombre));
                     ema(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
                 "KAMA" => {
                     let parametros =
                         serde_json::from_value::<KamaParams>(indicator.parametros.clone()).unwrap();
+
+                    self.add_registro(format!("Indicador KAMA agregado: {}", indicator.nombre));
                     kama(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
                 "MA" => {
                     let parametros =
                         serde_json::from_value::<MaParams>(indicator.parametros.clone()).unwrap();
+
+                    self.add_registro(format!("Indicador MA agregado: {}", indicator.nombre));
                     ma(
                         df,
                         Some(parametros.timeperiod),
@@ -192,6 +246,8 @@ impl Backtest {
                 "MAMA" => {
                     let parametros =
                         serde_json::from_value::<MamaParams>(indicator.parametros.clone()).unwrap();
+
+                    self.add_registro(format!("Indicador MAMA agregado: {}", indicator.nombre));
                     mama(
                         df,
                         Some(parametros.fastlimit),
@@ -204,17 +260,23 @@ impl Backtest {
                     let parametros =
                         serde_json::from_value::<MidpointParams>(indicator.parametros.clone())
                             .unwrap();
+
+                    self.add_registro(format!("Indicador MIDPOINT agregado: {}", indicator.nombre));
                     midpoint(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
                 "MIDPRICE" => {
                     let parametros =
                         serde_json::from_value::<MidpriceParams>(indicator.parametros.clone())
                             .unwrap();
+
+                    self.add_registro(format!("Indicador MIDPRICE agregado: {}", indicator.nombre));
                     midprice(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
                 "SAR" => {
                     let parametros =
                         serde_json::from_value::<SarParams>(indicator.parametros.clone()).unwrap();
+
+                    self.add_registro(format!("Indicador SAR agregado: {}", indicator.nombre));
                     sar(
                         df,
                         Some(parametros.acceleration),
@@ -226,6 +288,8 @@ impl Backtest {
                     let parametros =
                         serde_json::from_value::<SarextParams>(indicator.parametros.clone())
                             .unwrap();
+
+                    self.add_registro(format!("Indicador SAREXT agregado: {}", indicator.nombre));
                     sarext(
                         df,
                         Some(parametros.startvalue),
@@ -239,11 +303,15 @@ impl Backtest {
                 "SMA" => {
                     let parametros =
                         serde_json::from_value::<SmaParams>(indicator.parametros.clone()).unwrap();
+
+                    self.add_registro(format!("Indicador SMA agregado: {}", indicator.nombre));
                     sma(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
                 "T3" => {
                     let parametros =
                         serde_json::from_value::<T3Params>(indicator.parametros.clone()).unwrap();
+
+                    self.add_registro(format!("Indicador T3 agregado: {}", indicator.nombre));
                     t3(
                         df,
                         Some(parametros.timeperiod),
@@ -254,107 +322,473 @@ impl Backtest {
                 "TEMA" => {
                     let parametros =
                         serde_json::from_value::<TemaParams>(indicator.parametros.clone()).unwrap();
+
+                    self.add_registro(format!("Indicador TEMA agregado: {}", indicator.nombre));
                     tema(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
                 "TRIMA" => {
                     let parametros =
                         serde_json::from_value::<TrimaParams>(indicator.parametros.clone())
                             .unwrap();
+
+                    self.add_registro(format!("Indicador TRIMA agregado: {}", indicator.nombre));
                     trima(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
                 "WMA" => {
                     let parametros =
                         serde_json::from_value::<WmaParams>(indicator.parametros.clone()).unwrap();
+
+                    self.add_registro(format!("Indicador WMA agregado: {}", indicator.nombre));
                     wma(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
                 }
-                "CDL2CROWS" => cdlupsidegap2crows(df, Some(&indicator.nombre))?,
-                "CDL3BLACKCROWS" => cdl3blackcrows(df, Some(&indicator.nombre))?,
-                "CDL3INSIDE" => cdl3inside(df, Some(&indicator.nombre))?,
-                "CDL3LINESTRIKE" => cdl3linestrike(df, Some(&indicator.nombre))?,
-                "CDL3OUTSIDE" => cdl3outside(df, Some(&indicator.nombre))?,
-                "CDL3STARSINSOUTH" => cdl3starsinsouth(df, Some(&indicator.nombre))?,
-                "CDL3WHITESOLDIERS" => cdl3whitesoldiers(df, Some(&indicator.nombre))?,
-                "CDLABANDONEDBABY" => cdlabandonedbaby(df, Some(&indicator.nombre))?,
-                "CDLADVANCEBLOCK" => cdladvanceblock(df, Some(&indicator.nombre))?,
-                "CDLBELTHOLD" => cdlbelthold(df, Some(&indicator.nombre))?,
-                "CDLBREAKAWAY" => cdlbreakaway(df, Some(&indicator.nombre))?,
-                "CDLCLOSINGMARUBOZU" => cdlclosingmarubuzo(df, Some(&indicator.nombre))?,
-                "CDLCONCEALBABYSWALL" => cdlconcealbabyswall(df, Some(&indicator.nombre))?,
-                "CDLCOUNTERATTACK" => cdlcounterattack(df, Some(&indicator.nombre))?,
-                "CDLDARKCLOUDCOVER" => cdldarkcloudcover(df, Some(&indicator.nombre))?,
-                "CDLDOJI" => cdldoji(df, Some(&indicator.nombre))?,
-                "CDLDOJISTAR" => cdldojistar(df, Some(&indicator.nombre))?,
-                "CDLDRAGONFLYDOJI" => cdldragonflydoji(df, Some(&indicator.nombre))?,
-                "CDLENGULFING" => cdlengulfing(df, Some(&indicator.nombre))?,
-                "CDLEVENINGDOJISTAR" => cdleveningdojistar(df, Some(&indicator.nombre))?,
-                "CDLEVENINGSTAR" => cdleveningstar(df, Some(&indicator.nombre))?,
-                "CDLGAPSIDESIDEWHITE" => cdlgapsidesidewhite(df, Some(&indicator.nombre))?,
-                "CDLGRAVESTONEDOJI" => cdlgravestonedoji(df, Some(&indicator.nombre))?,
-                "CDLHAMMER" => cdlhammer(df, Some(&indicator.nombre))?,
-                "CDLHANGINGMAN" => cdlhangingman(df, Some(&indicator.nombre))?,
-                "CDLHARAMI" => cdlharami(df, Some(&indicator.nombre))?,
-                "CDLHARAMICROSS" => cdlharamicross(df, Some(&indicator.nombre))?,
-                "CDLHIGHWAVE" => cdlhighwave(df, Some(&indicator.nombre))?,
-                "CDLHIKKAKE" => cdlhikkake(df, Some(&indicator.nombre))?,
-                "CDLHIKKAKEMOD" => cdlhikkakemod(df, Some(&indicator.nombre))?,
-                "CDLHOMINGPIGEON" => cdlhomingpigeon(df, Some(&indicator.nombre))?,
-                "CDLIDENTICAL3CROWS" => cdlidentical3crows(df, Some(&indicator.nombre))?,
-                "CDLINNECK" => cdlinneck(df, Some(&indicator.nombre))?,
-                "CDLINVERTEDHAMMER" => cdlinvertedhammer(df, Some(&indicator.nombre))?,
-                "CDLKICKING" => cdlkicking(df, Some(&indicator.nombre))?,
-                "CDLKICKINGBYLENGTH" => cdlkickingbylength(df, Some(&indicator.nombre))?,
-                "CDLLADDERBOTTOM" => cdladderbottom(df, Some(&indicator.nombre))?,
-                "CDLLONGLEGGEDDOJI" => cdllongleggeddoji(df, Some(&indicator.nombre))?,
-                "CDLLONGLINE" => cdllongline(df, Some(&indicator.nombre))?,
-                "CDLMARUBOZU" => cdlmarubozu(df, Some(&indicator.nombre))?,
-                "CDLMATCHINGLOW" => cdlmatchinglow(df, Some(&indicator.nombre))?,
-                "CDLMATHOLD" => cdlmathold(df, Some(&indicator.nombre))?,
+                "CDL2CROWS" => {
+                    self.add_registro(format!(
+                        "Indicador CDL2CROWS agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlupsidegap2crows(df, Some(&indicator.nombre))?
+                }
+                "CDL3BLACKCROWS" => {
+                    self.add_registro(format!(
+                        "Indicador CDL3BLACKCROWS agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdl3blackcrows(df, Some(&indicator.nombre))?
+                }
+                "CDL3INSIDE" => {
+                    self.add_registro(format!(
+                        "Indicador CDL3INSIDE agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdl3inside(df, Some(&indicator.nombre))?
+                }
+                "CDL3LINESTRIKE" => {
+                    self.add_registro(format!(
+                        "Indicador CDL3LINESTRIKE agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdl3linestrike(df, Some(&indicator.nombre))?
+                }
+                "CDL3OUTSIDE" => {
+                    self.add_registro(format!(
+                        "Indicador CDL3OUTSIDE agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdl3outside(df, Some(&indicator.nombre))?
+                }
+                "CDL3STARSINSOUTH" => {
+                    self.add_registro(format!(
+                        "Indicador CDL3STARSINSOUTH agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdl3starsinsouth(df, Some(&indicator.nombre))?
+                }
+                "CDL3WHITESOLDIERS" => {
+                    self.add_registro(format!(
+                        "Indicador CDL3WHITESOLDIERS agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdl3whitesoldiers(df, Some(&indicator.nombre))?
+                }
+                "CDLABANDONEDBABY" => {
+                    self.add_registro(format!(
+                        "Indicador CDLABANDONEDBABY agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlabandonedbaby(df, Some(&indicator.nombre))?
+                }
+                "CDLADVANCEBLOCK" => {
+                    self.add_registro(format!(
+                        "Indicador CDLADVANCEBLOCK agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdladvanceblock(df, Some(&indicator.nombre))?
+                }
+                "CDLBELTHOLD" => {
+                    self.add_registro(format!(
+                        "Indicador CDLBELTHOLD agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlbelthold(df, Some(&indicator.nombre))?
+                }
+                "CDLBREAKAWAY" => {
+                    self.add_registro(format!(
+                        "Indicador CDLBREAKAWAY agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlbreakaway(df, Some(&indicator.nombre))?
+                }
+                "CDLCLOSINGMARUBOZU" => {
+                    self.add_registro(format!(
+                        "Indicador CDLCLOSINGMARUBOZU agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlclosingmarubuzo(df, Some(&indicator.nombre))?
+                }
+                "CDLCONCEALBABYSWALL" => {
+                    self.add_registro(format!(
+                        "Indicador CDLCONCEALBABYSWALL agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlconcealbabyswall(df, Some(&indicator.nombre))?
+                }
+                "CDLCOUNTERATTACK" => {
+                    self.add_registro(format!(
+                        "Indicador CDLCOUNTERATTACK agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlcounterattack(df, Some(&indicator.nombre))?
+                }
+                "CDLDARKCLOUDCOVER" => {
+                    self.add_registro(format!(
+                        "Indicador CDLDARKCLOUDCOVER agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdldarkcloudcover(df, Some(&indicator.nombre))?
+                }
+                "CDLDOJI" => {
+                    self.add_registro(format!("Indicador CDLDOJI agregado: {}", indicator.nombre));
+                    cdldoji(df, Some(&indicator.nombre))?
+                }
+                "CDLDOJISTAR" => {
+                    self.add_registro(format!(
+                        "Indicador CDLDOJISTAR agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdldojistar(df, Some(&indicator.nombre))?
+                }
+                "CDLDRAGONFLYDOJI" => {
+                    self.add_registro(format!(
+                        "Indicador CDLDRAGONFLYDOJI agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdldragonflydoji(df, Some(&indicator.nombre))?
+                }
+                "CDLENGULFING" => {
+                    self.add_registro(format!(
+                        "Indicador CDLENGULFING agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlengulfing(df, Some(&indicator.nombre))?
+                }
+                "CDLEVENINGDOJISTAR" => {
+                    self.add_registro(format!(
+                        "Indicador CDLEVENINGDOJISTAR agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdleveningdojistar(df, Some(&indicator.nombre))?
+                }
+                "CDLEVENINGSTAR" => {
+                    self.add_registro(format!(
+                        "Indicador CDLEVENINGSTAR agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdleveningstar(df, Some(&indicator.nombre))?
+                }
+                "CDLGAPSIDESIDEWHITE" => {
+                    self.add_registro(format!(
+                        "Indicador CDLGAPSIDESIDEWHITE agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlgapsidesidewhite(df, Some(&indicator.nombre))?
+                }
+                "CDLGRAVESTONEDOJI" => {
+                    self.add_registro(format!(
+                        "Indicador CDLGRAVESTONEDOJI agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlgravestonedoji(df, Some(&indicator.nombre))?
+                }
+                "CDLHAMMER" => {
+                    self.add_registro(format!(
+                        "Indicador CDLHAMMER agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlhammer(df, Some(&indicator.nombre))?
+                }
+                "CDLHANGINGMAN" => {
+                    self.add_registro(format!(
+                        "Indicador CDLHANGINGMAN agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlhangingman(df, Some(&indicator.nombre))?
+                }
+                "CDLHARAMI" => {
+                    self.add_registro(format!(
+                        "Indicador CDLHARAMI agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlharami(df, Some(&indicator.nombre))?
+                }
+                "CDLHARAMICROSS" => {
+                    self.add_registro(format!(
+                        "Indicador CDLHARAMICROSS agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlharamicross(df, Some(&indicator.nombre))?
+                }
+                "CDLHIGHWAVE" => {
+                    self.add_registro(format!(
+                        "Indicador CDLHIGHWAVE agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlhighwave(df, Some(&indicator.nombre))?
+                }
+                "CDLHIKKAKE" => {
+                    self.add_registro(format!(
+                        "Indicador CDLHIKKAKE agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlhikkake(df, Some(&indicator.nombre))?
+                }
+                "CDLHIKKAKEMOD" => {
+                    self.add_registro(format!(
+                        "Indicador CDLHIKKAKEMOD agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlhikkakemod(df, Some(&indicator.nombre))?
+                }
+                "CDLHOMINGPIGEON" => {
+                    self.add_registro(format!(
+                        "Indicador CDLHOMINGPIGEON agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlhomingpigeon(df, Some(&indicator.nombre))?
+                }
+                "CDLIDENTICAL3CROWS" => {
+                    self.add_registro(format!(
+                        "Indicador CDLIDENTICAL3CROWS agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlidentical3crows(df, Some(&indicator.nombre))?
+                }
+                "CDLINNECK" => {
+                    self.add_registro(format!(
+                        "Indicador CDLINNECK agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlinneck(df, Some(&indicator.nombre))?
+                }
+                "CDLINVERTEDHAMMER" => {
+                    self.add_registro(format!(
+                        "Indicador CDLINVERTEDHAMMER agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlinvertedhammer(df, Some(&indicator.nombre))?
+                }
+                "CDLKICKING" => {
+                    self.add_registro(format!(
+                        "Indicador CDLKICKING agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlkicking(df, Some(&indicator.nombre))?
+                }
+                "CDLKICKINGBYLENGTH" => {
+                    self.add_registro(format!(
+                        "Indicador CDLKICKINGBYLENGTH agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlkickingbylength(df, Some(&indicator.nombre))?
+                }
+                "CDLLADDERBOTTOM" => {
+                    self.add_registro(format!(
+                        "Indicador CDLLADDERBOTTOM agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdladderbottom(df, Some(&indicator.nombre))?
+                }
+                "CDLLONGLEGGEDDOJI" => {
+                    self.add_registro(format!(
+                        "Indicador CDLLONGLEGGEDDOJI agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdllongleggeddoji(df, Some(&indicator.nombre))?
+                }
+                "CDLLONGLINE" => {
+                    self.add_registro(format!(
+                        "Indicador CDLLONGLINE agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdllongline(df, Some(&indicator.nombre))?
+                }
+                "CDLMARUBOZU" => {
+                    self.add_registro(format!(
+                        "Indicador CDLMARUBOZU agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlmarubozu(df, Some(&indicator.nombre))?
+                }
+                "CDLMATCHINGLOW" => {
+                    self.add_registro(format!(
+                        "Indicador CDLMATCHINGLOW agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlmatchinglow(df, Some(&indicator.nombre))?
+                }
+                "CDLMATHOLD" => {
+                    self.add_registro(format!(
+                        "Indicador CDLMATHOLD agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlmathold(df, Some(&indicator.nombre))?
+                }
                 "CDLMORNINGDOJISTAR" => {
                     let parametros =
                         serde_json::from_value::<MorningDojiStar>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!(
+                        "Indicador CDLMORNINGDOJISTAR agregado: {}",
+                        indicator.nombre
+                    ));
                     cdlmorningdojistar(df, Some(parametros.penetration), Some(&indicator.nombre))?
                 }
                 "CDLMORNINGSTAR" => {
                     let parametros =
                         serde_json::from_value::<MorningStar>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!(
+                        "Indicador CDLMORNINGSTAR agregado: {}",
+                        indicator.nombre
+                    ));
                     cdlmorningstar(df, Some(parametros.penetration), Some(&indicator.nombre))?
                 }
-                "CDLONNECK" => cdlonneck(df, Some(&indicator.nombre))?,
+                "CDLONNECK" => {
+                    self.add_registro(format!(
+                        "Indicador CDLONNECK agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlonneck(df, Some(&indicator.nombre))?
+                }
                 "CDLPIERCING" => {
                     let parametros =
                         serde_json::from_value::<Piercing>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!(
+                        "Indicador CDLPIERCING agregado: {}",
+                        indicator.nombre
+                    ));
                     cdlpiercing(df, Some(parametros.penetration), Some(&indicator.nombre))?
                 }
-                "CDLRICKSHAWMAN" => cdlrickshawman(df, Some(&indicator.nombre))?,
-                "CDLRISEFALL3METHODS" => cdlrisefall3methods(df, Some(&indicator.nombre))?,
-                "CDLSEPARATINGLINES" => cdlseparatinglines(df, Some(&indicator.nombre))?,
-                "CDLSHOOTINGSTAR" => cdlshootingstar(df, Some(&indicator.nombre))?,
-                "CDLSHORTLINE" => cdlshortline(df, Some(&indicator.nombre))?,
-                "CDLSPINNINGTOP" => cdlspinningtop(df, Some(&indicator.nombre))?,
-                "CDLSTALLEDPATTERN" => cdlstalledpattern(df, Some(&indicator.nombre))?,
-                "CDLSTICKSANDWICH" => cdlsticksandwich(df, Some(&indicator.nombre))?,
-                "CDLTAKURI" => cdltakuri(df, Some(&indicator.nombre))?,
-                "CDLTASUKIGAP" => cdltasukigap(df, Some(&indicator.nombre))?,
-                "CDLTHRUSTING" => cdlthrusting(df, Some(&indicator.nombre))?,
-                "CDLTRISTAR" => cdltristar(df, Some(&indicator.nombre))?,
-                "CDLUNIQUE3RIVER" => cdlunique3river(df, Some(&indicator.nombre))?,
-                "CDLUPSIDEGAP2CROWS" => cdlupsidegap2crows(df, Some(&indicator.nombre))?,
-                "CDLXSIDEGAP3METHODS" => cdlxsidegap3methods(df, Some(&indicator.nombre))?,
+                "CDLRICKSHAWMAN" => {
+                    self.add_registro(format!(
+                        "Indicador CDLRICKSHAWMAN agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlrickshawman(df, Some(&indicator.nombre))?
+                }
+                "CDLRISEFALL3METHODS" => {
+                    self.add_registro(format!(
+                        "Indicador CDLRISEFALL3METHODS agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlrisefall3methods(df, Some(&indicator.nombre))?
+                }
+                "CDLSEPARATINGLINES" => {
+                    self.add_registro(format!(
+                        "Indicador CDLSEPARATINGLINES agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlseparatinglines(df, Some(&indicator.nombre))?
+                }
+                "CDLSHOOTINGSTAR" => {
+                    self.add_registro(format!(
+                        "Indicador CDLSHOOTINGSTAR agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlshootingstar(df, Some(&indicator.nombre))?
+                }
+                "CDLSHORTLINE" => {
+                    self.add_registro(format!(
+                        "Indicador CDLSHORTLINE agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlshortline(df, Some(&indicator.nombre))?
+                }
+                "CDLSPINNINGTOP" => {
+                    self.add_registro(format!(
+                        "Indicador CDLSPINNINGTOP agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlspinningtop(df, Some(&indicator.nombre))?
+                }
+                "CDLSTALLEDPATTERN" => {
+                    self.add_registro(format!(
+                        "Indicador CDLSTALLEDPATTERN agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlstalledpattern(df, Some(&indicator.nombre))?
+                }
+                "CDLSTICKSANDWICH" => {
+                    self.add_registro(format!(
+                        "Indicador CDLSTICKSANDWICH agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlsticksandwich(df, Some(&indicator.nombre))?
+                }
+                "CDLTAKURI" => {
+                    self.add_registro(format!(
+                        "Indicador CDLTAKURI agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdltakuri(df, Some(&indicator.nombre))?
+                }
+                "CDLTASUKIGAP" => {
+                    self.add_registro(format!(
+                        "Indicador CDLTASUKIGAP agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdltasukigap(df, Some(&indicator.nombre))?
+                }
+                "CDLTHRUSTING" => {
+                    self.add_registro(format!(
+                        "Indicador CDLTHRUSTING agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlthrusting(df, Some(&indicator.nombre))?
+                }
+                "CDLTRISTAR" => {
+                    self.add_registro(format!(
+                        "Indicador CDLTRISTAR agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdltristar(df, Some(&indicator.nombre))?
+                }
+                "CDLUNIQUE3RIVER" => {
+                    self.add_registro(format!(
+                        "Indicador CDLUNIQUE3RIVER agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlunique3river(df, Some(&indicator.nombre))?
+                }
+                "CDLUPSIDEGAP2CROWS" => {
+                    self.add_registro(format!(
+                        "Indicador CDLUPSIDEGAP2CROWS agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlupsidegap2crows(df, Some(&indicator.nombre))?
+                }
+                "CDLXSIDEGAP3METHODS" => {
+                    self.add_registro(format!(
+                        "Indicador CDLXSIDEGAP3METHODS agregado: {}",
+                        indicator.nombre
+                    ));
+                    cdlxsidegap3methods(df, Some(&indicator.nombre))?
+                }
                 "ADX" => {
                     let params: AdxParams =
                         serde_json::from_value::<AdxParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador ADX agregado: {}", indicator.nombre));
                     adx(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "ADXR" => {
                     let params: AdxrParams =
                         serde_json::from_value::<AdxrParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador ADXR agregado: {}", indicator.nombre));
                     adxr(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "APO" => {
                     let params: ApoParams =
                         serde_json::from_value::<ApoParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador APO agregado: {}", indicator.nombre));
                     apo(
                         df,
                         Some(params.fastperiod),
@@ -366,6 +800,7 @@ impl Backtest {
                     let params: AroonParams =
                         serde_json::from_value::<AroonParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador AROON agregado: {}", indicator.nombre));
                     aroon(
                         df,
                         Some(params.timeperiod),
@@ -377,31 +812,37 @@ impl Backtest {
                     let params: AroonoscParams =
                         serde_json::from_value::<AroonoscParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador AROONOSC agregado: {}", indicator.nombre));
                     aroonosc(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "BOP" => {
                     let params: BopParams =
                         serde_json::from_value::<BopParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador BOP agregado: {}", indicator.nombre));
                     bop(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "CCI" => {
                     let params: CciParams =
                         serde_json::from_value::<CciParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador CCI agregado: {}", indicator.nombre));
                     cci(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "CMO" => {
                     let params: CmoParams =
                         serde_json::from_value::<CmoParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador CMO agregado: {}", indicator.nombre));
                     cmo(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "DX" => {
                     let params: DxParams =
                         serde_json::from_value::<DxParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador DX agregado: {}", indicator.nombre));
                     dx(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "MACD" => {
                     let params: MacdParams =
                         serde_json::from_value::<MacdParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador MACD agregado: {}", indicator.nombre));
                     macd(
                         df,
                         Some(params.timeperiod),
@@ -416,6 +857,7 @@ impl Backtest {
                     let params: MacdextParams =
                         serde_json::from_value::<MacdextParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador MACDEXT agregado: {}", indicator.nombre));
                     macdext(
                         df,
                         Some(params.fastperiod),
@@ -433,6 +875,7 @@ impl Backtest {
                     let params: MacdfixParams =
                         serde_json::from_value::<MacdfixParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador MACDFIX agregado: {}", indicator.nombre));
                     macdfix(
                         df,
                         Some(params.signalperiod),
@@ -444,40 +887,47 @@ impl Backtest {
                 "MFI" => {
                     let params: MfiParams =
                         serde_json::from_value::<MfiParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador MFI agregado: {}", indicator.nombre));
                     mfi(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "MINUS_DI" => {
                     let params: MinusDiParams =
                         serde_json::from_value::<MinusDiParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador MINUS_DI agregado: {}", indicator.nombre));
                     minus_di(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "MINUS_DM" => {
                     let params: MinusDmParams =
                         serde_json::from_value::<MinusDmParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador MINUS_DM agregado: {}", indicator.nombre));
                     minus_dm(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "MOM" => {
                     let params: MomParams =
                         serde_json::from_value::<MomParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador MOM agregado: {}", indicator.nombre));
                     mom(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "PLUS_DI" => {
                     let params: PlusDiParams =
                         serde_json::from_value::<PlusDiParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador PLUS_DI agregado: {}", indicator.nombre));
                     plus_di(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "PLUS_DM" => {
                     let params: PlusDmParams =
                         serde_json::from_value::<PlusDmParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador PLUS_DM agregado: {}", indicator.nombre));
                     plus_dm(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "PPO" => {
                     let params: PpoParams =
                         serde_json::from_value::<PpoParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador PPO agregado: {}", indicator.nombre));
                     ppo(
                         df,
                         Some(params.fastperiod),
@@ -488,33 +938,39 @@ impl Backtest {
                 "ROC" => {
                     let params: RocParams =
                         serde_json::from_value::<RocParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador ROC agregado: {}", indicator.nombre));
                     roc(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "ROCP" => {
                     let params: RocpParams =
                         serde_json::from_value::<RocpParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador ROCP agregado: {}", indicator.nombre));
                     rocp(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "ROCR" => {
                     let params: RocrParams =
                         serde_json::from_value::<RocrParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador ROCR agregado: {}", indicator.nombre));
                     rocr(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "ROCR100" => {
                     let params: Roc100Params =
                         serde_json::from_value::<Roc100Params>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador ROCR100 agregado: {}", indicator.nombre));
                     rocr100(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "RSI" => {
                     let params: RsiParams =
                         serde_json::from_value::<RsiParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador RSI agregado: {}", indicator.nombre));
                     rsi(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "STOCH" => {
                     let params: StochParams =
                         serde_json::from_value::<StochParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador STOCH agregado: {}", indicator.nombre));
                     stoch(
                         df,
                         Some(params.fastk_period),
@@ -529,6 +985,7 @@ impl Backtest {
                     let params: StochfParams =
                         serde_json::from_value::<StochfParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador STOCHF agregado: {}", indicator.nombre));
                     stochf(
                         df,
                         Some(params.fastk_period),
@@ -542,6 +999,7 @@ impl Backtest {
                     let params: StochRsiParams =
                         serde_json::from_value::<StochRsiParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador STOCHRSI agregado: {}", indicator.nombre));
                     stochrsi(
                         df,
                         Some(params.timeperiod),
@@ -555,12 +1013,14 @@ impl Backtest {
                 "TRIX" => {
                     let params: TrixParams =
                         serde_json::from_value::<TrixParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador TRIX agregado: {}", indicator.nombre));
                     trix(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "ULTOSC" => {
                     let params: UltoscParams =
                         serde_json::from_value::<UltoscParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador ULTOSC agregado: {}", indicator.nombre));
                     ultosc(
                         df,
                         Some(params.timeperiod1),
@@ -573,15 +1033,29 @@ impl Backtest {
                     let params: WillrParams =
                         serde_json::from_value::<WillrParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador WILLR agregado: {}", indicator.nombre));
                     willr(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
-                "AVGPRICE" => avgprice(df, Some(&indicator.nombre))?,
-                "MEDPRICE" => medprice(df, Some(&indicator.nombre))?,
-                "TYPPRICE" => typprice(df, Some(&indicator.nombre))?,
-                "WCLPRICE" => wclprice(df, Some(&indicator.nombre))?,
+                "AVGPRICE" => {
+                    self.add_registro(format!("Indicador AVGPRICE agregado: {}", indicator.nombre));
+                    avgprice(df, Some(&indicator.nombre))?
+                }
+                "MEDPRICE" => {
+                    self.add_registro(format!("Indicador MEDPRICE agregado: {}", indicator.nombre));
+                    medprice(df, Some(&indicator.nombre))?
+                }
+                "TYPPRICE" => {
+                    self.add_registro(format!("Indicador TYPPRICE agregado: {}", indicator.nombre));
+                    typprice(df, Some(&indicator.nombre))?
+                }
+                "WCLPRICE" => {
+                    self.add_registro(format!("Indicador WCLPRICE agregado: {}", indicator.nombre));
+                    wclprice(df, Some(&indicator.nombre))?
+                }
                 "BETA" => {
                     let params: BetaParams =
                         serde_json::from_value::<BetaParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador BETA agregado: {}", indicator.nombre));
                     beta(
                         df,
                         &params.col_real0,
@@ -594,6 +1068,7 @@ impl Backtest {
                     let params: CorrelParams =
                         serde_json::from_value::<CorrelParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador CORREL agregado: {}", indicator.nombre));
                     correl(
                         df,
                         &params.col_real0,
@@ -606,6 +1081,10 @@ impl Backtest {
                     let params: LinearRegParams =
                         serde_json::from_value::<LinearRegParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!(
+                        "Indicador LINEARREG agregado: {}",
+                        indicator.nombre
+                    ));
                     linearreg(
                         df,
                         &params.col_real,
@@ -619,6 +1098,10 @@ impl Backtest {
                             indicator.parametros.clone(),
                         )
                         .unwrap();
+                    self.add_registro(format!(
+                        "Indicador LINEARREG_ANGLE agregado: {}",
+                        indicator.nombre
+                    ));
                     linearreg_angle(
                         df,
                         &params.col_real,
@@ -632,6 +1115,10 @@ impl Backtest {
                             indicator.parametros.clone(),
                         )
                         .unwrap();
+                    self.add_registro(format!(
+                        "Indicador LINEARREG_INTERCEPT agregado: {}",
+                        indicator.nombre
+                    ));
                     linearreg_intercept(
                         df,
                         &params.col_real,
@@ -645,6 +1132,10 @@ impl Backtest {
                             indicator.parametros.clone(),
                         )
                         .unwrap();
+                    self.add_registro(format!(
+                        "Indicador LINEARREG_SLOPE agregado: {}",
+                        indicator.nombre
+                    ));
                     linearreg_slope(
                         df,
                         &params.col_real,
@@ -656,6 +1147,7 @@ impl Backtest {
                     let params: StddevParams =
                         serde_json::from_value::<StddevParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador STDDEV agregado: {}", indicator.nombre));
                     stddev(
                         df,
                         &params.col_real,
@@ -667,6 +1159,7 @@ impl Backtest {
                 "TSF" => {
                     let params: TsfParams =
                         serde_json::from_value::<TsfParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador TSF agregado: {}", indicator.nombre));
                     tsf(
                         df,
                         &params.col_real,
@@ -677,6 +1170,7 @@ impl Backtest {
                 "VAR" => {
                     let params: VarParams =
                         serde_json::from_value::<VarParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador VAR agregado: {}", indicator.nombre));
                     var(
                         df,
                         &params.col_real,
@@ -685,22 +1179,31 @@ impl Backtest {
                         Some(&indicator.nombre),
                     )?
                 }
-                "TRANGE" => trange(df, Some(&indicator.nombre))?,
+                "TRANGE" => {
+                    self.add_registro(format!("Indicador TRANGE agregado: {}", indicator.nombre));
+                    trange(df, Some(&indicator.nombre))?
+                }
                 "ATR" => {
                     let params: AtrParams =
                         serde_json::from_value::<AtrParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador ATR agregado: {}", indicator.nombre));
                     atr(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
                 "NATR" => {
                     let params: NatrParams =
                         serde_json::from_value::<NatrParams>(indicator.parametros.clone()).unwrap();
+                    self.add_registro(format!("Indicador NATR agregado: {}", indicator.nombre));
                     natr(df, Some(params.timeperiod), Some(&indicator.nombre))?
                 }
-                "AD" => ad(df, Some(&indicator.nombre))?,
+                "AD" => {
+                    self.add_registro(format!("Indicador AD agregado: {}", indicator.nombre));
+                    ad(df, Some(&indicator.nombre))?
+                }
                 "ADOSC" => {
                     let params: AdoscParams =
                         serde_json::from_value::<AdoscParams>(indicator.parametros.clone())
                             .unwrap();
+                    self.add_registro(format!("Indicador ADOSC agregado: {}", indicator.nombre));
                     adosc(
                         df,
                         Some(params.fastperiod),
@@ -708,7 +1211,10 @@ impl Backtest {
                         Some(&indicator.nombre),
                     )?
                 }
-                "OBV" => obv(df, Some(&indicator.nombre))?,
+                "OBV" => {
+                    self.add_registro(format!("Indicador OBV agregado: {}", indicator.nombre));
+                    obv(df, Some(&indicator.nombre))?
+                }
                 _ => df,
             }
         }
@@ -723,15 +1229,29 @@ impl Backtest {
     ///
     /// # Retorna
     /// True si se puede operar en la dirección indicada, false en caso contrario.
-    fn verificar_direccion(&self, tipo: EntryDirection) -> bool {
+    fn verificar_direccion(&mut self, tipo: EntryDirection) -> bool {
         match tipo {
             EntryDirection::Buy => {
-                self.estrategia.opciones.trading_direccion == TradingDirection::Long
+                self.add_registro(format!("Verificando: Buy"));
+                if self.estrategia.opciones.trading_direccion == TradingDirection::Long
                     || self.estrategia.opciones.trading_direccion == TradingDirection::Both
+                {
+                    self.add_registro(format!("Direccion de Buy: OK"));
+                    true
+                } else {
+                    false
+                }
             }
             EntryDirection::Sell => {
-                self.estrategia.opciones.trading_direccion == TradingDirection::Short
+                self.add_registro(format!("Verificando: Sell"));
+                if self.estrategia.opciones.trading_direccion == TradingDirection::Short
                     || self.estrategia.opciones.trading_direccion == TradingDirection::Both
+                {
+                    self.add_registro(format!("Direccion de Sell: OK"));
+                    true
+                } else {
+                    false
+                }
             }
         }
     }
@@ -745,8 +1265,14 @@ impl Backtest {
     ///
     /// # Retorna
     /// True si se puede operar en la dirección indicada, false en caso contrario.
-    fn test_conditions(&self, df: DataFrame, accion: StrategyAction, i: usize) -> bool {
+    fn test_conditions(&mut self, df: DataFrame, accion: StrategyAction, i: usize) -> bool {
+        self.add_registro(format!(
+            "Verificando condiciones de la estrategia: {}",
+            accion.id
+        ));
+
         let mut condiciones_map: HashMap<String, bool> = HashMap::new();
+        let mut mensaje = String::new();
         self.estrategia
             .condiciones
             .iter()
@@ -771,8 +1297,20 @@ impl Backtest {
                     };
 
                     condiciones_map.insert(condicion.logica.clone(), resultado);
+                    if !resultado {
+                        mensaje = format!("La condición {} no se cumple", condicion.logica);
+                    } else {
+                        mensaje = format!("La condición {} se cumple", condicion.logica);
+                    }
+                } else {
+                    mensaje = format!(
+                        "El indice {} del shift es incorrecto",
+                        (i as i32 - condicion.shift_b)
+                    );
                 }
             });
+
+        self.add_registro(mensaje);
 
         let mut all_true = true;
         let mut key_anterior = "none".to_string();
@@ -797,6 +1335,12 @@ impl Backtest {
             }
         }
 
+        if !all_true {
+            self.add_registro(format!("No se cumplen todas las condiciones"));
+        } else {
+            self.add_registro(format!("Todas las condiciones se cumplen"));
+        }
+
         all_true
     }
 
@@ -807,12 +1351,17 @@ impl Backtest {
     ///
     /// # Retorna
     /// True si se puede operar en la dirección indicada, false en caso contrario.
-    fn entry_options(&self, open_trades: &Vec<Trade>) -> bool {
+    fn entry_options(&mut self, open_trades: &Vec<Trade>) -> bool {
         let entry_options: bool;
+
+        self.add_registro(format!("Comprobando opciones de entrada"));
+
         if !self.estrategia.opciones.multiples_tardes && !open_trades.is_empty() {
             entry_options = false;
+            self.add_registro(format!("No se puede operar con mas de un trade"));
         } else {
             entry_options = true;
+            self.add_registro(format!("Se puede operar con mas de un trade"));
         }
         entry_options
     }
@@ -826,60 +1375,142 @@ impl Backtest {
     ///
     /// # Retorna
     /// El límite de la acción en el índice dado.
-    fn get_limit(&self, df: DataFrame, params: String, i: usize) -> Result<f64, serde_json::Error> {
-        let params: LimitParams = serde_json::from_str(&params).unwrap();
+    fn get_limit(
+        &mut self,
+        df: DataFrame,
+        params: String,
+        i: usize,
+    ) -> Result<f64, serde_json::Error> {
+        self.add_registro("Obteniendo limite con la función get_limit".to_string());
 
-        let valor: f64 = df
-            .column(&params.nombre_col)
-            .unwrap()
-            .f64()
-            .unwrap()
-            .get(i - params.shift)
-            .unwrap_or(0.0);
+        let params: LimitParams = serde_json::from_str(&params).unwrap();
+        self.add_registro(format!("Parametros de la limitada {:?}", params));
+
+        let mut valor: f64 = 0.0;
+
+        if (i as i32 - params.shift.clone() as i32) >= 0 {
+            valor = df
+                .column(&params.nombre_col)
+                .unwrap()
+                .f64()
+                .unwrap()
+                .get(i - params.shift)
+                .unwrap_or(0.0);
+        }
 
         let limit: f64 = match params.tipo.as_str() {
             "pip" => {
                 if params.direccion == EntryDirection::Buy {
+                    self.add_registro(format!(
+                        "Obteniendo limite de compra por pip: {}",
+                        valor + params.valor
+                    ));
                     valor + params.valor
                 } else if params.direccion == EntryDirection::Sell {
-                    valor - params.valor
+                    if valor - params.valor >= 0.00000 {
+                        self.add_registro(format!(
+                            "Obteniendo limite de venta por pip: {}",
+                            valor - params.valor
+                        ));
+                        valor - params.valor
+                    } else {
+                        self.add_registro(format!("Limite por pip no valido"));
+                        0.0
+                    }
                 } else {
+                    self.add_registro(format!("Limite por pip no valido"));
                     0.0
                 }
             }
             "tick" => {
                 if params.direccion == EntryDirection::Buy {
+                    self.add_registro(format!(
+                        "Obteniendo limite de compra por tick: {}",
+                        valor + params.valor
+                    ));
                     valor + params.valor
                 } else if params.direccion == EntryDirection::Sell {
-                    valor - params.valor
+                    if valor - params.valor >= 0.00000 {
+                        self.add_registro(format!(
+                            "Obteniendo limite de venta por tick: {}",
+                            valor - params.valor
+                        ));
+                        valor - params.valor
+                    } else {
+                        self.add_registro(format!("Limite por tick no valido"));
+                        0.0
+                    }
                 } else {
+                    self.add_registro(format!("Limite por tick no valido"));
                     0.0
                 }
             }
             "punto" => {
                 if params.direccion == EntryDirection::Buy {
+                    self.add_registro(format!(
+                        "Obteniendo limite de compra por punto: {}",
+                        valor + params.valor
+                    ));
                     valor + params.valor
                 } else if params.direccion == EntryDirection::Sell {
-                    valor - params.valor
+                    if valor - params.valor >= 0.00000 {
+                        self.add_registro(format!(
+                            "Obteniendo limite de venta por punto: {}",
+                            valor - params.valor
+                        ));
+                        valor - params.valor
+                    } else {
+                        self.add_registro(format!("Limite por punto no valido"));
+                        0.0
+                    }
                 } else {
+                    self.add_registro(format!("Limite por punto no valido"));
                     0.0
                 }
             }
             "porcentaje" => {
                 if params.direccion == EntryDirection::Buy {
+                    self.add_registro(format!(
+                        "Obteniendo limite de compra por porcentaje: {}",
+                        valor + (valor * params.valor)
+                    ));
                     valor + (valor * params.valor)
                 } else if params.direccion == EntryDirection::Sell {
-                    valor - (valor * params.valor)
+                    if valor - (valor * params.valor) >= 0.00000 {
+                        self.add_registro(format!(
+                            "Obteniendo limite de venta por porcentaje: {}",
+                            valor - (valor * params.valor)
+                        ));
+                        valor - (valor * params.valor)
+                    } else {
+                        self.add_registro(format!("Limite por porcentaje no valido"));
+                        0.0
+                    }
                 } else {
+                    self.add_registro(format!("Limite por porcentaje no valido"));
                     0.0
                 }
             }
             "atr" => {
                 if params.direccion == EntryDirection::Buy {
+                    self.add_registro(format!(
+                        "Obteniendo limite de compra por atr: {}",
+                        valor + params.valor
+                    ));
                     valor + params.valor
                 } else if params.direccion == EntryDirection::Sell {
-                    valor - params.valor
+                    if valor - params.valor >= 0.00000 {
+                        self.add_registro(format!(
+                            "Obteniendo limite de venta por atr: {}",
+                            valor - params.valor
+                        ));
+                        valor - params.valor
+                    } else {
+                        self.add_registro(format!("Limite por atr no valido"));
+                        0.0
+                    }
                 } else {
+                    self.add_registro(format!("Limite por atr no valido"));
                     0.0
                 }
             }
@@ -899,17 +1530,20 @@ impl Backtest {
     /// # Returns
     ///
     /// El valor del stop loss.
-    fn get_stoploss(&self, df: DataFrame, i: usize, direccion: EntryDirection) -> f64 {
+    fn get_stoploss(&mut self, df: DataFrame, i: usize, direccion: EntryDirection) -> f64 {
+        self.add_registro(format!("Obteniendo stop loss"));
+
         let params = &self
             .estrategia
             .opciones
             .parametros_stoploss
             .clone()
             .unwrap();
+        self.add_registro(format!("Obteniendo stop loss para tipo: {}", params.tipo));
 
         let mut valor: f64 = 0.0;
 
-        if (i as i32 - params.shift.clone() as i32) > 0 {
+        if (i as i32 - params.shift.clone() as i32) >= 0 {
             valor = df
                 .column(&params.nombre_col)
                 .unwrap()
@@ -922,46 +1556,116 @@ impl Backtest {
         let sl: f64 = match params.tipo.as_str() {
             "pip" => {
                 if direccion == EntryDirection::Buy {
-                    valor + params.valor
+                    if valor - params.valor >= 0.00000 {
+                        self.add_registro(format!(
+                            "Obteniendo stop loss por pip: {}",
+                            valor - params.valor
+                        ));
+                        valor - params.valor
+                    } else {
+                        self.add_registro(format!("stop loss por pip no valido"));
+                        0.0
+                    }
                 } else if direccion == EntryDirection::Sell {
-                    valor - params.valor
+                    self.add_registro(format!(
+                        "Obteniendo stop loss por pip: {}",
+                        valor + params.valor
+                    ));
+                    valor + params.valor
                 } else {
+                    self.add_registro(format!("stop loss por pip no valido"));
                     0.0
                 }
             }
             "tick" => {
                 if direccion == EntryDirection::Buy {
-                    valor + params.valor
+                    if valor - params.valor >= 0.00000 {
+                        self.add_registro(format!(
+                            "Obteniendo stop loss por tick: {}",
+                            valor - params.valor
+                        ));
+                        valor - params.valor
+                    } else {
+                        self.add_registro(format!("stop loss por tick no valido"));
+                        0.0
+                    }
                 } else if direccion == EntryDirection::Sell {
-                    valor - params.valor
+                    self.add_registro(format!(
+                        "Obteniendo stop loss por tick: {}",
+                        valor + params.valor
+                    ));
+                    valor + params.valor
                 } else {
+                    self.add_registro(format!("stop loss por tick no valido"));
                     0.0
                 }
             }
             "punto" => {
                 if direccion == EntryDirection::Buy {
-                    valor + params.valor
+                    if valor - params.valor >= 0.00000 {
+                        self.add_registro(format!(
+                            "Obteniendo stop loss por punto: {}",
+                            valor - params.valor
+                        ));
+                        valor - params.valor
+                    } else {
+                        self.add_registro(format!("stop loss por punto no valido"));
+                        0.0
+                    }
                 } else if direccion == EntryDirection::Sell {
-                    valor - params.valor
+                    self.add_registro(format!(
+                        "Obteniendo stop loss por punto: {}",
+                        valor + params.valor
+                    ));
+                    valor + params.valor
                 } else {
+                    self.add_registro(format!("stop loss por punto no valido"));
                     0.0
                 }
             }
             "porcentaje" => {
                 if direccion == EntryDirection::Buy {
-                    valor + (valor * params.valor)
+                    if valor - (valor * params.valor) >= 0.00000 {
+                        self.add_registro(format!(
+                            "Obteniendo stop loss por porcentaje: {}",
+                            valor - (valor * params.valor)
+                        ));
+                        valor - (valor * params.valor)
+                    } else {
+                        self.add_registro(format!("stop loss por porcentaje no valido"));
+                        0.0
+                    }
                 } else if direccion == EntryDirection::Sell {
-                    valor - (valor * params.valor)
+                    self.add_registro(format!(
+                        "Obteniendo stop loss por porcentaje: {}",
+                        valor + (valor * params.valor)
+                    ));
+                    valor + (valor * params.valor)
                 } else {
+                    self.add_registro(format!("stop loss por porcentaje no valido"));
                     0.0
                 }
             }
             "atr" => {
                 if direccion == EntryDirection::Buy {
-                    valor + params.valor
+                    if valor - params.valor >= 0.00000 {
+                        self.add_registro(format!(
+                            "Obteniendo stop loss por atr: {}",
+                            valor - params.valor
+                        ));
+                        valor - params.valor
+                    } else {
+                        self.add_registro(format!("stop loss por atr no valido"));
+                        0.0
+                    }
                 } else if direccion == EntryDirection::Sell {
-                    valor - params.valor
+                    self.add_registro(format!(
+                        "Obteniendo stop loss por atr: {}",
+                        valor + params.valor
+                    ));
+                    valor + params.valor
                 } else {
+                    self.add_registro(format!("stop loss por atr no valido"));
                     0.0
                 }
             }
@@ -981,13 +1685,20 @@ impl Backtest {
     /// # Returns
     ///
     /// El valor del take profit.
-    fn get_takeprofit(&self, df: DataFrame, i: usize, direccion: EntryDirection) -> f64 {
+    fn get_takeprofit(&mut self, df: DataFrame, i: usize, direccion: EntryDirection) -> f64 {
+        self.add_registro(format!("Obteniendo take profit"));
+
         let params = &self
             .estrategia
             .opciones
             .parametros_takeprofit
             .clone()
             .unwrap();
+
+        self.add_registro(format!(
+            "Obteniendo los parametros de take profit: {:?}",
+            params
+        ));
 
         let mut valor: f64 = 0.0;
 
@@ -1004,46 +1715,116 @@ impl Backtest {
         let tp: f64 = match params.tipo.as_str() {
             "pip" => {
                 if direccion == EntryDirection::Buy {
+                    self.add_registro(format!(
+                        "Obteniendo limite de compra por pip: {}",
+                        valor + params.valor
+                    ));
                     valor + params.valor
                 } else if direccion == EntryDirection::Sell {
-                    valor - params.valor
+                    if valor - params.valor >= 0.00000 {
+                        self.add_registro(format!(
+                            "Obteniendo limite de venta por pip: {}",
+                            valor - params.valor
+                        ));
+                        valor - params.valor
+                    } else {
+                        self.add_registro(format!("limite de venta por pip no valido"));
+                        0.0
+                    }
                 } else {
+                    self.add_registro(format!("limite de venta por pip no valido"));
                     0.0
                 }
             }
             "tick" => {
                 if direccion == EntryDirection::Buy {
+                    self.add_registro(format!(
+                        "Obteniendo limite de compra por tick: {}",
+                        valor + params.valor
+                    ));
                     valor + params.valor
                 } else if direccion == EntryDirection::Sell {
-                    valor - params.valor
+                    if valor - params.valor >= 0.00000 {
+                        self.add_registro(format!(
+                            "Obteniendo limite de venta por tick: {}",
+                            valor - params.valor
+                        ));
+                        valor - params.valor
+                    } else {
+                        self.add_registro(format!("limite de venta por tick no valido"));
+                        0.0
+                    }
                 } else {
+                    self.add_registro(format!("limite de venta por tick no valido"));
                     0.0
                 }
             }
             "punto" => {
                 if direccion == EntryDirection::Buy {
+                    self.add_registro(format!(
+                        "Obteniendo limite de compra por punto: {}",
+                        valor + params.valor
+                    ));
                     valor + params.valor
                 } else if direccion == EntryDirection::Sell {
-                    valor - params.valor
+                    if valor - params.valor >= 0.00000 {
+                        self.add_registro(format!(
+                            "Obteniendo limite de venta por punto: {}",
+                            valor - params.valor
+                        ));
+                        valor - params.valor
+                    } else {
+                        self.add_registro(format!("limite de venta por punto no valido"));
+                        0.0
+                    }
                 } else {
+                    self.add_registro(format!("limite de venta por punto no valido"));
                     0.0
                 }
             }
             "porcentaje" => {
                 if direccion == EntryDirection::Buy {
+                    self.add_registro(format!(
+                        "Obteniendo limite de compra por porcentaje: {}",
+                        valor + (valor * params.valor)
+                    ));
                     valor + (valor * params.valor)
                 } else if direccion == EntryDirection::Sell {
-                    valor - (valor * params.valor)
+                    if valor - (valor * params.valor) >= 0.00000 {
+                        self.add_registro(format!(
+                            "Obteniendo limite de venta por porcentaje: {}",
+                            valor - (valor * params.valor)
+                        ));
+                        valor - (valor * params.valor)
+                    } else {
+                        self.add_registro(format!("limite de venta por porcentaje no valido"));
+                        0.0
+                    }
                 } else {
+                    self.add_registro(format!("limite de venta por porcentaje no valido"));
                     0.0
                 }
             }
             "atr" => {
                 if direccion == EntryDirection::Buy {
+                    self.add_registro(format!(
+                        "Obteniendo limite de compra por atr: {}",
+                        valor + params.valor
+                    ));
                     valor + params.valor
                 } else if direccion == EntryDirection::Sell {
-                    valor - params.valor
+                    if valor - params.valor >= 0.00000 {
+                        self.add_registro(format!(
+                            "Obteniendo limite de venta por atr: {}",
+                            valor - params.valor
+                        ));
+                        valor - params.valor
+                    } else {
+                        self.add_registro(format!("limite de venta por atr no valido"));
+                        0.0
+                    }
                 } else {
+                    self.add_registro(format!("limite de atr no valido"));
                     0.0
                 }
             }
@@ -1066,7 +1847,7 @@ impl Backtest {
     /// # Retorna
     /// El trade ejecutado, si se pudo realizar.
     async fn ejecutar_entry(
-        &self,
+        &mut self,
         timestamp: i64,
         symbol: SymbolInfoCFD,
         signal: EntryDirection,
@@ -1074,6 +1855,8 @@ impl Backtest {
         stoploss: Option<f64>,
         takeprofit: Option<f64>,
     ) -> Option<Trade> {
+        self.add_registro(format!("Ejecutando entry: timestamp={} symbol={} signal={:?} precio_entrada={} stoploss={:?} takeprofit={:?}", timestamp, symbol.name.clone(), signal, precio_entrada, stoploss, takeprofit));
+
         let mut trade: Trade = Trade::new(self.id.clone(), symbol.clone()).await;
 
         let sl = stoploss.unwrap_or(0.0);
@@ -1085,7 +1868,7 @@ impl Backtest {
         match signal {
             EntryDirection::Buy => {
                 trade.buy(
-                    t0,
+                    t0.clone(),
                     precio_entrada,
                     self.gestion_strategy.clone(),
                     self.parametros_gestion.clone(),
@@ -1093,12 +1876,15 @@ impl Backtest {
                     Some(tp),
                     Some(sl),
                 );
-
+                self.add_registro(format!(
+                    "Trade buy ejecutado: t0={} precio_entrada={} tp={} sl={}",
+                    t0, precio_entrada, tp, sl
+                ));
                 return Some(trade);
             }
             EntryDirection::Sell => {
                 trade.sell(
-                    t0,
+                    t0.clone(),
                     precio_entrada,
                     self.gestion_strategy.clone(),
                     self.parametros_gestion.clone(),
@@ -1106,7 +1892,10 @@ impl Backtest {
                     Some(tp),
                     Some(sl),
                 );
-
+                self.add_registro(format!(
+                    "Trade sell ejecutado: t0={} precio_entrada={} tp={} sl={}",
+                    t0, precio_entrada, tp, sl
+                ));
                 return Some(trade);
             }
         }
@@ -1127,7 +1916,7 @@ impl Backtest {
     ///
     /// `true` si se da la condición para activar el Breakevent, `false` en caso contrario
     fn colocar_be(
-        &self,
+        &mut self,
         tipo: EntryDirection,
         unidad: BeTipo,
         symbol: SymbolInfoCFD,
@@ -1180,6 +1969,7 @@ impl Backtest {
         };
 
         if resultado >= valor {
+            self.add_registro(format!("Se va a colocar BE en precio={}", resultado));
             true
         } else {
             false
@@ -1199,7 +1989,7 @@ impl Backtest {
     ///
     /// El BE+ calculado como un valor f64.
     fn calcular_be_plus(
-        &self,
+        &mut self,
         unidad: BeTipo,
         symbol: SymbolInfoCFD,
         valor: f64,
@@ -1243,7 +2033,7 @@ impl Backtest {
             },
             _ => 0.0,
         };
-
+        self.add_registro(format!("Se va a colocar BE+ en precio={}", resultado));
         resultado
     }
 
@@ -1262,7 +2052,7 @@ impl Backtest {
     ///
     /// El valor del TLS calculado.
     fn calcular_tls(
-        &self,
+        &mut self,
         tipo: EntryDirection,
         symbol: SymbolInfoCFD,
         parametros: TlParams,
@@ -1270,10 +2060,15 @@ impl Backtest {
         precio_actual: f64,
         precio_anterior: f64,
     ) -> f64 {
+        self.add_registro("Calculando TLS...".to_string());
+
         let resultado: f64 = match parametros.tipo {
             TlTipo::Pip => match tipo {
                 EntryDirection::Buy => {
+                    self.add_registro("Calculando TLS en pips para Buy".to_string());
+
                     let diff = precio_actual - precio_anterior;
+                    self.add_registro(format!("Diferencia: {}", diff));
 
                     if diff > 0.0 {
                         let pips = diff / parametros.valor;
@@ -1294,7 +2089,9 @@ impl Backtest {
                     }
                 }
                 EntryDirection::Sell => {
+                    self.add_registro("Calculando TLS en pips para Sell".to_string());
                     let diff = precio_anterior - precio_actual;
+                    self.add_registro(format!("Diferencia: {}", diff));
 
                     if diff > 0.0 {
                         let pips = diff / parametros.valor;
@@ -1317,7 +2114,9 @@ impl Backtest {
             },
             TlTipo::Tick => match tipo {
                 EntryDirection::Buy => {
+                    self.add_registro("Calculando TLS en ticks para Buy".to_string());
                     let diff = precio_actual - precio_anterior;
+                    self.add_registro(format!("Diferencia: {}", diff));
 
                     if diff > 0.0 {
                         let ticks = diff / parametros.valor;
@@ -1338,7 +2137,9 @@ impl Backtest {
                     }
                 }
                 EntryDirection::Sell => {
+                    self.add_registro("Calculando TLS en ticks para Sell".to_string());
                     let diff = precio_anterior - precio_actual;
+                    self.add_registro(format!("Diferencia: {}", diff));
 
                     if diff > 0.0 {
                         let ticks = diff / parametros.valor;
@@ -1361,7 +2162,9 @@ impl Backtest {
             },
             TlTipo::Punto => match tipo {
                 EntryDirection::Buy => {
+                    self.add_registro("Calculando TLS en puntos para Buy".to_string());
                     let diff = precio_actual - precio_anterior;
+                    self.add_registro(format!("Diferencia: {}", diff));
 
                     if diff > 0.0 {
                         let punto = diff / parametros.valor;
@@ -1382,7 +2185,9 @@ impl Backtest {
                     }
                 }
                 EntryDirection::Sell => {
+                    self.add_registro("Calculando TLS en puntos para Sell".to_string());
                     let diff = precio_anterior - precio_actual;
+                    self.add_registro(format!("Diferencia: {}", diff));
 
                     if diff > 0.0 {
                         let punto = diff / parametros.valor;
@@ -1406,6 +2211,8 @@ impl Backtest {
             _ => 0.0,
         };
 
+        self.add_registro(format!("Resultado del calculo de TLS: {}", resultado));
+
         resultado
     }
 
@@ -1425,7 +2232,7 @@ impl Backtest {
     ///
     /// `true` si el TSL se activa, `false` en caso contrario.
     fn activar_tsl(
-        &self,
+        &mut self,
         data: DataFrame,
         i: usize,
         tipo: EntryDirection,
@@ -1434,6 +2241,7 @@ impl Backtest {
         precio_entrada: f64,
         precio_actual: f64,
     ) -> bool {
+        self.add_registro("Activando TSL".to_string());
         let diferencia = match tipo {
             EntryDirection::Buy => precio_actual - precio_entrada,
             EntryDirection::Sell => precio_entrada - precio_actual,
@@ -1626,11 +2434,14 @@ impl Backtest {
         };
 
         if resultado >= parametros.activacion_valor && !indicador {
+            self.add_registro("TSL activado".to_string());
             true
         } else {
             if indicador {
+                self.add_registro("TSL activado".to_string());
                 true
             } else {
+                self.add_registro("TSL desactivado".to_string());
                 false
             }
         }
@@ -1663,6 +2474,7 @@ impl Backtest {
         // df.column("close").unwrap().get(i).unwrap().try_extract::<f64>().unwrap();
         for i in 0..df.height() {
             if !buy_limits.is_empty() {
+                self.add_registro(format!("Recorriendo los buy limits..."));
                 let mut indices: Vec<usize> = Vec::new();
                 let low: f64 = df
                     .column("low")
@@ -1700,6 +2512,10 @@ impl Backtest {
                         .await;
 
                     if let Some(trade) = trade {
+                        self.add_registro(format!(
+                            "Buy limit activado en índice: {}. Trade ejecutado {:?}.",
+                            idx, &trade
+                        ));
                         open_trades.push(trade);
                     }
 
@@ -1707,11 +2523,13 @@ impl Backtest {
                 }
 
                 for idx in indices.iter().rev() {
+                    self.add_registro(format!("Buy limit eliminado en índice: {}.", *idx));
                     buy_limits.remove(*idx);
                 }
             }
 
             if !buy_stops.is_empty() {
+                self.add_registro(format!("Recorriendo los buy stops..."));
                 let mut indices: Vec<usize> = Vec::new();
                 let high: f64 = df
                     .column("high")
@@ -1749,6 +2567,10 @@ impl Backtest {
                         .await;
 
                     if let Some(trade) = trade {
+                        self.add_registro(format!(
+                            "Buy stop activado en índice: {}. Trade ejecutado {:?}.",
+                            idx, &trade
+                        ));
                         open_trades.push(trade);
                     }
 
@@ -1756,11 +2578,13 @@ impl Backtest {
                 }
 
                 for idx in indices.iter().rev() {
+                    self.add_registro(format!("Buy stop eliminado en índice: {}.", *idx));
                     buy_stops.remove(*idx);
                 }
             }
 
             if !sell_limits.is_empty() {
+                self.add_registro(format!("Recorriendo los sell limits..."));
                 let mut indices: Vec<usize> = Vec::new();
                 let high: f64 = df
                     .column("high")
@@ -1798,6 +2622,10 @@ impl Backtest {
                         .await;
 
                     if let Some(trade) = trade {
+                        self.add_registro(format!(
+                            "Sell limit activado en índice: {}. Trade ejecutado {:?}.",
+                            idx, &trade
+                        ));
                         open_trades.push(trade);
                     }
 
@@ -1805,11 +2633,13 @@ impl Backtest {
                 }
 
                 for idx in indices.iter().rev() {
+                    self.add_registro(format!("Sell limit eliminado en índice: {}.", *idx));
                     sell_limits.remove(*idx);
                 }
             }
 
             if !sell_stops.is_empty() {
+                self.add_registro(format!("Recorriendo los sell stops..."));
                 let mut indices: Vec<usize> = Vec::new();
                 let low: f64 = df
                     .column("low")
@@ -1847,6 +2677,10 @@ impl Backtest {
                         .await;
 
                     if let Some(trade) = trade {
+                        self.add_registro(format!(
+                            "Sell stop activado en índice: {}. Trade ejecutado {:?}.",
+                            idx, &trade
+                        ));
                         open_trades.push(trade);
                     }
 
@@ -1854,11 +2688,13 @@ impl Backtest {
                 }
 
                 for idx in indices.iter().rev() {
+                    self.add_registro(format!("Sell stop eliminado en índice: {}.", *idx));
                     sell_stops.remove(*idx);
                 }
             }
 
             if !open_trades.is_empty() {
+                self.add_registro(format!("Recorriendo los trades abiertos..."));
                 let precio_actual: f64 = df
                     .column("close")
                     .unwrap()
@@ -1870,9 +2706,10 @@ impl Backtest {
                 // alcanzan los stop-loss o take-profit para cerrarlas.
                 let mut indices: Vec<usize> = Vec::new();
                 for (idx, trade) in open_trades.iter_mut().enumerate() {
+                    self.add_registro(format!("Procesando trade abierto: {:?}.", &trade));
                     match trade.tipo {
                         EntryDirection::Buy => {
-                            if precio_actual <= trade.sl {
+                            if trade.sl > 0.00000 && precio_actual <= trade.sl {
                                 let timestamp: i64 = df
                                     .column("timestamp")
                                     .unwrap()
@@ -1887,9 +2724,13 @@ impl Backtest {
 
                                 trade.close(t1, trade.sl);
                                 indices.push(idx);
-                                self.add_trade(trade.clone());
+                                self.add_registro(format!(
+                                    "Se ha ejecutado el Stop loss en : {}.",
+                                    &trade.sl
+                                ));
+                                //self.add_trade(trade.clone());
                             }
-                            if precio_actual >= trade.tp {
+                            if trade.tp > 0.00000 && precio_actual >= trade.tp {
                                 let timestamp: i64 = df
                                     .column("timestamp")
                                     .unwrap()
@@ -1904,11 +2745,15 @@ impl Backtest {
 
                                 trade.close(t1, trade.tp);
                                 indices.push(idx);
+                                self.add_registro(format!(
+                                    "Se ha ejecutado el Take profit en : {}.",
+                                    &trade.tp
+                                ));
                                 //self.add_trade(trade.clone());
                             }
                         }
                         EntryDirection::Sell => {
-                            if precio_actual >= trade.sl {
+                            if trade.sl > 0.00000 && precio_actual >= trade.sl {
                                 let timestamp: i64 = df
                                     .column("timestamp")
                                     .unwrap()
@@ -1923,9 +2768,13 @@ impl Backtest {
 
                                 trade.close(t1, trade.sl);
                                 indices.push(idx);
+                                self.add_registro(format!(
+                                    "Se ha ejecutado el Stop loss en : {}.",
+                                    &trade.sl
+                                ));
                                 //self.add_trade(trade.clone());
                             }
-                            if precio_actual <= trade.tp {
+                            if trade.tp > 0.00000 && precio_actual <= trade.tp {
                                 let timestamp: i64 = df
                                     .column("timestamp")
                                     .unwrap()
@@ -1940,6 +2789,10 @@ impl Backtest {
 
                                 trade.close(t1, trade.tp);
                                 indices.push(idx);
+                                self.add_registro(format!(
+                                    "Se ha ejecutado el Take profit en : {}.",
+                                    &trade.tp
+                                ));
                                 //self.add_trade(trade.clone());
                             }
                         }
@@ -1947,12 +2800,13 @@ impl Backtest {
                 }
 
                 // Cerrar trades abiertos basados en las condiciones de salida
-                self.estrategia
-                    .acciones
+                let acciones = self.estrategia.acciones.clone();
+
+                acciones
                     .iter()
                     .filter(|acc| acc.tipo_signal == "Exit")
-                    .for_each(|accion| match accion.tipo.as_str() {
-                        "exit_buy" => {
+                    .for_each(|accion| match accion.tipo {
+                        Action::ExitBuy => {
                             if self.test_conditions(df.clone(), accion.clone(), i) {
                                 let timestamp: i64 = df
                                     .column("timestamp")
@@ -1979,13 +2833,14 @@ impl Backtest {
                                         EntryDirection::Buy => {
                                             trade.close(t1.clone(), precio_cierre);
                                             indices.push(idx);
+                                            self.add_registro(format!("Condición de salida Exit Buy activada. Cerramos el trade: {:?}", &trade));
                                         }
                                         _ => {}
                                     }
                                 }
                             }
                         }
-                        "exit_sell" => {
+                        Action::ExitSell => {
                             if self.test_conditions(df.clone(), accion.clone(), i) {
                                 let timestamp: i64 = df
                                     .column("timestamp")
@@ -2012,6 +2867,7 @@ impl Backtest {
                                         EntryDirection::Sell => {
                                             trade.close(t1.clone(), precio_cierre);
                                             indices.push(idx);
+                                            self.add_registro(format!("Condición de salida Exit Sell activada. Cerramos el trade: {:?}", &trade));
                                         }
 
                                         _ => {}
@@ -2019,7 +2875,7 @@ impl Backtest {
                                 }
                             }
                         }
-                        "N_bars" => {
+                        Action::Nbars => {
                             let n_bars: NBarsOptions =
                                 serde_json::from_value(accion.parametros.clone()).unwrap();
 
@@ -2059,10 +2915,11 @@ impl Backtest {
 
                                     trade.close(t1, precio_cierre);
                                     indices.push(idx);
+                                    self.add_registro(format!("Condición de salida en NBars({}) activada. Cerramos el trade: {:?}", n_bars.valor.clone(), &trade));
                                 }
                             }
                         }
-                        "Close_all_rule" => {
+                        Action::CloseAllRules => {
                             if self.test_conditions(df.clone(), accion.clone(), i) {
                                 let timestamp: i64 = df
                                     .column("timestamp")
@@ -2087,6 +2944,7 @@ impl Backtest {
                                 for (idx, trade) in open_trades.iter_mut().enumerate() {
                                     trade.close(t1.clone(), precio_cierre);
                                     indices.push(idx);
+                                    self.add_registro(format!("Condición de salida activada. Cerramos el trade: {:?}", &trade));
                                 }
                             }
                         }
@@ -2094,8 +2952,7 @@ impl Backtest {
                     });
 
                 // Activamos el Breakeven segun las condiciones definidas en las acciones
-                self.estrategia
-                    .acciones
+                acciones
                     .iter()
                     .filter(|acc| acc.tipo_signal == "BE")
                     .for_each(|accion| {
@@ -2136,6 +2993,10 @@ impl Backtest {
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
+                                                self.add_registro(format!(
+                                                    "BE activado por ticks a precio de entrada: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                         EntryDirection::Sell => {
@@ -2160,6 +3021,10 @@ impl Backtest {
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
+                                                self.add_registro(format!(
+                                                    "BE activado por ticks a precio de entrada: {:?}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                     }
@@ -2190,6 +3055,10 @@ impl Backtest {
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
+                                                self.add_registro(format!(
+                                                    "BE activado por pips a precio de entrada: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                         EntryDirection::Sell => {
@@ -2214,6 +3083,10 @@ impl Backtest {
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
+                                                self.add_registro(format!(
+                                                    "BE activado por pips a precio de entrada: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                     }
@@ -2244,6 +3117,10 @@ impl Backtest {
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
+                                                self.add_registro(format!(
+                                                    "BE activado por puntos a precio de entrada: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                         EntryDirection::Sell => {
@@ -2268,6 +3145,10 @@ impl Backtest {
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
+                                                self.add_registro(format!(
+                                                    "BE activado por puntos a precio de entrada: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                     }
@@ -2298,6 +3179,10 @@ impl Backtest {
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
+                                                self.add_registro(format!(
+                                                    "BE activado por porcentaje a precio de entrada: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                         EntryDirection::Sell => {
@@ -2322,6 +3207,10 @@ impl Backtest {
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
+                                                self.add_registro(format!(
+                                                    "BE activado por porcentaje a precio de entrada: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                     }
@@ -2354,6 +3243,10 @@ impl Backtest {
                                                     } else if trade.sl != trade.precio_entrada {
                                                         trade.sl = trade.precio_entrada;
                                                     }
+                                                    self.add_registro(format!(
+                                                        "BE activado por indicador a precio de entrada: {}",
+                                                        trade.sl
+                                                    ));
                                                 }
                                             }
                                             EntryDirection::Sell => {
@@ -2370,6 +3263,10 @@ impl Backtest {
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
                                                 }
+                                                self.add_registro(format!(
+                                                    "BE activado por indicador a precio de entrada: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                     }
@@ -2380,8 +3277,7 @@ impl Backtest {
                     });
 
                 // Activamos las opciones de trailing stoploss segun la configuracion de las acciones
-                self.estrategia
-                    .acciones
+                acciones
                     .iter()
                     .filter(|acc| acc.tipo_signal == "TSL")
                     .for_each(|accion| {
@@ -2434,6 +3330,10 @@ impl Backtest {
                                                     precio_actual,
                                                     precio_anterior,
                                                 );
+                                                self.add_registro(format!(
+                                                    "TSL activado por ticks. Precio SL: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                         EntryDirection::Sell => {
@@ -2470,6 +3370,10 @@ impl Backtest {
                                                     precio_actual,
                                                     precio_anterior,
                                                 );
+                                                self.add_registro(format!(
+                                                    "TSL activado por ticks. Precio SL: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                     }
@@ -2512,6 +3416,10 @@ impl Backtest {
                                                     precio_actual,
                                                     precio_anterior,
                                                 );
+                                                self.add_registro(format!(
+                                                    "TSL activado por pips. Precio SL: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                         EntryDirection::Sell => {
@@ -2548,6 +3456,10 @@ impl Backtest {
                                                     precio_actual,
                                                     precio_anterior,
                                                 );
+                                                self.add_registro(format!(
+                                                    "TSL activado por pips. Precio SL: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                     }
@@ -2590,6 +3502,10 @@ impl Backtest {
                                                     precio_actual,
                                                     precio_anterior,
                                                 );
+                                                self.add_registro(format!(
+                                                    "TSL activado por punto. Precio SL: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                         EntryDirection::Sell => {
@@ -2626,6 +3542,10 @@ impl Backtest {
                                                     precio_actual,
                                                     precio_anterior,
                                                 );
+                                                self.add_registro(format!(
+                                                    "TSL activado por punto. Precio SL: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                     }
@@ -2668,6 +3588,10 @@ impl Backtest {
                                                     precio_actual,
                                                     precio_anterior,
                                                 );
+                                                self.add_registro(format!(
+                                                    "TSL activado por porcentaje. Precio SL: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                         EntryDirection::Sell => {
@@ -2704,6 +3628,10 @@ impl Backtest {
                                                     precio_actual,
                                                     precio_anterior,
                                                 );
+                                                self.add_registro(format!(
+                                                    "TSL activado por porcentaje. Precio SL: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                     }
@@ -2746,6 +3674,10 @@ impl Backtest {
                                                     precio_actual,
                                                     precio_anterior,
                                                 );
+                                                self.add_registro(format!(
+                                                    "TSL activado por indicador. Precio SL: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                         EntryDirection::Sell => {
@@ -2782,6 +3714,10 @@ impl Backtest {
                                                     precio_actual,
                                                     precio_anterior,
                                                 );
+                                                self.add_registro(format!(
+                                                    "TSL activado por indicador. Precio SL: {}",
+                                                    trade.sl
+                                                ));
                                             }
                                         }
                                     }
@@ -2796,18 +3732,15 @@ impl Backtest {
                     }
 
                     for idx in indices.iter().rev() {
+                        self.add_registro(format!("Trade cerrado: {:?}", open_trades[*idx]));
                         open_trades.remove(*idx);
                     }
                 }
             }
 
+            let acciones = self.estrategia.acciones.clone();
             // Optenemos las acciones de entrada.
-            for accion in self
-                .estrategia
-                .acciones
-                .iter()
-                .filter(|acc| acc.tipo_signal == "Entry")
-            {
+            for accion in acciones.iter().filter(|acc| acc.tipo_signal == "Entry") {
                 match accion.tipo {
                     Action::Buy => {
                         if self.verificar_direccion(EntryDirection::Buy)
@@ -2939,6 +3872,7 @@ impl Backtest {
                 };
             }
         }
+        self.add_registro("Backtest ejecutado correctamente".to_string());
         Ok("Backtest ejecutado correctamente".to_string())
     }
 
@@ -2948,13 +3882,15 @@ impl Backtest {
         symbol: SymbolInfoCFD,
     ) -> Result<String, Box<dyn std::error::Error>> {
         let inicio = Instant::now();
+        self.add_registro("Iniciando backtest...".to_string());
         self.estrategia = match get_strategies_by_id(id_startegy).await {
             Ok(strategy) => {
                 let mut estrategia: Strategy = strategy;
 
                 match get_strategies_actions_by_strategy_id(estrategia.id).await {
                     Ok(acciones) => {
-                        estrategia.acciones = acciones;
+                        estrategia.acciones = acciones.clone();
+                        self.add_registro(format!("Acciones cargadas: {:?}", acciones));
                     }
                     Err(e) => {
                         println!("Error al obtener acciones: {:?}", e);
@@ -2963,7 +3899,8 @@ impl Backtest {
 
                 match get_strategies_indicators_by_strategy_id(estrategia.id).await {
                     Ok(indicadores) => {
-                        estrategia.indicadores = indicadores;
+                        estrategia.indicadores = indicadores.clone();
+                        self.add_registro(format!("Indicadores cargados: {:?}", indicadores));
                     }
                     Err(e) => {
                         println!("Error al obtener indicadores: {:?}", e);
@@ -2972,13 +3909,18 @@ impl Backtest {
 
                 match get_strategies_conditions_by_strategy_id(estrategia.id).await {
                     Ok(condiciones) => {
-                        estrategia.condiciones = condiciones;
+                        estrategia.condiciones = condiciones.clone();
+                        self.add_registro(format!("Condiciones cargadas: {:?}", condiciones));
                     }
                     Err(e) => {
                         println!("Error al obtener condiciones: {:?}", e);
                     }
                 }
 
+                self.add_registro(format!(
+                    "Estrategia cargada correctamente: {:?}",
+                    estrategia
+                ));
                 estrategia
             }
             Err(e) => {
@@ -2988,6 +3930,7 @@ impl Backtest {
         };
 
         if self.datos.is_empty() {
+            self.add_registro("No hay datos para ejecutar el backtest".to_string());
             return Ok("No hay datos para ejecutar el backtest".to_string());
         }
 
@@ -3003,15 +3946,17 @@ impl Backtest {
             self.backtest(df.clone(), symbol.clone()).await.unwrap();
         }
 
-        self.guardar_trades().await;
-
         let mut resultados = Resultados::new(self.id).await;
 
         resultados.calcular_resultados(self.trades.clone(), self.balance.clone());
 
-        resultados.guardar_resultados().await;
+        if resultados.n_trades > 0 {
+            self.guardar_trades().await;
+            resultados.guardar_resultados().await;
+        }
 
         let duracion = inicio.elapsed();
+        self.add_registro(format!("Backtest finalizado en {}", duracion.as_secs_f64()));
         Ok(format!("Backtest finalizado en {}", duracion.as_secs_f64()))
     }
 
