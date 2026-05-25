@@ -2285,14 +2285,14 @@ impl Backtest {
                 }
                 "atr" => {
                     if direccion == EntryDirection::Buy {
-                        if valor - precio_entrada >= 0.00000 {
+                        if precio_entrada - valor >= 0.00000 {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
                                     "Obteniendo stop loss por atr: {}",
-                                    valor - precio_entrada
+                                    precio_entrada - valor
                                 ));
                             }
-                            valor - precio_entrada
+                            precio_entrada - valor
                         } else {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!("stop loss por atr no valido"));
@@ -2303,10 +2303,10 @@ impl Backtest {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Obteniendo stop loss por atr: {}",
-                                valor + precio_entrada
+                                precio_entrada + valor
                             ));
                         }
-                        valor + precio_entrada
+                        precio_entrada + valor
                     } else {
                         if LOGS_REGISTRO {
                             self.add_registro(format!("stop loss por atr no valido"));
@@ -2367,6 +2367,7 @@ impl Backtest {
                 .unwrap()
                 .try_extract::<f64>()
                 .unwrap_or(0.0);
+
             if LOGS_REGISTRO {
                 self.add_registro(format!(
                     "Valor optenido para calcular el take profit: {}",
@@ -2506,19 +2507,19 @@ impl Backtest {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Obteniendo limite de compra por atr: {}",
-                                valor + precio_entrada
+                                precio_entrada + valor
                             ));
                         }
-                        valor + precio_entrada
+                        precio_entrada + valor
                     } else if direccion == EntryDirection::Sell {
-                        if valor - precio_entrada >= 0.00000 {
+                        if precio_entrada - valor >= 0.00000 {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
                                     "Obteniendo limite de venta por atr: {}",
-                                    valor - precio_entrada
+                                    precio_entrada - valor
                                 ));
                             }
-                            valor - precio_entrada
+                            precio_entrada - valor
                         } else {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!("limite de atr no valido"));
