@@ -2115,7 +2115,13 @@ impl Backtest {
     /// # Returns
     ///
     /// El valor del stop loss.
-    fn get_stoploss(&mut self, df: DataFrame, i: usize, direccion: EntryDirection) -> f64 {
+    fn get_stoploss(
+        &mut self,
+        precio_entrada: f64,
+        df: DataFrame,
+        i: usize,
+        direccion: EntryDirection,
+    ) -> f64 {
         if LOGS_REGISTRO {
             self.add_registro(format!("Obteniendo stop loss"));
         }
@@ -2126,6 +2132,7 @@ impl Backtest {
             .parametros_stoploss
             .clone()
             .unwrap();
+
         if LOGS_REGISTRO {
             self.add_registro(format!(
                 "Obteniendo los parametros de stop loss: {:?}",
@@ -2143,6 +2150,7 @@ impl Backtest {
                 .unwrap()
                 .try_extract::<f64>()
                 .unwrap_or(0.0);
+
             if LOGS_REGISTRO {
                 self.add_registro(format!(
                     "Valor optenido para calcular el stop loss: {}",
@@ -2276,23 +2284,15 @@ impl Backtest {
                     }
                 }
                 "atr" => {
-                    let precio_actual = df
-                        .column("close")
-                        .unwrap()
-                        .get(i - 1)
-                        .unwrap()
-                        .try_extract::<f64>()
-                        .unwrap_or(0.0);
-
                     if direccion == EntryDirection::Buy {
-                        if valor - precio_actual >= 0.00000 {
+                        if valor - precio_entrada >= 0.00000 {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
                                     "Obteniendo stop loss por atr: {}",
-                                    valor - precio_actual
+                                    valor - precio_entrada
                                 ));
                             }
-                            valor - precio_actual
+                            valor - precio_entrada
                         } else {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!("stop loss por atr no valido"));
@@ -2303,10 +2303,10 @@ impl Backtest {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Obteniendo stop loss por atr: {}",
-                                valor + precio_actual
+                                valor + precio_entrada
                             ));
                         }
-                        valor + precio_actual
+                        valor + precio_entrada
                     } else {
                         if LOGS_REGISTRO {
                             self.add_registro(format!("stop loss por atr no valido"));
@@ -2332,7 +2332,13 @@ impl Backtest {
     /// # Returns
     ///
     /// El valor del take profit.
-    fn get_takeprofit(&mut self, df: DataFrame, i: usize, direccion: EntryDirection) -> f64 {
+    fn get_takeprofit(
+        &mut self,
+        precio_entrada: f64,
+        df: DataFrame,
+        i: usize,
+        direccion: EntryDirection,
+    ) -> f64 {
         if LOGS_REGISTRO {
             self.add_registro(format!("Obteniendo take profit"));
         }
@@ -2496,31 +2502,23 @@ impl Backtest {
                     }
                 }
                 "atr" => {
-                    let precio_actual = df
-                        .column("close")
-                        .unwrap()
-                        .get(i - 1)
-                        .unwrap()
-                        .try_extract::<f64>()
-                        .unwrap_or(0.0);
-
                     if direccion == EntryDirection::Buy {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Obteniendo limite de compra por atr: {}",
-                                valor + precio_actual
+                                valor + precio_entrada
                             ));
                         }
-                        valor + precio_actual
+                        valor + precio_entrada
                     } else if direccion == EntryDirection::Sell {
-                        if valor - precio_actual >= 0.00000 {
+                        if valor - precio_entrada >= 0.00000 {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
                                     "Obteniendo limite de venta por atr: {}",
-                                    valor - precio_actual
+                                    valor - precio_entrada
                                 ));
                             }
-                            valor - precio_actual
+                            valor - precio_entrada
                         } else {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!("limite de atr no valido"));
@@ -3255,8 +3253,10 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
-                    let tp: f64 = self.get_takeprofit(df.clone(), i, EntryDirection::Buy);
-                    let sl: f64 = self.get_stoploss(df.clone(), i, EntryDirection::Buy);
+                    let tp: f64 =
+                        self.get_takeprofit(limit.clone(), df.clone(), i, EntryDirection::Buy);
+                    let sl: f64 =
+                        self.get_stoploss(limit.clone(), df.clone(), i, EntryDirection::Buy);
 
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
@@ -3317,8 +3317,10 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
-                    let tp: f64 = self.get_takeprofit(df.clone(), i, EntryDirection::Buy);
-                    let sl: f64 = self.get_stoploss(df.clone(), i, EntryDirection::Buy);
+                    let tp: f64 =
+                        self.get_takeprofit(limit.clone(), df.clone(), i, EntryDirection::Buy);
+                    let sl: f64 =
+                        self.get_stoploss(limit.clone(), df.clone(), i, EntryDirection::Buy);
 
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
@@ -3381,8 +3383,10 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
-                    let tp: f64 = self.get_takeprofit(df.clone(), i, EntryDirection::Sell);
-                    let sl: f64 = self.get_stoploss(df.clone(), i, EntryDirection::Sell);
+                    let tp: f64 =
+                        self.get_takeprofit(limit.clone(), df.clone(), i, EntryDirection::Sell);
+                    let sl: f64 =
+                        self.get_stoploss(limit.clone(), df.clone(), i, EntryDirection::Sell);
 
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
@@ -3445,8 +3449,10 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
-                    let tp: f64 = self.get_takeprofit(df.clone(), i, EntryDirection::Sell);
-                    let sl: f64 = self.get_stoploss(df.clone(), i, EntryDirection::Sell);
+                    let tp: f64 =
+                        self.get_takeprofit(limit.clone(), df.clone(), i, EntryDirection::Sell);
+                    let sl: f64 =
+                        self.get_stoploss(limit.clone(), df.clone(), i, EntryDirection::Sell);
 
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
@@ -4629,8 +4635,18 @@ impl Backtest {
                                 .try_extract::<i64>()
                                 .unwrap();
 
-                            let tp: f64 = self.get_takeprofit(df.clone(), i, EntryDirection::Buy);
-                            let sl: f64 = self.get_stoploss(df.clone(), i, EntryDirection::Buy);
+                            let tp: f64 = self.get_takeprofit(
+                                precio_entrada,
+                                df.clone(),
+                                i,
+                                EntryDirection::Buy,
+                            );
+                            let sl: f64 = self.get_stoploss(
+                                precio_entrada,
+                                df.clone(),
+                                i,
+                                EntryDirection::Buy,
+                            );
 
                             let trade: Option<Trade> = self
                                 .ejecutar_entry(
@@ -4670,8 +4686,18 @@ impl Backtest {
                                 .try_extract::<i64>()
                                 .unwrap();
 
-                            let tp: f64 = self.get_takeprofit(df.clone(), i, EntryDirection::Sell);
-                            let sl: f64 = self.get_stoploss(df.clone(), i, EntryDirection::Sell);
+                            let tp: f64 = self.get_takeprofit(
+                                precio_entrada.clone(),
+                                df.clone(),
+                                i,
+                                EntryDirection::Sell,
+                            );
+                            let sl: f64 = self.get_stoploss(
+                                precio_entrada.clone(),
+                                df.clone(),
+                                i,
+                                EntryDirection::Sell,
+                            );
 
                             let trade: Option<Trade> = self
                                 .ejecutar_entry(
