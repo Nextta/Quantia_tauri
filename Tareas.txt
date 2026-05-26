@@ -13,10 +13,12 @@ Terminadas:
 -Verificar los test y corregir los test fallidos de strategies.
 -Crear indicadores basicos por ahora.
 -Añadir los indicadores a backtest.
+-Crear la logica para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
 
 
 TODO:
--Crear la logica para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
+-Corregir algunos errores de la logica del backtest:
+   * En todos los atr de las operaciones limits cambiar de valor por parametro a precio de los datos.
 -Crear plantillas para que genere el código en MQL5.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.
 -Crear la interface y las funcionalidades para crear de forma visual estrategias con workflows.

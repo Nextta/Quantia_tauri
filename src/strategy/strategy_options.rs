@@ -2,42 +2,31 @@ use chrono::DateTime;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
-use crate::enums::entry::EntryDirection;
-
 // use serde_json::Value;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct StopLoss {
-    pub tipo: String,              // Tipo de limite: ask, bid, bb, atr... etc
-    pub nombre_col: String,        // Nombre de la columna a usar como limite
-    pub shift: usize,              // Numero de filas a desplazar
-    pub valor: f64,                // en caso de ser por pip, ticks o puntos
-    pub direccion: EntryDirection, // Direccion del limite: buy, sell
+    pub tipo: String,       // Tipo de limite: ask, bid, bb, atr... etc
+    pub nombre_col: String, // Nombre de la columna a usar como limite
+    pub shift: usize,       // Numero de filas a desplazar
+    pub valor: f64,         // en caso de ser por pip, ticks o puntos
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct TakeProfit {
-    pub tipo: String,              // Tipo de limite: ask, bid, bb, atr... etc
-    pub nombre_col: String,        // Nombre de la columna a usar como limite
-    pub shift: usize,              // Numero de filas a desplazar
-    pub valor: f64,                // en caso de ser por pip, ticks o puntos
-    pub direccion: EntryDirection, // Direccion del limite: buy, sell
+    pub tipo: String,       // Tipo de limite: ask, bid, bb, atr... etc
+    pub nombre_col: String, // Nombre de la columna a usar como limite
+    pub shift: usize,       // Numero de filas a desplazar
+    pub valor: f64,         // en caso de ser por pip, ticks o puntos
 }
 
 impl StopLoss {
-    pub fn new(
-        tipo: String,
-        nombre_col: String,
-        shift: usize,
-        valor: f64,
-        direccion: EntryDirection,
-    ) -> Self {
+    pub fn new(tipo: String, nombre_col: String, shift: usize, valor: f64) -> Self {
         Self {
             tipo,
             nombre_col,
             shift,
             valor,
-            direccion,
         }
     }
 
@@ -47,7 +36,6 @@ impl StopLoss {
             nombre_col: String::new(),
             shift: 0,
             valor: 0.0,
-            direccion: EntryDirection::Buy,
         }
     }
 
@@ -57,19 +45,12 @@ impl StopLoss {
 }
 
 impl TakeProfit {
-    pub fn new(
-        tipo: String,
-        nombre_col: String,
-        shift: usize,
-        valor: f64,
-        direccion: EntryDirection,
-    ) -> Self {
+    pub fn new(tipo: String, nombre_col: String, shift: usize, valor: f64) -> Self {
         Self {
             tipo,
             nombre_col,
             shift,
             valor,
-            direccion,
         }
     }
 
@@ -79,7 +60,6 @@ impl TakeProfit {
             nombre_col: String::new(),
             shift: 0,
             valor: 0.0,
-            direccion: EntryDirection::Buy,
         }
     }
 
@@ -92,7 +72,7 @@ impl TakeProfit {
 pub struct StrategyOptions {
     pub id: i32,
     pub strategy_id: i32,
-    pub multiples_tardes: bool,
+    pub multiples_trades: bool,
     pub trading_direccion: TradingDirection,
     pub operar_finde: bool,
     pub cerrar_fin_de_dia: bool,
@@ -107,8 +87,8 @@ pub struct StrategyOptions {
     pub numero_velas_cierre: i32,
     pub cierre_limite_hora: bool,
     pub hora_cierre_limite: DateTime<Utc>,
-    pub parametros_stoploss: StopLoss,
-    pub parametros_takeprofit: TakeProfit,
+    pub parametros_stoploss: Option<StopLoss>,
+    pub parametros_takeprofit: Option<TakeProfit>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -132,7 +112,7 @@ impl StrategyOptions {
     pub fn new(
         id: i32,
         strategy_id: i32,
-        multiples_tardes: bool,
+        multiples_trades: bool,
         trading_direccion: TradingDirection,
         operar_finde: bool,
         cerrar_fin_de_dia: bool,
@@ -147,13 +127,13 @@ impl StrategyOptions {
         numero_velas_cierre: i32,
         cierre_limite_hora: bool,
         hora_cierre_limite: DateTime<Utc>,
-        parametros_stoploss: StopLoss,
-        parametros_takeprofit: TakeProfit,
+        parametros_stoploss: Option<StopLoss>,
+        parametros_takeprofit: Option<TakeProfit>,
     ) -> Self {
         Self {
             id,
             strategy_id,
-            multiples_tardes,
+            multiples_trades,
             trading_direccion,
             operar_finde,
             cerrar_fin_de_dia,
@@ -177,7 +157,7 @@ impl StrategyOptions {
         Self {
             id: 0,
             strategy_id: 0,
-            multiples_tardes: false,
+            multiples_trades: false,
             trading_direccion: TradingDirection::Both,
             operar_finde: false,
             cerrar_fin_de_dia: false,
@@ -192,8 +172,8 @@ impl StrategyOptions {
             numero_velas_cierre: 0,
             cierre_limite_hora: false,
             hora_cierre_limite: Utc::now(),
-            parametros_stoploss: serde_json::from_value(serde_json::json!("{}")).unwrap(),
-            parametros_takeprofit: serde_json::from_value(serde_json::json!("{}")).unwrap(),
+            parametros_stoploss: None,
+            parametros_takeprofit: None,
         }
     }
 }

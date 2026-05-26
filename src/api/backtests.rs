@@ -1,15 +1,16 @@
 use crate::api::resultados::delete_resultados_by_backtest;
 use crate::api::trades::{delete_trades_by_backtest, get_trades_by_backtest};
 use crate::backtest::backtest::Backtest;
+use crate::enums::activos::Activo;
 use crate::enums::gestion::GestionStrategy;
 use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_options::StrategyOptions;
 use crate::structs::parametros::GestionParams;
 use crate::traits::tparametro::TParametro;
+use crate::traits::ttipos::TTipos;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
 use serde::Serialize;
-// use serde_json::Value;
 use std::env;
 
 #[derive(Serialize, Debug)]
@@ -107,7 +108,7 @@ pub async fn insert_backtest_cfd(backtest: Backtest) -> Result<i32> {
 
     conn.query(
         "INSERT INTO backtest (titulo, balance, tipo, gestion_strategy, parametros_gestion) VALUES (?, ?, ?, ?, ?) RETURNING id",
-        params![backtest.titulo, backtest.balance, backtest.tipo, backtest.gestion_strategy.to_string(), backtest.parametros_gestion.to_json()],
+        params![backtest.titulo, backtest.balance, backtest.tipo.to_string(), backtest.gestion_strategy.to_string(), backtest.parametros_gestion.to_json()],
     )
     .await?;
 
@@ -152,11 +153,21 @@ pub async fn get_backtests() -> Result<Vec<Backtest>> {
             _ => GestionStrategy::Formula,
         };
 
+        let tipo: Activo = match row.get::<String>(3)?.as_str() {
+            "Forex" => Activo::Forex,
+            "Futuros" => Activo::Futuros,
+            "CDF" => Activo::CDF,
+            "Acciones" => Activo::Acciones,
+            "ETF" => Activo::ETF,
+            "Opciones" => Activo::Opciones,
+            _ => Activo::Forex,
+        };
+
         let backtest = Backtest {
             id: row.get::<i32>(0)?,
             titulo: row.get::<String>(1)?,
             balance: row.get::<f64>(2)?,
-            tipo: row.get::<String>(3)?,
+            tipo: tipo,
             gestion_strategy: gestion_strategy,
             parametros_gestion: parametros_gestion,
             trades: trades,
@@ -222,11 +233,21 @@ pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>> {
             _ => GestionStrategy::Formula,
         };
 
+        let tipo: Activo = match row.get::<String>(3)?.as_str() {
+            "Forex" => Activo::Forex,
+            "Futuros" => Activo::Futuros,
+            "CDF" => Activo::CDF,
+            "Acciones" => Activo::Acciones,
+            "ETF" => Activo::ETF,
+            "Opciones" => Activo::Opciones,
+            _ => Activo::Forex,
+        };
+
         let backtest = Backtest {
             id: row.get::<i32>(0)?,
             titulo: row.get::<String>(1)?,
             balance: row.get::<f64>(2)?,
-            tipo: row.get::<String>(3)?,
+            tipo: tipo,
             gestion_strategy: gestion_strategy,
             parametros_gestion: parametros_gestion,
             trades: trades,
@@ -292,11 +313,21 @@ pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
             _ => GestionStrategy::Formula,
         };
 
+        let tipo: Activo = match row.get::<String>(3)?.as_str() {
+            "Forex" => Activo::Forex,
+            "Futuros" => Activo::Futuros,
+            "CDF" => Activo::CDF,
+            "Acciones" => Activo::Acciones,
+            "ETF" => Activo::ETF,
+            "Opciones" => Activo::Opciones,
+            _ => Activo::Forex,
+        };
+
         let backtest = Backtest {
             id: row.get::<i32>(0)?,
             titulo: row.get::<String>(1)?,
             balance: row.get::<f64>(2)?,
-            tipo: row.get::<String>(3)?,
+            tipo: tipo,
             gestion_strategy: gestion_strategy,
             parametros_gestion: parametros_gestion,
             trades: trades,
@@ -331,7 +362,7 @@ pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_backtests_by_tipo(tipo: String) -> Result<Vec<Backtest>> {
+pub async fn get_backtests_by_tipo(tipo: Activo) -> Result<Vec<Backtest>> {
     let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
 
     let db = if !test_active.valor {
@@ -345,7 +376,10 @@ pub async fn get_backtests_by_tipo(tipo: String) -> Result<Vec<Backtest>> {
     let conn = db.connect()?;
 
     let mut rows = conn
-        .query("SELECT * FROM backtest WHERE tipo = ?", params![tipo])
+        .query(
+            "SELECT * FROM backtest WHERE tipo = ?",
+            params![tipo.as_str()],
+        )
         .await?;
 
     let mut backtests = Vec::new();
@@ -362,11 +396,21 @@ pub async fn get_backtests_by_tipo(tipo: String) -> Result<Vec<Backtest>> {
             _ => GestionStrategy::Formula,
         };
 
+        let tipo: Activo = match row.get::<String>(3)?.as_str() {
+            "Forex" => Activo::Forex,
+            "Futuros" => Activo::Futuros,
+            "CDF" => Activo::CDF,
+            "Acciones" => Activo::Acciones,
+            "ETF" => Activo::ETF,
+            "Opciones" => Activo::Opciones,
+            _ => Activo::Forex,
+        };
+
         let backtest = Backtest {
             id: row.get::<i32>(0)?,
             titulo: row.get::<String>(1)?,
             balance: row.get::<f64>(2)?,
-            tipo: row.get::<String>(3)?,
+            tipo: tipo,
             gestion_strategy: gestion_strategy,
             parametros_gestion: parametros_gestion,
             trades: trades,
@@ -440,7 +484,7 @@ mod tests {
             id: 0,
             titulo: "Test".to_string(),
             balance: 100.0,
-            tipo: "CFD".to_string(),
+            tipo: Activo::CDF,
             gestion_strategy: GestionStrategy::Formula,
             parametros_gestion: serde_json::from_str("{}")?,
             trades: Vec::new(),

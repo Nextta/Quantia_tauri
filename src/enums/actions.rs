@@ -9,6 +9,10 @@ pub enum Action {
     BuyStop,
     SellStop,
     Close,
+    ExitBuy,
+    ExitSell,
+    Nbars,
+    CloseAllRules,
 }
 
 impl Action {
@@ -21,6 +25,10 @@ impl Action {
             Action::BuyStop => "Buy Stop".to_string(),
             Action::SellStop => "Sell Stop".to_string(),
             Action::Close => "Close".to_string(),
+            Action::ExitBuy => "Exit Buy".to_string(),
+            Action::ExitSell => "Exit Sell".to_string(),
+            Action::Nbars => "Nbars".to_string(),
+            Action::CloseAllRules => "Close All Rules".to_string(),
         }
     }
 
@@ -33,6 +41,10 @@ impl Action {
             Action::BuyStop => "Buy Stop",
             Action::SellStop => "Sell Stop",
             Action::Close => "Close",
+            Action::ExitBuy => "Exit Buy",
+            Action::ExitSell => "Exit Sell",
+            Action::Nbars => "Nbars",
+            Action::CloseAllRules => "Close All Rules",
         }
     }
 }

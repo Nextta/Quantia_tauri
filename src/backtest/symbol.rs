@@ -54,7 +54,6 @@ impl SymbolInfoCFD {
         };
         match table {
             Ok(_) => {
-                //symbol.id = db.insert_symbol_cfd(symbol.clone()).await.unwrap();
                 println!("Symbol creado: {:?}", symbol);
             }
             Err(e) => println!("Error al crear symbol: {:?}", e),
