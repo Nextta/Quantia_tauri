@@ -1,5 +1,5 @@
 use crate::strategy::strategy_action::StrategyAction;
-use crate::strategy::strategy_condition::StrategyCondition;
+// use crate::strategy::strategy_condition::StrategyCondition;
 use crate::strategy::strategy_indicator::StrategyIndicator;
 use crate::strategy::strategy_options::StrategyOptions;
 
@@ -12,7 +12,7 @@ pub struct Strategy {
     pub activa: bool,
     pub creada_en: String,
     pub indicadores: Vec<StrategyIndicator>,
-    pub condiciones: Vec<StrategyCondition>,
+    // pub condiciones: Vec<StrategyCondition>,
     pub acciones: Vec<StrategyAction>,
     pub opciones: StrategyOptions,
 }
@@ -35,7 +35,7 @@ impl Strategy {
             activa,
             creada_en,
             indicadores: Vec::<StrategyIndicator>::new(),
-            condiciones: Vec::<StrategyCondition>::new(),
+            // condiciones: Vec::<StrategyCondition>::new(),
             acciones: Vec::<StrategyAction>::new(),
             opciones,
         }
@@ -50,7 +50,7 @@ impl Strategy {
             activa: false,
             creada_en: String::new(),
             indicadores: Vec::<StrategyIndicator>::new(),
-            condiciones: Vec::<StrategyCondition>::new(),
+            // condiciones: Vec::<StrategyCondition>::new(),
             acciones: Vec::<StrategyAction>::new(),
             opciones: StrategyOptions::new_empty(),
         }

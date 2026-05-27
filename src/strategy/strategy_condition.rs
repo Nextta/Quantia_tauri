@@ -1,4 +1,7 @@
-#[derive(Debug, Clone)]
+use crate::enums::logics::Logic;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StrategyCondition {
     pub id: i32,
     pub strategy_id: i32,
@@ -8,8 +11,9 @@ pub struct StrategyCondition {
     pub operador: String,
     pub campo_b: String,
     pub shift_b: i32,
-    pub logica: String,
+    pub logica: Option<Logic>,
     pub orden: i32,
+    pub next_condition: Option<Box<StrategyCondition>>,
 }
 
 impl StrategyCondition {
@@ -22,8 +26,9 @@ impl StrategyCondition {
         operador: String,
         campo_b: String,
         shift_b: i32,
-        logica: String,
+        logica: Option<Logic>,
         orden: i32,
+        next_condition: Option<Box<StrategyCondition>>,
     ) -> Self {
         Self {
             id,
@@ -36,6 +41,7 @@ impl StrategyCondition {
             shift_b,
             logica,
             orden,
+            next_condition,
         }
     }
 
@@ -49,8 +55,9 @@ impl StrategyCondition {
             operador: String::new(),
             campo_b: String::new(),
             shift_b: 0,
-            logica: String::new(),
+            logica: None,
             orden: 0,
+            next_condition: None,
         }
     }
 }
