@@ -94,9 +94,9 @@ impl Trade {
     }
 
     /// Funciones
-    fn random_spread(&self) -> f64 {
+    pub fn random_spread(&self) -> f64 {
         let mut rng = rand::rng();
-        let spread = self.symbol.spread;
+        let spread = self.symbol.spread.clone();
         let mut numero: f64 = rng.random_range((spread / 2.0)..=spread);
 
         let numero_truncado: Decimal = truncate_decimal(
@@ -119,7 +119,7 @@ impl Trade {
     ) {
         self.tipo = EntryDirection::Buy;
         self.t0 = t0;
-        self.precio_entrada = precio_entrada + self.random_spread();
+        self.precio_entrada = precio_entrada; // + self.random_spread();
         self.tp = tp.unwrap_or(0.0);
         self.sl = sl.unwrap_or(0.0);
 

@@ -1905,102 +1905,6 @@ impl Backtest {
         }
     }
 
-    /// Comprueba todas las condiciones de una acción en un índice dado.
-    ///
-    /// # Parametros
-    /// df: Dataframe con los datos.
-    /// accion: Acción a confirmar.
-    /// i: Índice del dataframe.
-    ///
-    /// # Retorna
-    /// True si se puede operar en la dirección indicada, false en caso contrario.
-    // fn test_conditions(&mut self, df: DataFrame, accion: StrategyAction, i: usize) -> bool {
-    //     if LOGS_REGISTRO {
-    //         self.add_registro(format!(
-    //             "Verificando condiciones de la estrategia: {}",
-    //             accion.id
-    //         ));
-    //     }
-
-    //     let mut condiciones_map: HashMap<String, bool> = HashMap::new();
-    //     let mut mensaje = String::new();
-    //     self.estrategia
-    //         .condiciones
-    //         .iter()
-    //         .filter(|condicion| condicion.action_id == accion.id)
-    //         .for_each(|condicion| {
-    //             if (i as i32 - condicion.shift_b) > 0 {
-    //                 let campo_a = df
-    //                     .column(&condicion.campo_a)
-    //                     .unwrap()
-    //                     .get(i - condicion.shift_a as usize)
-    //                     .unwrap();
-    //                 let campo_b = df
-    //                     .column(&condicion.campo_b)
-    //                     .unwrap()
-    //                     .get(i - condicion.shift_b as usize)
-    //                     .unwrap();
-    //                 let resultado = match condicion.operador.as_str() {
-    //                     ">" => campo_a > campo_b,
-    //                     "<" => campo_a < campo_b,
-    //                     "==" => campo_a == campo_b,
-    //                     _ => false,
-    //                 };
-
-    //                 condiciones_map.insert(condicion.logica.clone(), resultado);
-    //                 if !resultado {
-    //                     mensaje = format!("La condición {} no se cumple", condicion.logica);
-    //                 } else {
-    //                     mensaje = format!("La condición {} se cumple", condicion.logica);
-    //                 }
-    //             } else {
-    //                 mensaje = format!(
-    //                     "El indice {} del shift es incorrecto",
-    //                     (i as i32 - condicion.shift_b)
-    //                 );
-    //             }
-    //         });
-
-    //     if LOGS_REGISTRO {
-    //         self.add_registro(mensaje);
-    //     }
-
-    //     let mut all_true = false;
-    //     let mut key_anterior = "none".to_string();
-    //     let mut resultado_anterior = false;
-    //     for (key, resultado) in condiciones_map.iter() {
-    //         if key_anterior == "none".to_string() {
-    //             key_anterior = key.clone();
-    //             resultado_anterior = *resultado;
-    //         } else {
-    //             match key.as_str() {
-    //                 "AND" => all_true = resultado_anterior == *resultado,
-    //                 "OR" => {
-    //                     all_true =
-    //                         resultado_anterior != *resultado || resultado_anterior == *resultado
-    //                 }
-    //                 _ => all_true = false,
-    //             }
-
-    //             if !all_true {
-    //                 break;
-    //             }
-    //         }
-    //     }
-
-    //     if !all_true {
-    //         if LOGS_REGISTRO {
-    //             self.add_registro(format!("No se cumplen todas las condiciones"));
-    //         }
-    //     } else {
-    //         if LOGS_REGISTRO {
-    //             self.add_registro(format!("Todas las condiciones se cumplen"));
-    //         }
-    //     }
-
-    //     all_true
-    // }
-
     /// Comprueba las opciones de entrada de una acción en un índice dado.
     ///
     /// # Parametros
@@ -2691,16 +2595,23 @@ impl Backtest {
         let mut trade: Trade = Trade::new(self.id.clone(), symbol.clone()).await;
 
         let sl = stoploss.unwrap_or(0.0);
-        let tp = takeprofit.unwrap_or(0.0);
+        let mut tp = takeprofit.unwrap_or(0.0);
 
         let naive_time = DateTime::from_timestamp_millis(timestamp).expect("timestamp inválido");
         let t0 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
         match signal {
             EntryDirection::Buy => {
+                let spread = trade.random_spread();
+                let precio = precio_entrada + spread;
+
+                if tp > 0.0 {
+                    tp += spread;
+                }
+
                 trade.buy(
                     t0.clone(),
-                    precio_entrada,
+                    precio,
                     self.gestion_strategy.clone(),
                     self.parametros_gestion.clone(),
                     &self,
@@ -2710,7 +2621,7 @@ impl Backtest {
                 if LOGS_REGISTRO {
                     self.add_registro(format!(
                         "Trade buy ejecutado: t0={} precio_entrada={} tp={} sl={}",
-                        t0, precio_entrada, tp, sl
+                        t0, precio, tp, sl
                     ));
                 }
                 return Some(trade);
@@ -5042,8 +4953,29 @@ impl Backtest {
         resultados.calcular_resultados(self.trades.clone(), self.balance.clone());
 
         if resultados.n_trades > 0 {
+            if LOGS_REGISTRO {
+                self.add_registro("Guardando los trades en la base de datos.".to_string());
+            }
+
             self.guardar_trades().await;
+
+            if LOGS_REGISTRO {
+                self.add_registro("Trades guardados en la base de datos.".to_string());
+            }
+
+            if LOGS_REGISTRO {
+                self.add_registro("Guardando los resultados en la base de datos.".to_string());
+            }
+
             resultados.guardar_resultados().await;
+
+            if LOGS_REGISTRO {
+                self.add_registro("Resultados guardados en la base de datos.".to_string());
+            }
+        } else {
+            if LOGS_REGISTRO {
+                self.add_registro("No se ha registrado ningun trade.".to_string());
+            }
         }
 
         let duracion = inicio.elapsed();

@@ -1350,9 +1350,9 @@ pub async fn get_strategy_action_by_id(id: i32) -> Result<StrategyAction> {
         conditions: None,
     };
 
-    sql = "SELECT * FROM strategy_conditions WHERE strategy_id = ?";
+    sql = "SELECT * FROM strategy_conditions WHERE action_id = ?";
 
-    parametros = params![id];
+    parametros = params![action.id];
 
     result = conn.query(sql, parametros).await?;
 
@@ -1435,7 +1435,7 @@ pub async fn get_strategies_actions_by_strategy_id(
             conditions: None,
         };
 
-        let sql = "SELECT * FROM strategy_conditions WHERE strategy_id = ?";
+        let sql = "SELECT * FROM strategy_conditions WHERE action_id = ?";
 
         let parametros = params![action.id];
 
