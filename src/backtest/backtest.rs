@@ -1693,7 +1693,12 @@ impl Backtest {
                         self.add_registro(format!("Indicador ATR agregado: {}", indicator.nombre));
                     }
 
-                    atr(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    atr(
+                        df,
+                        Some(params.timeperiod),
+                        Some(params.multiplier),
+                        Some(&indicator.nombre),
+                    )?
                 }
                 "NATR" => {
                     let params: NatrParams =
