@@ -165,7 +165,7 @@ impl Trade {
         }
     }
 
-    pub fn close(&mut self, t1: String, precio_cierre: f64) {
+    pub fn close(&mut self, t1: String, precio_cierre: f64) -> f64 {
         self.t1 = t1;
         self.precio_cierre = precio_cierre;
         self.calcular_duración();
@@ -176,6 +176,8 @@ impl Trade {
         } else {
             self.label = 0;
         }
+
+        self.pl
     }
 
     ///Calcula el lotaje óptimo para una operación basado en el balance actual, el precio de entrada,

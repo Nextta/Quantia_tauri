@@ -3556,7 +3556,7 @@ impl Backtest {
                                     .expect("timestamp inválido");
                                 let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
-                                trade.close(t1, trade.sl);
+                                self.balance += trade.close(t1, trade.sl);
                                 indices.push(idx);
                                 if LOGS_REGISTRO {
                                     self.add_registro(format!(
@@ -3578,7 +3578,7 @@ impl Backtest {
                                     .expect("timestamp inválido");
                                 let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
-                                trade.close(t1, trade.tp);
+                                self.balance += trade.close(t1, trade.tp);
                                 indices.push(idx);
                                 if LOGS_REGISTRO {
                                     self.add_registro(format!(
@@ -3602,7 +3602,7 @@ impl Backtest {
                                     .expect("timestamp inválido");
                                 let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
-                                trade.close(t1, trade.sl);
+                                self.balance += trade.close(t1, trade.sl);
                                 indices.push(idx);
                                 if LOGS_REGISTRO {
                                     self.add_registro(format!(
@@ -3624,7 +3624,7 @@ impl Backtest {
                                     .expect("timestamp inválido");
                                 let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
-                                trade.close(t1, trade.tp);
+                                self.balance += trade.close(t1, trade.tp);
                                 indices.push(idx);
                                 if LOGS_REGISTRO {
                                     self.add_registro(format!(
@@ -3671,7 +3671,7 @@ impl Backtest {
                                         for (idx, trade) in open_trades.iter_mut().enumerate() {
                                             match trade.tipo {
                                                 EntryDirection::Buy => {
-                                                    trade.close(t1.clone(), precio_cierre);
+                                                    self.balance += trade.close(t1.clone(), precio_cierre);
                                                     indices.push(idx);
                                                     if LOGS_REGISTRO {
                                                         self.add_registro(format!("Condición de salida Exit Buy activada. Cerramos el trade: {:?}", &trade));
@@ -3716,7 +3716,7 @@ impl Backtest {
                                         for (idx, trade) in open_trades.iter_mut().enumerate() {
                                             match trade.tipo {
                                                 EntryDirection::Sell => {
-                                                    trade.close(t1.clone(), precio_cierre);
+                                                    self.balance += trade.close(t1.clone(), precio_cierre);
                                                     indices.push(idx);
                                                     if LOGS_REGISTRO {
                                                         self.add_registro(format!("Condición de salida Exit Sell activada. Cerramos el trade: {:?}", &trade));
@@ -3773,7 +3773,7 @@ impl Backtest {
                                         .expect("timestamp inválido");
                                     let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
-                                    trade.close(t1, precio_cierre);
+                                    self.balance += trade.close(t1, precio_cierre);
                                     indices.push(idx);
                                     if LOGS_REGISTRO {
                                         self.add_registro(format!("Condición de salida en NBars({}) activada. Cerramos el trade: {:?}", n_bars.valor.clone(), &trade));
@@ -3806,7 +3806,7 @@ impl Backtest {
                                         let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
                                         for (idx, trade) in open_trades.iter_mut().enumerate() {
-                                            trade.close(t1.clone(), precio_cierre);
+                                            self.balance += trade.close(t1.clone(), precio_cierre);
                                             indices.push(idx);
                                             if LOGS_REGISTRO {
                                                 self.add_registro(format!("Condición de salida activada. Cerramos el trade: {:?}", &trade));
