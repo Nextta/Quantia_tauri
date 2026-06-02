@@ -1,5 +1,7 @@
 use crate::api::resultados::{insert_resultados, table_resultados};
 use crate::backtest::trade::Trade;
+use crate::structs::logs::RegistroLog;
+use crate::utils::configuracion::LOGS_REGISTRO;
 use chrono::{Datelike, NaiveDateTime}; // Utc, Month, DateTime
 
 #[derive(Debug, Clone)]
@@ -700,9 +702,18 @@ impl Resultados {
     pub async fn guardar_resultados(&self) {
         let result = insert_resultados(self.clone()).await;
         match result {
-            Ok(_) => {}
+            Ok(_) => {
+                if LOGS_REGISTRO {
+                    let entry =
+                        RegistroLog::new("Resultados guardados en la base de datos.".to_string());
+                    entry.guardar_logs().unwrap();
+                }
+            }
             Err(e) => {
-                println!("Error al guardar resultados: {:?}", e);
+                if LOGS_REGISTRO {
+                    let entry = RegistroLog::new(format!("Error al guardar resultados: {:?}", e));
+                    entry.guardar_logs().unwrap();
+                }
             }
         }
     }

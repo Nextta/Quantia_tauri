@@ -2593,10 +2593,6 @@ impl Backtest {
         stoploss: Option<f64>,
         takeprofit: Option<f64>,
     ) -> Option<Trade> {
-        if LOGS_REGISTRO {
-            self.add_registro(format!("Ejecutando entry: timestamp={} symbol={} signal={:?} precio_entrada={} stoploss={:?} takeprofit={:?}", timestamp, symbol.name.clone(), signal, precio_entrada, stoploss, takeprofit));
-        }
-
         let mut trade: Trade = Trade::new(self.id.clone(), symbol.clone()).await;
 
         let sl = stoploss.unwrap_or(0.0);
@@ -2625,8 +2621,8 @@ impl Backtest {
                 );
                 if LOGS_REGISTRO {
                     self.add_registro(format!(
-                        "Trade buy ejecutado: t0={} precio_entrada={} tp={} sl={}",
-                        t0, precio, tp, sl
+                        "Trade buy ejecutado: t0={} precio_entrada={} tp={} sl={} spread={}",
+                        t0, precio, tp, sl, spread
                     ));
                 }
                 return Some(trade);
@@ -4953,11 +4949,7 @@ impl Backtest {
             self.backtest(df.clone(), symbol.clone()).await.unwrap();
         }
 
-        let mut resultados = Resultados::new(self.id).await;
-
-        resultados.calcular_resultados(self.trades.clone(), self.balance.clone());
-
-        if resultados.n_trades > 0 {
+        if !self.trades.is_empty() {
             if LOGS_REGISTRO {
                 self.add_registro("Guardando los trades en la base de datos.".to_string());
             }
@@ -4968,15 +4960,23 @@ impl Backtest {
                 self.add_registro("Trades guardados en la base de datos.".to_string());
             }
 
+            let mut resultados = Resultados::new(self.id).await;
+
+            if LOGS_REGISTRO {
+                self.add_registro("Calculando los resultados.".to_string());
+            }
+
+            resultados.calcular_resultados(self.trades.clone(), self.balance.clone());
+
+            if LOGS_REGISTRO {
+                self.add_registro(format!("Resultados calculados: {:?}", resultados));
+            }
+
             if LOGS_REGISTRO {
                 self.add_registro("Guardando los resultados en la base de datos.".to_string());
             }
 
             resultados.guardar_resultados().await;
-
-            if LOGS_REGISTRO {
-                self.add_registro("Resultados guardados en la base de datos.".to_string());
-            }
         } else {
             if LOGS_REGISTRO {
                 self.add_registro("No se ha registrado ningun trade.".to_string());
