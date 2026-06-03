@@ -135,6 +135,7 @@ pub fn trange(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataF
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AtrParams {
     pub timeperiod: usize,
+    pub multiplier: f64,
 }
 
 // ============================================================================
@@ -145,9 +146,11 @@ pub struct AtrParams {
 pub fn atr(
     mut df: DataFrame,
     timeperiod: Option<usize>,
+    multiplier: Option<f64>,
     output_col: Option<&str>,
 ) -> PolarsResult<DataFrame> {
     let timeperiod = timeperiod.unwrap_or(14);
+    let multiplier = multiplier.unwrap_or(1.0);
     let output_col = output_col.unwrap_or("atr");
 
     let high = get_high(&df)?;
@@ -156,6 +159,7 @@ pub fn atr(
 
     let tr_series = calc_true_range(&high, &low, &close)?;
     let mut atr_series = rma_series(&tr_series, timeperiod)?;
+    atr_series = &atr_series * multiplier;
     atr_series.rename(output_col.into());
 
     df.with_column(atr_series.into())?;
@@ -232,7 +236,7 @@ mod tests {
     #[test]
     fn test_atr() {
         match load_data() {
-            Ok(df) => match atr(df, Some(14), None) {
+            Ok(df) => match atr(df, Some(14), Some(1.0), None) {
                 Ok(result) => {
                     save_data(&result, "download/test_atr.csv").unwrap();
                 }

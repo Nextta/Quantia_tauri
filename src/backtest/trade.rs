@@ -94,9 +94,9 @@ impl Trade {
     }
 
     /// Funciones
-    fn random_spread(&self) -> f64 {
+    pub fn random_spread(&self) -> f64 {
         let mut rng = rand::rng();
-        let spread = self.symbol.spread;
+        let spread = self.symbol.spread.clone();
         let mut numero: f64 = rng.random_range((spread / 2.0)..=spread);
 
         let numero_truncado: Decimal = truncate_decimal(
@@ -119,7 +119,7 @@ impl Trade {
     ) {
         self.tipo = EntryDirection::Buy;
         self.t0 = t0;
-        self.precio_entrada = precio_entrada + self.random_spread();
+        self.precio_entrada = precio_entrada; // + self.random_spread();
         self.tp = tp.unwrap_or(0.0);
         self.sl = sl.unwrap_or(0.0);
 
@@ -165,7 +165,7 @@ impl Trade {
         }
     }
 
-    pub fn close(&mut self, t1: String, precio_cierre: f64) {
+    pub fn close(&mut self, t1: String, precio_cierre: f64) -> f64 {
         self.t1 = t1;
         self.precio_cierre = precio_cierre;
         self.calcular_duración();
@@ -176,6 +176,8 @@ impl Trade {
         } else {
             self.label = 0;
         }
+
+        self.pl
     }
 
     ///Calcula el lotaje óptimo para una operación basado en el balance actual, el precio de entrada,

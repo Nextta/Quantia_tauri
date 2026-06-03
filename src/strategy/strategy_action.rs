@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::enums::actions::Action;
+use crate::strategy::strategy_condition::StrategyCondition;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StrategyAction {
@@ -10,6 +11,7 @@ pub struct StrategyAction {
     pub tipo_signal: String,
     pub tipo: Action,
     pub parametros: Value,
+    pub conditions: Option<StrategyCondition>,
 }
 
 impl StrategyAction {
@@ -19,6 +21,7 @@ impl StrategyAction {
         tipo_signal: String,
         tipo: Action,
         parametros: Value,
+        conditions: Option<StrategyCondition>,
     ) -> Self {
         Self {
             id,
@@ -26,6 +29,7 @@ impl StrategyAction {
             tipo_signal,
             tipo,
             parametros,
+            conditions,
         }
     }
 
@@ -36,6 +40,7 @@ impl StrategyAction {
             tipo_signal: String::new(),
             tipo: Action::Buy,
             parametros: Value::Null,
+            conditions: None,
         }
     }
 }

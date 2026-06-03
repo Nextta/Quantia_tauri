@@ -1,1 +1,1 @@
-pub const LOGS_REGISTRO: bool = false;
+pub const LOGS_REGISTRO: bool = true;
