@@ -40,8 +40,9 @@ use crate::enums::tipos::{BeTipo, TlTipo};
 use crate::structs::logs::RegistroLog;
 use crate::structs::options::NBarsOptions;
 use crate::structs::parametros::{BeParams, GestionParams, LimitParams, TlParams};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Backtest {
     pub id: i32,
     pub titulo: String,

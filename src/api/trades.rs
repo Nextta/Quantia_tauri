@@ -228,6 +228,142 @@ pub async fn get_trades_by_backtest(id_backtest: i32) -> Result<Vec<Trade>> {
     Ok(trades)
 }
 
+/// Obtiene todos los trades asociados a un backtest específico limitados a una cantidad de trades.
+///
+/// # Parámetros
+/// - `id_backtest`: ID del backtest del cual obtener los trades.
+/// - `limite`: Cantidad de trades que va a devolver.
+/// - `pagina`: Número de la pagina desde la que va a devolver.
+///
+/// # Returns
+/// Returns `Ok(Vec<Trade>)` con la lista de trades del backtest.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
+#[tauri::command]
+pub async fn get_trades_by_backtest_limit(
+    id_backtest: i32,
+    limite: i32,
+    pagina: i32,
+) -> Result<Vec<Trade>> {
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
+
+    let conn = db.connect()?;
+
+    let mut result = conn
+        .query(
+            "SELECT * FROM trades WHERE id_backtest = ? ORDER BY id LIMIT ? OFFSET ?;",
+            [id_backtest, limite, pagina],
+        )
+        .await?;
+
+    let mut trades: Vec<Trade> = Vec::new();
+
+    while let Some(row) = result.next().await? {
+        let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(row.get(2)?).await.unwrap(); // Necesito implementar la api de symbol.
+        let mut trade: Trade = Trade::new(row.get(1)?, symbol).await;
+
+        trade.id = row.get::<i32>(0)?;
+        trade.id_symbol = row.get::<i32>(2)?;
+        trade.tipo = if row.get::<String>(4)? == "Buy" {
+            EntryDirection::Buy
+        } else {
+            EntryDirection::Sell
+        };
+        trade.lotaje = row.get::<f64>(5)?;
+        trade.multiplicador = row.get::<f64>(6)?;
+        trade.t0 = row.get::<String>(7)?;
+        trade.precio_entrada = row.get::<f64>(8)?;
+        trade.tp = row.get::<f64>(9)?;
+        trade.sl = row.get::<f64>(10)?;
+        trade.t1 = row.get::<String>(11)?;
+        trade.precio_cierre = row.get::<f64>(12)?;
+        trade.precio_maximo = row.get::<f64>(13)?;
+        trade.precio_minimo = row.get::<f64>(14)?;
+        trade.duracion_segundos = row.get::<String>(15)?;
+        trade.duracion_minutos = row.get::<String>(16)?;
+        trade.duracion_horas = row.get::<String>(17)?;
+        trade.duracion_dias = row.get::<String>(18)?;
+        trade.label = row.get::<u32>(19)?;
+        trade.pl = row.get::<f64>(20)?;
+        trade.plsc = row.get::<f64>(21)?;
+        trade.pips_pl = row.get::<f64>(22)?;
+
+        trades.push(trade);
+    }
+
+    Ok(trades)
+}
+
+/// Obtiene todos los trades asociados a un backtest específico.
+///
+/// # Parámetros
+/// - `id_backtest`: ID del backtest del cual obtener los trades.
+///
+/// # Returns
+/// Returns `Ok(Vec<Trade>)` con la lista de trades del backtest.
+///
+/// # Errores
+/// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
+#[tauri::command]
+pub async fn get_trade_by_id(id: i32) -> Result<Trade> {
+    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+
+    let db = if !test_active.valor {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
+
+    let conn = db.connect()?;
+
+    let mut result = conn
+        .query("SELECT * FROM trades WHERE id = ?", [id])
+        .await?;
+
+    let row = result.next().await?.unwrap();
+    let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(row.get(2)?).await.unwrap(); // Necesito implementar la api de symbol.
+    let mut trade: Trade = Trade::new(row.get::<i32>(1)?, symbol).await;
+
+    trade.id = row.get::<i32>(0)?;
+    trade.id_symbol = row.get::<i32>(2)?;
+    trade.tipo = if row.get::<String>(4)? == "Buy" {
+        EntryDirection::Buy
+    } else {
+        EntryDirection::Sell
+    };
+    trade.lotaje = row.get::<f64>(5)?;
+    trade.multiplicador = row.get::<f64>(6)?;
+    trade.t0 = row.get::<String>(7)?;
+    trade.precio_entrada = row.get::<f64>(8)?;
+    trade.tp = row.get::<f64>(9)?;
+    trade.sl = row.get::<f64>(10)?;
+    trade.t1 = row.get::<String>(11)?;
+    trade.precio_cierre = row.get::<f64>(12)?;
+    trade.precio_maximo = row.get::<f64>(13)?;
+    trade.precio_minimo = row.get::<f64>(14)?;
+    trade.duracion_segundos = row.get::<String>(15)?;
+    trade.duracion_minutos = row.get::<String>(16)?;
+    trade.duracion_horas = row.get::<String>(17)?;
+    trade.duracion_dias = row.get::<String>(18)?;
+    trade.label = row.get::<u32>(19)?;
+    trade.pl = row.get::<f64>(20)?;
+    trade.plsc = row.get::<f64>(21)?;
+    trade.pips_pl = row.get::<f64>(22)?;
+
+    Ok(trade)
+}
+
 /// Elimina todos los trades por id.
 ///
 /// # Parámetros
@@ -342,6 +478,10 @@ mod tests {
         let id: i32 = insert_trades(trade.id_backtest.clone(), &trade).await?;
 
         let _ = get_trades_by_backtest(trade.id_backtest.clone()).await?;
+
+        let _ = get_trades_by_backtest_limit(trade.id_backtest.clone(), 20, 0).await?;
+
+        // let _ = get_trade_by_id(1).await?;
 
         let _ = delete_trades(id).await?;
 
