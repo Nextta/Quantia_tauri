@@ -1,4 +1,5 @@
 use crate::backtest::resultados::Resultados;
+use crate::utils::configuracion::DB_LOCAL;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
 use serde::Serialize;
@@ -22,17 +23,12 @@ where
     }
 }
 
-struct TestsActive {
-    pub valor: bool,
-}
-
-fn get_db_config() -> Result<(String, String, String, TestsActive)> {
+fn get_db_config() -> Result<(String, String, String)> {
     dotenv().expect(".env file not found");
     let db_path = env::var("DB_PATH").unwrap();
     let sync_url = env::var("TURSO_SYNC_URL").unwrap();
     let auth_token = env::var("TURSO_AUTH_TOKEN").unwrap();
-    let tests_active = TestsActive { valor: true };
-    Ok((db_path, sync_url, auth_token, tests_active))
+    Ok((db_path, sync_url, auth_token))
 }
 
 /// Crea la tabla `resultados` en la base de datos si no existe.
@@ -44,9 +40,9 @@ fn get_db_config() -> Result<(String, String, String, TestsActive)> {
 /// Retorna un error si no se puede conectar a la base de datos o si la creación de la tabla falla.
 #[tauri::command]
 pub async fn table_resultados() -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -146,10 +142,10 @@ pub async fn table_resultados() -> Result<String> {
 /// # Errores
 /// Retorna un error si no se puede conectar a la base de datos o si la inserción falla.
 #[tauri::command]
-pub async fn insert_resultados(resultados: Resultados) -> Result<i32> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+pub async fn insert_resultados(resultados: &Resultados) -> Result<i32> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -264,9 +260,9 @@ pub async fn insert_resultados(resultados: Resultados) -> Result<i32> {
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
 pub async fn get_resultados() -> Result<Vec<Resultados>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -367,9 +363,9 @@ pub async fn get_resultados() -> Result<Vec<Resultados>> {
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
 pub async fn get_resultados_by_id(id: i32) -> Result<Resultados> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -470,9 +466,9 @@ pub async fn get_resultados_by_id(id: i32) -> Result<Resultados> {
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
 pub async fn get_resultados_by_id_backtest(id: i32) -> Result<Resultados> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -573,9 +569,9 @@ pub async fn get_resultados_by_id_backtest(id: i32) -> Result<Resultados> {
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
 pub async fn delete_resultados(id: i32) -> Result<()> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -602,9 +598,9 @@ pub async fn delete_resultados(id: i32) -> Result<()> {
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
 pub async fn delete_resultados_by_backtest(id_backtest: i32) -> Result<()> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -701,7 +697,7 @@ mod tests {
 
         let _ = table_resultados().await?;
 
-        let id: i32 = insert_resultados(resultado.clone()).await?;
+        let id: i32 = insert_resultados(&resultado).await?;
 
         let _ = get_resultados().await?;
 

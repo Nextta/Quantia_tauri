@@ -28,7 +28,7 @@ impl BrokerCFD {
     }
 
     pub async fn create_broker_cfd(&mut self) {
-        self.id = insert_broker_cfd(self.clone()).await.unwrap();
+        self.id = insert_broker_cfd(&self).await.unwrap();
     }
 
     ///Funciones

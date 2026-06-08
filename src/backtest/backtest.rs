@@ -76,7 +76,7 @@ impl Backtest {
         }
         match table {
             Ok(_) => {
-                backtest.id = insert_backtest_cfd(backtest.clone()).await.unwrap();
+                backtest.id = insert_backtest_cfd(&backtest).await.unwrap();
                 if LOGS_REGISTRO {
                     backtest.add_registro("Backtest guardado en la base de datos".to_string());
                 }

@@ -1,7 +1,7 @@
 use crate::traits::ttipos::TTipos;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub enum Activo {
     Forex,
     Futuros,

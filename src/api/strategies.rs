@@ -4,6 +4,7 @@ use crate::strategy::strategy_action::StrategyAction;
 use crate::strategy::strategy_condition::StrategyCondition;
 use crate::strategy::strategy_indicator::StrategyIndicator;
 use crate::strategy::strategy_options::{StopLoss, StrategyOptions, TakeProfit, TradingDirection};
+use crate::utils::configuracion::DB_LOCAL;
 use crate::utils::tools::add_condition;
 use chrono::DateTime;
 use chrono::Utc;
@@ -32,17 +33,12 @@ where
     }
 }
 
-struct TestsActive {
-    pub valor: bool,
-}
-
-fn get_db_config() -> Result<(String, String, String, TestsActive)> {
+fn get_db_config() -> Result<(String, String, String)> {
     dotenv().expect(".env file not found");
     let db_path = env::var("DB_PATH").unwrap();
     let sync_url = env::var("TURSO_SYNC_URL").unwrap();
     let auth_token = env::var("TURSO_AUTH_TOKEN").unwrap();
-    let tests_active = TestsActive { valor: true };
-    Ok((db_path, sync_url, auth_token, tests_active))
+    Ok((db_path, sync_url, auth_token))
 }
 //================================Strategies================================
 
@@ -55,9 +51,9 @@ fn get_db_config() -> Result<(String, String, String, TestsActive)> {
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_strategies() -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -94,10 +90,10 @@ pub async fn table_strategies() -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
-pub async fn insert_strategies(strategy: Strategy) -> Result<i32> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+pub async fn insert_strategies(strategy: &Strategy) -> Result<i32> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -109,10 +105,10 @@ pub async fn insert_strategies(strategy: Strategy) -> Result<i32> {
 
     let parametros = params![
         strategy.id_user,
-        strategy.nombre,
-        strategy.descripcion,
+        strategy.nombre.clone(),
+        strategy.descripcion.clone(),
         strategy.activa,
-        strategy.creada_en
+        strategy.creada_en.clone()
     ];
     conn.query(
         "INSERT INTO strategies (id_user, nombre, descripcion, activa, creada_en) VALUES (?, ?, ?, ?, ?) RETURNING id",
@@ -133,9 +129,9 @@ pub async fn insert_strategies(strategy: Strategy) -> Result<i32> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_strategies() -> Result<Vec<Strategy>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -224,9 +220,9 @@ pub async fn get_strategies() -> Result<Vec<Strategy>> {
 /// Retorna error si no se encuentra la estrategia o falla la conexión.
 #[tauri::command]
 pub async fn get_strategies_by_id(id: i32) -> Result<Strategy> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -315,9 +311,9 @@ pub async fn get_strategies_by_id(id: i32) -> Result<Strategy> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -408,9 +404,9 @@ pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_strategies_by_nombre(nombre: String) -> Result<Vec<Strategy>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -501,9 +497,9 @@ pub async fn get_strategies_by_nombre(nombre: String) -> Result<Vec<Strategy>> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_active_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -591,9 +587,9 @@ pub async fn get_active_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_all_active_strategies() -> Result<Vec<Strategy>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -684,9 +680,9 @@ pub async fn get_all_active_strategies() -> Result<Vec<Strategy>> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_desactive_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -774,9 +770,9 @@ pub async fn get_desactive_strategies_by_user(id_user: i32) -> Result<Vec<Strate
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_all_desactive_strategies() -> Result<Vec<Strategy>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -867,9 +863,9 @@ pub async fn get_all_desactive_strategies() -> Result<Vec<Strategy>> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_active_strategies_by_date(fecha: String) -> Result<Vec<Strategy>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -968,9 +964,9 @@ pub async fn delete_strategy(id: i32) -> Result<String> {
     let _ = delete_strategy_action_by_strategy(id).await;
     let _ = delete_strategy_options_by_strategy(id).await;
 
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -998,9 +994,9 @@ pub async fn delete_strategy(id: i32) -> Result<String> {
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_strategy_indicators() -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1036,10 +1032,10 @@ pub async fn table_strategy_indicators() -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
-pub async fn insert_strategies_indicator(indicator: StrategyIndicator) -> Result<i32> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+pub async fn insert_strategies_indicator(indicator: &StrategyIndicator) -> Result<i32> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1051,8 +1047,8 @@ pub async fn insert_strategies_indicator(indicator: StrategyIndicator) -> Result
 
     let parametros = params![
         indicator.strategy_id,
-        indicator.nombre,
-        indicator.tipo,
+        indicator.nombre.clone(),
+        indicator.tipo.clone(),
         indicator.parametros.to_string()
     ];
     conn.query(
@@ -1077,9 +1073,9 @@ pub async fn insert_strategies_indicator(indicator: StrategyIndicator) -> Result
 /// Retorna error si no se encuentra el indicador o falla la conexión.
 #[tauri::command]
 pub async fn get_strategy_indicator_by_id(id: i32) -> Result<StrategyIndicator> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1122,9 +1118,9 @@ pub async fn get_strategy_indicator_by_id(id: i32) -> Result<StrategyIndicator> 
 pub async fn get_strategies_indicators_by_strategy_id(
     startegy_id: i32,
 ) -> Result<Vec<StrategyIndicator>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1167,9 +1163,9 @@ pub async fn get_strategies_indicators_by_strategy_id(
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_indicator(id: i32) -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1199,9 +1195,9 @@ pub async fn delete_strategy_indicator(id: i32) -> Result<String> {
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_indicator_by_strategy(strategy_id: i32) -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1233,9 +1229,9 @@ pub async fn delete_strategy_indicator_by_strategy(strategy_id: i32) -> Result<S
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_strategy_actions() -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1271,10 +1267,10 @@ pub async fn table_strategy_actions() -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
-pub async fn insert_strategies_action(action: StrategyAction) -> Result<i32> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+pub async fn insert_strategies_action(action: &StrategyAction) -> Result<i32> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1286,7 +1282,7 @@ pub async fn insert_strategies_action(action: StrategyAction) -> Result<i32> {
 
     let parametros = params![
         action.strategy_id,
-        action.tipo_signal,
+        action.tipo_signal.clone(),
         action.tipo.to_string(),
         action.parametros.to_string()
     ];
@@ -1312,9 +1308,9 @@ pub async fn insert_strategies_action(action: StrategyAction) -> Result<i32> {
 /// Retorna error si no se encuentra la acción o falla la conexión.
 #[tauri::command]
 pub async fn get_strategy_action_by_id(id: i32) -> Result<StrategyAction> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1397,9 +1393,9 @@ pub async fn get_strategy_action_by_id(id: i32) -> Result<StrategyAction> {
 pub async fn get_strategies_actions_by_strategy_id(
     startegy_id: i32,
 ) -> Result<Vec<StrategyAction>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1482,9 +1478,9 @@ pub async fn get_strategies_actions_by_strategy_id(
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_action(id: i32) -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1514,9 +1510,9 @@ pub async fn delete_strategy_action(id: i32) -> Result<String> {
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_action_by_strategy(strategy_id: i32) -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1547,9 +1543,9 @@ pub async fn delete_strategy_action_by_strategy(strategy_id: i32) -> Result<Stri
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_strategy_conditions() -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1590,10 +1586,10 @@ pub async fn table_strategy_conditions() -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
-pub async fn insert_strategy_condition(condition: StrategyCondition) -> Result<i32> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+pub async fn insert_strategy_condition(condition: &StrategyCondition) -> Result<i32> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1606,10 +1602,10 @@ pub async fn insert_strategy_condition(condition: StrategyCondition) -> Result<i
     let parametros = params![
         condition.strategy_id,
         condition.action_id,
-        condition.campo_a,
+        condition.campo_a.clone(),
         condition.shift_a,
-        condition.operador,
-        condition.campo_b,
+        condition.operador.clone(),
+        condition.campo_b.clone(),
         condition.shift_b,
         condition.logica.unwrap().to_string(),
         condition.orden
@@ -1636,9 +1632,9 @@ pub async fn insert_strategy_condition(condition: StrategyCondition) -> Result<i
 /// Retorna error si no se encuentra la condición o falla la conexión.
 #[tauri::command]
 pub async fn get_strategy_condition_by_id(id: i32) -> Result<StrategyCondition> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1691,9 +1687,9 @@ pub async fn get_strategy_condition_by_id(id: i32) -> Result<StrategyCondition> 
 pub async fn get_strategies_conditions_by_strategy_id(
     startegy_id: i32,
 ) -> Result<Vec<StrategyCondition>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1746,9 +1742,9 @@ pub async fn get_strategies_conditions_by_strategy_id(
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_condition(id: i32) -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1778,9 +1774,9 @@ pub async fn delete_strategy_condition(id: i32) -> Result<String> {
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_condition_by_strategy(strategy_id: i32) -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1811,9 +1807,9 @@ pub async fn delete_strategy_condition_by_strategy(strategy_id: i32) -> Result<S
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_strategy_options() -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1861,10 +1857,10 @@ pub async fn table_strategy_options() -> Result<String> {
 /// * `Ok(())` - Las opciones de estrategia fueron insertadas correctamente.
 /// * `Err(Error)` - Ocurrió un error al insertar las opciones de estrategia.
 #[tauri::command]
-pub async fn insert_strategy_options(options: StrategyOptions) -> Result<i32> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+pub async fn insert_strategy_options(options: &StrategyOptions) -> Result<i32> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -1891,8 +1887,8 @@ pub async fn insert_strategy_options(options: StrategyOptions) -> Result<i32> {
         options.numero_velas_cierre,
         options.cierre_limite_hora,
         options.hora_cierre_limite.to_string(),
-        options.parametros_stoploss.unwrap().to_json(),
-        options.parametros_takeprofit.unwrap().to_json(),
+        options.parametros_stoploss.as_ref().unwrap().to_json(),
+        options.parametros_takeprofit.as_ref().unwrap().to_json(),
     ];
 
     conn.execute("INSERT INTO strategy_options (strategy_id, multiples_tardes, trading_direccion, operar_finde, cerrar_fin_de_dia, hora_fin_de_dia, cerrar_viernes, hora_cierre_viernes, rango_operativo, rango_operativo_inicio, rango_operativo_fin, cerrar_fin_rango_operativo, activar_cierre_numero_velas, numero_velas_cierre, cierre_limite_hora, hora_cierre_limite, parametros_stoploss, parametros_takeprofit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", parametros).await?;
@@ -1913,9 +1909,9 @@ pub async fn insert_strategy_options(options: StrategyOptions) -> Result<i32> {
 /// Retorna error si no se encuentra la estrategia o falla la conexión.
 #[tauri::command]
 pub async fn get_strategy_options_by_id(id: i32) -> Result<StrategyOptions> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -2002,9 +1998,9 @@ pub async fn get_strategy_options_by_id(id: i32) -> Result<StrategyOptions> {
 /// Retorna error si no se encuentra la estrategia o falla la conexión.
 #[tauri::command]
 pub async fn get_strategy_options_by_strategy_id(strategy_id: i32) -> Result<StrategyOptions> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -2091,9 +2087,9 @@ pub async fn get_strategy_options_by_strategy_id(strategy_id: i32) -> Result<Str
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_option(id: i32) -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -2123,9 +2119,9 @@ pub async fn delete_strategy_option(id: i32) -> Result<String> {
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_strategy_options_by_strategy(strategy_id: i32) -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -2167,7 +2163,7 @@ mod tests {
                     opciones: StrategyOptions::new_empty(),
                 };
 
-                match insert_strategies(estrategia.clone()).await {
+                match insert_strategies(&estrategia).await {
                     Ok(id) => {
                         tokio::time::sleep(std::time::Duration::from_secs(5)).await;
 
@@ -2186,7 +2182,7 @@ mod tests {
                                     ),
                                 };
 
-                                match insert_strategies_indicator(indicator.clone()).await {
+                                match insert_strategies_indicator(&indicator).await {
                                     Ok(id_indicador) => {
                                         tokio::time::sleep(std::time::Duration::from_secs(5)).await;
                                         //================================TEST: GETTERS Indicators================================
@@ -2216,7 +2212,7 @@ mod tests {
                                     conditions: None,
                                 };
 
-                                match insert_strategies_action(action.clone()).await {
+                                match insert_strategies_action(&action).await {
                                     Ok(id_action) => {
                                         tokio::time::sleep(std::time::Duration::from_secs(5)).await;
                                         let condition: StrategyCondition = StrategyCondition {
@@ -2235,9 +2231,7 @@ mod tests {
 
                                         match table_strategy_conditions().await {
                                             Ok(_) => {
-                                                match insert_strategy_condition(condition.clone())
-                                                    .await
-                                                {
+                                                match insert_strategy_condition(&condition).await {
                                                     Ok(id_condition) => {
                                                         //================================TEST: GETTERS Conditions================================
                                                         let _ = get_strategy_condition_by_id(
@@ -2294,7 +2288,7 @@ mod tests {
                                     parametros_takeprofit: Some(TakeProfit::new_empty()),
                                 };
 
-                                match insert_strategy_options(option.clone()).await {
+                                match insert_strategy_options(&option).await {
                                     Ok(id_option) => {
                                         tokio::time::sleep(std::time::Duration::from_secs(5)).await;
                                         //================================TEST: GETTERS Options================================

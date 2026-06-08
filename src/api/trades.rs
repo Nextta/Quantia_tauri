@@ -2,6 +2,7 @@ use crate::api::symbols::get_symbol_cfd_by_id;
 use crate::backtest::symbol::SymbolInfoCFD;
 use crate::backtest::trade::Trade;
 use crate::enums::entry::EntryDirection;
+use crate::utils::configuracion::DB_LOCAL;
 use crate::utils::tools::truncate_decimal;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
@@ -27,17 +28,12 @@ where
     }
 }
 
-struct TestsActive {
-    pub valor: bool,
-}
-
-fn get_db_config() -> Result<(String, String, String, TestsActive)> {
+fn get_db_config() -> Result<(String, String, String)> {
     dotenv().expect(".env file not found");
     let db_path = env::var("DB_PATH").unwrap();
     let sync_url = env::var("TURSO_SYNC_URL").unwrap();
     let auth_token = env::var("TURSO_AUTH_TOKEN").unwrap();
-    let tests_active = TestsActive { valor: true };
-    Ok((db_path, sync_url, auth_token, tests_active))
+    Ok((db_path, sync_url, auth_token))
 }
 
 /// Crea la tabla `trades` en la base de datos si no existe.
@@ -49,9 +45,9 @@ fn get_db_config() -> Result<(String, String, String, TestsActive)> {
 /// Retorna un error si no se puede conectar a la base de datos o si la creación de la tabla falla.
 #[tauri::command]
 pub async fn table_trades() -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -108,9 +104,9 @@ pub async fn table_trades() -> Result<String> {
 /// Retorna un error si no se puede conectar a la base de datos o si la inserción falla.
 #[tauri::command]
 pub async fn insert_trades(id_backtest: i32, trade: &Trade) -> Result<i32> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -174,9 +170,9 @@ pub async fn insert_trades(id_backtest: i32, trade: &Trade) -> Result<i32> {
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
 pub async fn get_trades_by_backtest(id_backtest: i32) -> Result<Vec<Trade>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -246,9 +242,9 @@ pub async fn get_trades_by_backtest_limit(
     limite: i32,
     pagina: i32,
 ) -> Result<Vec<Trade>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -315,9 +311,9 @@ pub async fn get_trades_by_backtest_limit(
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
 pub async fn get_trade_by_id(id: i32) -> Result<Trade> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -376,9 +372,9 @@ pub async fn get_trade_by_id(id: i32) -> Result<Trade> {
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
 pub async fn delete_trades(id: i32) -> Result<()> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -405,9 +401,9 @@ pub async fn delete_trades(id: i32) -> Result<()> {
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
 pub async fn delete_trades_by_backtest(id_backtest: i32) -> Result<()> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?

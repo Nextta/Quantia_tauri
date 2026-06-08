@@ -63,6 +63,6 @@ impl SymbolInfoCFD {
     }
 
     pub async fn create_symbol(&mut self) {
-        self.id = insert_symbol_cfd(self.clone()).await.unwrap();
+        self.id = insert_symbol_cfd(&self).await.unwrap();
     }
 }
