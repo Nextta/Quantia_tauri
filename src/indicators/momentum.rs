@@ -202,16 +202,12 @@ pub struct AdxParams {
 ///
 /// # Fórmula
 /// ADX = EMA(DX), donde DX = ((+|DI| - |DI|) / (+|DI| + |DI|)) * 100
-pub fn adx(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn adx(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_name = output_col.unwrap_or("adx");
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
-    let close = get_close(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
+    let close = get_close(&df).unwrap();
 
     let high_vals = high.f64().unwrap();
     let low_vals = low.f64().unwrap();
@@ -220,9 +216,8 @@ pub fn adx(
     let n = high_vals.len();
 
     if n < (timeperiod * 2) {
-        let mut result_df = df.clone();
-        result_df.with_column(Series::new(output_name.into(), vec![f64::NAN; n]).into())?;
-        return Ok(result_df);
+        df.with_column(Series::new(output_name.into(), vec![f64::NAN; n]).into())
+            .unwrap();
     }
 
     let mut plus_dm = vec![0.0; n];
@@ -296,10 +291,8 @@ pub fn adx(
     let dx_series = Series::new("dx".into(), dx_vals);
     let adx_series = rma_series(&dx_series, timeperiod);
 
-    let mut result_df = df.clone();
     let adx_final = adx_series.with_name(output_name.into());
-    result_df.with_column(adx_final.into())?;
-    Ok(result_df)
+    df.with_column(adx_final.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -320,17 +313,13 @@ pub struct AdxrParams {
 ///
 /// # Fórmula
 /// ADXR = (ADX + ADX[timeperiod]) / 2
-pub fn adxr(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn adxr(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_name = output_col.unwrap_or("adxr");
 
     // Calcular ADX primero
-    let adx_df = adx(df.clone(), Some(timeperiod), Some("temp_adx"))?;
-    let adx_col = adx_df.column("temp_adx").unwrap().f64().unwrap();
+    adx(df, Some(timeperiod), Some("temp_adx"));
+    let adx_col = df.column("temp_adx").unwrap().f64().unwrap();
 
     let n = adx_col.len();
     let mut adxr_vals: Vec<f64> = vec![f64::NAN; n];
@@ -347,9 +336,7 @@ pub fn adxr(
     }
 
     let adxr_series = Series::new(output_name.into(), adxr_vals);
-    let mut result_df = df;
-    result_df.with_column(adxr_series.into())?;
-    Ok(result_df)
+    df.with_column(adxr_series.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -374,22 +361,22 @@ pub struct ApoParams {
 /// # Fórmula
 /// APO = EMA(fast) - EMA(slow)
 pub fn apo(
-    df: DataFrame,
+    df: &mut DataFrame,
     fastperiod: Option<usize>,
     slowperiod: Option<usize>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let fastperiod = fastperiod.unwrap_or(12);
     let slowperiod = slowperiod.unwrap_or(26);
     let output_name = output_col.unwrap_or("apo");
 
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
 
     let fast_ema = ema_series(&close, fastperiod);
     let slow_ema = ema_series(&close, slowperiod);
 
-    let fast_ca = fast_ema.f64()?;
-    let slow_ca = slow_ema.f64()?;
+    let fast_ca = fast_ema.f64().unwrap();
+    let slow_ca = slow_ema.f64().unwrap();
 
     let apo_vals: Vec<f64> = fast_ca
         .into_no_null_iter()
@@ -399,9 +386,7 @@ pub fn apo(
 
     let apo_series = Series::new(output_name.into(), apo_vals);
 
-    let mut result_df = df;
-    result_df.with_column(apo_series.into())?;
-    Ok(result_df)
+    df.with_column(apo_series.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -427,17 +412,17 @@ pub struct AroonParams {
 /// Aroon Up = ((timeperiod - períodos desde máximo) / timeperiod) * 100
 /// Aroon Down = ((timeperiod - períodos desde mínimo) / timeperiod) * 100
 pub fn aroon(
-    df: DataFrame,
+    df: &mut DataFrame,
     timeperiod: Option<usize>,
     output_col_up: Option<&str>,
     output_col_down: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_col_up = output_col_up.unwrap_or("aroon_up");
     let output_col_down = output_col_down.unwrap_or("aroon_down");
 
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
 
     let high_ca = high.f64().unwrap();
     let low_ca = low.f64().unwrap();
@@ -487,11 +472,10 @@ pub fn aroon(
     let aroon_up_series = Series::new(output_col_up.into(), &aroon_up);
     let aroon_down_series = Series::new(output_col_down.into(), &aroon_down);
 
-    let mut result_df = df;
-    result_df
-        .with_column(aroon_up_series.into())?
-        .with_column(aroon_down_series.into())?;
-    Ok(result_df)
+    df.with_column(aroon_up_series.into())
+        .unwrap()
+        .with_column(aroon_down_series.into())
+        .unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -513,11 +497,7 @@ pub struct AroonoscParams {
 ///
 /// # Fórmula
 /// AROONOSC = Aroon Up - Aroon Down
-pub fn aroonosc(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn aroonosc(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_name = output_col.unwrap_or("aroonosc");
 
@@ -525,17 +505,15 @@ pub fn aroonosc(
     let temp_up = "temp_aroon_up";
     let temp_down = "temp_aroon_down";
 
-    let aroon_df = aroon(df.clone(), Some(timeperiod), Some(temp_up), Some(temp_down))?;
+    aroon(df, Some(timeperiod), Some(temp_up), Some(temp_down));
 
-    let up_col = aroon_df.column(temp_up)?;
-    let down_col = aroon_df.column(temp_down)?;
+    let up_col = df.column(temp_up).unwrap();
+    let down_col = df.column(temp_down).unwrap();
 
     // AROONOSC = Aroon Up - Aroon Down
-    let aroonosc_series = (up_col - down_col)?.with_name(output_name.into());
+    let aroonosc_series = (up_col - down_col).unwrap().with_name(output_name.into());
 
-    let mut result_df = df;
-    result_df.with_column(aroonosc_series.into())?;
-    Ok(result_df)
+    df.with_column(aroonosc_series.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -557,31 +535,25 @@ pub struct BopParams {
 ///
 /// # Fórmula
 /// BOP = SMA((close - open) / (high - low), timeperiod)
-pub fn bop(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn bop(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_name = output_col.unwrap_or("bop");
 
-    let open = get_open(&df)?;
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
-    let close = get_close(&df)?;
+    let open = get_open(&df).unwrap();
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
+    let close = get_close(&df).unwrap();
 
     // Calcular BOP raw usando expresiones de Polars para eficiencia y alineación
-    let denominator = (&high - &low)?;
+    let denominator = (&high - &low).unwrap();
 
     // Evitar división por cero: donde denominator == 0, el resultado es NaN
-    let raw_bop = ((&close - &open)? / denominator)?;
+    let raw_bop = ((&close - &open).unwrap() / denominator).unwrap();
 
     // Aplicar suavizado SMA (Estándar de la industria)
     let bop_smoothed = sma_series(&raw_bop, timeperiod).with_name(output_name.into());
 
-    let mut result_df = df;
-    result_df.with_column(bop_smoothed.into())?;
-    Ok(result_df)
+    df.with_column(bop_smoothed.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -604,31 +576,30 @@ pub struct CciParams {
 /// # Fórmula
 /// CCI = (Typical Price - SMA(Typical Price)) / (0.015 * Mean Deviation)
 /// Typical Price = (high + low + close) / 3
-pub fn cci(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn cci(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let timeperiod = timeperiod.max(2);
     let output_name = output_col.unwrap_or("cci");
 
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
-    let close = get_close(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
+    let close = get_close(&df).unwrap();
 
     let high_vals = high
-        .f64()?
+        .f64()
+        .unwrap()
         .into_iter()
         .map(|v| v.unwrap_or(f64::NAN))
         .collect::<Vec<f64>>();
     let low_vals = low
-        .f64()?
+        .f64()
+        .unwrap()
         .into_iter()
         .map(|v| v.unwrap_or(f64::NAN))
         .collect::<Vec<f64>>();
     let close_vals = close
-        .f64()?
+        .f64()
+        .unwrap()
         .into_iter()
         .map(|v| v.unwrap_or(f64::NAN))
         .collect::<Vec<f64>>();
@@ -673,9 +644,7 @@ pub fn cci(
     }
 
     let cci_series = Series::new(output_name.into(), &cci_vals);
-    let mut result_df = df;
-    result_df.with_column(cci_series.into())?;
-    Ok(result_df)
+    df.with_column(cci_series.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -699,15 +668,11 @@ pub struct CmoParams {
 /// CMO = 100 * ((sum_up - sum_down) / (sum_up + sum_down))
 /// sum_up = suma de precios que subieron
 /// sum_down = suma de precios que bajaron
-pub fn cmo(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn cmo(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_col = output_col.unwrap_or("cmo");
 
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
     let close_ca = close.f64().unwrap();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
@@ -747,9 +712,7 @@ pub fn cmo(
     }
 
     let cmo_series = Series::new(output_col.into(), &cmo_vals);
-    let mut result_df = df;
-    result_df.with_column(cmo_series.into())?;
-    Ok(result_df)
+    df.with_column(cmo_series.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -771,16 +734,12 @@ pub struct DxParams {
 ///
 /// # Fórmula
 /// DX = (|+DI - -DI| / (+DI + -DI)) * 100
-pub fn dx(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn dx(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_name = output_col.unwrap_or("dx");
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
-    let close = get_close(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
+    let close = get_close(&df).unwrap();
 
     let high_vals = high.f64().unwrap();
     let low_vals = low.f64().unwrap();
@@ -862,9 +821,7 @@ pub fn dx(
     }
 
     let dx_series = Series::new(output_name.into(), dx_vals);
-    let mut result_df = df;
-    result_df.with_column(dx_series.into())?;
-    Ok(result_df)
+    df.with_column(dx_series.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -896,14 +853,14 @@ pub struct MacdParams {
 /// Signal = EMA(MACD, signalperiod)
 /// Histogram = MACD - Signal
 pub fn macd(
-    df: DataFrame,
+    df: &mut DataFrame,
     fastperiod: Option<usize>,
     slowperiod: Option<usize>,
     signalperiod: Option<usize>,
     output_col: Option<&str>,
     output_col_signal: Option<&str>,
     output_col_hist: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let fastperiod = fastperiod.unwrap_or(12);
     let slowperiod = slowperiod.unwrap_or(26);
     let signalperiod = signalperiod.unwrap_or(9);
@@ -911,7 +868,7 @@ pub fn macd(
     let output_col_signal = output_col_signal.unwrap_or("macd_signal");
     let output_col_hist = output_col_hist.unwrap_or("macd_hist");
 
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
     let fast_ema = ema_series(&close, fastperiod);
     let slow_ema = ema_series(&close, slowperiod);
 
@@ -950,11 +907,12 @@ pub fn macd(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_col.into(), macd_vals).into())?;
-    result_df.with_column(Series::new(output_col_signal.into(), signal_vals).into())?;
-    result_df.with_column(Series::new(output_col_hist.into(), hist_vals).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_col.into(), macd_vals).into())
+        .unwrap();
+    df.with_column(Series::new(output_col_signal.into(), signal_vals).into())
+        .unwrap();
+    df.with_column(Series::new(output_col_hist.into(), hist_vals).into())
+        .unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -986,7 +944,7 @@ pub struct MacdextParams {
 /// # Retorna
 /// DataFrame con columnas "macd", "macd_signal" y "macd_hist" añadidas
 pub fn macdext(
-    df: DataFrame,
+    df: &mut DataFrame,
     fastperiod: Option<usize>,
     slowperiod: Option<usize>,
     signalperiod: Option<usize>,
@@ -996,7 +954,7 @@ pub fn macdext(
     output_col: Option<&str>,
     output_col_signal: Option<&str>,
     output_col_hist: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let fastperiod = fastperiod.unwrap_or(12);
     let slowperiod = slowperiod.unwrap_or(26);
     let signalperiod = signalperiod.unwrap_or(9);
@@ -1010,7 +968,7 @@ pub fn macdext(
     let output_col_signal = output_col_signal.unwrap_or("macd_signal");
     let output_col_hist = output_col_hist.unwrap_or("macd_hist");
 
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
 
     // Helper para despachar tipos de MA
     fn get_ma(series: &Series, period: usize, ma_type: usize) -> Series {
@@ -1059,11 +1017,12 @@ pub fn macdext(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_col.into(), macd_vals).into())?;
-    result_df.with_column(Series::new(output_col_signal.into(), signal_vals).into())?;
-    result_df.with_column(Series::new(output_col_hist.into(), hist_vals).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_col.into(), macd_vals).into())
+        .unwrap();
+    df.with_column(Series::new(output_col_signal.into(), signal_vals).into())
+        .unwrap();
+    df.with_column(Series::new(output_col_hist.into(), hist_vals).into())
+        .unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1082,12 +1041,12 @@ pub struct MacdfixParams {
 /// # Retorna
 /// DataFrame con columnas "macd", "macd_signal" y "macd_hist" añadidas
 pub fn macdfix(
-    df: DataFrame,
+    df: &mut DataFrame,
     signalperiod: Option<usize>,
     output_col: Option<&str>,
     output_col_signal: Option<&str>,
     output_col_hist: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let signalperiod = signalperiod.unwrap_or(9);
     let output_col = output_col.unwrap_or("macd");
     let output_col_signal = output_col_signal.unwrap_or("macd_signal");
@@ -1100,7 +1059,7 @@ pub fn macdfix(
         Some(output_col),
         Some(output_col_signal),
         Some(output_col_hist),
-    )
+    );
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1126,17 +1085,13 @@ pub struct MfiParams {
 /// Money Flow = Typical Price * Volume
 /// Money Ratio = Positive Flow / Negative Flow
 /// MFI = 100 - (100 / (1 + Money Ratio))
-pub fn mfi(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn mfi(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_col = output_col.unwrap_or("mfi");
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
-    let close = get_close(&df)?;
-    let volume = get_volume(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
+    let close = get_close(&df).unwrap();
+    let volume = get_volume(&df).unwrap();
 
     let high_ca = high.f64().unwrap();
     let low_ca = low.f64().unwrap();
@@ -1145,9 +1100,8 @@ pub fn mfi(
 
     let n = high_ca.len();
     if n <= timeperiod {
-        let mut result_df = df;
-        result_df.with_column(Series::new(output_col.into(), vec![f64::NAN; n]).into())?;
-        return Ok(result_df);
+        df.with_column(Series::new(output_col.into(), vec![f64::NAN; n]).into())
+            .unwrap();
     }
 
     // Convertir a vectores de f64 para acceso rápido
@@ -1201,9 +1155,7 @@ pub fn mfi(
     }
 
     let mfi_series = Series::new(output_col.into(), mfi_vals);
-    let mut result_df = df;
-    result_df.with_column(mfi_series.into())?;
-    Ok(result_df)
+    df.with_column(mfi_series.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1225,16 +1177,12 @@ pub struct MinusDiParams {
 ///
 /// # Fórmula
 /// -DI = (Smoothed -DM / Smoothed TR) * 100
-pub fn minus_di(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn minus_di(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_name = output_col.unwrap_or("minus_di");
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
-    let close = get_close(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
+    let close = get_close(&df).unwrap();
 
     let high_vals = high.f64().unwrap();
     let low_vals = low.f64().unwrap();
@@ -1292,9 +1240,7 @@ pub fn minus_di(
         .collect();
 
     let minus_di_series = Series::new(output_name.into(), minus_di_vals);
-    let mut result_df = df;
-    result_df.with_column(minus_di_series.into())?;
-    Ok(result_df)
+    df.with_column(minus_di_series.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1316,15 +1262,11 @@ pub struct MinusDmParams {
 ///
 /// # Fórmula
 /// -DM = RMA(Max(high - low, high - prev_close, prev_close - low))
-pub fn minus_dm(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn minus_dm(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_name = output_col.unwrap_or("minus_dm");
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
 
     let high_vals = high.f64().unwrap();
     let low_vals = low.f64().unwrap();
@@ -1351,9 +1293,7 @@ pub fn minus_dm(
     let minus_dm_series = Series::new(output_name.into(), minus_dm);
     let smoothed_minus_dm = rma_series(&minus_dm_series, timeperiod);
 
-    let mut result_df = df;
-    result_df.with_column(smoothed_minus_dm.into())?;
-    Ok(result_df)
+    df.with_column(smoothed_minus_dm.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1375,14 +1315,10 @@ pub struct MomParams {
 ///
 /// # Fórmula
 /// MOM = close[i] - close[i - timeperiod]
-pub fn mom(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn mom(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(10);
     let output_col = output_col.unwrap_or("mom");
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
 
     let close_ca = close.f64().unwrap();
     let n = close_ca.len();
@@ -1405,9 +1341,8 @@ pub fn mom(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_col.into(), mom_vals).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_col.into(), mom_vals).into())
+        .unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1429,16 +1364,12 @@ pub struct PlusDiParams {
 ///
 /// # Fórmula
 /// +DI = (Smoothed +DM / Smoothed TR) * 100
-pub fn plus_di(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn plus_di(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_name = output_col.unwrap_or("plus_di");
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
-    let close = get_close(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
+    let close = get_close(&df).unwrap();
 
     let high_vals = high.f64().unwrap();
     let low_vals = low.f64().unwrap();
@@ -1496,9 +1427,7 @@ pub fn plus_di(
         .collect();
 
     let plus_di_series = Series::new(output_name.into(), plus_di_vals);
-    let mut result_df = df;
-    result_df.with_column(plus_di_series.into())?;
-    Ok(result_df)
+    df.with_column(plus_di_series.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1520,15 +1449,11 @@ pub struct PlusDmParams {
 ///
 /// # Fórmula
 /// +DM = RMA(Max(high - low, high - prev_close, prev_close - low))
-pub fn plus_dm(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn plus_dm(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_name = output_col.unwrap_or("plus_dm");
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
 
     let high_vals = high.f64().unwrap();
     let low_vals = low.f64().unwrap();
@@ -1555,9 +1480,7 @@ pub fn plus_dm(
     let plus_dm_series = Series::new(output_name.into(), plus_dm);
     let smoothed_plus_dm = rma_series(&plus_dm_series, timeperiod);
 
-    let mut result_df = df;
-    result_df.with_column(smoothed_plus_dm.into())?;
-    Ok(result_df)
+    df.with_column(smoothed_plus_dm.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1582,20 +1505,20 @@ pub struct PpoParams {
 /// # Fórmula
 /// PPO = ((EMA(fast) - EMA(slow)) / EMA(slow)) * 100
 pub fn ppo(
-    df: DataFrame,
+    df: &mut DataFrame,
     fastperiod: Option<usize>,
     slowperiod: Option<usize>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let fastperiod = fastperiod.unwrap_or(12);
     let slowperiod = slowperiod.unwrap_or(26);
     let output_name = output_col.unwrap_or("ppo");
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
 
     let fast_ema = ema_series(&close, fastperiod);
     let slow_ema = ema_series(&close, slowperiod);
-    let fast_ca = fast_ema.f64()?;
-    let slow_ca = slow_ema.f64()?;
+    let fast_ca = fast_ema.f64().unwrap();
+    let slow_ca = slow_ema.f64().unwrap();
 
     let ppo_vals: Vec<f64> = fast_ca
         .into_no_null_iter()
@@ -1605,9 +1528,7 @@ pub fn ppo(
 
     let ppo_series = Series::new(output_name.into(), ppo_vals);
 
-    let mut result_df = df;
-    result_df.with_column(ppo_series.into())?;
-    Ok(result_df)
+    df.with_column(ppo_series.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1629,14 +1550,10 @@ pub struct RocParams {
 ///
 /// # Fórmula
 /// ROC = ((close[i] / close[i - timeperiod]) - 1) * 100
-pub fn roc(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn roc(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(10);
     let output_col = output_col.unwrap_or("roc");
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
 
     let close_ca = close.f64().unwrap();
     let n = close_ca.len();
@@ -1658,9 +1575,8 @@ pub fn roc(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_col.into(), roc_vals).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_col.into(), roc_vals).into())
+        .unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1682,14 +1598,10 @@ pub struct RocpParams {
 ///
 /// # Fórmula
 /// ROCP = (close[i] - close[i - timeperiod]) / close[i - timeperiod]
-pub fn rocp(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn rocp(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(10);
     let output_col = output_col.unwrap_or("rocp");
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
 
     let close_ca = close.f64().unwrap();
     let n = close_ca.len();
@@ -1711,9 +1623,8 @@ pub fn rocp(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_col.into(), rocp_vals).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_col.into(), rocp_vals).into())
+        .unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1735,14 +1646,10 @@ pub struct RocrParams {
 ///
 /// # Fórmula
 /// ROCR = close[i] / close[i - timeperiod]
-pub fn rocr(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn rocr(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(10);
     let output_col = output_col.unwrap_or("rocr");
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
 
     let close_ca = close.f64().unwrap();
     let n = close_ca.len();
@@ -1764,9 +1671,8 @@ pub fn rocr(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_col.into(), rocr_vals).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_col.into(), rocr_vals).into())
+        .unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1788,14 +1694,10 @@ pub struct Roc100Params {
 ///
 /// # Fórmula
 /// ROCR100 = (close[i] / close[i - timeperiod]) * 100
-pub fn rocr100(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn rocr100(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(10);
     let output_col = output_col.unwrap_or("rocr100");
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
 
     let close_ca = close.f64().unwrap();
     let n = close_ca.len();
@@ -1817,9 +1719,8 @@ pub fn rocr100(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_col.into(), rocr100_vals).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_col.into(), rocr100_vals).into())
+        .unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1843,22 +1744,17 @@ pub struct RsiParams {
 /// # Fórmula
 /// RSI = 100 - (100 / (1 + RS))
 /// RS = Average Gain / Average Loss
-pub fn rsi(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn rsi(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_col = output_col.unwrap_or("rsi");
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
 
     let close_ca = close.f64().unwrap();
     let n = close_ca.len();
 
     if n <= 1 {
-        let mut result_df = df;
-        result_df.with_column(Series::new(output_col.into(), vec![f64::NAN; n]).into())?;
-        return Ok(result_df);
+        df.with_column(Series::new(output_col.into(), vec![f64::NAN; n]).into())
+            .unwrap();
     }
 
     // Convertimos a vector manejando nulos para evitar desalineación
@@ -1914,9 +1810,8 @@ pub fn rsi(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_col.into(), rsi_vals).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_col.into(), rsi_vals).into())
+        .unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -1950,14 +1845,14 @@ pub struct StochParams {
 /// %K = ((close - lowest_low) / (highest_high - lowest_low)) * 100
 /// %D = SMA(%K, slowd_period)
 pub fn stoch(
-    df: DataFrame,
+    df: &mut DataFrame,
     fastk_period: Option<usize>,
     slowk_period: Option<usize>,
     slowk_matype: Option<usize>,
     slowd_period: Option<usize>,
     output_col_k: Option<&str>,
     output_col_d: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let fastk_period = fastk_period.unwrap_or(5).max(2);
     let slowk_period = slowk_period.unwrap_or(3).max(2);
     let slowd_period = slowd_period.unwrap_or(3).max(2);
@@ -1968,9 +1863,9 @@ pub fn stoch(
     let output_col_k = output_col_k.unwrap_or("slow_k");
     let output_col_d = output_col_d.unwrap_or("slow_d");
 
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
-    let close = get_close(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
+    let close = get_close(&df).unwrap();
 
     let high_ca = high.f64().unwrap();
     let low_ca = low.f64().unwrap();
@@ -2030,11 +1925,8 @@ pub fn stoch(
     k_smooth_series.rename(output_col_k.into());
     d_smooth_series.rename(output_col_d.into());
 
-    let mut result_df = df;
-    result_df.with_column(k_smooth_series.into())?;
-    result_df.with_column(d_smooth_series.into())?;
-
-    Ok(result_df)
+    df.with_column(k_smooth_series.into()).unwrap();
+    df.with_column(d_smooth_series.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -2063,13 +1955,13 @@ pub struct StochfParams {
 /// %K = ((close - lowest_low) / (highest_high - lowest_low)) * 100
 /// %D = EMA(%K, fastd_period)
 pub fn stochf(
-    df: DataFrame,
+    df: &mut DataFrame,
     fastk_period: Option<usize>,
     fastd_period: Option<usize>,
     fastd_matype: Option<usize>,
     output_col_k: Option<&str>,
     output_col_d: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let fastk_period = fastk_period.unwrap_or(5).max(2);
     let fastd_period = fastd_period.unwrap_or(3).max(2);
 
@@ -2079,9 +1971,9 @@ pub fn stochf(
     let output_col_k = output_col_k.unwrap_or("fast_k");
     let output_col_d = output_col_d.unwrap_or("fast_d");
 
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
-    let close = get_close(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
+    let close = get_close(&df).unwrap();
 
     let high_ca = high.f64().unwrap();
     let low_ca = low.f64().unwrap();
@@ -2136,11 +2028,8 @@ pub fn stochf(
 
     fastd_series.rename(output_col_d.into());
 
-    let mut result_df = df;
-    result_df.with_column(fastk_series.into())?;
-    result_df.with_column(fastd_series.into())?;
-
-    Ok(result_df)
+    df.with_column(fastk_series.into()).unwrap();
+    df.with_column(fastd_series.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -2171,14 +2060,14 @@ pub struct StochRsiParams {
 /// %K = (RSI - lowest_RSI) / (highest_RSI - lowest_RSI)
 /// %D = SMA(%K, fastd_period)
 pub fn stochrsi(
-    df: DataFrame,
+    df: &mut DataFrame,
     timeperiod: Option<usize>,
     fastk_period: Option<usize>,
     fastd_period: Option<usize>,
     fastd_matype: Option<usize>,
     output_col_k: Option<&str>,
     output_col_d: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let timeperiod = timeperiod.unwrap_or(14).max(2);
     let fastk_period = fastk_period.unwrap_or(3).max(2);
     let fastd_period = fastd_period.unwrap_or(3).max(2);
@@ -2190,9 +2079,9 @@ pub fn stochrsi(
     let output_col_d = output_col_d.unwrap_or("stochrsi_d");
 
     // Calculamos el RSI (usando una copia para no alterar el original antes de tiempo)
-    let rsi_df = rsi(df.clone(), Some(timeperiod), Some("temp_rsi"))?;
-    let rsi_col = rsi_df.column("temp_rsi")?;
-    let rsi_ca = rsi_col.f64()?;
+    rsi(df, Some(timeperiod), Some("temp_rsi"));
+    let rsi_col = df.column("temp_rsi").unwrap();
+    let rsi_ca = rsi_col.f64().unwrap();
 
     let n = df.height();
     let mut stochrsi_vals: Vec<f64> = vec![f64::NAN; n];
@@ -2242,11 +2131,8 @@ pub fn stochrsi(
     k_smooth_series.rename(output_col_k.into());
     d_smooth_series.rename(output_col_d.into());
 
-    let mut result_df = df;
-    result_df.with_column(k_smooth_series.into())?;
-    result_df.with_column(d_smooth_series.into())?;
-
-    Ok(result_df)
+    df.with_column(k_smooth_series.into()).unwrap();
+    df.with_column(d_smooth_series.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -2270,14 +2156,10 @@ pub struct TrixParams {
 /// # Fórmula
 /// TRIX = ((EMA3[t] - EMA3[t-1]) / EMA3[t-1]) * 100
 /// donde EMA3 = EMA(EMA(EMA(close)))
-pub fn trix(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn trix(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(30);
     let output_col = output_col.unwrap_or("trix");
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
 
     let ema1 = ema_series(&close, timeperiod);
     let ema2 = ema_series(&ema1, timeperiod);
@@ -2300,9 +2182,8 @@ pub fn trix(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_col.into(), trix_vals).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_col.into(), trix_vals).into())
+        .unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -2332,24 +2213,24 @@ pub struct UltoscParams {
 /// Avg = sum(BP) / sum(TR)
 /// ULTOSC = 100 * (4*Avg1 + 2*Avg2 + Avg3) / 7
 pub fn ultosc(
-    df: DataFrame,
+    df: &mut DataFrame,
     timeperiod1: Option<usize>,
     timeperiod2: Option<usize>,
     timeperiod3: Option<usize>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let t1 = timeperiod1.unwrap_or(7);
     let t2 = timeperiod2.unwrap_or(14);
     let t3 = timeperiod3.unwrap_or(28);
     let output_col = output_col.unwrap_or("ultosc");
 
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
-    let close = get_close(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
+    let close = get_close(&df).unwrap();
 
-    let h_ca = high.f64()?;
-    let l_ca = low.f64()?;
-    let c_ca = close.f64()?;
+    let h_ca = high.f64().unwrap();
+    let l_ca = low.f64().unwrap();
+    let c_ca = close.f64().unwrap();
     let n = df.height();
 
     let mut bp = vec![0.0; n];
@@ -2423,9 +2304,8 @@ pub fn ultosc(
     }
 
     let ultosc_series = Series::new(output_col.into(), ultosc_vals);
-    let mut result_df = df;
-    result_df.with_column(ultosc_series.into())?;
-    Ok(result_df)
+
+    df.with_column(ultosc_series.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -2448,20 +2328,16 @@ pub struct WillrParams {
 ///
 /// # Fórmula
 /// %R = ((highest_high - close) / (highest_high - lowest_low)) * -100
-pub fn willr(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn willr(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14).max(2);
     let output_col = output_col.unwrap_or("willr");
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
-    let close = get_close(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
+    let close = get_close(&df).unwrap();
 
-    let high_ca = high.f64()?;
-    let low_ca = low.f64()?;
-    let close_ca = close.f64()?;
+    let high_ca = high.f64().unwrap();
+    let low_ca = low.f64().unwrap();
+    let close_ca = close.f64().unwrap();
 
     let n = high_ca.len();
     let mut willr_vals: Vec<f64> = vec![f64::NAN; n];
@@ -2514,9 +2390,8 @@ pub fn willr(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_col.into(), willr_vals).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_col.into(), willr_vals).into())
+        .unwrap();
 }
 
 #[cfg(test)]
@@ -2544,12 +2419,10 @@ mod tests {
     #[test]
     fn test_adx() {
         match load_data() {
-            Ok(df) => match adx(df, Some(14), None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_adx.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute ADX: {:?}", e),
-            },
+            Ok(mut df) => {
+                adx(&mut df, Some(14), None);
+                save_data(&df, "download/test_adx.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2557,12 +2430,10 @@ mod tests {
     #[test]
     fn test_adxr() {
         match load_data() {
-            Ok(df) => match adxr(df, Some(14), None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_adxr.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute ADXR: {:?}", e),
-            },
+            Ok(mut df) => {
+                adxr(&mut df, Some(14), None);
+                save_data(&df, "download/test_adxr.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2570,12 +2441,10 @@ mod tests {
     #[test]
     fn test_apo() {
         match load_data() {
-            Ok(df) => match apo(df, Some(12), Some(26), None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_apo.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute APO: {:?}", e),
-            },
+            Ok(mut df) => {
+                apo(&mut df, Some(12), Some(26), None);
+                save_data(&df, "download/test_apo.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2583,12 +2452,10 @@ mod tests {
     #[test]
     fn test_aroon() {
         match load_data() {
-            Ok(df) => match aroon(df, Some(14), None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_aroon.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute Aroon: {:?}", e),
-            },
+            Ok(mut df) => {
+                aroon(&mut df, Some(14), None, None);
+                save_data(&df, "download/test_aroon.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2596,12 +2463,10 @@ mod tests {
     #[test]
     fn test_aroonosc() {
         match load_data() {
-            Ok(df) => match aroonosc(df, Some(14), None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_aroonosc.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute Aroon Oscillator: {:?}", e),
-            },
+            Ok(mut df) => {
+                aroonosc(&mut df, Some(14), None);
+                save_data(&df, "download/test_aroonosc.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2609,12 +2474,10 @@ mod tests {
     #[test]
     fn test_bop() {
         match load_data() {
-            Ok(df) => match bop(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_bop.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute BOP: {:?}", e),
-            },
+            Ok(mut df) => {
+                bop(&mut df, None, None);
+                save_data(&df, "download/test_bop.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2622,12 +2485,10 @@ mod tests {
     #[test]
     fn test_cci() {
         match load_data() {
-            Ok(df) => match cci(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_cci.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute CCI: {:?}", e),
-            },
+            Ok(mut df) => {
+                cci(&mut df, None, None);
+                save_data(&df, "download/test_cci.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2635,12 +2496,10 @@ mod tests {
     #[test]
     fn test_cmo() {
         match load_data() {
-            Ok(df) => match cmo(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_cmo.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute CMO: {:?}", e),
-            },
+            Ok(mut df) => {
+                cmo(&mut df, None, None);
+                save_data(&df, "download/test_cmo.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2648,12 +2507,10 @@ mod tests {
     #[test]
     fn test_dx() {
         match load_data() {
-            Ok(df) => match dx(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_dx.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute DX: {:?}", e),
-            },
+            Ok(mut df) => {
+                dx(&mut df, None, None);
+                save_data(&df, "download/test_dx.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2661,12 +2518,10 @@ mod tests {
     #[test]
     fn test_macd() {
         match load_data() {
-            Ok(df) => match macd(df, Some(12), Some(26), Some(9), None, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_macd.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute MACD: {:?}", e),
-            },
+            Ok(mut df) => {
+                macd(&mut df, Some(12), Some(26), Some(9), None, None, None);
+                save_data(&df, "download/test_macd.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2674,12 +2529,12 @@ mod tests {
     #[test]
     fn test_macdext() {
         match load_data() {
-            Ok(df) => match macdext(df, None, None, None, None, None, None, None, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_macdext.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute macdext: {:?}", e),
-            },
+            Ok(mut df) => {
+                macdext(
+                    &mut df, None, None, None, None, None, None, None, None, None,
+                );
+                save_data(&df, "download/test_macdext.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2687,12 +2542,10 @@ mod tests {
     #[test]
     fn test_macdfix() {
         match load_data() {
-            Ok(df) => match macdfix(df, None, None, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_macdfix.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute macdfix: {:?}", e),
-            },
+            Ok(mut df) => {
+                macdfix(&mut df, None, None, None, None);
+                save_data(&df, "download/test_macdfix.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2700,12 +2553,10 @@ mod tests {
     #[test]
     fn test_mfi() {
         match load_data() {
-            Ok(df) => match mfi(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_mfi.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute mfi: {:?}", e),
-            },
+            Ok(mut df) => {
+                mfi(&mut df, None, None);
+                save_data(&df, "download/test_mfi.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2713,12 +2564,10 @@ mod tests {
     #[test]
     fn test_minus_di() {
         match load_data() {
-            Ok(df) => match minus_di(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_minus_di.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute minus_di: {:?}", e),
-            },
+            Ok(mut df) => {
+                minus_di(&mut df, None, None);
+                save_data(&df, "download/test_minus_di.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2726,12 +2575,10 @@ mod tests {
     #[test]
     fn test_minus_dm() {
         match load_data() {
-            Ok(df) => match minus_dm(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_minus_dm.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute minus_dm: {:?}", e),
-            },
+            Ok(mut df) => {
+                minus_dm(&mut df, None, None);
+                save_data(&df, "download/test_minus_dm.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2739,12 +2586,10 @@ mod tests {
     #[test]
     fn test_mom() {
         match load_data() {
-            Ok(df) => match mom(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_mom.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute mom: {:?}", e),
-            },
+            Ok(mut df) => {
+                mom(&mut df, None, None);
+                save_data(&df, "download/test_mom.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2752,12 +2597,10 @@ mod tests {
     #[test]
     fn test_plus_di() {
         match load_data() {
-            Ok(df) => match plus_di(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_plus_di.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute plus_di: {:?}", e),
-            },
+            Ok(mut df) => {
+                plus_di(&mut df, None, None);
+                save_data(&df, "download/test_plus_di.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2765,12 +2608,10 @@ mod tests {
     #[test]
     fn test_plus_dm() {
         match load_data() {
-            Ok(df) => match plus_dm(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_plus_dm.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute plus_dm: {:?}", e),
-            },
+            Ok(mut df) => {
+                plus_dm(&mut df, None, None);
+                save_data(&df, "download/test_plus_dm.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2778,12 +2619,10 @@ mod tests {
     #[test]
     fn test_ppo() {
         match load_data() {
-            Ok(df) => match ppo(df, None, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_ppo.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute ppo: {:?}", e),
-            },
+            Ok(mut df) => {
+                ppo(&mut df, None, None, None);
+                save_data(&df, "download/test_ppo.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2791,12 +2630,10 @@ mod tests {
     #[test]
     fn test_roc() {
         match load_data() {
-            Ok(df) => match roc(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_roc.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute roc: {:?}", e),
-            },
+            Ok(mut df) => {
+                roc(&mut df, None, None);
+                save_data(&df, "download/test_roc.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2804,12 +2641,10 @@ mod tests {
     #[test]
     fn test_rocp() {
         match load_data() {
-            Ok(df) => match rocp(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_rocp.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute rocp: {:?}", e),
-            },
+            Ok(mut df) => {
+                rocp(&mut df, None, None);
+                save_data(&df, "download/test_rocp.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2817,12 +2652,10 @@ mod tests {
     #[test]
     fn test_rocr() {
         match load_data() {
-            Ok(df) => match rocr(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_rocr.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute rocr: {:?}", e),
-            },
+            Ok(mut df) => {
+                rocr(&mut df, None, None);
+                save_data(&df, "download/test_rocr.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2830,12 +2663,10 @@ mod tests {
     #[test]
     fn test_rocr100() {
         match load_data() {
-            Ok(df) => match rocr100(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_rocr100.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute rocr100: {:?}", e),
-            },
+            Ok(mut df) => {
+                rocr100(&mut df, None, None);
+                save_data(&df, "download/test_rocr100.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2843,12 +2674,10 @@ mod tests {
     #[test]
     fn test_rsi() {
         match load_data() {
-            Ok(df) => match rsi(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_rsi.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute rsi: {:?}", e),
-            },
+            Ok(mut df) => {
+                rsi(&mut df, None, None);
+                save_data(&df, "download/test_rsi.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2856,12 +2685,10 @@ mod tests {
     #[test]
     fn test_stoch() {
         match load_data() {
-            Ok(df) => match stoch(df, None, None, None, None, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_stoch.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute stoch: {:?}", e),
-            },
+            Ok(mut df) => {
+                stoch(&mut df, None, None, None, None, None, None);
+                save_data(&df, "download/test_stoch.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2869,12 +2696,10 @@ mod tests {
     #[test]
     fn test_stochf() {
         match load_data() {
-            Ok(df) => match stochf(df, None, None, None, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_stochf.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute stochf: {:?}", e),
-            },
+            Ok(mut df) => {
+                stochf(&mut df, None, None, None, None, None);
+                save_data(&df, "download/test_stochf.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2882,12 +2707,10 @@ mod tests {
     #[test]
     fn test_stochrsi() {
         match load_data() {
-            Ok(df) => match stochrsi(df, None, None, None, None, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_stochrsi.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute stochrsi: {:?}", e),
-            },
+            Ok(mut df) => {
+                stochrsi(&mut df, None, None, None, None, None, None);
+                save_data(&df, "download/test_stochrsi.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2895,12 +2718,10 @@ mod tests {
     #[test]
     fn test_trix() {
         match load_data() {
-            Ok(df) => match trix(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_trix.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute trix: {:?}", e),
-            },
+            Ok(mut df) => {
+                trix(&mut df, None, None);
+                save_data(&df, "download/test_trix.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2908,12 +2729,10 @@ mod tests {
     #[test]
     fn test_ultosc() {
         match load_data() {
-            Ok(df) => match ultosc(df, None, None, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_ultosc.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute ultosc: {:?}", e),
-            },
+            Ok(mut df) => {
+                ultosc(&mut df, None, None, None, None);
+                save_data(&df, "download/test_ultosc.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -2921,12 +2740,10 @@ mod tests {
     #[test]
     fn test_willr() {
         match load_data() {
-            Ok(df) => match willr(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_willr.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute willr: {:?}", e),
-            },
+            Ok(mut df) => {
+                willr(&mut df, None, None);
+                save_data(&df, "download/test_willr.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }

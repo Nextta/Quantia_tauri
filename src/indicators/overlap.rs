@@ -289,7 +289,7 @@ pub struct BbandsParams {
 /// Upper = Middle + (nbdevup * StdDev(close, timeperiod))
 /// Lower = Middle - (nbdevdn * StdDev(close, timeperiod))
 pub fn bbands(
-    df: DataFrame,
+    df: &mut DataFrame,
     timeperiod: Option<usize>,
     nbdevup: Option<f64>,
     nbdevdn: Option<f64>,
@@ -297,7 +297,7 @@ pub fn bbands(
     output_col_bb_upper: Option<&str>,
     output_col_bb_middle: Option<&str>,
     output_col_bb_lower: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let timeperiod = timeperiod.unwrap_or(5);
     let nbdevup = nbdevup.unwrap_or(2.0);
     let nbdevdn = nbdevdn.unwrap_or(2.0);
@@ -306,7 +306,7 @@ pub fn bbands(
     let output_col_bb_middle = output_col_bb_middle.unwrap_or("bb_middle");
     let output_col_bb_lower = output_col_bb_lower.unwrap_or("bb_lower");
 
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
     let n = close_vals.len();
@@ -338,13 +338,12 @@ pub fn bbands(
     let middle_series = Series::new(output_col_bb_middle.into(), &middle);
     let lower_series = Series::new(output_col_bb_lower.into(), &lower);
 
-    let mut result_df = df;
-    result_df
-        .with_column(upper_series.into())?
-        .with_column(middle_series.into())?
-        .with_column(lower_series.into())?;
-
-    Ok(result_df)
+    df.with_column(upper_series.into())
+        .unwrap()
+        .with_column(middle_series.into())
+        .unwrap()
+        .with_column(lower_series.into())
+        .unwrap();
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -371,15 +370,11 @@ pub struct DemaParams {
 ///
 /// # Fórmula
 /// DEMA = 2 * EMA(price) - EMA(EMA(price))
-pub fn dema(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn dema(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(30);
     let output_col = output_col.unwrap_or("dema");
 
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
@@ -399,9 +394,7 @@ pub fn dema(
         .collect();
 
     let dema_series = Series::new(output_col.into(), &dema_vals);
-    let mut result_df = df;
-    result_df.with_column(dema_series.into())?;
-    Ok(result_df)
+    df.with_column(dema_series.into()).unwrap();
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -429,24 +422,18 @@ pub struct EmaParams {
 /// # Fórmula
 /// EMA(t) = (price(t) - EMA(t-1)) * multiplier + EMA(t-1)
 /// multiplier = 2 / (timeperiod + 1)
-pub fn ema(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn ema(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(30);
     let output_col = output_col.unwrap_or("ema");
 
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
     let ema_vals = calc_ema(&close_vals, timeperiod);
 
     let ema_series = Series::new(output_col.into(), &ema_vals);
-    let mut result_df = df;
-    result_df.with_column(ema_series.into())?;
-    Ok(result_df)
+    df.with_column(ema_series.into()).unwrap();
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -476,24 +463,18 @@ pub struct KamaParams {
 /// ER = Change / Volatility
 /// SC = [ER * (2/(fast+1) - 2/(slow+1)) + 2/(slow+1)]^2
 /// KAMA = SC * price + (1 - SC) * KAMA_prev
-pub fn kama(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn kama(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(30);
     let output_col = output_col.unwrap_or("kama");
 
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
     let kama_vals = calc_kama(&close_vals, timeperiod);
 
     let kama_series = Series::new(output_col.into(), &kama_vals);
-    let mut result_df = df;
-    result_df.with_column(kama_series.into())?;
-    Ok(result_df)
+    df.with_column(kama_series.into()).unwrap();
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -520,25 +501,23 @@ pub struct MaParams {
 /// # Retorna
 /// DataFrame con columna "ma" añadida
 pub fn ma(
-    df: DataFrame,
+    df: &mut DataFrame,
     timeperiod: Option<usize>,
     matype: Option<i32>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let timeperiod = timeperiod.unwrap_or(30);
     let matype = matype.unwrap_or(0);
     let output_col = output_col.unwrap_or("ma");
 
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
     let ma_vals = calc_ma(&close_vals, timeperiod, MAType::from_i32(matype));
 
     let ma_series = Series::new(output_col.into(), &ma_vals);
-    let mut result_df = df;
-    result_df.with_column(ma_series.into())?;
-    Ok(result_df)
+    df.with_column(ma_series.into()).unwrap();
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -572,18 +551,18 @@ pub struct MamaParams {
 /// MAMA = alpha * price + (1 - alpha) * MAMA_prev
 /// FAMA = media móvil de MAMA
 pub fn mama(
-    df: DataFrame,
+    df: &mut DataFrame,
     fastlimit: Option<f64>,
     slowlimit: Option<f64>,
     output_col_mama: Option<&str>,
     output_col_fama: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let fastlimit = fastlimit.unwrap_or(0.5);
     let slowlimit = slowlimit.unwrap_or(0.05);
     let output_col_mama = output_col_mama.unwrap_or("mama");
     let output_col_fama = output_col_fama.unwrap_or("fama");
 
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
@@ -592,11 +571,10 @@ pub fn mama(
     let mama_series = Series::new(output_col_mama.into(), &mama_vals);
     let fama_series = Series::new(output_col_fama.into(), &fama_vals);
 
-    let mut result_df = df;
-    result_df
-        .with_column(mama_series.into())?
-        .with_column(fama_series.into())?;
-    Ok(result_df)
+    df.with_column(mama_series.into())
+        .unwrap()
+        .with_column(fama_series.into())
+        .unwrap();
 }
 
 fn calc_mama(values: &[f64], fastlimit: f64, slowlimit: f64) -> (Vec<f64>, Vec<f64>) {
@@ -776,15 +754,11 @@ pub struct MidpointParams {
 ///
 /// # Fórmula
 /// MIDPOINT = (max(close, timeperiod) + min(close, timeperiod)) / 2
-pub fn midpoint(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn midpoint(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_col = output_col.unwrap_or("midpoint");
 
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
     let close_ca = close.f64().unwrap();
     // Maintain original length by including nulls as NaN
     let close_vals: Vec<f64> = close_ca
@@ -823,9 +797,8 @@ pub fn midpoint(
     }
 
     let midpoint_series = Series::new(output_col.into(), &midpoint_vals);
-    let mut result_df = df;
-    result_df.with_column(midpoint_series.into())?;
-    Ok(result_df)
+
+    df.with_column(midpoint_series.into()).unwrap();
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -852,16 +825,12 @@ pub struct MidpriceParams {
 ///
 /// # Fórmula
 /// MIDPRICE = (max(high, timeperiod) + min(low, timeperiod)) / 2
-pub fn midprice(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn midprice(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_col = output_col.unwrap_or("midprice");
 
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
 
     let high_ca = high.f64().unwrap();
     let low_ca = low.f64().unwrap();
@@ -914,9 +883,7 @@ pub fn midprice(
     }
 
     let midprice_series = Series::new(output_col.into(), &midprice_vals);
-    let mut result_df = df;
-    result_df.with_column(midprice_series.into())?;
-    Ok(result_df)
+    df.with_column(midprice_series.into()).unwrap();
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -944,17 +911,17 @@ pub struct SarParams {
 /// # Retorna
 /// DataFrame con columna "sar" añadida
 pub fn sar(
-    df: DataFrame,
+    df: &mut DataFrame,
     acceleration: Option<f64>,
     maximum: Option<f64>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let acceleration = acceleration.unwrap_or(0.02);
     let maximum = maximum.unwrap_or(0.2);
     let output_col = output_col.unwrap_or("sar");
 
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
 
     let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
     let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
@@ -966,9 +933,7 @@ pub fn sar(
 
     if n < 2 {
         let sar_series = Series::new(output_col.into(), &sar_vals);
-        let mut result_df = df;
-        result_df.with_column(sar_series.into())?;
-        return Ok(result_df);
+        df.with_column(sar_series.into()).unwrap();
     }
 
     let mut af = acceleration;
@@ -1029,9 +994,8 @@ pub fn sar(
     }
 
     let sar_series = Series::new(output_col.into(), &sar_vals);
-    let mut result_df = df;
-    result_df.with_column(sar_series.into())?;
-    Ok(result_df)
+
+    df.with_column(sar_series.into()).unwrap();
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -1065,14 +1029,14 @@ pub struct SarextParams {
 /// # Retorna
 /// DataFrame con columna "sarext" añadida
 pub fn sarext(
-    df: DataFrame,
+    df: &mut DataFrame,
     startvalue: Option<f64>,
     offsetonlong: Option<f64>,
     offsetonshort: Option<f64>,
     blockonlong: Option<f64>,
     blockonshort: Option<f64>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let startvalue = startvalue.unwrap_or(0.02);
     let offsetonlong = offsetonlong.unwrap_or(0.0);
     let offsetonshort = offsetonshort.unwrap_or(0.0);
@@ -1080,8 +1044,8 @@ pub fn sarext(
     let _blockonshort = blockonshort.unwrap_or(0.0);
     let output_col = output_col.unwrap_or("sarext");
 
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
 
     let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
     let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
@@ -1093,9 +1057,7 @@ pub fn sarext(
 
     if n < 2 {
         let sarext_series = Series::new(output_col.into(), &sarext_vals);
-        let mut result_df = df;
-        result_df.with_column(sarext_series.into())?;
-        return Ok(result_df);
+        df.with_column(sarext_series.into()).unwrap();
     }
 
     let mut af = startvalue;
@@ -1157,9 +1119,8 @@ pub fn sarext(
     }
 
     let sarext_series = Series::new(output_col.into(), &sarext_vals);
-    let mut result_df = df;
-    result_df.with_column(sarext_series.into())?;
-    Ok(result_df)
+
+    df.with_column(sarext_series.into()).unwrap();
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -1187,24 +1148,19 @@ pub struct SmaParams {
 ///
 /// # Fórmula
 /// SMA = sum(close, timeperiod) / timeperiod
-pub fn sma(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn sma(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(30);
     let output_col = output_col.unwrap_or("sma");
 
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
     let sma_vals = calc_sma(&close_vals, timeperiod);
 
     let sma_series = Series::new(output_col.into(), &sma_vals);
-    let mut result_df = df;
-    result_df.with_column(sma_series.into())?;
-    Ok(result_df)
+
+    df.with_column(sma_series.into()).unwrap();
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -1247,25 +1203,23 @@ pub struct T3Params {
 /// c3 = -6a^2 - 3a - 3a^3
 /// c4 = 1 + 3a + 3a^2 + a^3
 pub fn t3(
-    df: DataFrame,
+    df: &mut DataFrame,
     timeperiod: Option<usize>,
     vfactor: Option<f64>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let timeperiod = timeperiod.unwrap_or(5);
     let vfactor = vfactor.unwrap_or(0.7);
     let output_col = output_col.unwrap_or("t3");
 
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
     let t3_vals = calc_t3(&close_vals, timeperiod, vfactor);
 
     let t3_series = Series::new(output_col.into(), &t3_vals);
-    let mut result_df = df;
-    result_df.with_column(t3_series.into())?;
-    Ok(result_df)
+    df.with_column(t3_series.into()).unwrap();
 }
 
 fn calc_t3(values: &[f64], period: usize, vfactor: f64) -> Vec<f64> {
@@ -1349,15 +1303,11 @@ pub struct TemaParams {
 ///
 /// # Fórmula
 /// TEMA = 3 * EMA - 3 * EMA(EMA) + EMA(EMA(EMA))
-pub fn tema(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn tema(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(30);
     let output_col = output_col.unwrap_or("tema");
 
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
@@ -1366,9 +1316,7 @@ pub fn tema(
 
     if n < timeperiod || timeperiod == 0 {
         let tema_series = Series::new(output_col.into(), &result);
-        let mut result_df = df;
-        result_df.with_column(tema_series.into())?;
-        return Ok(result_df);
+        df.with_column(tema_series.into()).unwrap();
     }
 
     let k = 2.0 / (timeperiod as f64 + 1.0);
@@ -1407,9 +1355,8 @@ pub fn tema(
     }
 
     let tema_series = Series::new(output_col.into(), &result);
-    let mut result_df = df;
-    result_df.with_column(tema_series.into())?;
-    Ok(result_df)
+
+    df.with_column(tema_series.into()).unwrap();
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -1436,24 +1383,18 @@ pub struct TrimaParams {
 ///
 /// # Fórmula
 /// TRIMA = SMA(SMA(price, ceil(period/2)), floor(period/2)+1)
-pub fn trima(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn trima(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(30);
     let output_col = output_col.unwrap_or("trima");
 
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
     let trima_vals = calc_trima(&close_vals, timeperiod);
 
     let trima_series = Series::new(output_col.into(), &trima_vals);
-    let mut result_df = df;
-    result_df.with_column(trima_series.into())?;
-    Ok(result_df)
+    df.with_column(trima_series.into()).unwrap();
 }
 
 fn calc_trima(values: &[f64], period: usize) -> Vec<f64> {
@@ -1495,31 +1436,24 @@ pub struct WmaParams {
 ///
 /// # Fórmula
 /// WMA = sum(price[i] * (i+1)) / sum(1..period) para i en 0..period
-pub fn wma(
-    df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn wma(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(30);
     let output_col = output_col.unwrap_or("wma");
 
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
     if close_vals.len() < timeperiod {
         let wma_series = Series::new(output_col.into(), &vec![f64::NAN; close_vals.len()]);
-        let mut result_df = df;
-        result_df.with_column(wma_series.into())?;
-        return Ok(result_df);
+        df.with_column(wma_series.into()).unwrap();
     }
 
     let wma_vals = calc_wma(&close_vals, timeperiod);
 
     let wma_series = Series::new(output_col.into(), &wma_vals);
-    let mut result_df = df;
-    result_df.with_column(wma_series.into())?;
-    Ok(result_df)
+
+    df.with_column(wma_series.into()).unwrap();
 }
 
 fn calc_wma(values: &[f64], period: usize) -> Vec<f64> {
@@ -1603,12 +1537,10 @@ mod tests {
     #[test]
     fn test_bbands() {
         match load_data() {
-            Ok(df) => match bbands(df, None, None, None, None, None, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_bbands.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute bbands: {:?}", e),
-            },
+            Ok(mut df) => {
+                bbands(&mut df, None, None, None, None, None, None, None);
+                save_data(&df, "download/test_bbands.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -1616,12 +1548,10 @@ mod tests {
     #[test]
     fn test_dema() {
         match load_data() {
-            Ok(df) => match dema(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_dema.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute dema: {:?}", e),
-            },
+            Ok(mut df) => {
+                dema(&mut df, None, None);
+                save_data(&df, "download/test_dema.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -1629,12 +1559,10 @@ mod tests {
     #[test]
     fn test_ema() {
         match load_data() {
-            Ok(df) => match ema(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_ema.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute ema: {:?}", e),
-            },
+            Ok(mut df) => {
+                ema(&mut df, None, None);
+                save_data(&df, "download/test_ema.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -1642,12 +1570,10 @@ mod tests {
     #[test]
     fn test_kama() {
         match load_data() {
-            Ok(df) => match kama(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_kama.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute kama: {:?}", e),
-            },
+            Ok(mut df) => {
+                kama(&mut df, None, None);
+                save_data(&df, "download/test_kama.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -1655,12 +1581,10 @@ mod tests {
     #[test]
     fn test_ma() {
         match load_data() {
-            Ok(df) => match ma(df, None, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_ma.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute ma: {:?}", e),
-            },
+            Ok(mut df) => {
+                ma(&mut df, None, None, None);
+                save_data(&df, "download/test_ma.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -1668,12 +1592,10 @@ mod tests {
     #[test]
     fn test_mama() {
         match load_data() {
-            Ok(df) => match mama(df, None, None, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_mama.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute mama: {:?}", e),
-            },
+            Ok(mut df) => {
+                mama(&mut df, None, None, None, None);
+                save_data(&df, "download/test_mama.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -1681,12 +1603,10 @@ mod tests {
     #[test]
     fn test_midpoint() {
         match load_data() {
-            Ok(df) => match midpoint(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_midpoint.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute midpoint: {:?}", e),
-            },
+            Ok(mut df) => {
+                midpoint(&mut df, None, None);
+                save_data(&df, "download/test_midpoint.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -1694,12 +1614,10 @@ mod tests {
     #[test]
     fn test_midprice() {
         match load_data() {
-            Ok(df) => match midprice(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_midprice.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute midprice: {:?}", e),
-            },
+            Ok(mut df) => {
+                midprice(&mut df, None, None);
+                save_data(&df, "download/test_midprice.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -1707,12 +1625,10 @@ mod tests {
     #[test]
     fn test_sar() {
         match load_data() {
-            Ok(df) => match sar(df, None, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_sar.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute sar: {:?}", e),
-            },
+            Ok(mut df) => {
+                sar(&mut df, None, None, None);
+                save_data(&df, "download/test_sar.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -1720,12 +1636,10 @@ mod tests {
     #[test]
     fn test_sarext() {
         match load_data() {
-            Ok(df) => match sarext(df, None, None, None, None, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_sarext.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute sarext: {:?}", e),
-            },
+            Ok(mut df) => {
+                sarext(&mut df, None, None, None, None, None, None);
+                save_data(&df, "download/test_sarext.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -1733,12 +1647,10 @@ mod tests {
     #[test]
     fn test_sma() {
         match load_data() {
-            Ok(df) => match sma(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_sma.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute sma: {:?}", e),
-            },
+            Ok(mut df) => {
+                sma(&mut df, None, None);
+                save_data(&df, "download/test_sma.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -1746,12 +1658,10 @@ mod tests {
     #[test]
     fn test_t3() {
         match load_data() {
-            Ok(df) => match t3(df, None, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_t3.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute t3: {:?}", e),
-            },
+            Ok(mut df) => {
+                t3(&mut df, None, None, None);
+                save_data(&df, "download/test_t3.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -1759,12 +1669,10 @@ mod tests {
     #[test]
     fn test_tema() {
         match load_data() {
-            Ok(df) => match tema(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_tema.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute tema: {:?}", e),
-            },
+            Ok(mut df) => {
+                tema(&mut df, None, None);
+                save_data(&df, "download/test_tema.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -1772,12 +1680,10 @@ mod tests {
     #[test]
     fn test_trima() {
         match load_data() {
-            Ok(df) => match trima(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_trima.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute trima: {:?}", e),
-            },
+            Ok(mut df) => {
+                trima(&mut df, None, None);
+                save_data(&df, "download/test_trima.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -1785,12 +1691,10 @@ mod tests {
     #[test]
     fn test_wma() {
         match load_data() {
-            Ok(df) => match wma(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_wma.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute wma: {:?}", e),
-            },
+            Ok(mut df) => {
+                wma(&mut df, None, None);
+                save_data(&df, "download/test_wma.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }

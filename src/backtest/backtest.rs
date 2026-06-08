@@ -149,12 +149,12 @@ impl Backtest {
     ///
     /// # Retorna
     /// DataFrame con los nuevos datos.
-    fn set_indicators_strategy(&mut self, datos: DataFrame) -> PolarsResult<DataFrame> {
+    fn set_indicators_strategy(&mut self, datos: &mut DataFrame) -> PolarsResult<DataFrame> {
         let mut df: DataFrame = datos.clone();
         let indicadores = self.estrategia.indicadores.clone();
 
         for indicator in &indicadores {
-            df = match indicator.tipo.as_str() {
+            match indicator.tipo.as_str() {
                 "HT_DCPERIOD" => {
                     if LOGS_REGISTRO {
                         self.add_registro(format!(
@@ -163,7 +163,7 @@ impl Backtest {
                         ));
                     }
 
-                    ht_dcperiod(df, Some(&indicator.nombre))?
+                    ht_dcperiod(&mut df, Some(&indicator.nombre));
                 }
                 "HT_DCPHASE" => {
                     if LOGS_REGISTRO {
@@ -173,7 +173,7 @@ impl Backtest {
                         ));
                     }
 
-                    ht_dcphase(df, Some(&indicator.nombre))?
+                    ht_dcphase(&mut df, Some(&indicator.nombre));
                 }
                 "HT_PHASOR" => {
                     if LOGS_REGISTRO {
@@ -184,10 +184,10 @@ impl Backtest {
                     }
 
                     ht_phasor(
-                        df,
+                        &mut df,
                         Some(format!("{}_in_phase", &indicator.nombre).as_str()),
                         Some(format!("{}_quadrature", &indicator.nombre).as_str()),
-                    )?
+                    );
                 }
                 "HT_SINE" => {
                     if LOGS_REGISTRO {
@@ -198,10 +198,10 @@ impl Backtest {
                     }
 
                     ht_sine(
-                        df,
+                        &mut df,
                         Some(format!("{}_sine", &indicator.nombre).as_str()),
                         Some(format!("{}_lead_sine", &indicator.nombre).as_str()),
-                    )?
+                    );
                 }
                 "HT_TRENDMODE" => {
                     if LOGS_REGISTRO {
@@ -211,7 +211,7 @@ impl Backtest {
                         ));
                     }
 
-                    ht_trendmode(df, Some(&indicator.nombre))?
+                    ht_trendmode(&mut df, Some(&indicator.nombre));
                 }
                 "BBANDS" => {
                     let parametros =
@@ -4922,7 +4922,7 @@ impl Backtest {
 
         for data in self.datos.clone() {
             // Verificamos los indicadores que tiene la estrategia para añadirlos a los datos del DataFrame
-            let df = match self.set_indicators_strategy(data.get_datos()) {
+            let df = match self.set_indicators_strategy(&mut data.get_datos()) {
                 Ok(df_result) => {
                     let df_clean = df_result
                         .lazy()
