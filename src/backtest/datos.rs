@@ -1,6 +1,7 @@
 use polars::prelude::*;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Datos {
     datos: DataFrame,
 }

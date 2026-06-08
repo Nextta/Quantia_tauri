@@ -3,8 +3,9 @@ use crate::backtest::trade::Trade;
 use crate::structs::logs::RegistroLog;
 use crate::utils::configuracion::LOGS_REGISTRO;
 use chrono::{Datelike, NaiveDateTime}; // Utc, Month, DateTime
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Resultados {
     pub id: i32,
     pub id_backtest: i32,

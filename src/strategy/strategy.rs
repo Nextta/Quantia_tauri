@@ -3,7 +3,9 @@ use crate::strategy::strategy_action::StrategyAction;
 use crate::strategy::strategy_indicator::StrategyIndicator;
 use crate::strategy::strategy_options::StrategyOptions;
 
-#[derive(Debug, Clone)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Strategy {
     pub id: i32,
     pub id_user: i32,

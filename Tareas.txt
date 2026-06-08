@@ -14,12 +14,17 @@ Terminadas:
 -Crear indicadores basicos por ahora.
 -Añadir los indicadores a backtest.
 -Crear la logica para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
+-Corregir algunos errores de la logica del backtest:
+   * En todos los atr de las operaciones limits cambiar de valor por parametro a precio de los datos.
 
 
 TODO:
--Corregir algunos errores de la logica del backtest:
-   * En todos los atr de las operaciones limits cambiar de valor por parametro a precio de los datos.
+-Crear los primeros comandos para el frontend:
+    * Comando GetBacktest: Que envia todas las estrategias de la base de datos.
+    * Comando GetResults: Envia los resultados de un backtest pasando por parametro el id del backtest.
+    * Comando GetTrades: Envia todos los trades de un backtest pasando por parametro el id del backtest.
+
 -Crear plantillas para que genere el código en MQL5.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.
--Crear la interface y las funcionalidades para crear de forma visual estrategias con workflows.
 -Leer un trackrecord de Metatrader 5 y guardar los datos en la base de datos.
+-Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.

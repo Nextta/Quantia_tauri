@@ -68,7 +68,7 @@ impl TakeProfit {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StrategyOptions {
     pub id: i32,
     pub strategy_id: i32,
@@ -91,7 +91,7 @@ pub struct StrategyOptions {
     pub parametros_takeprofit: Option<TakeProfit>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub enum TradingDirection {
     Long,
     Short,

@@ -1,8 +1,6 @@
 use crate::api::backtests::{insert_backtest_cfd, table_backtests_cfd};
 use crate::api::strategies::{
-    get_strategies_actions_by_strategy_id,
-    get_strategies_by_id,
-    // get_strategies_conditions_by_strategy_id,
+    get_strategies_actions_by_strategy_id, get_strategies_by_id,
     get_strategies_indicators_by_strategy_id,
 };
 
@@ -22,15 +20,12 @@ use crate::indicators::statistic::*;
 use crate::indicators::volatility::*;
 use crate::indicators::volume::*;
 use crate::strategy::strategy::Strategy;
-// use crate::strategy::strategy_action::StrategyAction;
 use crate::strategy::strategy_condition::StrategyCondition;
 use crate::strategy::strategy_options::TradingDirection;
 use crate::utils::configuracion::LOGS_REGISTRO;
 
 use chrono::DateTime;
 use polars::prelude::*;
-// use serde::{Deserialize, Serialize};
-// use std::collections::HashMap;
 use std::time::Instant;
 
 use crate::enums::activos::Activo;
@@ -40,8 +35,9 @@ use crate::enums::tipos::{BeTipo, TlTipo};
 use crate::structs::logs::RegistroLog;
 use crate::structs::options::NBarsOptions;
 use crate::structs::parametros::{BeParams, GestionParams, LimitParams, TlParams};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Backtest {
     pub id: i32,
     pub titulo: String,
@@ -52,7 +48,6 @@ pub struct Backtest {
     pub trades: Vec<Trade>,
     pub datos: Vec<Datos>,
     pub estrategia: Strategy,
-    // pub registro: Vec<RegistroLog>,
 }
 
 impl Backtest {
@@ -157,7 +152,7 @@ impl Backtest {
     fn set_indicators_strategy(&mut self, datos: DataFrame) -> PolarsResult<DataFrame> {
         let mut df: DataFrame = datos.clone();
         let indicadores = self.estrategia.indicadores.clone();
-        //TODO: Añadir los indicadores de la estrategia al dataframe de datos.
+
         for indicator in &indicadores {
             df = match indicator.tipo.as_str() {
                 "HT_DCPERIOD" => {
