@@ -49,7 +49,9 @@ pub fn cdl2crows(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -81,7 +83,8 @@ pub fn cdl2crows(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDL3BLACKCROWS - Three Black Crows
@@ -105,7 +108,9 @@ pub fn cdl3blackcrows(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -132,7 +137,8 @@ pub fn cdl3blackcrows(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDL3INSIDE - Three Inside Up/Down
@@ -157,7 +163,9 @@ pub fn cdl3inside(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -188,7 +196,8 @@ pub fn cdl3inside(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDL3LINESTRIKE - Three-Line Strike
@@ -215,7 +224,9 @@ pub fn cdl3linestrike(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 4 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 3..len {
@@ -250,7 +261,8 @@ pub fn cdl3linestrike(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDL3OUTSIDE - Three Outside Up/Down
@@ -275,7 +287,9 @@ pub fn cdl3outside(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -306,7 +320,8 @@ pub fn cdl3outside(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDL3STARSINSOUTH - Three Stars In The South
@@ -332,7 +347,9 @@ pub fn cdl3starsinsouth(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -386,7 +403,8 @@ pub fn cdl3starsinsouth(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDL3WHITESOLDIERS - Three Advancing White Soldiers
@@ -412,7 +430,9 @@ pub fn cdl3whitesoldiers(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -453,7 +473,8 @@ pub fn cdl3whitesoldiers(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLABANDONEDBABY - Abandoned Baby
@@ -480,7 +501,9 @@ pub fn cdlabandonedbaby(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -532,7 +555,8 @@ pub fn cdlabandonedbaby(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLADVANCEBLOCK - Advance Block
@@ -558,7 +582,9 @@ pub fn cdladvanceblock(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -604,7 +630,8 @@ pub fn cdladvanceblock(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLBELTHOLD - Belt-hold
@@ -666,7 +693,8 @@ pub fn cdlbelthold(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLBREAKAWAY - Breakaway
@@ -693,7 +721,9 @@ pub fn cdlbreakaway(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 5 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 4..len {
@@ -732,7 +762,8 @@ pub fn cdlbreakaway(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLCLOSINGMARUBOZU - Closing Marubozu
@@ -786,7 +817,8 @@ pub fn cdlclosingmarubuzo(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLCONCEALBABYSWALL - Concealing Baby Swallow
@@ -814,7 +846,9 @@ pub fn cdlconcealbabyswall(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 4 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 3..len {
@@ -847,7 +881,8 @@ pub fn cdlconcealbabyswall(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLCOUNTERATTACK - Counterattack
@@ -873,7 +908,9 @@ pub fn cdlcounterattack(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -905,7 +942,8 @@ pub fn cdlcounterattack(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLDARKCLOUDCOVER - Dark Cloud Cover
@@ -931,7 +969,9 @@ pub fn cdldarkcloudcover(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -957,7 +997,8 @@ pub fn cdldarkcloudcover(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLDOJI - Doji
@@ -999,7 +1040,8 @@ pub fn cdldoji(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLDOJISTAR - Doji Star
@@ -1026,7 +1068,9 @@ pub fn cdldojistar(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -1063,7 +1107,8 @@ pub fn cdldojistar(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLDRAGONFLYDOJI - Dragonfly Doji
@@ -1111,7 +1156,8 @@ pub fn cdldragonflydoji(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLENGULFING - Engulfing Pattern
@@ -1136,7 +1182,9 @@ pub fn cdlengulfing(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -1157,7 +1205,8 @@ pub fn cdlengulfing(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLEVENINGDOJISTAR - Evening Doji Star
@@ -1186,7 +1235,9 @@ pub fn cdleveningdojistar(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -1221,7 +1272,8 @@ pub fn cdleveningdojistar(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLEVENINGSTAR - Evening Star
@@ -1249,7 +1301,9 @@ pub fn cdleveningstar(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -1280,7 +1334,8 @@ pub fn cdleveningstar(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLGAPSIDESIDEWHITE - Up/Down-gap side-by-side white lines
@@ -1305,7 +1360,9 @@ pub fn cdlgapsidesidewhite(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -1338,7 +1395,8 @@ pub fn cdlgapsidesidewhite(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLGRAVESTONEDOJI - Gravestone Doji
@@ -1386,7 +1444,8 @@ pub fn cdlgravestonedoji(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLHAMMER - Hammer
@@ -1438,7 +1497,8 @@ pub fn cdlhammer(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLHANGINGMAN - Hanging Man
@@ -1491,7 +1551,8 @@ pub fn cdlhangingman(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLHARAMI - Harami Pattern
@@ -1517,7 +1578,9 @@ pub fn cdlharami(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -1546,7 +1609,8 @@ pub fn cdlharami(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLHARAMICROSS - Harami Cross Pattern
@@ -1574,7 +1638,9 @@ pub fn cdlharamicross(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -1614,7 +1680,8 @@ pub fn cdlharamicross(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLHIGHWAVE - High-Wave Candle
@@ -1670,7 +1737,8 @@ pub fn cdlhighwave(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLHIKKAKE - Hikkake Pattern
@@ -1695,7 +1763,9 @@ pub fn cdlhikkake(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -1723,7 +1793,8 @@ pub fn cdlhikkake(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLHIKKAKEMOD - Modified Hikkake Pattern
@@ -1758,7 +1829,9 @@ pub fn cdlhikkakemod(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 6 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     let mut pattern_idx: i32 = -1;
@@ -1820,7 +1893,8 @@ pub fn cdlhikkakemod(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLHOMINGPIGEON - Homing Pigeon
@@ -1848,7 +1922,9 @@ pub fn cdlhomingpigeon(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -1873,7 +1949,8 @@ pub fn cdlhomingpigeon(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLIDENTICAL3CROWS - Identical Three Crows
@@ -1899,7 +1976,9 @@ pub fn cdlidentical3crows(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -1946,7 +2025,8 @@ pub fn cdlidentical3crows(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLINNECK - In-Neck Pattern
@@ -1976,7 +2056,9 @@ pub fn cdlinneck(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -2007,7 +2089,8 @@ pub fn cdlinneck(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLINVERTEDHAMMER - Inverted Hammer
@@ -2060,7 +2143,8 @@ pub fn cdlinvertedhammer(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLKICKING - Kicking
@@ -2093,7 +2177,9 @@ pub fn cdlkicking(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -2132,7 +2218,8 @@ pub fn cdlkicking(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLKICKINGBYLENGTH - Kicking - bull/bear determined by the longer marubozu
@@ -2163,7 +2250,9 @@ pub fn cdlkickingbylength(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -2206,7 +2295,8 @@ pub fn cdlkickingbylength(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLLADDERBOTTOM - Ladder Bottom
@@ -2235,7 +2325,9 @@ pub fn cdladderbottom(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 5 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 4..len {
@@ -2281,7 +2373,8 @@ pub fn cdladderbottom(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLLONGLEGGEDDOJI - Long Legged Doji
@@ -2331,7 +2424,8 @@ pub fn cdllongleggeddoji(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLLONGLINE - Long Line Candle
@@ -2381,7 +2475,8 @@ pub fn cdllongline(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLMARUBOZU - Marubozu
@@ -2430,7 +2525,8 @@ pub fn cdlmarubozu(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLMATCHINGLOW - Matching Low
@@ -2460,7 +2556,9 @@ pub fn cdlmatchinglow(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -2492,7 +2590,8 @@ pub fn cdlmatchinglow(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLMATHOLD - Mat Hold
@@ -2524,7 +2623,9 @@ pub fn cdlmathold(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 5 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 4..len {
@@ -2566,7 +2667,8 @@ pub fn cdlmathold(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -2600,7 +2702,9 @@ pub fn cdlmorningdojistar(df: &mut DataFrame, penetration: Option<f64>, output_c
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -2660,7 +2764,8 @@ pub fn cdlmorningdojistar(df: &mut DataFrame, penetration: Option<f64>, output_c
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -2694,7 +2799,9 @@ pub fn cdlmorningstar(df: &mut DataFrame, penetration: Option<f64>, output_col: 
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -2748,7 +2855,8 @@ pub fn cdlmorningstar(df: &mut DataFrame, penetration: Option<f64>, output_col: 
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLONNECK - On-Neck Pattern
@@ -2775,7 +2883,9 @@ pub fn cdlonneck(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -2814,7 +2924,8 @@ pub fn cdlonneck(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -2848,7 +2959,9 @@ pub fn cdlpiercing(df: &mut DataFrame, penetration: Option<f64>, output_col: Opt
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -2884,7 +2997,8 @@ pub fn cdlpiercing(df: &mut DataFrame, penetration: Option<f64>, output_col: Opt
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLRICKSHAWMAN - Rickshaw Man
@@ -2935,7 +3049,8 @@ pub fn cdlrickshawman(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLRISEFALL3METHODS - Rising/Falling Three Methods
@@ -2970,7 +3085,9 @@ pub fn cdlrisefall3methods(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 5 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 4..len {
@@ -3045,7 +3162,8 @@ pub fn cdlrisefall3methods(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLSEPARATINGLINES - Separating Lines
@@ -3078,7 +3196,9 @@ pub fn cdlseparatinglines(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -3114,7 +3234,8 @@ pub fn cdlseparatinglines(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLSHOOTINGSTAR - Shooting Star
@@ -3142,7 +3263,9 @@ pub fn cdlshootingstar(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -3181,7 +3304,8 @@ pub fn cdlshootingstar(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLSHORTLINE - Short Line Candle
@@ -3237,7 +3361,8 @@ pub fn cdlshortline(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLSPINNINGTOP - Spinning Top
@@ -3294,7 +3419,8 @@ pub fn cdlspinningtop(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLSTALLEDPATTERN - Stalled Pattern (Deliberation)
@@ -3323,7 +3449,9 @@ pub fn cdlstalledpattern(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -3369,7 +3497,8 @@ pub fn cdlstalledpattern(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLSTICKSANDWICH - Stick Sandwich
@@ -3397,7 +3526,9 @@ pub fn cdlsticksandwich(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -3433,7 +3564,8 @@ pub fn cdlsticksandwich(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLTAKURI - Takuri (Dragonfly Doji with very long lower shadow)
@@ -3489,7 +3621,8 @@ pub fn cdltakuri(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLTASUKIGAP - Tasuki Gap
@@ -3524,7 +3657,9 @@ pub fn cdltasukigap(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -3562,7 +3697,8 @@ pub fn cdltasukigap(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLTHRUSTING - Thrusting Pattern
@@ -3590,7 +3726,9 @@ pub fn cdlthrusting(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -3626,7 +3764,8 @@ pub fn cdlthrusting(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLTRISTAR - Tristar Pattern
@@ -3660,7 +3799,9 @@ pub fn cdltristar(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -3711,7 +3852,8 @@ pub fn cdltristar(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLUNIQUE3RIVER - Unique 3 River
@@ -3739,7 +3881,9 @@ pub fn cdlunique3river(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -3785,7 +3929,8 @@ pub fn cdlunique3river(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLUPSIDEGAP2CROWS - Upside Gap Two Crows
@@ -3815,7 +3960,9 @@ pub fn cdlupsidegap2crows(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -3859,7 +4006,8 @@ pub fn cdlupsidegap2crows(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLXSIDEGAP3METHODS - Upside/Downside Gap Three Methods
@@ -3893,7 +4041,9 @@ pub fn cdlxsidegap3methods(df: &mut DataFrame, output_col: Option<&str>) {
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        df.with_column(Series::new(output_name.into(), &result).into());
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -3939,7 +4089,8 @@ pub fn cdlxsidegap3methods(df: &mut DataFrame, output_col: Option<&str>) {
         }
     }
 
-    df.with_column(Series::new(output_name.into(), result).into());
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[cfg(test)]

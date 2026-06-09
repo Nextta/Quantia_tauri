@@ -934,6 +934,7 @@ pub fn sar(
     if n < 2 {
         let sar_series = Series::new(output_col.into(), &sar_vals);
         df.with_column(sar_series.into()).unwrap();
+        return;
     }
 
     let mut af = acceleration;
@@ -1058,6 +1059,7 @@ pub fn sarext(
     if n < 2 {
         let sarext_series = Series::new(output_col.into(), &sarext_vals);
         df.with_column(sarext_series.into()).unwrap();
+        return;
     }
 
     let mut af = startvalue;
@@ -1317,6 +1319,7 @@ pub fn tema(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&s
     if n < timeperiod || timeperiod == 0 {
         let tema_series = Series::new(output_col.into(), &result);
         df.with_column(tema_series.into()).unwrap();
+        return;
     }
 
     let k = 2.0 / (timeperiod as f64 + 1.0);
@@ -1447,6 +1450,7 @@ pub fn wma(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&st
     if close_vals.len() < timeperiod {
         let wma_series = Series::new(output_col.into(), &vec![f64::NAN; close_vals.len()]);
         df.with_column(wma_series.into()).unwrap();
+        return;
     }
 
     let wma_vals = calc_wma(&close_vals, timeperiod);

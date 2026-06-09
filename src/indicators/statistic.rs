@@ -32,27 +32,27 @@ pub struct BetaParams {
 /// β = Cov(Ri, Rm) / Var(Rm)
 /// donde Ri son los retornos del activo y Rm los retornos del mercado.
 pub fn beta(
-    df: DataFrame,
+    df: &mut DataFrame,
     col_real0: &str,
     col_real1: &str,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let timeperiod = timeperiod.unwrap_or(20);
     let output_name = output_col.unwrap_or("beta");
 
     // Obtenemos los precios
-    let series_a = df.column(col_real0)?.f64()?;
-    let series_b = df.column(col_real1)?.f64()?;
+    let series_a = df.column(col_real0).unwrap().f64().unwrap();
+    let series_b = df.column(col_real1).unwrap().f64().unwrap();
 
     let len = series_a.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
     // Necesitamos al menos timeperiod + 1 datos para calcular retornos y luego la ventana
     if len <= timeperiod {
-        let mut result_df = df;
-        result_df.with_column(Series::new(output_name.into(), result).into())?;
-        return Ok(result_df);
+        df.with_column(Series::new(output_name.into(), result).into())
+            .unwrap();
+        return;
     }
 
     // Calculamos los retornos: r_t = (p_t / p_{t-1}) - 1
@@ -105,9 +105,8 @@ pub fn beta(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_name.into(), result).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -129,24 +128,24 @@ pub struct CorrelParams {
 /// # Fórmula
 /// ρ = Cov(A, B) / (σ_A * σ_B)
 pub fn correl(
-    df: DataFrame,
+    df: &mut DataFrame,
     col_real0: &str,
     col_real1: &str,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let timeperiod = timeperiod.unwrap_or(20);
     let output_name = output_col.unwrap_or("correl");
-    let series_a = df.column(col_real0)?.f64()?;
-    let series_b = df.column(col_real1)?.f64()?;
+    let series_a = df.column(col_real0).unwrap().f64().unwrap();
+    let series_b = df.column(col_real1).unwrap().f64().unwrap();
 
     let len = series_a.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
     if len < timeperiod {
-        let mut result_df = df;
-        result_df.with_column(Series::new(output_name.into(), result).into())?;
-        return Ok(result_df);
+        df.with_column(Series::new(output_name.into(), result).into())
+            .unwrap();
+        return;
     }
 
     for i in timeperiod..=len {
@@ -188,9 +187,8 @@ pub fn correl(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_name.into(), result).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -210,22 +208,22 @@ pub struct LinearRegParams {
 /// # Fórmula
 /// Valor = m * (N-1) + c (valor en el punto más reciente)
 pub fn linearreg(
-    df: DataFrame,
+    df: &mut DataFrame,
     col_real: &str,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let timeperiod = timeperiod.unwrap_or(20);
     let output_name = output_col.unwrap_or("linearreg");
-    let series = df.column(col_real)?.f64()?;
+    let series = df.column(col_real).unwrap().f64().unwrap();
 
     let len = series.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
     if len < timeperiod {
-        let mut result_df = df;
-        result_df.with_column(Series::new(output_name.into(), result).into())?;
-        return Ok(result_df);
+        df.with_column(Series::new(output_name.into(), result).into())
+            .unwrap();
+        return;
     }
 
     let sum_t: f64 = (0..timeperiod).map(|t| t as f64).sum();
@@ -251,9 +249,8 @@ pub fn linearreg(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_name.into(), result).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -264,22 +261,22 @@ pub struct LinearRegAngleParams {
 
 /// Calcula el ángulo de la regresión lineal con ventana deslizante.
 pub fn linearreg_angle(
-    df: DataFrame,
+    df: &mut DataFrame,
     col_real: &str,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let timeperiod = timeperiod.unwrap_or(20);
     let output_name = output_col.unwrap_or("linearreg_angle");
-    let series = df.column(col_real)?.f64()?;
+    let series = df.column(col_real).unwrap().f64().unwrap();
 
     let len = series.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
     if len < timeperiod {
-        let mut result_df = df;
-        result_df.with_column(Series::new(output_name.into(), result).into())?;
-        return Ok(result_df);
+        df.with_column(Series::new(output_name.into(), result).into())
+            .unwrap();
+        return;
     }
 
     let sum_t: f64 = (0..timeperiod).map(|t| t as f64).sum();
@@ -303,9 +300,8 @@ pub fn linearreg_angle(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_name.into(), result).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -316,22 +312,22 @@ pub struct LinearRegInterceptParams {
 
 /// Calcula la intersección de la regresión lineal con ventana deslizante.
 pub fn linearreg_intercept(
-    df: DataFrame,
+    df: &mut DataFrame,
     col_real: &str,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let timeperiod = timeperiod.unwrap_or(20);
     let output_name = output_col.unwrap_or("linearreg_intercept");
-    let series = df.column(col_real)?.f64()?;
+    let series = df.column(col_real).unwrap().f64().unwrap();
 
     let len = series.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
     if len < timeperiod {
-        let mut result_df = df;
-        result_df.with_column(Series::new(output_name.into(), result).into())?;
-        return Ok(result_df);
+        df.with_column(Series::new(output_name.into(), result).into())
+            .unwrap();
+        return;
     }
 
     let sum_t: f64 = (0..timeperiod).map(|t| t as f64).sum();
@@ -356,9 +352,8 @@ pub fn linearreg_intercept(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_name.into(), result).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -369,22 +364,22 @@ pub struct LinearRegSlopeParams {
 
 /// Calcula la pendiente (slope) de la regresión lineal con ventana deslizante.
 pub fn linearreg_slope(
-    df: DataFrame,
+    df: &mut DataFrame,
     col_real: &str,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let timeperiod = timeperiod.unwrap_or(20);
     let output_name = output_col.unwrap_or("linearreg_slope");
-    let series = df.column(col_real)?.f64()?;
+    let series = df.column(col_real).unwrap().f64().unwrap();
 
     let len = series.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
     if len < timeperiod {
-        let mut result_df = df;
-        result_df.with_column(Series::new(output_name.into(), result).into())?;
-        return Ok(result_df);
+        df.with_column(Series::new(output_name.into(), result).into())
+            .unwrap();
+        return;
     }
 
     let sum_t: f64 = (0..timeperiod).map(|t| t as f64).sum();
@@ -408,9 +403,8 @@ pub fn linearreg_slope(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_name.into(), result).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -422,24 +416,24 @@ pub struct StddevParams {
 
 /// Calcula la desviación estándar con ventana deslizante.
 pub fn stddev(
-    df: DataFrame,
+    df: &mut DataFrame,
     col_real: &str,
     timeperiod: Option<usize>,
     nbdev: Option<f64>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let timeperiod = timeperiod.unwrap_or(1);
     let output_name = output_col.unwrap_or("stddev");
     let nbdev = nbdev.unwrap_or(1.0);
-    let series = df.column(col_real)?.f64()?;
+    let series = df.column(col_real).unwrap().f64().unwrap();
 
     let len = series.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
     if len < timeperiod {
-        let mut result_df = df;
-        result_df.with_column(Series::new(output_name.into(), result).into())?;
-        return Ok(result_df);
+        df.with_column(Series::new(output_name.into(), result).into())
+            .unwrap();
+        return;
     }
 
     for i in timeperiod..=len {
@@ -458,9 +452,8 @@ pub fn stddev(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_name.into(), result).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -471,22 +464,22 @@ pub struct TsfParams {
 
 /// Calcula la previsión de serie temporal (Time Series Forecast) con ventana deslizante.
 pub fn tsf(
-    df: DataFrame,
+    df: &mut DataFrame,
     col_real: &str,
     timeperiod: Option<usize>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let timeperiod = timeperiod.unwrap_or(20);
     let output_name = output_col.unwrap_or("tsf");
-    let series = df.column(col_real)?.f64()?;
+    let series = df.column(col_real).unwrap().f64().unwrap();
 
     let len = series.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
     if len < timeperiod {
-        let mut result_df = df;
-        result_df.with_column(Series::new(output_name.into(), result).into())?;
-        return Ok(result_df);
+        df.with_column(Series::new(output_name.into(), result).into())
+            .unwrap();
+        return;
     }
 
     let sum_t: f64 = (0..timeperiod).map(|t| t as f64).sum();
@@ -513,9 +506,8 @@ pub fn tsf(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_name.into(), result).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -527,24 +519,24 @@ pub struct VarParams {
 
 /// Calcula la varianza con ventana deslizante.
 pub fn var(
-    df: DataFrame,
+    df: &mut DataFrame,
     col_real: &str,
     timeperiod: Option<usize>,
     nbdev: Option<f64>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let timeperiod = timeperiod.unwrap_or(20);
     let output_name = output_col.unwrap_or("var");
     let nbdev = nbdev.unwrap_or(1.0);
-    let series = df.column(col_real)?.f64()?;
+    let series = df.column(col_real).unwrap().f64().unwrap();
 
     let len = series.len();
     let mut result: Vec<Option<f64>> = vec![None; len];
 
     if len < timeperiod {
-        let mut result_df = df;
-        result_df.with_column(Series::new(output_name.into(), result).into())?;
-        return Ok(result_df);
+        df.with_column(Series::new(output_name.into(), result).into())
+            .unwrap();
+        return;
     }
 
     for i in timeperiod..=len {
@@ -563,9 +555,8 @@ pub fn var(
         }
     }
 
-    let mut result_df = df;
-    result_df.with_column(Series::new(output_name.into(), result).into())?;
-    Ok(result_df)
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[cfg(test)]
@@ -591,13 +582,9 @@ mod tests {
     #[test]
     fn test_beta() {
         match load_data() {
-            Ok(df) => {
-                match beta(df, "close", "open", None, Some("beta")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_beta.csv").unwrap();
-                    }
-                    Err(e) => panic!("Failed to calculate beta: {:?}", e),
-                };
+            Ok(mut df) => {
+                beta(&mut df, "close", "open", None, Some("beta"));
+                save_data(&df, "download/test_beta.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -606,13 +593,9 @@ mod tests {
     #[test]
     fn test_correl() {
         match load_data() {
-            Ok(df) => {
-                match correl(df, "close", "open", None, None) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_correl.csv").unwrap();
-                    }
-                    Err(e) => panic!("Failed to calculate correl: {:?}", e),
-                };
+            Ok(mut df) => {
+                correl(&mut df, "close", "open", None, None);
+                save_data(&df, "download/test_correl.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -621,13 +604,9 @@ mod tests {
     #[test]
     fn test_linearreg() {
         match load_data() {
-            Ok(df) => {
-                match linearreg(df, "close", None, None) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_linearreg.csv").unwrap();
-                    }
-                    Err(e) => panic!("Failed to calculate linearreg: {:?}", e),
-                };
+            Ok(mut df) => {
+                linearreg(&mut df, "close", None, None);
+                save_data(&df, "download/test_linearreg.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -636,13 +615,9 @@ mod tests {
     #[test]
     fn test_stddev() {
         match load_data() {
-            Ok(df) => {
-                match stddev(df, "close", None, None, None) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_stddev.csv").unwrap();
-                    }
-                    Err(e) => panic!("Failed to calculate stddev: {:?}", e),
-                };
+            Ok(mut df) => {
+                stddev(&mut df, "close", None, None, None);
+                save_data(&df, "download/test_stddev.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -651,13 +626,9 @@ mod tests {
     #[test]
     fn test_linearreg_angle() {
         match load_data() {
-            Ok(df) => {
-                match linearreg_angle(df, "close", None, None) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_linearreg_angle.csv").unwrap();
-                    }
-                    Err(e) => panic!("Failed to calculate linearreg_angle: {:?}", e),
-                };
+            Ok(mut df) => {
+                linearreg_angle(&mut df, "close", None, None);
+                save_data(&df, "download/test_linearreg_angle.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -666,13 +637,9 @@ mod tests {
     #[test]
     fn test_linearreg_intercept() {
         match load_data() {
-            Ok(df) => {
-                match linearreg_intercept(df, "close", None, None) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_linearreg_intercept.csv").unwrap();
-                    }
-                    Err(e) => panic!("Failed to calculate linearreg_intercept: {:?}", e),
-                };
+            Ok(mut df) => {
+                linearreg_intercept(&mut df, "close", None, None);
+                save_data(&df, "download/test_linearreg_intercept.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -681,13 +648,9 @@ mod tests {
     #[test]
     fn test_linearreg_slope() {
         match load_data() {
-            Ok(df) => {
-                match linearreg_slope(df, "close", None, None) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_linearreg_slope.csv").unwrap();
-                    }
-                    Err(e) => panic!("Failed to calculate linearreg_slope: {:?}", e),
-                };
+            Ok(mut df) => {
+                linearreg_slope(&mut df, "close", None, None);
+                save_data(&df, "download/test_linearreg_slope.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -696,13 +659,9 @@ mod tests {
     #[test]
     fn test_tsf() {
         match load_data() {
-            Ok(df) => {
-                match tsf(df, "close", None, None) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_tsf.csv").unwrap();
-                    }
-                    Err(e) => panic!("Failed to calculate tsf: {:?}", e),
-                };
+            Ok(mut df) => {
+                tsf(&mut df, "close", None, None);
+                save_data(&df, "download/test_tsf.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -711,13 +670,9 @@ mod tests {
     #[test]
     fn test_var() {
         match load_data() {
-            Ok(df) => {
-                match var(df, "close", None, None, None) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_var.csv").unwrap();
-                    }
-                    Err(e) => panic!("Failed to calculate var: {:?}", e),
-                };
+            Ok(mut df) => {
+                var(&mut df, "close", None, None, None);
+                save_data(&df, "download/test_var.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };

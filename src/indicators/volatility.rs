@@ -118,18 +118,17 @@ fn rma_series(values: &Series, period: usize) -> PolarsResult<Series> {
 // ============================================================================
 
 /// TRANGE - True Range
-pub fn trange(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn trange(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("trange");
 
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
-    let close = get_close(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
+    let close = get_close(&df).unwrap();
 
-    let mut tr_series = calc_true_range(&high, &low, &close)?;
+    let mut tr_series = calc_true_range(&high, &low, &close).unwrap();
     tr_series.rename(output_col.into());
 
-    df.with_column(tr_series.into())?;
-    Ok(df)
+    df.with_column(tr_series.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -144,26 +143,25 @@ pub struct AtrParams {
 
 /// ATR - Average True Range
 pub fn atr(
-    mut df: DataFrame,
+    df: &mut DataFrame,
     timeperiod: Option<usize>,
     multiplier: Option<f64>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let timeperiod = timeperiod.unwrap_or(14);
     let multiplier = multiplier.unwrap_or(1.0);
     let output_col = output_col.unwrap_or("atr");
 
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
-    let close = get_close(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
+    let close = get_close(&df).unwrap();
 
-    let tr_series = calc_true_range(&high, &low, &close)?;
-    let mut atr_series = rma_series(&tr_series, timeperiod)?;
+    let tr_series = calc_true_range(&high, &low, &close).unwrap();
+    let mut atr_series = rma_series(&tr_series, timeperiod).unwrap();
     atr_series = &atr_series * multiplier;
     atr_series.rename(output_col.into());
 
-    df.with_column(atr_series.into())?;
-    Ok(df)
+    df.with_column(atr_series.into()).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -176,28 +174,23 @@ pub struct NatrParams {
 // ============================================================================
 
 /// NATR - Normalized Average True Range
-pub fn natr(
-    mut df: DataFrame,
-    timeperiod: Option<usize>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn natr(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_col = output_col.unwrap_or("natr");
 
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
-    let close = get_close(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
+    let close = get_close(&df).unwrap();
 
-    let tr_series = calc_true_range(&high, &low, &close)?;
-    let atr_series = rma_series(&tr_series, timeperiod)?;
+    let tr_series = calc_true_range(&high, &low, &close).unwrap();
+    let atr_series = rma_series(&tr_series, timeperiod).unwrap();
 
     // (ATR / close) * 100
-    let natr_series = (&atr_series / &close)?;
+    let natr_series = (&atr_series / &close).unwrap();
     let mut natr_series = &natr_series * 100.0;
     natr_series.rename(output_col.into());
 
-    df.with_column(natr_series.into())?;
-    Ok(df)
+    df.with_column(natr_series.into()).unwrap();
 }
 
 #[cfg(test)]
@@ -223,12 +216,10 @@ mod tests {
     #[test]
     fn test_trange() {
         match load_data() {
-            Ok(df) => match trange(df, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_trange.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute trange: {:?}", e),
-            },
+            Ok(mut df) => {
+                trange(&mut df, None);
+                save_data(&df, "download/test_trange.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -236,12 +227,10 @@ mod tests {
     #[test]
     fn test_atr() {
         match load_data() {
-            Ok(df) => match atr(df, Some(14), Some(1.0), None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_atr.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute ATR: {:?}", e),
-            },
+            Ok(mut df) => {
+                atr(&mut df, Some(14), Some(1.0), None);
+                save_data(&df, "download/test_atr.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -249,12 +238,10 @@ mod tests {
     #[test]
     fn test_natr() {
         match load_data() {
-            Ok(df) => match natr(df, Some(14), None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_natr.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute NATR: {:?}", e),
-            },
+            Ok(mut df) => {
+                natr(&mut df, Some(14), None);
+                save_data(&df, "download/test_natr.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }

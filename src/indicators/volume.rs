@@ -106,25 +106,26 @@ fn calc_ema(values: &[f64], period: usize) -> Vec<f64> {
 /// ```rust
 /// let df_with_ad = ad(df, Some("mi_ad"))?;
 /// ```
-pub fn ad(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn ad(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("ad");
 
-    let high = get_high(&df)?;
-    let low = get_low(&df)?;
-    let close = get_close(&df)?;
-    let volume = get_volume(&df)?;
+    let high = get_high(&df).unwrap();
+    let low = get_low(&df).unwrap();
+    let close = get_close(&df).unwrap();
+    let volume = get_volume(&df).unwrap();
 
-    let hl_range = (&high - &low)?;
-    let mut mfm = (&close + &close)?;
-    mfm = (&mfm - &high)?;
-    mfm = (&mfm - &low)?;
+    let hl_range = (&high - &low).unwrap();
+    let mut mfm = (&close + &close).unwrap();
+    mfm = (&mfm - &high).unwrap();
+    mfm = (&mfm - &low).unwrap();
 
     // safe division manually for robustness if traits are missing
     let mfm_final: Vec<f64> = mfm
-        .f64()?
+        .f64()
+        .unwrap()
         .into_iter()
-        .zip(hl_range.f64()?.into_iter())
-        .zip(volume.f64()?.into_iter())
+        .zip(hl_range.f64().unwrap().into_iter())
+        .zip(volume.f64().unwrap().into_iter())
         .map(|((m, r), v)| match (m, r, v) {
             (Some(mv), Some(rv), Some(vv)) if rv > 0.0 => (mv / rv) * vv,
             _ => 0.0,
@@ -141,8 +142,7 @@ pub fn ad(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame
         .collect();
 
     let ad_series = Series::new(output_col.into(), ad_vals);
-    df.with_column(ad_series.into())?;
-    Ok(df)
+    df.with_column(ad_series.into()).unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -174,23 +174,24 @@ pub struct AdoscParams {
 ///
 /// # Ejemplo
 /// ```rust
-/// let df_with_adosc = adosc(df, Some(3), Some(10), None)?;
+/// let df_with_adosc = adosc(df, Some(3), Some(10), None).unwrap();
 /// ```
 pub fn adosc(
-    mut df: DataFrame,
+    df: &mut DataFrame,
     fastperiod: Option<usize>,
     slowperiod: Option<usize>,
     output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let fastperiod = fastperiod.unwrap_or(3);
     let slowperiod = slowperiod.unwrap_or(10);
     let output_col = output_col.unwrap_or("adosc");
 
-    let ad_df = ad(df.clone(), Some("temp_ad"))?;
-    let ad_series = ad_df.column("temp_ad")?;
+    ad(df, Some("temp_ad"));
+    let ad_series = df.column("temp_ad").unwrap();
 
     let ad_vals: Vec<f64> = ad_series
-        .f64()?
+        .f64()
+        .unwrap()
         .into_iter()
         .map(|v| v.unwrap_or(0.0))
         .collect();
@@ -211,8 +212,7 @@ pub fn adosc(
         .collect();
 
     let adosc_series = Series::new(output_col.into(), adosc_vals);
-    df.with_column(adosc_series.into())?;
-    Ok(df)
+    df.with_column(adosc_series.into()).unwrap();
 }
 
 // ============================================================================
@@ -238,29 +238,32 @@ pub fn adosc(
 ///
 /// # Ejemplo
 /// ```rust
-/// let df_with_obv = obv(df, None)?;
+/// let df_with_obv = obv(df, None).unwrap();
 /// ```
-pub fn obv(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn obv(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("obv");
 
-    let close = get_close(&df)?;
-    let volume = get_volume(&df)?;
+    let close = get_close(&df).unwrap();
+    let volume = get_volume(&df).unwrap();
 
     let close_vals: Vec<f64> = close
-        .f64()?
+        .f64()
+        .unwrap()
         .into_iter()
         .map(|v| v.unwrap_or(f64::NAN))
         .collect();
     let volume_vals: Vec<f64> = volume
-        .f64()?
+        .f64()
+        .unwrap()
         .into_iter()
         .map(|v| v.unwrap_or(0.0))
         .collect();
     let n = close_vals.len();
 
     if n == 0 {
-        df.with_column(Series::new(output_col.into(), Vec::<f64>::new()).into())?;
-        return Ok(df);
+        df.with_column(Series::new(output_col.into(), Vec::<f64>::new()).into())
+            .unwrap();
+        return;
     }
 
     let mut obv_vals = Vec::with_capacity(n);
@@ -283,8 +286,7 @@ pub fn obv(mut df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFram
     }
 
     let obv_series = Series::new(output_col.into(), obv_vals);
-    df.with_column(obv_series.into())?;
-    Ok(df)
+    df.with_column(obv_series.into()).unwrap();
 }
 
 #[cfg(test)]
@@ -309,28 +311,25 @@ mod tests {
 
     #[test]
     fn test_ad() {
-        if let Ok(df) = load_data() {
-            if let Ok(result) = ad(df, None) {
-                let _ = save_data(&result, "download/test_ad.csv");
-            }
+        if let Ok(mut df) = load_data() {
+            ad(&mut df, None);
+            save_data(&df, "download/test_ad.csv").unwrap();
         }
     }
 
     #[test]
     fn test_adosc() {
-        if let Ok(df) = load_data() {
-            if let Ok(result) = adosc(df, None, None, None) {
-                let _ = save_data(&result, "download/test_adosc.csv");
-            }
+        if let Ok(mut df) = load_data() {
+            adosc(&mut df, None, None, None);
+            save_data(&df, "download/test_adosc.csv").unwrap();
         }
     }
 
     #[test]
     fn test_obv() {
-        if let Ok(df) = load_data() {
-            if let Ok(result) = obv(df, None) {
-                let _ = save_data(&result, "download/test_obv.csv");
-            }
+        if let Ok(mut df) = load_data() {
+            obv(&mut df, None);
+            save_data(&df, "download/test_obv.csv").unwrap();
         }
     }
 }

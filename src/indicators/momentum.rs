@@ -218,6 +218,7 @@ pub fn adx(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&st
     if n < (timeperiod * 2) {
         df.with_column(Series::new(output_name.into(), vec![f64::NAN; n]).into())
             .unwrap();
+        return;
     }
 
     let mut plus_dm = vec![0.0; n];
@@ -1102,6 +1103,7 @@ pub fn mfi(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&st
     if n <= timeperiod {
         df.with_column(Series::new(output_col.into(), vec![f64::NAN; n]).into())
             .unwrap();
+        return;
     }
 
     // Convertir a vectores de f64 para acceso rápido
@@ -1755,6 +1757,7 @@ pub fn rsi(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&st
     if n <= 1 {
         df.with_column(Series::new(output_col.into(), vec![f64::NAN; n]).into())
             .unwrap();
+        return;
     }
 
     // Convertimos a vector manejando nulos para evitar desalineación
