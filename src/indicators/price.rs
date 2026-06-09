@@ -284,7 +284,15 @@ pub fn daily_ohlc(
         .unwrap();
 
     result = result.drop("date").unwrap();
-    df.hstack_mut(result.columns()).unwrap();
+    for name in [
+        output_col_open,
+        output_col_high,
+        output_col_low,
+        output_col_close,
+    ] {
+        df.with_column(result.column(name).unwrap().clone())
+            .unwrap();
+    }
 }
 
 /// Calcula las velas OHLC semanales a partir de un DataFrame de velas.
@@ -348,7 +356,15 @@ pub fn weekly_ohlc(
         .unwrap();
 
     result = result.drop("week").unwrap();
-    df.hstack_mut(result.columns()).unwrap();
+    for name in [
+        output_col_open,
+        output_col_high,
+        output_col_low,
+        output_col_close,
+    ] {
+        df.with_column(result.column(name).unwrap().clone())
+            .unwrap();
+    }
 }
 
 /// Calcula las velas OHLC mensuales a partir de un DataFrame de velas.
@@ -426,7 +442,15 @@ pub fn monthly_ohlc(
     // PASO 4: Eliminar columna 'month'
     result = result.drop("month").unwrap();
 
-    df.hstack_mut(result.columns()).unwrap();
+    for name in [
+        output_col_open,
+        output_col_high,
+        output_col_low,
+        output_col_close,
+    ] {
+        df.with_column(result.column(name).unwrap().clone())
+            .unwrap();
+    }
 }
 
 #[cfg(test)]
