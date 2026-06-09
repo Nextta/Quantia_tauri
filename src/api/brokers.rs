@@ -1,5 +1,6 @@
 use crate::api::symbols::get_symbols_cfd_by_broker;
 use crate::backtest::broker::BrokerCFD;
+use crate::utils::configuracion::DB_LOCAL;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
 use serde::Serialize;
@@ -23,17 +24,12 @@ where
     }
 }
 
-struct TestsActive {
-    pub valor: bool,
-}
-
-fn get_db_config() -> Result<(String, String, String, TestsActive)> {
+fn get_db_config() -> Result<(String, String, String)> {
     dotenv().expect(".env file not found");
     let db_path = env::var("DB_PATH").unwrap();
     let sync_url = env::var("TURSO_SYNC_URL").unwrap();
     let auth_token = env::var("TURSO_AUTH_TOKEN").unwrap();
-    let tests_active = TestsActive { valor: true };
-    Ok((db_path, sync_url, auth_token, tests_active))
+    Ok((db_path, sync_url, auth_token))
 }
 
 /// Crea la tabla de brokers CFD en la base de datos.
@@ -45,9 +41,9 @@ fn get_db_config() -> Result<(String, String, String, TestsActive)> {
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_brokers_cfd() -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -81,10 +77,10 @@ pub async fn table_brokers_cfd() -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
-pub async fn insert_broker_cfd(broker: BrokerCFD) -> Result<i32> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+pub async fn insert_broker_cfd(broker: &BrokerCFD) -> Result<i32> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -94,7 +90,7 @@ pub async fn insert_broker_cfd(broker: BrokerCFD) -> Result<i32> {
 
     let conn = db.connect()?;
 
-    let parametros = params![broker.name];
+    let parametros = params![broker.name.clone()];
 
     conn.query(
         "INSERT INTO broker_cfd (name) VALUES (?) RETURNING id",
@@ -115,9 +111,9 @@ pub async fn insert_broker_cfd(broker: BrokerCFD) -> Result<i32> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_brokers_cfd() -> Result<Vec<BrokerCFD>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -157,9 +153,9 @@ pub async fn get_brokers_cfd() -> Result<Vec<BrokerCFD>> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_brokers_cfd_by_name(name: &str) -> Result<Vec<BrokerCFD>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -200,9 +196,9 @@ pub async fn get_brokers_cfd_by_name(name: &str) -> Result<Vec<BrokerCFD>> {
 /// Retorna error si no se encuentra el broker o falla la conexión.
 #[tauri::command]
 pub async fn get_broker_cfd_by_id(id: i32) -> Result<BrokerCFD> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -241,9 +237,9 @@ pub async fn get_broker_cfd_by_id(id: i32) -> Result<BrokerCFD> {
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_broker_cfd(id: i32) -> Result<()> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -273,7 +269,7 @@ mod tests {
 
         let _ = table_brokers_cfd().await?;
 
-        let id: i32 = insert_broker_cfd(broker.clone()).await?;
+        let id: i32 = insert_broker_cfd(&broker).await?;
 
         let _ = get_brokers_cfd().await?;
 

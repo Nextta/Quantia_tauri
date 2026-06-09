@@ -39,20 +39,19 @@ fn candle_color(open: f64, close: f64) -> i32 {
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdl2crows(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdl2crows(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdl2crows");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -84,9 +83,8 @@ pub fn cdl2crows(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFr
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDL3BLACKCROWS - Three Black Crows
@@ -100,20 +98,19 @@ pub fn cdl2crows(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFr
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdl3blackcrows(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdl3blackcrows(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdl3blackcrows");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -140,9 +137,8 @@ pub fn cdl3blackcrows(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDL3INSIDE - Three Inside Up/Down
@@ -157,20 +153,19 @@ pub fn cdl3blackcrows(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdl3inside(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdl3inside(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdl3inside");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -201,9 +196,8 @@ pub fn cdl3inside(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataF
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDL3LINESTRIKE - Three-Line Strike
@@ -220,20 +214,19 @@ pub fn cdl3inside(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataF
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdl3linestrike(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdl3linestrike(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdl3linestrike");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 4 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 3..len {
@@ -268,9 +261,8 @@ pub fn cdl3linestrike(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDL3OUTSIDE - Three Outside Up/Down
@@ -285,20 +277,19 @@ pub fn cdl3linestrike(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdl3outside(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdl3outside(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdl3outside");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -329,9 +320,8 @@ pub fn cdl3outside(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Data
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDL3STARSINSOUTH - Three Stars In The South
@@ -345,22 +335,21 @@ pub fn cdl3outside(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Data
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdl3starsinsouth(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdl3starsinsouth(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdl3starsinsouth");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -414,9 +403,8 @@ pub fn cdl3starsinsouth(df: DataFrame, output_col: Option<&str>) -> PolarsResult
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDL3WHITESOLDIERS - Three Advancing White Soldiers
@@ -431,21 +419,20 @@ pub fn cdl3starsinsouth(df: DataFrame, output_col: Option<&str>) -> PolarsResult
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdl3whitesoldiers(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdl3whitesoldiers(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdl3whitesoldiers");
-    let (open_s, high_s, _low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -486,9 +473,8 @@ pub fn cdl3whitesoldiers(df: DataFrame, output_col: Option<&str>) -> PolarsResul
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLABANDONEDBABY - Abandoned Baby
@@ -503,22 +489,21 @@ pub fn cdl3whitesoldiers(df: DataFrame, output_col: Option<&str>) -> PolarsResul
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlabandonedbaby(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlabandonedbaby(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlabandonedbaby");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -570,9 +555,8 @@ pub fn cdlabandonedbaby(df: DataFrame, output_col: Option<&str>) -> PolarsResult
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLADVANCEBLOCK - Advance Block
@@ -587,21 +571,20 @@ pub fn cdlabandonedbaby(df: DataFrame, output_col: Option<&str>) -> PolarsResult
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdladvanceblock(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdladvanceblock(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdladvanceblock");
-    let (open_s, high_s, _low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -647,9 +630,8 @@ pub fn cdladvanceblock(df: DataFrame, output_col: Option<&str>) -> PolarsResult<
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLBELTHOLD - Belt-hold
@@ -664,13 +646,13 @@ pub fn cdladvanceblock(df: DataFrame, output_col: Option<&str>) -> PolarsResult<
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlbelthold(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlbelthold(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlbelthold");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
@@ -711,9 +693,8 @@ pub fn cdlbelthold(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Data
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLBREAKAWAY - Breakaway
@@ -730,20 +711,19 @@ pub fn cdlbelthold(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Data
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlbreakaway(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlbreakaway(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlbreakaway");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 5 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 4..len {
@@ -782,9 +762,8 @@ pub fn cdlbreakaway(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLCLOSINGMARUBOZU - Closing Marubozu
@@ -799,13 +778,13 @@ pub fn cdlbreakaway(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlclosingmarubuzo(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlclosingmarubuzo(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlclosingmarubozu");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
@@ -838,9 +817,8 @@ pub fn cdlclosingmarubuzo(df: DataFrame, output_col: Option<&str>) -> PolarsResu
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLCONCEALBABYSWALL - Concealing Baby Swallow
@@ -856,22 +834,21 @@ pub fn cdlclosingmarubuzo(df: DataFrame, output_col: Option<&str>) -> PolarsResu
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlconcealbabyswall(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlconcealbabyswall(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlconcealbabyswall");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 4 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 3..len {
@@ -904,9 +881,8 @@ pub fn cdlconcealbabyswall(df: DataFrame, output_col: Option<&str>) -> PolarsRes
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLCOUNTERATTACK - Counterattack
@@ -922,20 +898,19 @@ pub fn cdlconcealbabyswall(df: DataFrame, output_col: Option<&str>) -> PolarsRes
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlcounterattack(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlcounterattack(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlcounterattack");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -967,9 +942,8 @@ pub fn cdlcounterattack(df: DataFrame, output_col: Option<&str>) -> PolarsResult
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLDARKCLOUDCOVER - Dark Cloud Cover
@@ -985,20 +959,19 @@ pub fn cdlcounterattack(df: DataFrame, output_col: Option<&str>) -> PolarsResult
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdldarkcloudcover(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdldarkcloudcover(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdldarkcloudcover");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -1024,9 +997,8 @@ pub fn cdldarkcloudcover(df: DataFrame, output_col: Option<&str>) -> PolarsResul
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLDOJI - Doji
@@ -1040,13 +1012,13 @@ pub fn cdldarkcloudcover(df: DataFrame, output_col: Option<&str>) -> PolarsResul
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdldoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdldoji(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdldoji");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
@@ -1068,9 +1040,8 @@ pub fn cdldoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFram
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLDOJISTAR - Doji Star
@@ -1085,22 +1056,21 @@ pub fn cdldoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFram
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdldojistar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdldojistar(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdldojistar");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -1137,9 +1107,8 @@ pub fn cdldojistar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Data
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLDRAGONFLYDOJI - Dragonfly Doji
@@ -1154,13 +1123,13 @@ pub fn cdldojistar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Data
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdldragonflydoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdldragonflydoji(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdldragonflydoji");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
@@ -1187,9 +1156,8 @@ pub fn cdldragonflydoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLENGULFING - Engulfing Pattern
@@ -1204,20 +1172,19 @@ pub fn cdldragonflydoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlengulfing(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlengulfing(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlengulfing");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -1238,9 +1205,8 @@ pub fn cdlengulfing(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLEVENINGDOJISTAR - Evening Doji Star
@@ -1257,22 +1223,21 @@ pub fn cdlengulfing(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdleveningdojistar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdleveningdojistar(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdleveningdojistar");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -1307,9 +1272,8 @@ pub fn cdleveningdojistar(df: DataFrame, output_col: Option<&str>) -> PolarsResu
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLEVENINGSTAR - Evening Star
@@ -1325,22 +1289,21 @@ pub fn cdleveningdojistar(df: DataFrame, output_col: Option<&str>) -> PolarsResu
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdleveningstar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdleveningstar(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdleveningstar");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -1371,9 +1334,8 @@ pub fn cdleveningstar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLGAPSIDESIDEWHITE - Up/Down-gap side-by-side white lines
@@ -1388,20 +1350,19 @@ pub fn cdleveningstar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlgapsidesidewhite(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlgapsidesidewhite(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlgapsidesidewhite");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -1434,9 +1395,8 @@ pub fn cdlgapsidesidewhite(df: DataFrame, output_col: Option<&str>) -> PolarsRes
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLGRAVESTONEDOJI - Gravestone Doji
@@ -1451,13 +1411,13 @@ pub fn cdlgapsidesidewhite(df: DataFrame, output_col: Option<&str>) -> PolarsRes
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlgravestonedoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlgravestonedoji(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlgravestonedoji");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
@@ -1484,9 +1444,8 @@ pub fn cdlgravestonedoji(df: DataFrame, output_col: Option<&str>) -> PolarsResul
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLHAMMER - Hammer
@@ -1500,13 +1459,13 @@ pub fn cdlgravestonedoji(df: DataFrame, output_col: Option<&str>) -> PolarsResul
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlhammer(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlhammer(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlhammer");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
@@ -1538,9 +1497,8 @@ pub fn cdlhammer(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFr
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLHANGINGMAN - Hanging Man
@@ -1554,13 +1512,13 @@ pub fn cdlhammer(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFr
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlhangingman(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlhangingman(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlhangingman");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
@@ -1593,9 +1551,8 @@ pub fn cdlhangingman(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Da
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLHARAMI - Harami Pattern
@@ -1611,20 +1568,19 @@ pub fn cdlhangingman(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Da
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlharami(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlharami(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlharami");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -1653,9 +1609,8 @@ pub fn cdlharami(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFr
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLHARAMICROSS - Harami Cross Pattern
@@ -1671,22 +1626,21 @@ pub fn cdlharami(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFr
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlharamicross(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlharamicross(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlharamicross");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -1726,9 +1680,8 @@ pub fn cdlharamicross(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLHIGHWAVE - High-Wave Candle
@@ -1744,13 +1697,13 @@ pub fn cdlharamicross(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlhighwave(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlhighwave(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlhighwave");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
@@ -1784,9 +1737,8 @@ pub fn cdlhighwave(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Data
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLHIKKAKE - Hikkake Pattern
@@ -1801,20 +1753,19 @@ pub fn cdlhighwave(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Data
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlhikkake(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlhikkake(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlhikkake");
-    let (_, high_s, low_s, _) = get_ohlc(&df)?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
+    let (_, high_s, low_s, _) = get_ohlc(&df).unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
 
     let len = high.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -1842,9 +1793,8 @@ pub fn cdlhikkake(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataF
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLHIKKAKEMOD - Modified Hikkake Pattern
@@ -1868,21 +1818,20 @@ pub fn cdlhikkake(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataF
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlhikkakemod(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlhikkakemod(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlhikkakemod");
-    let (_open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (_open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = high.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 6 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     let mut pattern_idx: i32 = -1;
@@ -1944,9 +1893,8 @@ pub fn cdlhikkakemod(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Da
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLHOMINGPIGEON - Homing Pigeon
@@ -1964,20 +1912,19 @@ pub fn cdlhikkakemod(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Da
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlhomingpigeon(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlhomingpigeon(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlhomingpigeon");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -2002,9 +1949,8 @@ pub fn cdlhomingpigeon(df: DataFrame, output_col: Option<&str>) -> PolarsResult<
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLIDENTICAL3CROWS - Identical Three Crows
@@ -2018,22 +1964,21 @@ pub fn cdlhomingpigeon(df: DataFrame, output_col: Option<&str>) -> PolarsResult<
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlidentical3crows(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlidentical3crows(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlidentical3crows");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -2080,9 +2025,8 @@ pub fn cdlidentical3crows(df: DataFrame, output_col: Option<&str>) -> PolarsResu
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLINNECK - In-Neck Pattern
@@ -2100,22 +2044,21 @@ pub fn cdlidentical3crows(df: DataFrame, output_col: Option<&str>) -> PolarsResu
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlinneck(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlinneck(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlinneck");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -2146,9 +2089,8 @@ pub fn cdlinneck(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFr
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLINVERTEDHAMMER - Inverted Hammer
@@ -2163,13 +2105,13 @@ pub fn cdlinneck(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFr
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlinvertedhammer(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlinvertedhammer(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlinvertedhammer");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
@@ -2201,9 +2143,8 @@ pub fn cdlinvertedhammer(df: DataFrame, output_col: Option<&str>) -> PolarsResul
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLKICKING - Kicking
@@ -2224,22 +2165,21 @@ pub fn cdlinvertedhammer(df: DataFrame, output_col: Option<&str>) -> PolarsResul
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlkicking(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlkicking(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlkicking");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -2278,9 +2218,8 @@ pub fn cdlkicking(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataF
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLKICKINGBYLENGTH - Kicking - bull/bear determined by the longer marubozu
@@ -2299,22 +2238,21 @@ pub fn cdlkicking(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataF
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlkickingbylength(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlkickingbylength(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlkickingbylength");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -2357,9 +2295,8 @@ pub fn cdlkickingbylength(df: DataFrame, output_col: Option<&str>) -> PolarsResu
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLLADDERBOTTOM - Ladder Bottom
@@ -2376,22 +2313,21 @@ pub fn cdlkickingbylength(df: DataFrame, output_col: Option<&str>) -> PolarsResu
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdladderbottom(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdladderbottom(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdladderbottom");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 5 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 4..len {
@@ -2437,9 +2373,8 @@ pub fn cdladderbottom(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLLONGLEGGEDDOJI - Long Legged Doji
@@ -2453,13 +2388,13 @@ pub fn cdladderbottom(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdllongleggeddoji(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdllongleggeddoji(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdllongleggeddoji");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
@@ -2489,9 +2424,8 @@ pub fn cdllongleggeddoji(df: DataFrame, output_col: Option<&str>) -> PolarsResul
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLLONGLINE - Long Line Candle
@@ -2505,13 +2439,13 @@ pub fn cdllongleggeddoji(df: DataFrame, output_col: Option<&str>) -> PolarsResul
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdllongline(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdllongline(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdllongline");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
@@ -2541,9 +2475,8 @@ pub fn cdllongline(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Data
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLMARUBOZU - Marubozu
@@ -2556,13 +2489,13 @@ pub fn cdllongline(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Data
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlmarubozu(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlmarubozu(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlmarubozu");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
@@ -2592,9 +2525,8 @@ pub fn cdlmarubozu(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Data
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLMATCHINGLOW - Matching Low
@@ -2612,22 +2544,21 @@ pub fn cdlmarubozu(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Data
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlmatchinglow(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlmatchinglow(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlmatchinglow");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -2659,9 +2590,8 @@ pub fn cdlmatchinglow(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLMATHOLD - Mat Hold
@@ -2681,22 +2611,21 @@ pub fn cdlmatchinglow(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
 ///
 /// # Retorno
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
-pub fn cdlmathold(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlmathold(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlmathold");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 5 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 4..len {
@@ -2738,9 +2667,8 @@ pub fn cdlmathold(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataF
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -2761,27 +2689,22 @@ pub struct MorningDojiStar {
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 (nada) o 100 (alcista).
-pub fn cdlmorningdojistar(
-    df: DataFrame,
-    penetration: Option<f64>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn cdlmorningdojistar(df: &mut DataFrame, penetration: Option<f64>, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlmorningdojistar");
     let penetration = penetration.unwrap_or(0.3);
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -2841,9 +2764,8 @@ pub fn cdlmorningdojistar(
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -2864,27 +2786,22 @@ pub struct MorningStar {
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 (nada) o 100 (alcista).
-pub fn cdlmorningstar(
-    df: DataFrame,
-    penetration: Option<f64>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn cdlmorningstar(df: &mut DataFrame, penetration: Option<f64>, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlmorningstar");
     let penetration = penetration.unwrap_or(0.3);
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -2938,9 +2855,8 @@ pub fn cdlmorningstar(
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLONNECK - On-Neck Pattern
@@ -2955,22 +2871,21 @@ pub fn cdlmorningstar(
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 (nada) o -100 (bajista).
-pub fn cdlonneck(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlonneck(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlonneck");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -3009,9 +2924,8 @@ pub fn cdlonneck(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFr
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -3032,27 +2946,22 @@ pub struct Piercing {
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 (nada) o 100 (alcista).
-pub fn cdlpiercing(
-    df: DataFrame,
-    penetration: Option<f64>,
-    output_col: Option<&str>,
-) -> PolarsResult<DataFrame> {
+pub fn cdlpiercing(df: &mut DataFrame, penetration: Option<f64>, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlpiercing");
     let penetration = penetration.unwrap_or(0.5);
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -3088,9 +2997,8 @@ pub fn cdlpiercing(
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLRICKSHAWMAN - Rickshaw Man
@@ -3104,13 +3012,13 @@ pub fn cdlpiercing(
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 (nada) o 100 (indecisión/neutral).
-pub fn cdlrickshawman(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlrickshawman(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlrickshawman");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
@@ -3141,9 +3049,8 @@ pub fn cdlrickshawman(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLRISEFALL3METHODS - Rising/Falling Three Methods
@@ -3166,22 +3073,21 @@ pub fn cdlrickshawman(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
-pub fn cdlrisefall3methods(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlrisefall3methods(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlrisefall3methods");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 5 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 4..len {
@@ -3256,9 +3162,8 @@ pub fn cdlrisefall3methods(df: DataFrame, output_col: Option<&str>) -> PolarsRes
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLSEPARATINGLINES - Separating Lines
@@ -3279,22 +3184,21 @@ pub fn cdlrisefall3methods(df: DataFrame, output_col: Option<&str>) -> PolarsRes
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
-pub fn cdlseparatinglines(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlseparatinglines(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlseparatinglines");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -3330,9 +3234,8 @@ pub fn cdlseparatinglines(df: DataFrame, output_col: Option<&str>) -> PolarsResu
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLSHOOTINGSTAR - Shooting Star
@@ -3348,22 +3251,21 @@ pub fn cdlseparatinglines(df: DataFrame, output_col: Option<&str>) -> PolarsResu
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 o -100 (bajista).
-pub fn cdlshootingstar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlshootingstar(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlshootingstar");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -3402,9 +3304,8 @@ pub fn cdlshootingstar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLSHORTLINE - Short Line Candle
@@ -3418,13 +3319,13 @@ pub fn cdlshootingstar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
-pub fn cdlshortline(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlshortline(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlshortline");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
@@ -3460,9 +3361,8 @@ pub fn cdlshortline(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLSPINNINGTOP - Spinning Top
@@ -3477,13 +3377,13 @@ pub fn cdlshortline(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
-pub fn cdlspinningtop(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlspinningtop(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlspinningtop");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
@@ -3519,9 +3419,8 @@ pub fn cdlspinningtop(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLSTALLEDPATTERN - Stalled Pattern (Deliberation)
@@ -3538,22 +3437,21 @@ pub fn cdlspinningtop(df: DataFrame, output_col: Option<&str>) -> PolarsResult<D
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 o -100 (bajista).
-pub fn cdlstalledpattern(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlstalledpattern(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlstalledpattern");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -3599,9 +3497,8 @@ pub fn cdlstalledpattern(df: DataFrame, output_col: Option<&str>) -> PolarsResul
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLSTICKSANDWICH - Stick Sandwich
@@ -3617,22 +3514,21 @@ pub fn cdlstalledpattern(df: DataFrame, output_col: Option<&str>) -> PolarsResul
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 o 100 (alcista).
-pub fn cdlsticksandwich(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlsticksandwich(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlsticksandwich");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -3668,9 +3564,8 @@ pub fn cdlsticksandwich(df: DataFrame, output_col: Option<&str>) -> PolarsResult
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLTAKURI - Takuri (Dragonfly Doji with very long lower shadow)
@@ -3685,13 +3580,13 @@ pub fn cdlsticksandwich(df: DataFrame, output_col: Option<&str>) -> PolarsResult
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 o 100 (alcista).
-pub fn cdltakuri(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdltakuri(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdltakuri");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
@@ -3726,9 +3621,8 @@ pub fn cdltakuri(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFr
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLTASUKIGAP - Tasuki Gap
@@ -3751,22 +3645,21 @@ pub fn cdltakuri(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFr
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
-pub fn cdltasukigap(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdltasukigap(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdltasukigap");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let _ = high_s.f64()?;
-    let _ = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let _ = high_s.f64().unwrap();
+    let _ = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -3804,9 +3697,8 @@ pub fn cdltasukigap(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLTHRUSTING - Thrusting Pattern
@@ -3822,22 +3714,21 @@ pub fn cdltasukigap(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 o -100 (bajista).
-pub fn cdlthrusting(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlthrusting(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlthrusting");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 2 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 1..len {
@@ -3873,9 +3764,8 @@ pub fn cdlthrusting(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLTRISTAR - Tristar Pattern
@@ -3897,22 +3787,21 @@ pub fn cdlthrusting(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
-pub fn cdltristar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdltristar(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdltristar");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -3963,9 +3852,8 @@ pub fn cdltristar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataF
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLUNIQUE3RIVER - Unique 3 River
@@ -3981,22 +3869,21 @@ pub fn cdltristar(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataF
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 o 100 (alcista).
-pub fn cdlunique3river(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlunique3river(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlunique3river");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -4042,9 +3929,8 @@ pub fn cdlunique3river(df: DataFrame, output_col: Option<&str>) -> PolarsResult<
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLUPSIDEGAP2CROWS - Upside Gap Two Crows
@@ -4062,22 +3948,21 @@ pub fn cdlunique3river(df: DataFrame, output_col: Option<&str>) -> PolarsResult<
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 0 o -100 (bajista).
-pub fn cdlupsidegap2crows(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlupsidegap2crows(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlupsidegap2crows");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let high = high_s.f64()?;
-    let low = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let high = high_s.f64().unwrap();
+    let low = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -4121,9 +4006,8 @@ pub fn cdlupsidegap2crows(df: DataFrame, output_col: Option<&str>) -> PolarsResu
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 /// CDLXSIDEGAP3METHODS - Upside/Downside Gap Three Methods
@@ -4145,22 +4029,21 @@ pub fn cdlupsidegap2crows(df: DataFrame, output_col: Option<&str>) -> PolarsResu
 ///
 /// # Retorno
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
-pub fn cdlxsidegap3methods(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn cdlxsidegap3methods(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlxsidegap3methods");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df)?;
-    let open = open_s.f64()?;
-    let _ = high_s.f64()?;
-    let _ = low_s.f64()?;
-    let close = close_s.f64()?;
+    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let open = open_s.f64().unwrap();
+    let _ = high_s.f64().unwrap();
+    let _ = low_s.f64().unwrap();
+    let close = close_s.f64().unwrap();
 
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
     if len < 3 {
-        return df
-            .lazy()
-            .with_column(lit(Series::new(output_name.into(), result)))
-            .collect();
+        df.with_column(Series::new(output_name.into(), &result).into())
+            .unwrap();
+        return;
     }
 
     for i in 2..len {
@@ -4206,9 +4089,8 @@ pub fn cdlxsidegap3methods(df: DataFrame, output_col: Option<&str>) -> PolarsRes
         }
     }
 
-    df.lazy()
-        .with_column(lit(Series::new(output_name.into(), result)))
-        .collect()
+    df.with_column(Series::new(output_name.into(), result).into())
+        .unwrap();
 }
 
 #[cfg(test)]
@@ -4234,14 +4116,9 @@ mod tests {
     #[test]
     fn test_cdl2crows() {
         match load_data() {
-            Ok(df) => {
-                match cdl2crows(df, Some("cdl2crows")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdl2crows.csv").unwrap();
-                        println!("CDL2CROWS calculated and saved to download/test_cdl2crows.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdl2crows: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdl2crows(&mut df, Some("cdl2crows"));
+                save_data(&df, "download/test_cdl2crows.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4250,14 +4127,9 @@ mod tests {
     #[test]
     fn test_cdl3blackcrows() {
         match load_data() {
-            Ok(df) => {
-                match cdl3blackcrows(df, Some("cdl3blackcrows")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdl3blackcrows.csv").unwrap();
-                        println!("CDL3BLACKCROWS calculated and saved to download/test_cdl3blackcrows.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdl3blackcrows: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdl3blackcrows(&mut df, Some("cdl3blackcrows"));
+                save_data(&df, "download/test_cdl3blackcrows.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4266,14 +4138,9 @@ mod tests {
     #[test]
     fn test_cdl3inside() {
         match load_data() {
-            Ok(df) => {
-                match cdl3inside(df, Some("cdl3inside")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdl3inside.csv").unwrap();
-                        println!("CDL3INSIDE calculated and saved to download/test_cdl3inside.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdl3inside: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdl3inside(&mut df, Some("cdl3inside"));
+                save_data(&df, "download/test_cdl3inside.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4282,14 +4149,9 @@ mod tests {
     #[test]
     fn test_cdl3linestrike() {
         match load_data() {
-            Ok(df) => {
-                match cdl3linestrike(df, Some("cdl3linestrike")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdl3linestrike.csv").unwrap();
-                        println!("CDL3LINESTRIKE calculated and saved to download/test_cdl3linestrike.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdl3linestrike: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdl3linestrike(&mut df, Some("cdl3linestrike"));
+                save_data(&df, "download/test_cdl3linestrike.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4298,16 +4160,9 @@ mod tests {
     #[test]
     fn test_cdl3outside() {
         match load_data() {
-            Ok(df) => {
-                match cdl3outside(df, Some("cdl3outside")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdl3outside.csv").unwrap();
-                        println!(
-                            "CDL3OUTSIDE calculated and saved to download/test_cdl3outside.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdl3outside: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdl3outside(&mut df, Some("cdl3outside"));
+                save_data(&df, "download/test_cdl3outside.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4316,14 +4171,9 @@ mod tests {
     #[test]
     fn test_cdl3starsinsouth() {
         match load_data() {
-            Ok(df) => {
-                match cdl3starsinsouth(df, Some("cdl3starsinsouth")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdl3starsinsouth.csv").unwrap();
-                        println!("CDL3STARSINSOUTH calculated and saved to download/test_cdl3starsinsouth.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdl3starsinsouth: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdl3starsinsouth(&mut df, Some("cdl3starsinsouth"));
+                save_data(&df, "download/test_cdl3starsinsouth.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4332,14 +4182,9 @@ mod tests {
     #[test]
     fn test_cdl3whitesoldiers() {
         match load_data() {
-            Ok(df) => {
-                match cdl3whitesoldiers(df, Some("cdl3whitesoldiers")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdl3whitesoldiers.csv").unwrap();
-                        println!("CDL3WHITESOLDIERS calculated and saved to download/test_cdl3whitesoldiers.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdl3whitesoldiers: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdl3whitesoldiers(&mut df, Some("cdl3whitesoldiers"));
+                save_data(&df, "download/test_cdl3whitesoldiers.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4348,14 +4193,9 @@ mod tests {
     #[test]
     fn test_cdlabandonedbaby() {
         match load_data() {
-            Ok(df) => {
-                match cdlabandonedbaby(df, Some("cdlabandonedbaby")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlabandonedbaby.csv").unwrap();
-                        println!("CDLABANDONEDBABY calculated and saved to download/test_cdlabandonedbaby.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlabandonedbaby: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlabandonedbaby(&mut df, Some("cdlabandonedbaby"));
+                save_data(&df, "download/test_cdlabandonedbaby.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4364,14 +4204,9 @@ mod tests {
     #[test]
     fn test_cdladvanceblock() {
         match load_data() {
-            Ok(df) => {
-                match cdladvanceblock(df, Some("cdladvanceblock")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdladvanceblock.csv").unwrap();
-                        println!("CDLADVANCEBLOCK calculated and saved to download/test_cdladvanceblock.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdladvanceblock: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdladvanceblock(&mut df, Some("cdladvanceblock"));
+                save_data(&df, "download/test_cdladvanceblock.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4380,16 +4215,9 @@ mod tests {
     #[test]
     fn test_cdlbelthold() {
         match load_data() {
-            Ok(df) => {
-                match cdlbelthold(df, Some("cdlbelthold")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlbelthold.csv").unwrap();
-                        println!(
-                            "CDLBELTHOLD calculated and saved to download/test_cdlbelthold.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdlbelthold: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlbelthold(&mut df, Some("cdlbelthold"));
+                save_data(&df, "download/test_cdlbelthold.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4398,16 +4226,9 @@ mod tests {
     #[test]
     fn test_cdlbreakaway() {
         match load_data() {
-            Ok(df) => {
-                match cdlbreakaway(df, Some("cdlbreakaway")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlbreakaway.csv").unwrap();
-                        println!(
-                            "CDLBREAKAWAY calculated and saved to download/test_cdlbreakaway.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdlbreakaway: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlbreakaway(&mut df, Some("cdlbreakaway"));
+                save_data(&df, "download/test_cdlbreakaway.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4416,14 +4237,9 @@ mod tests {
     #[test]
     fn test_cdlclosingmarubuzo() {
         match load_data() {
-            Ok(df) => {
-                match cdlclosingmarubuzo(df, Some("cdlclosingmarubuzo")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlclosingmarubuzo.csv").unwrap();
-                        println!("CDLCLOSINGMARUBOZU calculated and saved to download/test_cdlclosingmarubuzo.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlclosingmarubuzo: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlclosingmarubuzo(&mut df, Some("cdlclosingmarubuzo"));
+                save_data(&df, "download/test_cdlclosingmarubuzo.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4432,14 +4248,9 @@ mod tests {
     #[test]
     fn test_cdlconcealbabyswall() {
         match load_data() {
-            Ok(df) => {
-                match cdlconcealbabyswall(df, Some("cdlconcealbabyswall")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlconcealbabyswall.csv").unwrap();
-                        println!("CDLCONCEALBABYSWALL calculated and saved to download/test_cdlconcealbabyswall.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlconcealbabyswall: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlconcealbabyswall(&mut df, Some("cdlconcealbabyswall"));
+                save_data(&df, "download/test_cdlconcealbabyswall.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4448,14 +4259,9 @@ mod tests {
     #[test]
     fn test_cdlcounterattack() {
         match load_data() {
-            Ok(df) => {
-                match cdlcounterattack(df, Some("cdlcounterattack")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlcounterattack.csv").unwrap();
-                        println!("CDLCOUNTERATTACK calculated and saved to download/test_cdlcounterattack.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlcounterattack: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlcounterattack(&mut df, Some("cdlcounterattack"));
+                save_data(&df, "download/test_cdlcounterattack.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4464,14 +4270,9 @@ mod tests {
     #[test]
     fn test_cdldarkcloudcover() {
         match load_data() {
-            Ok(df) => {
-                match cdldarkcloudcover(df, Some("cdldarkcloudcover")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdldarkcloudcover.csv").unwrap();
-                        println!("CDLDARKCLOUDCOVER calculated and saved to download/test_cdldarkcloudcover.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdldarkcloudcover: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdldarkcloudcover(&mut df, Some("cdldarkcloudcover"));
+                save_data(&df, "download/test_cdldarkcloudcover.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4480,14 +4281,9 @@ mod tests {
     #[test]
     fn test_cdldoji() {
         match load_data() {
-            Ok(df) => {
-                match cdldoji(df, Some("cdldoji")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdldoji.csv").unwrap();
-                        println!("CDLDOJI calculated and saved to download/test_cdldoji.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdldoji: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdldoji(&mut df, Some("cdldoji"));
+                save_data(&df, "download/test_cdldoji.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4496,16 +4292,9 @@ mod tests {
     #[test]
     fn test_cdldojistar() {
         match load_data() {
-            Ok(df) => {
-                match cdldojistar(df, Some("cdldojistar")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdldojistar.csv").unwrap();
-                        println!(
-                            "CDLDOJISTAR calculated and saved to download/test_cdldojistar.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdldojistar: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdldojistar(&mut df, Some("cdldojistar"));
+                save_data(&df, "download/test_cdldojistar.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4514,14 +4303,9 @@ mod tests {
     #[test]
     fn test_cdldragonflydoji() {
         match load_data() {
-            Ok(df) => {
-                match cdldragonflydoji(df, Some("cdldragonflydoji")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdldragonflydoji.csv").unwrap();
-                        println!("CDLDRAGONFLYDOJI calculated and saved to download/test_cdldragonflydoji.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdldragonflydoji: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdldragonflydoji(&mut df, Some("cdldragonflydoji"));
+                save_data(&df, "download/test_cdldragonflydoji.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4530,16 +4314,9 @@ mod tests {
     #[test]
     fn test_cdlengulfing() {
         match load_data() {
-            Ok(df) => {
-                match cdlengulfing(df, Some("cdlengulfing")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlengulfing.csv").unwrap();
-                        println!(
-                            "CDLENGULFING calculated and saved to download/test_cdlengulfing.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdlengulfing: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlengulfing(&mut df, Some("cdlengulfing"));
+                save_data(&df, "download/test_cdlengulfing.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4548,14 +4325,9 @@ mod tests {
     #[test]
     fn test_cdleveningdojistar() {
         match load_data() {
-            Ok(df) => {
-                match cdleveningdojistar(df, Some("cdleveningdojistar")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdleveningdojistar.csv").unwrap();
-                        println!("CDLEVENINGDOJISTAR calculated and saved to download/test_cdleveningdojistar.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdleveningdojistar: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdleveningdojistar(&mut df, Some("cdleveningdojistar"));
+                save_data(&df, "download/test_cdleveningdojistar.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4564,14 +4336,9 @@ mod tests {
     #[test]
     fn test_cdlmorningdojistar() {
         match load_data() {
-            Ok(df) => {
-                match cdlmorningdojistar(df, None, Some("cdlmorningdojistar")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlmorningdojistar.csv").unwrap();
-                        println!("CDLMORNINGDOJISTAR calculated and saved to download/test_cdlmorningdojistar.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlmorningdojistar: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlmorningdojistar(&mut df, None, Some("cdlmorningdojistar"));
+                save_data(&df, "download/test_cdlmorningdojistar.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4580,16 +4347,9 @@ mod tests {
     #[test]
     fn test_cdlmorningstar() {
         match load_data() {
-            Ok(df) => {
-                match cdlmorningstar(df, None, Some("cdlmorningstar")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlmorningstar.csv").unwrap();
-                        println!(
-                            "CDLMORNINGSTAR calculated and saved to download/test_cdlmorningstar.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdlmorningstar: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlmorningstar(&mut df, None, Some("cdlmorningstar"));
+                save_data(&df, "download/test_cdlmorningstar.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4598,14 +4358,9 @@ mod tests {
     #[test]
     fn test_cdlonneck() {
         match load_data() {
-            Ok(df) => {
-                match cdlonneck(df, Some("cdlonneck")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlonneck.csv").unwrap();
-                        println!("CDLONNECK calculated and saved to download/test_cdlonneck.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlonneck: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlonneck(&mut df, Some("cdlonneck"));
+                save_data(&df, "download/test_cdlonneck.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4614,16 +4369,9 @@ mod tests {
     #[test]
     fn test_cdlpiercing() {
         match load_data() {
-            Ok(df) => {
-                match cdlpiercing(df, None, Some("cdlpiercing")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlpiercing.csv").unwrap();
-                        println!(
-                            "CDLPIERCING calculated and saved to download/test_cdlpiercing.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdlpiercing: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlpiercing(&mut df, None, Some("cdlpiercing"));
+                save_data(&df, "download/test_cdlpiercing.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4632,16 +4380,9 @@ mod tests {
     #[test]
     fn test_cdlrickshawman() {
         match load_data() {
-            Ok(df) => {
-                match cdlrickshawman(df, Some("cdlrickshawman")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlrickshawman.csv").unwrap();
-                        println!(
-                            "CDLRICKSHAWMAN calculated and saved to download/test_cdlrickshawman.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdlrickshawman: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlrickshawman(&mut df, Some("cdlrickshawman"));
+                save_data(&df, "download/test_cdlrickshawman.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4650,14 +4391,9 @@ mod tests {
     #[test]
     fn test_cdlrisefall3methods() {
         match load_data() {
-            Ok(df) => {
-                match cdlrisefall3methods(df, Some("cdlrisefall3methods")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlrisefall3methods.csv").unwrap();
-                        println!("CDLRISEFALL3METHODS calculated and saved to download/test_cdlrisefall3methods.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlrisefall3methods: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlrisefall3methods(&mut df, Some("cdlrisefall3methods"));
+                save_data(&df, "download/test_cdlrisefall3methods.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4666,14 +4402,9 @@ mod tests {
     #[test]
     fn test_cdlseparatinglines() {
         match load_data() {
-            Ok(df) => {
-                match cdlseparatinglines(df, Some("cdlseparatinglines")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlseparatinglines.csv").unwrap();
-                        println!("CDLSEPARATINGLINES calculated and saved to download/test_cdlseparatinglines.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlseparatinglines: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlseparatinglines(&mut df, Some("cdlseparatinglines"));
+                save_data(&df, "download/test_cdlseparatinglines.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4682,16 +4413,9 @@ mod tests {
     #[test]
     fn test_cdlshootingstar() {
         match load_data() {
-            Ok(df) => {
-                match cdlshootingstar(df, Some("cdlshootingstar")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlshootingstar.csv").unwrap();
-                        println!(
-                            "CDLSHOOTINGSTAR calculated and saved to download/test_cdlshootingstar.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdlshootingstar: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlshootingstar(&mut df, Some("cdlshootingstar"));
+                save_data(&df, "download/test_cdlshootingstar.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4700,16 +4424,9 @@ mod tests {
     #[test]
     fn test_cdlshortline() {
         match load_data() {
-            Ok(df) => {
-                match cdlshortline(df, Some("cdlshortline")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlshortline.csv").unwrap();
-                        println!(
-                            "CDLSHORTLINE calculated and saved to download/test_cdlshortline.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdlshortline: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlshortline(&mut df, Some("cdlshortline"));
+                save_data(&df, "download/test_cdlshortline.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4718,14 +4435,9 @@ mod tests {
     #[test]
     fn test_cdlspinningtop() {
         match load_data() {
-            Ok(df) => {
-                match cdlspinningtop(df, Some("cdlspinningtop")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlspinningtop.csv").unwrap();
-                        println!("CDLSPINNINGTOP calculated and saved to download/test_cdlspinningtop.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlspinningtop: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlspinningtop(&mut df, Some("cdlspinningtop"));
+                save_data(&df, "download/test_cdlspinningtop.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4734,14 +4446,9 @@ mod tests {
     #[test]
     fn test_cdlstalledpattern() {
         match load_data() {
-            Ok(df) => {
-                match cdlstalledpattern(df, Some("cdlstalledpattern")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlstalledpattern.csv").unwrap();
-                        println!("CDLSTALLEDPATTERN calculated and saved to download/test_cdlstalledpattern.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlstalledpattern: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlstalledpattern(&mut df, Some("cdlstalledpattern"));
+                save_data(&df, "download/test_cdlstalledpattern.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4750,14 +4457,9 @@ mod tests {
     #[test]
     fn test_cdlsticksandwich() {
         match load_data() {
-            Ok(df) => {
-                match cdlsticksandwich(df, Some("cdlsticksandwich")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlsticksandwich.csv").unwrap();
-                        println!("CDLSTICKSANDWICH calculated and saved to download/test_cdlsticksandwich.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlsticksandwich: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlsticksandwich(&mut df, Some("cdlsticksandwich"));
+                save_data(&df, "download/test_cdlsticksandwich.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4766,14 +4468,9 @@ mod tests {
     #[test]
     fn test_cdltakuri() {
         match load_data() {
-            Ok(df) => {
-                match cdltakuri(df, Some("cdltakuri")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdltakuri.csv").unwrap();
-                        println!("CDLTAKURI calculated and saved to download/test_cdltakuri.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdltakuri: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdltakuri(&mut df, Some("cdltakuri"));
+                save_data(&df, "download/test_cdltakuri.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4782,16 +4479,9 @@ mod tests {
     #[test]
     fn test_cdltasukigap() {
         match load_data() {
-            Ok(df) => {
-                match cdltasukigap(df, Some("cdltasukigap")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdltasukigap.csv").unwrap();
-                        println!(
-                            "CDLTASUKIGAP calculated and saved to download/test_cdltasukigap.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdltasukigap: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdltasukigap(&mut df, Some("cdltasukigap"));
+                save_data(&df, "download/test_cdltasukigap.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4800,16 +4490,9 @@ mod tests {
     #[test]
     fn test_cdlthrusting() {
         match load_data() {
-            Ok(df) => {
-                match cdlthrusting(df, Some("cdlthrusting")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlthrusting.csv").unwrap();
-                        println!(
-                            "CDLTHRUSTING calculated and saved to download/test_cdlthrusting.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdlthrusting: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlthrusting(&mut df, Some("cdlthrusting"));
+                save_data(&df, "download/test_cdlthrusting.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4818,14 +4501,9 @@ mod tests {
     #[test]
     fn test_cdltristar() {
         match load_data() {
-            Ok(df) => {
-                match cdltristar(df, Some("cdltristar")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdltristar.csv").unwrap();
-                        println!("CDLTRISTAR calculated and saved to download/test_cdltristar.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdltristar: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdltristar(&mut df, Some("cdltristar"));
+                save_data(&df, "download/test_cdltristar.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4834,14 +4512,9 @@ mod tests {
     #[test]
     fn test_cdlunique3river() {
         match load_data() {
-            Ok(df) => {
-                match cdlunique3river(df, Some("cdlunique3river")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlunique3river.csv").unwrap();
-                        println!("CDLUNIQUE3RIVER calculated and saved to download/test_cdlunique3river.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlunique3river: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlunique3river(&mut df, Some("cdlunique3river"));
+                save_data(&df, "download/test_cdlunique3river.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4850,14 +4523,9 @@ mod tests {
     #[test]
     fn test_cdlupsidegap2crows() {
         match load_data() {
-            Ok(df) => {
-                match cdlupsidegap2crows(df, Some("cdlupsidegap2crows")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlupsidegap2crows.csv").unwrap();
-                        println!("CDLUPSIDEGAP2CROWS calculated and saved to download/test_cdlupsidegap2crows.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlupsidegap2crows: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlupsidegap2crows(&mut df, Some("cdlupsidegap2crows"));
+                save_data(&df, "download/test_cdlupsidegap2crows.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4866,14 +4534,9 @@ mod tests {
     #[test]
     fn test_cdlxsidegap3methods() {
         match load_data() {
-            Ok(df) => {
-                match cdlxsidegap3methods(df, Some("cdlxsidegap3methods")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlxsidegap3methods.csv").unwrap();
-                        println!("CDLXSIDEGAP3METHODS calculated and saved to download/test_cdlxsidegap3methods.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlxsidegap3methods: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlxsidegap3methods(&mut df, Some("cdlxsidegap3methods"));
+                save_data(&df, "download/test_cdlxsidegap3methods.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4882,14 +4545,9 @@ mod tests {
     #[test]
     fn test_cdleveningstar() {
         match load_data() {
-            Ok(df) => {
-                match cdleveningstar(df, Some("cdleveningstar")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdleveningstar.csv").unwrap();
-                        println!("CDLEVENINGSTAR calculated and saved to download/test_cdleveningstar.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdleveningstar: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdleveningstar(&mut df, Some("cdleveningstar"));
+                save_data(&df, "download/test_cdleveningstar.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4898,14 +4556,9 @@ mod tests {
     #[test]
     fn test_cdlgapsidesidewhite() {
         match load_data() {
-            Ok(df) => {
-                match cdlgapsidesidewhite(df, Some("cdlgapsidesidewhite")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlgapsidesidewhite.csv").unwrap();
-                        println!("CDLGAPSIDESIDEWHITE calculated and saved to download/test_cdlgapsidesidewhite.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlgapsidesidewhite: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlgapsidesidewhite(&mut df, Some("cdlgapsidesidewhite"));
+                save_data(&df, "download/test_cdlgapsidesidewhite.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4914,14 +4567,9 @@ mod tests {
     #[test]
     fn test_cdlgravestonedoji() {
         match load_data() {
-            Ok(df) => {
-                match cdlgravestonedoji(df, Some("cdlgravestonedoji")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlgravestonedoji.csv").unwrap();
-                        println!("CDLGRAVESTONEDOJI calculated and saved to download/test_cdlgravestonedoji.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlgravestonedoji: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlgravestonedoji(&mut df, Some("cdlgravestonedoji"));
+                save_data(&df, "download/test_cdlgravestonedoji.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4930,14 +4578,9 @@ mod tests {
     #[test]
     fn test_cdlhammer() {
         match load_data() {
-            Ok(df) => {
-                match cdlhammer(df, Some("cdlhammer")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlhammer.csv").unwrap();
-                        println!("CDLHAMMER calculated and saved to download/test_cdlhammer.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlhammer: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlhammer(&mut df, Some("cdlhammer"));
+                save_data(&df, "download/test_cdlhammer.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4946,16 +4589,9 @@ mod tests {
     #[test]
     fn test_cdlhangingman() {
         match load_data() {
-            Ok(df) => {
-                match cdlhangingman(df, Some("cdlhangingman")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlhangingman.csv").unwrap();
-                        println!(
-                            "CDLHANGINGMAN calculated and saved to download/test_cdlhangingman.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdlhangingman: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlhangingman(&mut df, Some("cdlhangingman"));
+                save_data(&df, "download/test_cdlhangingman.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4964,14 +4600,9 @@ mod tests {
     #[test]
     fn test_cdlharami() {
         match load_data() {
-            Ok(df) => {
-                match cdlharami(df, Some("cdlharami")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlharami.csv").unwrap();
-                        println!("CDLHARAMI calculated and saved to download/test_cdlharami.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlharami: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlharami(&mut df, Some("cdlharami"));
+                save_data(&df, "download/test_cdlharami.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4980,14 +4611,9 @@ mod tests {
     #[test]
     fn test_cdlharamicross() {
         match load_data() {
-            Ok(df) => {
-                match cdlharamicross(df, Some("cdlharamicross")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlharamicross.csv").unwrap();
-                        println!("CDLHARAMICROSS calculated and saved to download/test_cdlharamicross.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlharamicross: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlharamicross(&mut df, Some("cdlharamicross"));
+                save_data(&df, "download/test_cdlharamicross.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4996,16 +4622,9 @@ mod tests {
     #[test]
     fn test_cdlhighwave() {
         match load_data() {
-            Ok(df) => {
-                match cdlhighwave(df, Some("cdlhighwave")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlhighwave.csv").unwrap();
-                        println!(
-                            "CDLHIGHWAVE calculated and saved to download/test_cdlhighwave.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdlhighwave: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlhighwave(&mut df, Some("cdlhighwave"));
+                save_data(&df, "download/test_cdlhighwave.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -5014,14 +4633,9 @@ mod tests {
     #[test]
     fn test_cdlhikkake() {
         match load_data() {
-            Ok(df) => {
-                match cdlhikkake(df, Some("cdlhikkake")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlhikkake.csv").unwrap();
-                        println!("CDLHIKKAKE calculated and saved to download/test_cdlhikkake.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlhikkake: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlhikkake(&mut df, Some("cdlhikkake"));
+                save_data(&df, "download/test_cdlhikkake.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -5030,16 +4644,9 @@ mod tests {
     #[test]
     fn test_cdlhikkakemod() {
         match load_data() {
-            Ok(df) => {
-                match cdlhikkakemod(df, Some("cdlhikkakemod")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlhikkakemod.csv").unwrap();
-                        println!(
-                            "CDLHIKKAKEMOD calculated and saved to download/test_cdlhikkakemod.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdlhikkakemod: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlhikkakemod(&mut df, Some("cdlhikkakemod"));
+                save_data(&df, "download/test_cdlhikkakemod.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -5048,14 +4655,9 @@ mod tests {
     #[test]
     fn test_cdlhomingpigeon() {
         match load_data() {
-            Ok(df) => {
-                match cdlhomingpigeon(df, Some("cdlhomingpigeon")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlhomingpigeon.csv").unwrap();
-                        println!("CDLHOMINGPIGEON calculated and saved to download/test_cdlhomingpigeon.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlhomingpigeon: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlhomingpigeon(&mut df, Some("cdlhomingpigeon"));
+                save_data(&df, "download/test_cdlhomingpigeon.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -5064,14 +4666,9 @@ mod tests {
     #[test]
     fn test_cdlidentical3crows() {
         match load_data() {
-            Ok(df) => {
-                match cdlidentical3crows(df, Some("cdlidentical3crows")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlidentical3crows.csv").unwrap();
-                        println!("CDLIDENTICAL3CROWS calculated and saved to download/test_cdlidentical3crows.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlidentical3crows: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlidentical3crows(&mut df, Some("cdlidentical3crows"));
+                save_data(&df, "download/test_cdlidentical3crows.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -5080,14 +4677,9 @@ mod tests {
     #[test]
     fn test_cdlinneck() {
         match load_data() {
-            Ok(df) => {
-                match cdlinneck(df, Some("cdlinneck")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlinneck.csv").unwrap();
-                        println!("CDLINNECK calculated and saved to download/test_cdlinneck.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlinneck: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlinneck(&mut df, Some("cdlinneck"));
+                save_data(&df, "download/test_cdlinneck.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -5096,14 +4688,9 @@ mod tests {
     #[test]
     fn test_cdlinvertedhammer() {
         match load_data() {
-            Ok(df) => {
-                match cdlinvertedhammer(df, Some("cdlinvertedhammer")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlinvertedhammer.csv").unwrap();
-                        println!("CDLINVERTEDHAMMER calculated and saved to download/test_cdlinvertedhammer.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlinvertedhammer: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlinvertedhammer(&mut df, Some("cdlinvertedhammer"));
+                save_data(&df, "download/test_cdlinvertedhammer.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -5112,14 +4699,9 @@ mod tests {
     #[test]
     fn test_cdlkicking() {
         match load_data() {
-            Ok(df) => {
-                match cdlkicking(df, Some("cdlkicking")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlkicking.csv").unwrap();
-                        println!("CDLKICKING calculated and saved to download/test_cdlkicking.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlkicking: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlkicking(&mut df, Some("cdlkicking"));
+                save_data(&df, "download/test_cdlkicking.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -5128,14 +4710,9 @@ mod tests {
     #[test]
     fn test_cdlkickingbylength() {
         match load_data() {
-            Ok(df) => {
-                match cdlkickingbylength(df, Some("cdlkickingbylength")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlkickingbylength.csv").unwrap();
-                        println!("CDLKICKINGBYLENGTH calculated and saved to download/test_cdlkickingbylength.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlkickingbylength: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlkickingbylength(&mut df, Some("cdlkickingbylength"));
+                save_data(&df, "download/test_cdlkickingbylength.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -5144,14 +4721,9 @@ mod tests {
     #[test]
     fn test_cdladderbottom() {
         match load_data() {
-            Ok(df) => {
-                match cdladderbottom(df, Some("cdladderbottom")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdladderbottom.csv").unwrap();
-                        println!("CDLLADDERBOTTOM calculated and saved to download/test_cdladderbottom.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdladderbottom: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdladderbottom(&mut df, Some("cdladderbottom"));
+                save_data(&df, "download/test_cdladderbottom.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -5160,14 +4732,9 @@ mod tests {
     #[test]
     fn test_cdllongleggeddoji() {
         match load_data() {
-            Ok(df) => {
-                match cdllongleggeddoji(df, Some("cdllongleggeddoji")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdllongleggeddoji.csv").unwrap();
-                        println!("CDLLONGLEGGEDDOJI calculated and saved to download/test_cdllongleggeddoji.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdllongleggeddoji: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdllongleggeddoji(&mut df, Some("cdllongleggeddoji"));
+                save_data(&df, "download/test_cdllongleggeddoji.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -5176,16 +4743,9 @@ mod tests {
     #[test]
     fn test_cdllongline() {
         match load_data() {
-            Ok(df) => {
-                match cdllongline(df, Some("cdllongline")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdllongline.csv").unwrap();
-                        println!(
-                            "CDLLONGLINE calculated and saved to download/test_cdllongline.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdllongline: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdllongline(&mut df, Some("cdllongline"));
+                save_data(&df, "download/test_cdllongline.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -5194,16 +4754,9 @@ mod tests {
     #[test]
     fn test_cdlmarubozu() {
         match load_data() {
-            Ok(df) => {
-                match cdlmarubozu(df, Some("cdlmarubozu")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlmarubozu.csv").unwrap();
-                        println!(
-                            "CDLMARUBOZU calculated and saved to download/test_cdlmarubozu.csv"
-                        );
-                    }
-                    Err(e) => panic!("Failed to calculate cdlmarubozu: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlmarubozu(&mut df, Some("cdlmarubozu"));
+                save_data(&df, "download/test_cdlmarubozu.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -5212,14 +4765,9 @@ mod tests {
     #[test]
     fn test_cdlmatchinglow() {
         match load_data() {
-            Ok(df) => {
-                match cdlmatchinglow(df, Some("cdlmatchinglow")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlmatchinglow.csv").unwrap();
-                        println!("CDLMATCHINGLOW calculated and saved to download/test_cdlmatchinglow.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlmatchinglow: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlmatchinglow(&mut df, Some("cdlmatchinglow"));
+                save_data(&df, "download/test_cdlmatchinglow.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -5228,14 +4776,9 @@ mod tests {
     #[test]
     fn test_cdlmathold() {
         match load_data() {
-            Ok(df) => {
-                match cdlmathold(df, Some("cdlmathold")) {
-                    Ok(result) => {
-                        save_data(&result, "download/test_cdlmathold.csv").unwrap();
-                        println!("CDLMATHOLD calculated and saved to download/test_cdlmathold.csv");
-                    }
-                    Err(e) => panic!("Failed to calculate cdlmathold: {:?}", e),
-                };
+            Ok(mut df) => {
+                cdlmathold(&mut df, Some("cdlmathold"));
+                save_data(&df, "download/test_cdlmathold.csv").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };

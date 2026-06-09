@@ -317,9 +317,9 @@ impl HTState {
 /// ```rust
 /// let df_with_period = ht_dcperiod(df, None);
 /// ```
-pub fn ht_dcperiod(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn ht_dcperiod(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("ht_dcperiod");
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
@@ -335,9 +335,7 @@ pub fn ht_dcperiod(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Data
     }
 
     let dc_period_series = Series::new(output_col.into(), &dc_period_vals);
-    let mut result_df = df;
-    result_df.with_column(dc_period_series.into())?;
-    Ok(result_df)
+    df.with_column(dc_period_series.into()).unwrap();
 }
 
 // ============================================================================
@@ -365,9 +363,9 @@ pub fn ht_dcperiod(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Data
 /// ```rust
 /// let df_with_phase = ht_dcphase(df, None);
 /// ```
-pub fn ht_dcphase(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn ht_dcphase(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("ht_dcphase");
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
@@ -383,9 +381,7 @@ pub fn ht_dcphase(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataF
     }
 
     let dc_phase_series = Series::new(output_col.into(), &dc_phase_vals);
-    let mut result_df = df;
-    result_df.with_column(dc_phase_series.into())?;
-    Ok(result_df)
+    df.with_column(dc_phase_series.into()).unwrap();
 }
 
 // ============================================================================
@@ -416,13 +412,13 @@ pub fn ht_dcphase(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataF
 /// let df_with_phasors = ht_phasor(df, None, None);
 /// ```
 pub fn ht_phasor(
-    df: DataFrame,
+    df: &mut DataFrame,
     output_col_in_phase: Option<&str>,
     output_col_quadrature: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let output_col_in_phase = output_col_in_phase.unwrap_or("ht_phasor_inphase");
     let output_col_quadrature = output_col_quadrature.unwrap_or("ht_phasor_quadrature");
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
@@ -442,11 +438,10 @@ pub fn ht_phasor(
     let in_phase_series = Series::new(output_col_in_phase.into(), &in_phase_vals);
     let quadrature_series = Series::new(output_col_quadrature.into(), &quadrature_vals);
 
-    let mut result_df = df;
-    result_df
-        .with_column(in_phase_series.into())?
-        .with_column(quadrature_series.into())?;
-    Ok(result_df)
+    df.with_column(in_phase_series.into())
+        .unwrap()
+        .with_column(quadrature_series.into())
+        .unwrap();
 }
 
 // ============================================================================
@@ -476,13 +471,13 @@ pub fn ht_phasor(
 /// let df_with_sine = ht_sine(df, None, None);
 /// ```
 pub fn ht_sine(
-    df: DataFrame,
+    df: &mut DataFrame,
     output_col_sine: Option<&str>,
     output_col_lead_sine: Option<&str>,
-) -> PolarsResult<DataFrame> {
+) {
     let output_col_sine = output_col_sine.unwrap_or("ht_sine_sine");
     let output_col_lead_sine = output_col_lead_sine.unwrap_or("ht_sine_leadsine");
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
@@ -502,11 +497,10 @@ pub fn ht_sine(
     let sine_series = Series::new(output_col_sine.into(), &sine_vals);
     let lead_sine_series = Series::new(output_col_lead_sine.into(), &lead_sine_vals);
 
-    let mut result_df = df;
-    result_df
-        .with_column(sine_series.into())?
-        .with_column(lead_sine_series.into())?;
-    Ok(result_df)
+    df.with_column(sine_series.into())
+        .unwrap()
+        .with_column(lead_sine_series.into())
+        .unwrap();
 }
 
 // ============================================================================
@@ -537,9 +531,9 @@ pub fn ht_sine(
 /// ```rust
 /// let df_with_trend = ht_trendmode(df, None);
 /// ```
-pub fn ht_trendmode(df: DataFrame, output_col: Option<&str>) -> PolarsResult<DataFrame> {
+pub fn ht_trendmode(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("ht_trendmode");
-    let close = get_close(&df)?;
+    let close = get_close(&df).unwrap();
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
@@ -555,9 +549,7 @@ pub fn ht_trendmode(df: DataFrame, output_col: Option<&str>) -> PolarsResult<Dat
     }
 
     let trend_mode_series = Series::new(output_col.into(), &trend_mode_vals);
-    let mut result_df = df;
-    result_df.with_column(trend_mode_series.into())?;
-    Ok(result_df)
+    df.with_column(trend_mode_series.into()).unwrap();
 }
 
 #[cfg(test)]
@@ -585,12 +577,10 @@ mod tests {
     #[test]
     fn test_ht_dcperiod() {
         match load_data() {
-            Ok(df) => match ht_dcperiod(df, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_ht_dcperiod.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute ht_dcperiod: {:?}", e),
-            },
+            Ok(mut df) => {
+                ht_dcperiod(&mut df, None);
+                save_data(&df, "download/test_ht_dcperiod.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -598,12 +588,10 @@ mod tests {
     #[test]
     fn test_ht_dcphase() {
         match load_data() {
-            Ok(df) => match ht_dcphase(df, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_ht_dcphase.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute ht_dcphase: {:?}", e),
-            },
+            Ok(mut df) => {
+                ht_dcphase(&mut df, None);
+                save_data(&df, "download/test_ht_dcphase.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -611,12 +599,10 @@ mod tests {
     #[test]
     fn test_ht_phasor() {
         match load_data() {
-            Ok(df) => match ht_phasor(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_ht_phasor.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute ht_phasor: {:?}", e),
-            },
+            Ok(mut df) => {
+                ht_phasor(&mut df, None, None);
+                save_data(&df, "download/test_ht_phasor.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -624,12 +610,10 @@ mod tests {
     #[test]
     fn test_ht_sine() {
         match load_data() {
-            Ok(df) => match ht_sine(df, None, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_ht_sine.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute ht_sine: {:?}", e),
-            },
+            Ok(mut df) => {
+                ht_sine(&mut df, None, None);
+                save_data(&df, "download/test_ht_sine.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }
@@ -637,12 +621,10 @@ mod tests {
     #[test]
     fn test_ht_trendmode() {
         match load_data() {
-            Ok(df) => match ht_trendmode(df, None) {
-                Ok(result) => {
-                    save_data(&result, "download/test_ht_trendmode.csv").unwrap();
-                }
-                Err(e) => panic!("Failed to compute ht_trendmode: {:?}", e),
-            },
+            Ok(mut df) => {
+                ht_trendmode(&mut df, None);
+                save_data(&df, "download/test_ht_trendmode.csv").unwrap();
+            }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
     }

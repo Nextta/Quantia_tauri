@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(PartialEq, Clone, Debug, Deserialize, Serialize)]
+#[derive(PartialEq, Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum Dias {
     Lu,
     Ma,

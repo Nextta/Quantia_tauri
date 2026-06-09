@@ -8,6 +8,7 @@ use crate::strategy::strategy_options::StrategyOptions;
 use crate::structs::parametros::GestionParams;
 use crate::traits::tparametro::TParametro;
 use crate::traits::ttipos::TTipos;
+use crate::utils::configuracion::DB_LOCAL;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
 use serde::Serialize;
@@ -31,17 +32,12 @@ where
     }
 }
 
-struct TestsActive {
-    pub valor: bool,
-}
-
-fn get_db_config() -> Result<(String, String, String, TestsActive)> {
+fn get_db_config() -> Result<(String, String, String)> {
     dotenv().expect(".env file not found");
     let db_path = env::var("DB_PATH").unwrap();
     let sync_url = env::var("TURSO_SYNC_URL").unwrap();
     let auth_token = env::var("TURSO_AUTH_TOKEN").unwrap();
-    let tests_active = TestsActive { valor: true };
-    Ok((db_path, sync_url, auth_token, tests_active))
+    Ok((db_path, sync_url, auth_token))
 }
 
 /// Crea la tabla de backtests en la base de datos.
@@ -53,9 +49,9 @@ fn get_db_config() -> Result<(String, String, String, TestsActive)> {
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
 pub async fn table_backtests_cfd() -> Result<String> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -93,10 +89,10 @@ pub async fn table_backtests_cfd() -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
-pub async fn insert_backtest_cfd(backtest: Backtest) -> Result<i32> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+pub async fn insert_backtest_cfd(backtest: &Backtest) -> Result<i32> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -108,7 +104,7 @@ pub async fn insert_backtest_cfd(backtest: Backtest) -> Result<i32> {
 
     conn.query(
         "INSERT INTO backtest (titulo, balance, tipo, gestion_strategy, parametros_gestion) VALUES (?, ?, ?, ?, ?) RETURNING id",
-        params![backtest.titulo, backtest.balance, backtest.tipo.to_string(), backtest.gestion_strategy.to_string(), backtest.parametros_gestion.to_json()],
+        params![backtest.titulo.clone(), backtest.balance, backtest.tipo.to_string(), backtest.gestion_strategy.to_string(), backtest.parametros_gestion.to_json()],
     )
     .await?;
 
@@ -125,9 +121,9 @@ pub async fn insert_backtest_cfd(backtest: Backtest) -> Result<i32> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_backtests() -> Result<Vec<Backtest>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -203,9 +199,9 @@ pub async fn get_backtests() -> Result<Vec<Backtest>> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -283,9 +279,9 @@ pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>> {
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
 pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -362,10 +358,10 @@ pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_backtests_by_tipo(tipo: Activo) -> Result<Vec<Backtest>> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+pub async fn get_backtests_by_tipo(tipo: &Activo) -> Result<Vec<Backtest>> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -446,9 +442,9 @@ pub async fn get_backtests_by_tipo(tipo: Activo) -> Result<Vec<Backtest>> {
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
 pub async fn delete_backtest(id: i32) -> Result<()> {
-    let (db_path, sync_url, auth_token, test_active) = get_db_config()?;
+    let (db_path, sync_url, auth_token) = get_db_config()?;
 
-    let db = if !test_active.valor {
+    let db = if !DB_LOCAL {
         Builder::new_remote_replica(db_path, sync_url, auth_token)
             .build()
             .await?
@@ -505,11 +501,11 @@ mod tests {
 
         let _ = table_backtests_cfd().await?;
 
-        let id: i32 = insert_backtest_cfd(backtest.clone()).await?;
+        let id: i32 = insert_backtest_cfd(&backtest).await?;
 
         let _ = get_backtests().await?;
 
-        let _ = get_backtests_by_tipo(backtest.tipo.clone()).await?;
+        let _ = get_backtests_by_tipo(&backtest.tipo).await?;
 
         let _ = get_backtest_by_id(id).await?;
 

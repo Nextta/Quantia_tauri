@@ -35,7 +35,7 @@ impl TParametro for TlParams {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct GestionParams {
     pub multiplicador: f64,
     pub lotaje_fijo: f64,

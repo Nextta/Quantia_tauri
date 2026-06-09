@@ -76,7 +76,7 @@ impl Backtest {
         }
         match table {
             Ok(_) => {
-                backtest.id = insert_backtest_cfd(backtest.clone()).await.unwrap();
+                backtest.id = insert_backtest_cfd(&backtest).await.unwrap();
                 if LOGS_REGISTRO {
                     backtest.add_registro("Backtest guardado en la base de datos".to_string());
                 }
@@ -149,12 +149,12 @@ impl Backtest {
     ///
     /// # Retorna
     /// DataFrame con los nuevos datos.
-    fn set_indicators_strategy(&mut self, datos: DataFrame) -> PolarsResult<DataFrame> {
-        let mut df: DataFrame = datos.clone();
+    fn set_indicators_strategy(&mut self, df: &mut DataFrame) {
+        // let mut df: DataFrame = datos.clone();
         let indicadores = self.estrategia.indicadores.clone();
 
         for indicator in &indicadores {
-            df = match indicator.tipo.as_str() {
+            match indicator.tipo.as_str() {
                 "HT_DCPERIOD" => {
                     if LOGS_REGISTRO {
                         self.add_registro(format!(
@@ -163,7 +163,7 @@ impl Backtest {
                         ));
                     }
 
-                    ht_dcperiod(df, Some(&indicator.nombre))?
+                    ht_dcperiod(df, Some(&indicator.nombre));
                 }
                 "HT_DCPHASE" => {
                     if LOGS_REGISTRO {
@@ -173,7 +173,7 @@ impl Backtest {
                         ));
                     }
 
-                    ht_dcphase(df, Some(&indicator.nombre))?
+                    ht_dcphase(df, Some(&indicator.nombre));
                 }
                 "HT_PHASOR" => {
                     if LOGS_REGISTRO {
@@ -187,7 +187,7 @@ impl Backtest {
                         df,
                         Some(format!("{}_in_phase", &indicator.nombre).as_str()),
                         Some(format!("{}_quadrature", &indicator.nombre).as_str()),
-                    )?
+                    );
                 }
                 "HT_SINE" => {
                     if LOGS_REGISTRO {
@@ -201,7 +201,7 @@ impl Backtest {
                         df,
                         Some(format!("{}_sine", &indicator.nombre).as_str()),
                         Some(format!("{}_lead_sine", &indicator.nombre).as_str()),
-                    )?
+                    );
                 }
                 "HT_TRENDMODE" => {
                     if LOGS_REGISTRO {
@@ -211,7 +211,7 @@ impl Backtest {
                         ));
                     }
 
-                    ht_trendmode(df, Some(&indicator.nombre))?
+                    ht_trendmode(df, Some(&indicator.nombre));
                 }
                 "BBANDS" => {
                     let parametros =
@@ -234,7 +234,7 @@ impl Backtest {
                         Some(format!("{}_bb_upper", &indicator.nombre).as_str()),
                         Some(format!("{}_bb_upper", &indicator.nombre).as_str()),
                         Some(format!("{}_bb_upper", &indicator.nombre).as_str()),
-                    )?
+                    );
                 }
                 "DEMA" => {
                     let parametros =
@@ -243,7 +243,7 @@ impl Backtest {
                     if LOGS_REGISTRO {
                         self.add_registro(format!("Indicador DEMA agregado: {}", indicator.nombre));
                     }
-                    dema(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
+                    dema(df, Some(parametros.timeperiod), Some(&indicator.nombre));
                 }
                 "EMA" => {
                     let parametros =
@@ -252,7 +252,7 @@ impl Backtest {
                     if LOGS_REGISTRO {
                         self.add_registro(format!("Indicador EMA agregado: {}", indicator.nombre));
                     }
-                    ema(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
+                    ema(df, Some(parametros.timeperiod), Some(&indicator.nombre));
                 }
                 "KAMA" => {
                     let parametros =
@@ -261,7 +261,7 @@ impl Backtest {
                     if LOGS_REGISTRO {
                         self.add_registro(format!("Indicador KAMA agregado: {}", indicator.nombre));
                     }
-                    kama(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
+                    kama(df, Some(parametros.timeperiod), Some(&indicator.nombre));
                 }
                 "MA" => {
                     let parametros =
@@ -275,7 +275,7 @@ impl Backtest {
                         Some(parametros.timeperiod),
                         Some(parametros.matype),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "MAMA" => {
                     let parametros =
@@ -291,7 +291,7 @@ impl Backtest {
                         Some(parametros.slowlimit),
                         Some(format!("{}_mama", &indicator.nombre).as_str()),
                         Some(format!("{}_fama", &indicator.nombre).as_str()),
-                    )?
+                    );
                 }
                 "MIDPOINT" => {
                     let parametros =
@@ -305,7 +305,7 @@ impl Backtest {
                         ));
                     }
 
-                    midpoint(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
+                    midpoint(df, Some(parametros.timeperiod), Some(&indicator.nombre));
                 }
                 "MIDPRICE" => {
                     let parametros =
@@ -319,7 +319,7 @@ impl Backtest {
                         ));
                     }
 
-                    midprice(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
+                    midprice(df, Some(parametros.timeperiod), Some(&indicator.nombre));
                 }
                 "SAR" => {
                     let parametros =
@@ -334,7 +334,7 @@ impl Backtest {
                         Some(parametros.acceleration),
                         Some(parametros.maximum),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "SAREXT" => {
                     let parametros =
@@ -356,7 +356,7 @@ impl Backtest {
                         Some(parametros.blockonlong),
                         Some(parametros.blockonshort),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "SMA" => {
                     let parametros =
@@ -366,7 +366,7 @@ impl Backtest {
                         self.add_registro(format!("Indicador SMA agregado: {}", indicator.nombre));
                     }
 
-                    sma(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
+                    sma(df, Some(parametros.timeperiod), Some(&indicator.nombre));
                 }
                 "T3" => {
                     let parametros =
@@ -381,7 +381,7 @@ impl Backtest {
                         Some(parametros.timeperiod),
                         Some(parametros.vfactor),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "TEMA" => {
                     let parametros =
@@ -391,7 +391,7 @@ impl Backtest {
                         self.add_registro(format!("Indicador TEMA agregado: {}", indicator.nombre));
                     }
 
-                    tema(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
+                    tema(df, Some(parametros.timeperiod), Some(&indicator.nombre));
                 }
                 "TRIMA" => {
                     let parametros =
@@ -405,7 +405,7 @@ impl Backtest {
                         ));
                     }
 
-                    trima(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
+                    trima(df, Some(parametros.timeperiod), Some(&indicator.nombre));
                 }
                 "WMA" => {
                     let parametros =
@@ -415,7 +415,7 @@ impl Backtest {
                         self.add_registro(format!("Indicador WMA agregado: {}", indicator.nombre));
                     }
 
-                    wma(df, Some(parametros.timeperiod), Some(&indicator.nombre))?
+                    wma(df, Some(parametros.timeperiod), Some(&indicator.nombre));
                 }
                 "CDL2CROWS" => {
                     if LOGS_REGISTRO {
@@ -425,7 +425,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlupsidegap2crows(df, Some(&indicator.nombre))?
+                    cdlupsidegap2crows(df, Some(&indicator.nombre));
                 }
                 "CDL3BLACKCROWS" => {
                     if LOGS_REGISTRO {
@@ -435,7 +435,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdl3blackcrows(df, Some(&indicator.nombre))?
+                    cdl3blackcrows(df, Some(&indicator.nombre));
                 }
                 "CDL3INSIDE" => {
                     if LOGS_REGISTRO {
@@ -445,7 +445,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdl3inside(df, Some(&indicator.nombre))?
+                    cdl3inside(df, Some(&indicator.nombre));
                 }
                 "CDL3LINESTRIKE" => {
                     if LOGS_REGISTRO {
@@ -455,7 +455,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdl3linestrike(df, Some(&indicator.nombre))?
+                    cdl3linestrike(df, Some(&indicator.nombre));
                 }
                 "CDL3OUTSIDE" => {
                     if LOGS_REGISTRO {
@@ -465,7 +465,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdl3outside(df, Some(&indicator.nombre))?
+                    cdl3outside(df, Some(&indicator.nombre));
                 }
                 "CDL3STARSINSOUTH" => {
                     if LOGS_REGISTRO {
@@ -475,7 +475,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdl3starsinsouth(df, Some(&indicator.nombre))?
+                    cdl3starsinsouth(df, Some(&indicator.nombre));
                 }
                 "CDL3WHITESOLDIERS" => {
                     if LOGS_REGISTRO {
@@ -485,7 +485,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdl3whitesoldiers(df, Some(&indicator.nombre))?
+                    cdl3whitesoldiers(df, Some(&indicator.nombre));
                 }
                 "CDLABANDONEDBABY" => {
                     if LOGS_REGISTRO {
@@ -495,7 +495,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlabandonedbaby(df, Some(&indicator.nombre))?
+                    cdlabandonedbaby(df, Some(&indicator.nombre));
                 }
                 "CDLADVANCEBLOCK" => {
                     if LOGS_REGISTRO {
@@ -505,7 +505,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdladvanceblock(df, Some(&indicator.nombre))?
+                    cdladvanceblock(df, Some(&indicator.nombre));
                 }
                 "CDLBELTHOLD" => {
                     if LOGS_REGISTRO {
@@ -515,7 +515,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlbelthold(df, Some(&indicator.nombre))?
+                    cdlbelthold(df, Some(&indicator.nombre));
                 }
                 "CDLBREAKAWAY" => {
                     if LOGS_REGISTRO {
@@ -525,7 +525,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlbreakaway(df, Some(&indicator.nombre))?
+                    cdlbreakaway(df, Some(&indicator.nombre));
                 }
                 "CDLCLOSINGMARUBOZU" => {
                     if LOGS_REGISTRO {
@@ -535,7 +535,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlclosingmarubuzo(df, Some(&indicator.nombre))?
+                    cdlclosingmarubuzo(df, Some(&indicator.nombre));
                 }
                 "CDLCONCEALBABYSWALL" => {
                     if LOGS_REGISTRO {
@@ -545,7 +545,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlconcealbabyswall(df, Some(&indicator.nombre))?
+                    cdlconcealbabyswall(df, Some(&indicator.nombre));
                 }
                 "CDLCOUNTERATTACK" => {
                     if LOGS_REGISTRO {
@@ -555,7 +555,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlcounterattack(df, Some(&indicator.nombre))?
+                    cdlcounterattack(df, Some(&indicator.nombre));
                 }
                 "CDLDARKCLOUDCOVER" => {
                     if LOGS_REGISTRO {
@@ -565,7 +565,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdldarkcloudcover(df, Some(&indicator.nombre))?
+                    cdldarkcloudcover(df, Some(&indicator.nombre));
                 }
                 "CDLDOJI" => {
                     if LOGS_REGISTRO {
@@ -575,7 +575,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdldoji(df, Some(&indicator.nombre))?
+                    cdldoji(df, Some(&indicator.nombre));
                 }
                 "CDLDOJISTAR" => {
                     if LOGS_REGISTRO {
@@ -585,7 +585,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdldojistar(df, Some(&indicator.nombre))?
+                    cdldojistar(df, Some(&indicator.nombre));
                 }
                 "CDLDRAGONFLYDOJI" => {
                     if LOGS_REGISTRO {
@@ -595,7 +595,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdldragonflydoji(df, Some(&indicator.nombre))?
+                    cdldragonflydoji(df, Some(&indicator.nombre));
                 }
                 "CDLENGULFING" => {
                     if LOGS_REGISTRO {
@@ -605,7 +605,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlengulfing(df, Some(&indicator.nombre))?
+                    cdlengulfing(df, Some(&indicator.nombre));
                 }
                 "CDLEVENINGDOJISTAR" => {
                     if LOGS_REGISTRO {
@@ -615,7 +615,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdleveningdojistar(df, Some(&indicator.nombre))?
+                    cdleveningdojistar(df, Some(&indicator.nombre));
                 }
                 "CDLEVENINGSTAR" => {
                     if LOGS_REGISTRO {
@@ -625,7 +625,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdleveningstar(df, Some(&indicator.nombre))?
+                    cdleveningstar(df, Some(&indicator.nombre));
                 }
                 "CDLGAPSIDESIDEWHITE" => {
                     if LOGS_REGISTRO {
@@ -635,7 +635,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlgapsidesidewhite(df, Some(&indicator.nombre))?
+                    cdlgapsidesidewhite(df, Some(&indicator.nombre));
                 }
                 "CDLGRAVESTONEDOJI" => {
                     if LOGS_REGISTRO {
@@ -645,7 +645,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlgravestonedoji(df, Some(&indicator.nombre))?
+                    cdlgravestonedoji(df, Some(&indicator.nombre));
                 }
                 "CDLHAMMER" => {
                     if LOGS_REGISTRO {
@@ -655,7 +655,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlhammer(df, Some(&indicator.nombre))?
+                    cdlhammer(df, Some(&indicator.nombre));
                 }
                 "CDLHANGINGMAN" => {
                     if LOGS_REGISTRO {
@@ -665,7 +665,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlhangingman(df, Some(&indicator.nombre))?
+                    cdlhangingman(df, Some(&indicator.nombre));
                 }
                 "CDLHARAMI" => {
                     if LOGS_REGISTRO {
@@ -675,7 +675,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlharami(df, Some(&indicator.nombre))?
+                    cdlharami(df, Some(&indicator.nombre));
                 }
                 "CDLHARAMICROSS" => {
                     if LOGS_REGISTRO {
@@ -685,7 +685,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlharamicross(df, Some(&indicator.nombre))?
+                    cdlharamicross(df, Some(&indicator.nombre));
                 }
                 "CDLHIGHWAVE" => {
                     if LOGS_REGISTRO {
@@ -695,7 +695,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlhighwave(df, Some(&indicator.nombre))?
+                    cdlhighwave(df, Some(&indicator.nombre));
                 }
                 "CDLHIKKAKE" => {
                     if LOGS_REGISTRO {
@@ -705,7 +705,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlhikkake(df, Some(&indicator.nombre))?
+                    cdlhikkake(df, Some(&indicator.nombre));
                 }
                 "CDLHIKKAKEMOD" => {
                     if LOGS_REGISTRO {
@@ -715,7 +715,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlhikkakemod(df, Some(&indicator.nombre))?
+                    cdlhikkakemod(df, Some(&indicator.nombre));
                 }
                 "CDLHOMINGPIGEON" => {
                     if LOGS_REGISTRO {
@@ -725,7 +725,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlhomingpigeon(df, Some(&indicator.nombre))?
+                    cdlhomingpigeon(df, Some(&indicator.nombre));
                 }
                 "CDLIDENTICAL3CROWS" => {
                     if LOGS_REGISTRO {
@@ -735,7 +735,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlidentical3crows(df, Some(&indicator.nombre))?
+                    cdlidentical3crows(df, Some(&indicator.nombre));
                 }
                 "CDLINNECK" => {
                     if LOGS_REGISTRO {
@@ -745,7 +745,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlinneck(df, Some(&indicator.nombre))?
+                    cdlinneck(df, Some(&indicator.nombre));
                 }
                 "CDLINVERTEDHAMMER" => {
                     if LOGS_REGISTRO {
@@ -755,7 +755,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlinvertedhammer(df, Some(&indicator.nombre))?
+                    cdlinvertedhammer(df, Some(&indicator.nombre));
                 }
                 "CDLKICKING" => {
                     if LOGS_REGISTRO {
@@ -765,7 +765,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlkicking(df, Some(&indicator.nombre))?
+                    cdlkicking(df, Some(&indicator.nombre));
                 }
                 "CDLKICKINGBYLENGTH" => {
                     if LOGS_REGISTRO {
@@ -775,7 +775,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlkickingbylength(df, Some(&indicator.nombre))?
+                    cdlkickingbylength(df, Some(&indicator.nombre));
                 }
                 "CDLLADDERBOTTOM" => {
                     if LOGS_REGISTRO {
@@ -785,7 +785,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdladderbottom(df, Some(&indicator.nombre))?
+                    cdladderbottom(df, Some(&indicator.nombre));
                 }
                 "CDLLONGLEGGEDDOJI" => {
                     if LOGS_REGISTRO {
@@ -795,7 +795,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdllongleggeddoji(df, Some(&indicator.nombre))?
+                    cdllongleggeddoji(df, Some(&indicator.nombre));
                 }
                 "CDLLONGLINE" => {
                     if LOGS_REGISTRO {
@@ -805,7 +805,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdllongline(df, Some(&indicator.nombre))?
+                    cdllongline(df, Some(&indicator.nombre));
                 }
                 "CDLMARUBOZU" => {
                     if LOGS_REGISTRO {
@@ -815,7 +815,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlmarubozu(df, Some(&indicator.nombre))?
+                    cdlmarubozu(df, Some(&indicator.nombre));
                 }
                 "CDLMATCHINGLOW" => {
                     if LOGS_REGISTRO {
@@ -825,7 +825,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlmatchinglow(df, Some(&indicator.nombre))?
+                    cdlmatchinglow(df, Some(&indicator.nombre));
                 }
                 "CDLMATHOLD" => {
                     if LOGS_REGISTRO {
@@ -835,7 +835,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlmathold(df, Some(&indicator.nombre))?
+                    cdlmathold(df, Some(&indicator.nombre));
                 }
                 "CDLMORNINGDOJISTAR" => {
                     let parametros =
@@ -849,7 +849,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlmorningdojistar(df, Some(parametros.penetration), Some(&indicator.nombre))?
+                    cdlmorningdojistar(df, Some(parametros.penetration), Some(&indicator.nombre));
                 }
                 "CDLMORNINGSTAR" => {
                     let parametros =
@@ -863,7 +863,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlmorningstar(df, Some(parametros.penetration), Some(&indicator.nombre))?
+                    cdlmorningstar(df, Some(parametros.penetration), Some(&indicator.nombre));
                 }
                 "CDLONNECK" => {
                     if LOGS_REGISTRO {
@@ -873,7 +873,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlonneck(df, Some(&indicator.nombre))?
+                    cdlonneck(df, Some(&indicator.nombre));
                 }
                 "CDLPIERCING" => {
                     let parametros =
@@ -886,7 +886,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlpiercing(df, Some(parametros.penetration), Some(&indicator.nombre))?
+                    cdlpiercing(df, Some(parametros.penetration), Some(&indicator.nombre));
                 }
                 "CDLRICKSHAWMAN" => {
                     if LOGS_REGISTRO {
@@ -896,7 +896,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlrickshawman(df, Some(&indicator.nombre))?
+                    cdlrickshawman(df, Some(&indicator.nombre));
                 }
                 "CDLRISEFALL3METHODS" => {
                     if LOGS_REGISTRO {
@@ -906,7 +906,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlrisefall3methods(df, Some(&indicator.nombre))?
+                    cdlrisefall3methods(df, Some(&indicator.nombre));
                 }
                 "CDLSEPARATINGLINES" => {
                     if LOGS_REGISTRO {
@@ -916,7 +916,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlseparatinglines(df, Some(&indicator.nombre))?
+                    cdlseparatinglines(df, Some(&indicator.nombre));
                 }
                 "CDLSHOOTINGSTAR" => {
                     if LOGS_REGISTRO {
@@ -926,7 +926,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlshootingstar(df, Some(&indicator.nombre))?
+                    cdlshootingstar(df, Some(&indicator.nombre));
                 }
                 "CDLSHORTLINE" => {
                     if LOGS_REGISTRO {
@@ -936,7 +936,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlshortline(df, Some(&indicator.nombre))?
+                    cdlshortline(df, Some(&indicator.nombre));
                 }
                 "CDLSPINNINGTOP" => {
                     if LOGS_REGISTRO {
@@ -946,7 +946,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlspinningtop(df, Some(&indicator.nombre))?
+                    cdlspinningtop(df, Some(&indicator.nombre));
                 }
                 "CDLSTALLEDPATTERN" => {
                     if LOGS_REGISTRO {
@@ -956,7 +956,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlstalledpattern(df, Some(&indicator.nombre))?
+                    cdlstalledpattern(df, Some(&indicator.nombre));
                 }
                 "CDLSTICKSANDWICH" => {
                     if LOGS_REGISTRO {
@@ -966,7 +966,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlsticksandwich(df, Some(&indicator.nombre))?
+                    cdlsticksandwich(df, Some(&indicator.nombre));
                 }
                 "CDLTAKURI" => {
                     if LOGS_REGISTRO {
@@ -976,7 +976,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdltakuri(df, Some(&indicator.nombre))?
+                    cdltakuri(df, Some(&indicator.nombre));
                 }
                 "CDLTASUKIGAP" => {
                     if LOGS_REGISTRO {
@@ -986,7 +986,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdltasukigap(df, Some(&indicator.nombre))?
+                    cdltasukigap(df, Some(&indicator.nombre));
                 }
                 "CDLTHRUSTING" => {
                     if LOGS_REGISTRO {
@@ -996,7 +996,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlthrusting(df, Some(&indicator.nombre))?
+                    cdlthrusting(df, Some(&indicator.nombre));
                 }
                 "CDLTRISTAR" => {
                     if LOGS_REGISTRO {
@@ -1006,7 +1006,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdltristar(df, Some(&indicator.nombre))?
+                    cdltristar(df, Some(&indicator.nombre));
                 }
                 "CDLUNIQUE3RIVER" => {
                     if LOGS_REGISTRO {
@@ -1016,7 +1016,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlunique3river(df, Some(&indicator.nombre))?
+                    cdlunique3river(df, Some(&indicator.nombre));
                 }
                 "CDLUPSIDEGAP2CROWS" => {
                     if LOGS_REGISTRO {
@@ -1026,7 +1026,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlupsidegap2crows(df, Some(&indicator.nombre))?
+                    cdlupsidegap2crows(df, Some(&indicator.nombre));
                 }
                 "CDLXSIDEGAP3METHODS" => {
                     if LOGS_REGISTRO {
@@ -1036,7 +1036,7 @@ impl Backtest {
                         ));
                     }
 
-                    cdlxsidegap3methods(df, Some(&indicator.nombre))?
+                    cdlxsidegap3methods(df, Some(&indicator.nombre));
                 }
                 "ADX" => {
                     let params: AdxParams =
@@ -1046,7 +1046,7 @@ impl Backtest {
                         self.add_registro(format!("Indicador ADX agregado: {}", indicator.nombre));
                     }
 
-                    adx(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    adx(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "ADXR" => {
                     let params: AdxrParams =
@@ -1056,7 +1056,7 @@ impl Backtest {
                         self.add_registro(format!("Indicador ADXR agregado: {}", indicator.nombre));
                     }
 
-                    adxr(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    adxr(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "APO" => {
                     let params: ApoParams =
@@ -1071,7 +1071,7 @@ impl Backtest {
                         Some(params.fastperiod),
                         Some(params.slowperiod),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "AROON" => {
                     let params: AroonParams =
@@ -1089,7 +1089,7 @@ impl Backtest {
                         Some(params.timeperiod),
                         Some(format!("{}_col_up", &indicator.nombre).as_str()),
                         Some(format!("{}_col_down", &indicator.nombre).as_str()),
-                    )?
+                    );
                 }
                 "AROONOSC" => {
                     let params: AroonoscParams =
@@ -1103,7 +1103,7 @@ impl Backtest {
                         ));
                     }
 
-                    aroonosc(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    aroonosc(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "BOP" => {
                     let params: BopParams =
@@ -1113,7 +1113,7 @@ impl Backtest {
                         self.add_registro(format!("Indicador BOP agregado: {}", indicator.nombre));
                     }
 
-                    bop(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    bop(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "CCI" => {
                     let params: CciParams =
@@ -1123,7 +1123,7 @@ impl Backtest {
                         self.add_registro(format!("Indicador CCI agregado: {}", indicator.nombre));
                     }
 
-                    cci(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    cci(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "CMO" => {
                     let params: CmoParams =
@@ -1133,7 +1133,7 @@ impl Backtest {
                         self.add_registro(format!("Indicador CMO agregado: {}", indicator.nombre));
                     }
 
-                    cmo(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    cmo(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "DX" => {
                     let params: DxParams =
@@ -1143,7 +1143,7 @@ impl Backtest {
                         self.add_registro(format!("Indicador DX agregado: {}", indicator.nombre));
                     }
 
-                    dx(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    dx(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "MACD" => {
                     let params: MacdParams =
@@ -1161,7 +1161,7 @@ impl Backtest {
                         Some(&indicator.nombre),
                         Some(format!("{}_col_signal", &indicator.nombre).as_str()),
                         Some(format!("{}_col_hist", &indicator.nombre).as_str()),
-                    )?
+                    );
                 }
                 "MACDEXT" => {
                     let params: MacdextParams =
@@ -1186,7 +1186,7 @@ impl Backtest {
                         Some(&indicator.nombre),
                         Some(format!("{}_col_signal", &indicator.nombre).as_str()),
                         Some(format!("{}_col_hist", &indicator.nombre).as_str()),
-                    )?
+                    );
                 }
                 "MACDFIX" => {
                     let params: MacdfixParams =
@@ -1195,7 +1195,7 @@ impl Backtest {
 
                     if LOGS_REGISTRO {
                         self.add_registro(format!(
-                            "Indicador MACDFIX agregado: {}",
+                            "Indicador MACdfIX agregado: {}",
                             indicator.nombre
                         ));
                     }
@@ -1206,7 +1206,7 @@ impl Backtest {
                         Some(&indicator.nombre),
                         Some(format!("{}_col_signal", &indicator.nombre).as_str()),
                         Some(format!("{}_col_hist", &indicator.nombre).as_str()),
-                    )?
+                    );
                 }
                 "MFI" => {
                     let params: MfiParams =
@@ -1216,7 +1216,7 @@ impl Backtest {
                         self.add_registro(format!("Indicador MFI agregado: {}", indicator.nombre));
                     }
 
-                    mfi(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    mfi(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "MINUS_DI" => {
                     let params: MinusDiParams =
@@ -1230,7 +1230,7 @@ impl Backtest {
                         ));
                     }
 
-                    minus_di(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    minus_di(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "MINUS_DM" => {
                     let params: MinusDmParams =
@@ -1244,7 +1244,7 @@ impl Backtest {
                         ));
                     }
 
-                    minus_dm(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    minus_dm(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "MOM" => {
                     let params: MomParams =
@@ -1254,7 +1254,7 @@ impl Backtest {
                         self.add_registro(format!("Indicador MOM agregado: {}", indicator.nombre));
                     }
 
-                    mom(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    mom(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "PLUS_DI" => {
                     let params: PlusDiParams =
@@ -1268,7 +1268,7 @@ impl Backtest {
                         ));
                     }
 
-                    plus_di(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    plus_di(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "PLUS_DM" => {
                     let params: PlusDmParams =
@@ -1282,7 +1282,7 @@ impl Backtest {
                         ));
                     }
 
-                    plus_dm(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    plus_dm(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "PPO" => {
                     let params: PpoParams =
@@ -1297,7 +1297,7 @@ impl Backtest {
                         Some(params.fastperiod),
                         Some(params.slowperiod),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "ROC" => {
                     let params: RocParams =
@@ -1307,7 +1307,7 @@ impl Backtest {
                         self.add_registro(format!("Indicador ROC agregado: {}", indicator.nombre));
                     }
 
-                    roc(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    roc(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "ROCP" => {
                     let params: RocpParams =
@@ -1317,7 +1317,7 @@ impl Backtest {
                         self.add_registro(format!("Indicador ROCP agregado: {}", indicator.nombre));
                     }
 
-                    rocp(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    rocp(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "ROCR" => {
                     let params: RocrParams =
@@ -1327,7 +1327,7 @@ impl Backtest {
                         self.add_registro(format!("Indicador ROCR agregado: {}", indicator.nombre));
                     }
 
-                    rocr(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    rocr(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "ROCR100" => {
                     let params: Roc100Params =
@@ -1341,7 +1341,7 @@ impl Backtest {
                         ));
                     }
 
-                    rocr100(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    rocr100(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "RSI" => {
                     let params: RsiParams =
@@ -1351,7 +1351,7 @@ impl Backtest {
                         self.add_registro(format!("Indicador RSI agregado: {}", indicator.nombre));
                     }
 
-                    rsi(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    rsi(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "STOCH" => {
                     let params: StochParams =
@@ -1373,7 +1373,7 @@ impl Backtest {
                         Some(params.slowd_period),
                         Some(format!("{}_col_k", &indicator.nombre).as_str()),
                         Some(format!("{}_col_d", &indicator.nombre).as_str()),
-                    )?
+                    );
                 }
                 "STOCHF" => {
                     let params: StochfParams =
@@ -1394,7 +1394,7 @@ impl Backtest {
                         Some(params.fastd_matype),
                         Some(format!("{}_col_k", &indicator.nombre).as_str()),
                         Some(format!("{}_col_d", &indicator.nombre).as_str()),
-                    )?
+                    );
                 }
                 "STOCHRSI" => {
                     let params: StochRsiParams =
@@ -1416,7 +1416,7 @@ impl Backtest {
                         Some(params.fastd_matype),
                         Some(format!("{}_col_k", &indicator.nombre).as_str()),
                         Some(format!("{}_col_d", &indicator.nombre).as_str()),
-                    )?
+                    );
                 }
                 "TRIX" => {
                     let params: TrixParams =
@@ -1426,7 +1426,7 @@ impl Backtest {
                         self.add_registro(format!("Indicador TRIX agregado: {}", indicator.nombre));
                     }
 
-                    trix(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    trix(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "ULTOSC" => {
                     let params: UltoscParams =
@@ -1446,7 +1446,7 @@ impl Backtest {
                         Some(params.timeperiod2),
                         Some(params.timeperiod3),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "WILLR" => {
                     let params: WillrParams =
@@ -1460,7 +1460,7 @@ impl Backtest {
                         ));
                     }
 
-                    willr(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    willr(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "AVGPRICE" => {
                     if LOGS_REGISTRO {
@@ -1470,7 +1470,7 @@ impl Backtest {
                         ));
                     }
 
-                    avgprice(df, Some(&indicator.nombre))?
+                    avgprice(df, Some(&indicator.nombre));
                 }
                 "MEDPRICE" => {
                     if LOGS_REGISTRO {
@@ -1480,7 +1480,7 @@ impl Backtest {
                         ));
                     }
 
-                    medprice(df, Some(&indicator.nombre))?
+                    medprice(df, Some(&indicator.nombre));
                 }
                 "TYPPRICE" => {
                     if LOGS_REGISTRO {
@@ -1490,7 +1490,7 @@ impl Backtest {
                         ));
                     }
 
-                    typprice(df, Some(&indicator.nombre))?
+                    typprice(df, Some(&indicator.nombre));
                 }
                 "WCLPRICE" => {
                     if LOGS_REGISTRO {
@@ -1500,7 +1500,7 @@ impl Backtest {
                         ));
                     }
 
-                    wclprice(df, Some(&indicator.nombre))?
+                    wclprice(df, Some(&indicator.nombre));
                 }
                 "BETA" => {
                     let params: BetaParams =
@@ -1516,7 +1516,7 @@ impl Backtest {
                         &params.col_real1,
                         Some(params.timeperiod),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "CORREL" => {
                     let params: CorrelParams =
@@ -1536,7 +1536,7 @@ impl Backtest {
                         &params.col_real1,
                         Some(params.timeperiod),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "LINEARREG" => {
                     let params: LinearRegParams =
@@ -1555,7 +1555,7 @@ impl Backtest {
                         &params.col_real,
                         Some(params.timeperiod),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "LINEARREG_ANGLE" => {
                     let params: LinearRegAngleParams =
@@ -1576,7 +1576,7 @@ impl Backtest {
                         &params.col_real,
                         Some(params.timeperiod),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "LINEARREG_INTERCEPT" => {
                     let params: LinearRegInterceptParams =
@@ -1597,7 +1597,7 @@ impl Backtest {
                         &params.col_real,
                         Some(params.timeperiod),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "LINEARREG_SLOPE" => {
                     let params: LinearRegSlopeParams =
@@ -1618,7 +1618,7 @@ impl Backtest {
                         &params.col_real,
                         Some(params.timeperiod),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "STDDEV" => {
                     let params: StddevParams =
@@ -1638,7 +1638,7 @@ impl Backtest {
                         Some(params.timeperiod),
                         Some(params.nbdev),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "TSF" => {
                     let params: TsfParams =
@@ -1653,7 +1653,7 @@ impl Backtest {
                         &params.col_real,
                         Some(params.timeperiod),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "VAR" => {
                     let params: VarParams =
@@ -1669,7 +1669,7 @@ impl Backtest {
                         Some(params.timeperiod),
                         Some(params.nbdev),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "TRANGE" => {
                     if LOGS_REGISTRO {
@@ -1678,7 +1678,7 @@ impl Backtest {
                             indicator.nombre
                         ));
                     }
-                    trange(df, Some(&indicator.nombre))?
+                    trange(df, Some(&indicator.nombre));
                 }
                 "ATR" => {
                     let params: AtrParams =
@@ -1693,7 +1693,7 @@ impl Backtest {
                         Some(params.timeperiod),
                         Some(params.multiplier),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "NATR" => {
                     let params: NatrParams =
@@ -1703,14 +1703,14 @@ impl Backtest {
                         self.add_registro(format!("Indicador NATR agregado: {}", indicator.nombre));
                     }
 
-                    natr(df, Some(params.timeperiod), Some(&indicator.nombre))?
+                    natr(df, Some(params.timeperiod), Some(&indicator.nombre));
                 }
                 "AD" => {
                     if LOGS_REGISTRO {
                         self.add_registro(format!("Indicador AD agregado: {}", indicator.nombre));
                     }
 
-                    ad(df, Some(&indicator.nombre))?
+                    ad(df, Some(&indicator.nombre));
                 }
                 "ADOSC" => {
                     let params: AdoscParams =
@@ -1729,20 +1729,22 @@ impl Backtest {
                         Some(params.fastperiod),
                         Some(params.slowperiod),
                         Some(&indicator.nombre),
-                    )?
+                    );
                 }
                 "OBV" => {
                     if LOGS_REGISTRO {
                         self.add_registro(format!("Indicador OBV agregado: {}", indicator.nombre));
                     }
 
-                    obv(df, Some(&indicator.nombre))?
+                    obv(df, Some(&indicator.nombre));
                 }
-                _ => df,
+                _ => {
+                    if LOGS_REGISTRO {
+                        self.add_registro(format!("El indicador no existe."));
+                    }
+                }
             }
         }
-
-        Ok(df)
     }
 
     /// Confirma si se puede operar en una dirección de compra o venta.
@@ -3240,7 +3242,7 @@ impl Backtest {
     /// Un string con el resultado del backtest.
     async fn backtest(
         &mut self,
-        df: DataFrame,
+        df: &mut DataFrame,
         symbol: SymbolInfoCFD,
     ) -> Result<String, Box<dyn std::error::Error>> {
         let mut open_trades: Vec<Trade> = Vec::new();
@@ -4887,18 +4889,6 @@ impl Backtest {
                     }
                 }
 
-                // match get_strategies_conditions_by_strategy_id(estrategia.id).await {
-                //     Ok(condiciones) => {
-                //         estrategia.condiciones = condiciones.clone();
-                //         if LOGS_REGISTRO {
-                //             self.add_registro(format!("Condiciones cargadas: {:?}", condiciones));
-                //         }
-                //     }
-                //     Err(e) => {
-                //         println!("Error al obtener condiciones: {:?}", e);
-                //     }
-                // }
-
                 if LOGS_REGISTRO {
                     self.add_registro(format!(
                         "Estrategia cargada correctamente: {:?}",
@@ -4922,26 +4912,19 @@ impl Backtest {
 
         for data in self.datos.clone() {
             // Verificamos los indicadores que tiene la estrategia para añadirlos a los datos del DataFrame
-            let df = match self.set_indicators_strategy(data.get_datos()) {
-                Ok(df_result) => {
-                    let df_clean = df_result
-                        .lazy()
-                        .fill_nan(lit(NULL))
-                        .drop_nulls(None) // elimina filas con cualquier null
-                        .collect()?;
+            let mut df = data.get_datos();
+            self.set_indicators_strategy(&mut df);
+            df = df
+                .lazy()
+                .fill_nan(lit(NULL))
+                .drop_nulls(None) // elimina filas con cualquier null
+                .collect()?;
 
-                    if LOGS_REGISTRO {
-                        self.add_registro(format!("{:?}", &df_clean.head(Some(20))));
-                    }
+            if LOGS_REGISTRO {
+                self.add_registro(format!("{:?}", &df.head(Some(20))));
+            }
 
-                    df_clean
-                }
-                Err(e) => {
-                    return Err(Box::new(e));
-                }
-            };
-
-            self.backtest(df.clone(), symbol.clone()).await.unwrap();
+            self.backtest(&mut df, symbol.clone()).await.unwrap();
         }
 
         if !self.trades.is_empty() {

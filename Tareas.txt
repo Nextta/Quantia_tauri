@@ -16,6 +16,7 @@ Terminadas:
 -Crear la logica para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
 -Corregir algunos errores de la logica del backtest:
    * En todos los atr de las operaciones limits cambiar de valor por parametro a precio de los datos.
+-Optimizar backtest para aumentar velocidad.
 
 
 TODO:

@@ -701,7 +701,7 @@ impl Resultados {
 
     //FUNCIONES
     pub async fn guardar_resultados(&self) {
-        let result = insert_resultados(self.clone()).await;
+        let result = insert_resultados(&self).await;
         match result {
             Ok(_) => {
                 if LOGS_REGISTRO {
