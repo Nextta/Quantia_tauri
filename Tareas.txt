@@ -16,10 +16,10 @@ Terminadas:
 -Crear la logica para hacer que las estrategias se creen en base a un plantilla funcional para cualquier tipo de estrategia.
 -Corregir algunos errores de la logica del backtest:
    * En todos los atr de las operaciones limits cambiar de valor por parametro a precio de los datos.
+-Optimizar backtest para aumentar velocidad.
 
 
 TODO:
--Optimizar backtest para aumentar velocidad.
 -Crear los primeros comandos para el frontend:
     * Comando GetBacktest: Que envia todas las estrategias de la base de datos.
     * Comando GetResults: Envia los resultados de un backtest pasando por parametro el id del backtest.
