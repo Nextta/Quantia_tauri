@@ -4897,8 +4897,9 @@ impl Backtest {
             df = df
                 .lazy()
                 .fill_nan(lit(NULL))
-                .drop_nulls(None) // elimina filas con cualquier null
-                .collect()?;
+                .drop_nulls(None)
+                .collect()
+                .unwrap();
 
             if LOGS_REGISTRO {
                 self.add_registro(format!("{:?}", &df.head(Some(20))));
