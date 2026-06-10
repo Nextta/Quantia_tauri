@@ -1754,7 +1754,7 @@ impl Backtest {
     ///
     /// # Retorna
     /// True si se puede operar en la dirección indicada, false en caso contrario.
-    fn verificar_direccion(&mut self, tipo: EntryDirection) -> bool {
+    fn verificar_direccion(&mut self, tipo: &EntryDirection) -> bool {
         match tipo {
             EntryDirection::Buy => {
                 if LOGS_REGISTRO {
@@ -1946,7 +1946,7 @@ impl Backtest {
     /// El límite de la acción en el índice dado.
     fn get_limit(
         &mut self,
-        df: DataFrame,
+        df: &DataFrame,
         params: String,
         i: usize,
     ) -> Result<f64, serde_json::Error> {
@@ -2145,10 +2145,10 @@ impl Backtest {
     /// El valor del stop loss.
     fn get_stoploss(
         &mut self,
-        precio_entrada: f64,
-        df: DataFrame,
+        precio_entrada: &f64,
+        df: &DataFrame,
         i: usize,
-        direccion: EntryDirection,
+        direccion: &EntryDirection,
     ) -> f64 {
         if LOGS_REGISTRO {
             self.add_registro(format!("Obteniendo stop loss"));
@@ -2188,7 +2188,7 @@ impl Backtest {
 
             let sl: f64 = match params.tipo.as_str() {
                 "pip" => {
-                    if direccion == EntryDirection::Buy {
+                    if direccion == &EntryDirection::Buy {
                         if valor - params.valor >= 0.00000 {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
@@ -2203,7 +2203,7 @@ impl Backtest {
                             }
                             0.0
                         }
-                    } else if direccion == EntryDirection::Sell {
+                    } else if direccion == &EntryDirection::Sell {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Obteniendo stop loss por pip: {}",
@@ -2219,7 +2219,7 @@ impl Backtest {
                     }
                 }
                 "tick" => {
-                    if direccion == EntryDirection::Buy {
+                    if direccion == &EntryDirection::Buy {
                         if valor - params.valor >= 0.00000 {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
@@ -2234,7 +2234,7 @@ impl Backtest {
                             }
                             0.0
                         }
-                    } else if direccion == EntryDirection::Sell {
+                    } else if direccion == &EntryDirection::Sell {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Obteniendo stop loss por tick: {}",
@@ -2250,7 +2250,7 @@ impl Backtest {
                     }
                 }
                 "punto" => {
-                    if direccion == EntryDirection::Buy {
+                    if direccion == &EntryDirection::Buy {
                         if valor - params.valor >= 0.00000 {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
@@ -2265,7 +2265,7 @@ impl Backtest {
                             }
                             0.0
                         }
-                    } else if direccion == EntryDirection::Sell {
+                    } else if direccion == &EntryDirection::Sell {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Obteniendo stop loss por punto: {}",
@@ -2281,7 +2281,7 @@ impl Backtest {
                     }
                 }
                 "porcentaje" => {
-                    if direccion == EntryDirection::Buy {
+                    if direccion == &EntryDirection::Buy {
                         if valor - (valor * params.valor) >= 0.00000 {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
@@ -2296,7 +2296,7 @@ impl Backtest {
                             }
                             0.0
                         }
-                    } else if direccion == EntryDirection::Sell {
+                    } else if direccion == &EntryDirection::Sell {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Obteniendo stop loss por porcentaje: {}",
@@ -2312,7 +2312,7 @@ impl Backtest {
                     }
                 }
                 "atr" => {
-                    if direccion == EntryDirection::Buy {
+                    if direccion == &EntryDirection::Buy {
                         if precio_entrada - valor >= 0.00000 {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
@@ -2327,7 +2327,7 @@ impl Backtest {
                             }
                             0.0
                         }
-                    } else if direccion == EntryDirection::Sell {
+                    } else if direccion == &EntryDirection::Sell {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Obteniendo stop loss por atr: {}",
@@ -2362,10 +2362,10 @@ impl Backtest {
     /// El valor del take profit.
     fn get_takeprofit(
         &mut self,
-        precio_entrada: f64,
-        df: DataFrame,
+        precio_entrada: &f64,
+        df: &DataFrame,
         i: usize,
-        direccion: EntryDirection,
+        direccion: &EntryDirection,
     ) -> f64 {
         if LOGS_REGISTRO {
             self.add_registro(format!("Obteniendo take profit"));
@@ -2405,7 +2405,7 @@ impl Backtest {
 
             let tp: f64 = match params.tipo.as_str() {
                 "pip" => {
-                    if direccion == EntryDirection::Buy {
+                    if direccion == &EntryDirection::Buy {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Obteniendo limite de compra por pip: {}",
@@ -2413,7 +2413,7 @@ impl Backtest {
                             ));
                         }
                         valor + params.valor
-                    } else if direccion == EntryDirection::Sell {
+                    } else if direccion == &EntryDirection::Sell {
                         if valor - params.valor >= 0.00000 {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
@@ -2436,7 +2436,7 @@ impl Backtest {
                     }
                 }
                 "tick" => {
-                    if direccion == EntryDirection::Buy {
+                    if direccion == &EntryDirection::Buy {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Obteniendo limite de compra por tick: {}",
@@ -2444,7 +2444,7 @@ impl Backtest {
                             ));
                         }
                         valor + params.valor
-                    } else if direccion == EntryDirection::Sell {
+                    } else if direccion == &EntryDirection::Sell {
                         if valor - params.valor >= 0.00000 {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
@@ -2467,7 +2467,7 @@ impl Backtest {
                     }
                 }
                 "punto" => {
-                    if direccion == EntryDirection::Buy {
+                    if direccion == &EntryDirection::Buy {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Obteniendo limite de compra por punto: {}",
@@ -2475,7 +2475,7 @@ impl Backtest {
                             ));
                         }
                         valor + params.valor
-                    } else if direccion == EntryDirection::Sell {
+                    } else if direccion == &EntryDirection::Sell {
                         if valor - params.valor >= 0.00000 {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
@@ -2498,7 +2498,7 @@ impl Backtest {
                     }
                 }
                 "porcentaje" => {
-                    if direccion == EntryDirection::Buy {
+                    if direccion == &EntryDirection::Buy {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Obteniendo limite de compra por porcentaje: {}",
@@ -2506,7 +2506,7 @@ impl Backtest {
                             ));
                         }
                         valor + (valor * params.valor)
-                    } else if direccion == EntryDirection::Sell {
+                    } else if direccion == &EntryDirection::Sell {
                         if valor - (valor * params.valor) >= 0.00000 {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
@@ -2531,7 +2531,7 @@ impl Backtest {
                     }
                 }
                 "atr" => {
-                    if direccion == EntryDirection::Buy {
+                    if direccion == &EntryDirection::Buy {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Obteniendo limite de compra por atr: {}",
@@ -2539,7 +2539,7 @@ impl Backtest {
                             ));
                         }
                         precio_entrada + valor
-                    } else if direccion == EntryDirection::Sell {
+                    } else if direccion == &EntryDirection::Sell {
                         if precio_entrada - valor >= 0.00000 {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
@@ -2584,9 +2584,9 @@ impl Backtest {
     async fn ejecutar_entry(
         &mut self,
         timestamp: i64,
-        symbol: SymbolInfoCFD,
-        signal: EntryDirection,
-        precio_entrada: f64,
+        symbol: &SymbolInfoCFD,
+        signal: &EntryDirection,
+        precio_entrada: &f64,
         stoploss: Option<f64>,
         takeprofit: Option<f64>,
     ) -> Option<Trade> {
@@ -2608,10 +2608,10 @@ impl Backtest {
                 }
 
                 trade.buy(
-                    t0.clone(),
-                    precio,
-                    self.gestion_strategy.clone(),
-                    self.parametros_gestion.clone(),
+                    &t0,
+                    &precio,
+                    &self.gestion_strategy,
+                    &self.parametros_gestion,
                     &self,
                     Some(tp),
                     Some(sl),
@@ -2626,10 +2626,10 @@ impl Backtest {
             }
             EntryDirection::Sell => {
                 trade.sell(
-                    t0.clone(),
+                    &t0,
                     precio_entrada,
-                    self.gestion_strategy.clone(),
-                    self.parametros_gestion.clone(),
+                    &self.gestion_strategy,
+                    &self.parametros_gestion,
                     &self,
                     Some(tp),
                     Some(sl),
@@ -2661,12 +2661,12 @@ impl Backtest {
     /// `true` si se da la condición para activar el Breakevent, `false` en caso contrario
     fn colocar_be(
         &mut self,
-        tipo: EntryDirection,
-        unidad: BeTipo,
-        symbol: SymbolInfoCFD,
-        valor: f64,
-        precio_entrada: f64,
-        precio_actual: f64,
+        tipo: &EntryDirection,
+        unidad: &BeTipo,
+        symbol: &SymbolInfoCFD,
+        valor: &f64,
+        precio_entrada: &f64,
+        precio_actual: &f64,
     ) -> bool {
         let diferencia = match tipo {
             EntryDirection::Buy => precio_actual - precio_entrada,
@@ -2712,7 +2712,7 @@ impl Backtest {
             _ => diferencia,
         };
 
-        if resultado >= valor {
+        if &resultado >= valor {
             if LOGS_REGISTRO {
                 self.add_registro(format!("Se va a colocar BE en precio={}", resultado));
             }
@@ -2736,15 +2736,15 @@ impl Backtest {
     /// El BE+ calculado como un valor f64.
     fn calcular_be_plus(
         &mut self,
-        unidad: BeTipo,
-        symbol: SymbolInfoCFD,
-        valor: f64,
-        precio_entrada: f64,
+        unidad: &BeTipo,
+        symbol: &SymbolInfoCFD,
+        valor: &f64,
+        precio_entrada: &f64,
     ) -> f64 {
         let resultado: f64 = match symbol.digitos {
             1 => match unidad {
                 BeTipo::Tick => valor * 0.1,
-                BeTipo::Pip => valor,
+                BeTipo::Pip => *valor,
                 BeTipo::Punto => valor * 0.1,
                 BeTipo::Porcentaje => (valor / precio_entrada) * 100.0,
                 _ => 0.0,
@@ -2802,12 +2802,12 @@ impl Backtest {
     /// El valor del TLS calculado.
     fn calcular_tls(
         &mut self,
-        tipo: EntryDirection,
-        symbol: SymbolInfoCFD,
-        parametros: TlParams,
-        trade: Trade,
-        precio_actual: f64,
-        precio_anterior: f64,
+        tipo: &EntryDirection,
+        symbol: &SymbolInfoCFD,
+        parametros: &TlParams,
+        trade: &Trade,
+        precio_actual: &f64,
+        precio_anterior: &f64,
     ) -> f64 {
         if LOGS_REGISTRO {
             self.add_registro("Calculando TLS...".to_string());
@@ -3010,13 +3010,13 @@ impl Backtest {
     /// `true` si el TSL se activa, `false` en caso contrario.
     fn activar_tsl(
         &mut self,
-        data: DataFrame,
+        data: &DataFrame,
         i: usize,
-        tipo: EntryDirection,
-        parametros: TlParams,
-        symbol: SymbolInfoCFD,
-        precio_entrada: f64,
-        precio_actual: f64,
+        tipo: &EntryDirection,
+        parametros: &TlParams,
+        symbol: &SymbolInfoCFD,
+        precio_entrada: &f64,
+        precio_actual: &f64,
     ) -> bool {
         if LOGS_REGISTRO {
             self.add_registro("Activando TSL".to_string());
@@ -3045,7 +3045,7 @@ impl Backtest {
 
                     let resultado: f64 = match tipo {
                         EntryDirection::Buy => {
-                            if indicador_price <= precio_actual {
+                            if &indicador_price <= precio_actual {
                                 indicador = true;
                                 indicador_price
                             } else {
@@ -3053,7 +3053,7 @@ impl Backtest {
                             }
                         }
                         EntryDirection::Sell => {
-                            if indicador_price >= precio_actual {
+                            if &indicador_price >= precio_actual {
                                 indicador = true;
                                 indicador_price
                             } else {
@@ -3081,7 +3081,7 @@ impl Backtest {
 
                     let resultado: f64 = match tipo {
                         EntryDirection::Buy => {
-                            if indicador_price <= precio_actual {
+                            if &indicador_price <= precio_actual {
                                 indicador = true;
                                 indicador_price
                             } else {
@@ -3089,7 +3089,7 @@ impl Backtest {
                             }
                         }
                         EntryDirection::Sell => {
-                            if indicador_price >= precio_actual {
+                            if &indicador_price >= precio_actual {
                                 indicador = true;
                                 indicador_price
                             } else {
@@ -3117,7 +3117,7 @@ impl Backtest {
 
                     let resultado: f64 = match tipo {
                         EntryDirection::Buy => {
-                            if indicador_price <= precio_actual {
+                            if &indicador_price <= precio_actual {
                                 indicador = true;
                                 indicador_price
                             } else {
@@ -3125,7 +3125,7 @@ impl Backtest {
                             }
                         }
                         EntryDirection::Sell => {
-                            if indicador_price >= precio_actual {
+                            if &indicador_price >= precio_actual {
                                 indicador = true;
                                 indicador_price
                             } else {
@@ -3153,7 +3153,7 @@ impl Backtest {
 
                     let resultado: f64 = match tipo {
                         EntryDirection::Buy => {
-                            if indicador_price <= precio_actual {
+                            if &indicador_price <= precio_actual {
                                 indicador = true;
                                 indicador_price
                             } else {
@@ -3161,7 +3161,7 @@ impl Backtest {
                             }
                         }
                         EntryDirection::Sell => {
-                            if indicador_price >= precio_actual {
+                            if &indicador_price >= precio_actual {
                                 indicador = true;
                                 indicador_price
                             } else {
@@ -3189,7 +3189,7 @@ impl Backtest {
 
                     let resultado: f64 = match tipo {
                         EntryDirection::Buy => {
-                            if indicador_price <= precio_actual {
+                            if &indicador_price <= precio_actual {
                                 indicador = true;
                                 indicador_price
                             } else {
@@ -3197,7 +3197,7 @@ impl Backtest {
                             }
                         }
                         EntryDirection::Sell => {
-                            if indicador_price >= precio_actual {
+                            if &indicador_price >= precio_actual {
                                 indicador = true;
                                 indicador_price
                             } else {
@@ -3243,7 +3243,7 @@ impl Backtest {
     async fn backtest(
         &mut self,
         df: &mut DataFrame,
-        symbol: SymbolInfoCFD,
+        symbol: &SymbolInfoCFD,
     ) -> Result<String, Box<dyn std::error::Error>> {
         let mut open_trades: Vec<Trade> = Vec::new();
 
@@ -3285,17 +3285,15 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
-                    let tp: f64 =
-                        self.get_takeprofit(limit.clone(), df.clone(), i, EntryDirection::Buy);
-                    let sl: f64 =
-                        self.get_stoploss(limit.clone(), df.clone(), i, EntryDirection::Buy);
+                    let tp: f64 = self.get_takeprofit(&limit, &df, i, &EntryDirection::Buy);
+                    let sl: f64 = self.get_stoploss(&limit, &df, i, &EntryDirection::Buy);
 
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
                             timestamp,
-                            symbol.clone(),
-                            EntryDirection::Buy,
-                            limit.clone(),
+                            &symbol,
+                            &EntryDirection::Buy,
+                            &limit,
                             Some(sl),
                             Some(tp),
                         )
@@ -3349,17 +3347,15 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
-                    let tp: f64 =
-                        self.get_takeprofit(limit.clone(), df.clone(), i, EntryDirection::Buy);
-                    let sl: f64 =
-                        self.get_stoploss(limit.clone(), df.clone(), i, EntryDirection::Buy);
+                    let tp: f64 = self.get_takeprofit(&limit, &df, i, &EntryDirection::Buy);
+                    let sl: f64 = self.get_stoploss(&limit, &df, i, &EntryDirection::Buy);
 
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
                             timestamp,
-                            symbol.clone(),
-                            EntryDirection::Buy,
-                            limit.clone(),
+                            &symbol,
+                            &EntryDirection::Buy,
+                            &limit,
                             Some(sl),
                             Some(tp),
                         )
@@ -3415,17 +3411,15 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
-                    let tp: f64 =
-                        self.get_takeprofit(limit.clone(), df.clone(), i, EntryDirection::Sell);
-                    let sl: f64 =
-                        self.get_stoploss(limit.clone(), df.clone(), i, EntryDirection::Sell);
+                    let tp: f64 = self.get_takeprofit(&limit, &df, i, &EntryDirection::Sell);
+                    let sl: f64 = self.get_stoploss(&limit, &df, i, &EntryDirection::Sell);
 
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
                             timestamp,
-                            symbol.clone(),
-                            EntryDirection::Sell,
-                            limit.clone(),
+                            &symbol,
+                            &EntryDirection::Sell,
+                            &limit,
                             Some(sl),
                             Some(tp),
                         )
@@ -3481,17 +3475,15 @@ impl Backtest {
                         .try_extract::<i64>()
                         .unwrap();
 
-                    let tp: f64 =
-                        self.get_takeprofit(limit.clone(), df.clone(), i, EntryDirection::Sell);
-                    let sl: f64 =
-                        self.get_stoploss(limit.clone(), df.clone(), i, EntryDirection::Sell);
+                    let tp: f64 = self.get_takeprofit(&limit, &df, i, &EntryDirection::Sell);
+                    let sl: f64 = self.get_stoploss(&limit, &df, i, &EntryDirection::Sell);
 
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
                             timestamp,
-                            symbol.clone(),
-                            EntryDirection::Sell,
-                            limit.clone(),
+                            &symbol,
+                            &EntryDirection::Sell,
+                            &limit,
                             Some(sl),
                             Some(tp),
                         )
@@ -3839,22 +3831,22 @@ impl Backtest {
                                     match trade.tipo {
                                         EntryDirection::Buy => {
                                             if self.colocar_be(
-                                                EntryDirection::Buy,
-                                                BeTipo::Tick,
-                                                symbol.clone(),
-                                                parametros.valor,
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Buy,
+                                                &BeTipo::Tick,
+                                                &symbol,
+                                                &parametros.valor,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 if parametros.be_plus > 0.0
                                                     && trade.sl < trade.precio_entrada
                                                 {
                                                     trade.sl = trade.precio_entrada
                                                         + self.calcular_be_plus(
-                                                            BeTipo::Tick,
-                                                            symbol.clone(),
-                                                            parametros.be_plus,
-                                                            trade.precio_entrada,
+                                                            &BeTipo::Tick,
+                                                            &symbol,
+                                                            &parametros.be_plus,
+                                                            &trade.precio_entrada,
                                                         );
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
@@ -3869,22 +3861,22 @@ impl Backtest {
                                         }
                                         EntryDirection::Sell => {
                                             if self.colocar_be(
-                                                EntryDirection::Sell,
-                                                BeTipo::Tick,
-                                                symbol.clone(),
-                                                parametros.valor,
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Sell,
+                                                &BeTipo::Tick,
+                                                &symbol,
+                                                &parametros.valor,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 if parametros.be_plus > 0.0
                                                     && trade.sl > trade.precio_entrada
                                                 {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
-                                                            BeTipo::Tick,
-                                                            symbol.clone(),
-                                                            parametros.be_plus,
-                                                            trade.precio_entrada,
+                                                            &BeTipo::Tick,
+                                                            &symbol,
+                                                            &parametros.be_plus,
+                                                            &trade.precio_entrada,
                                                         );
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
@@ -3906,22 +3898,22 @@ impl Backtest {
                                     match trade.tipo {
                                         EntryDirection::Buy => {
                                             if self.colocar_be(
-                                                EntryDirection::Buy,
-                                                BeTipo::Pip,
-                                                symbol.clone(),
-                                                parametros.valor,
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Buy,
+                                                &BeTipo::Pip,
+                                                &symbol,
+                                                &parametros.valor,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 if parametros.be_plus > 0.0
                                                     && trade.sl < trade.precio_entrada
                                                 {
                                                     trade.sl = trade.precio_entrada
                                                         + self.calcular_be_plus(
-                                                            BeTipo::Pip,
-                                                            symbol.clone(),
-                                                            parametros.be_plus,
-                                                            trade.precio_entrada,
+                                                            &BeTipo::Pip,
+                                                            &symbol,
+                                                            &parametros.be_plus,
+                                                            &trade.precio_entrada,
                                                         );
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
@@ -3937,22 +3929,22 @@ impl Backtest {
                                         }
                                         EntryDirection::Sell => {
                                             if self.colocar_be(
-                                                EntryDirection::Sell,
-                                                BeTipo::Pip,
-                                                symbol.clone(),
-                                                parametros.valor,
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Sell,
+                                                &BeTipo::Pip,
+                                                &symbol,
+                                                &parametros.valor,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 if parametros.be_plus > 0.0
                                                     && trade.sl > trade.precio_entrada
                                                 {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
-                                                            BeTipo::Pip,
-                                                            symbol.clone(),
-                                                            parametros.be_plus,
-                                                            trade.precio_entrada,
+                                                            &BeTipo::Pip,
+                                                            &symbol,
+                                                            &parametros.be_plus,
+                                                            &trade.precio_entrada,
                                                         );
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
@@ -3974,22 +3966,22 @@ impl Backtest {
                                     match trade.tipo {
                                         EntryDirection::Buy => {
                                             if self.colocar_be(
-                                                EntryDirection::Buy,
-                                                BeTipo::Punto,
-                                                symbol.clone(),
-                                                parametros.valor,
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Buy,
+                                                &BeTipo::Punto,
+                                                &symbol,
+                                                &parametros.valor,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 if parametros.be_plus > 0.0
                                                     && trade.sl < trade.precio_entrada
                                                 {
                                                     trade.sl = trade.precio_entrada
                                                         + self.calcular_be_plus(
-                                                            BeTipo::Punto,
-                                                            symbol.clone(),
-                                                            parametros.be_plus,
-                                                            trade.precio_entrada,
+                                                            &BeTipo::Punto,
+                                                            &symbol,
+                                                            &parametros.be_plus,
+                                                            &trade.precio_entrada,
                                                         );
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
@@ -4005,22 +3997,22 @@ impl Backtest {
                                         }
                                         EntryDirection::Sell => {
                                             if self.colocar_be(
-                                                EntryDirection::Sell,
-                                                BeTipo::Punto,
-                                                symbol.clone(),
-                                                parametros.valor,
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Sell,
+                                                &BeTipo::Punto,
+                                                &symbol,
+                                                &parametros.valor,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 if parametros.be_plus > 0.0
                                                     && trade.sl > trade.precio_entrada
                                                 {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
-                                                            BeTipo::Punto,
-                                                            symbol.clone(),
-                                                            parametros.be_plus,
-                                                            trade.precio_entrada,
+                                                            &BeTipo::Punto,
+                                                            &symbol,
+                                                            &parametros.be_plus,
+                                                            &trade.precio_entrada,
                                                         );
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
@@ -4042,22 +4034,22 @@ impl Backtest {
                                     match trade.tipo {
                                         EntryDirection::Buy => {
                                             if self.colocar_be(
-                                                EntryDirection::Buy,
-                                                BeTipo::Porcentaje,
-                                                symbol.clone(),
-                                                parametros.valor,
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Buy,
+                                                &BeTipo::Porcentaje,
+                                                &symbol,
+                                                &parametros.valor,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 if parametros.be_plus > 0.0
                                                     && trade.sl < trade.precio_entrada
                                                 {
                                                     trade.sl = trade.precio_entrada
                                                         + self.calcular_be_plus(
-                                                            BeTipo::Porcentaje,
-                                                            symbol.clone(),
-                                                            parametros.be_plus,
-                                                            trade.precio_entrada,
+                                                            &BeTipo::Porcentaje,
+                                                            &symbol,
+                                                            &parametros.be_plus,
+                                                            &trade.precio_entrada,
                                                         );
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
@@ -4073,22 +4065,22 @@ impl Backtest {
                                         }
                                         EntryDirection::Sell => {
                                             if self.colocar_be(
-                                                EntryDirection::Sell,
-                                                BeTipo::Porcentaje,
-                                                symbol.clone(),
-                                                parametros.valor,
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Sell,
+                                                &BeTipo::Porcentaje,
+                                                &symbol,
+                                                &parametros.valor,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 if parametros.be_plus > 0.0
                                                     && trade.sl > trade.precio_entrada
                                                 {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
-                                                            BeTipo::Porcentaje,
-                                                            symbol.clone(),
-                                                            parametros.be_plus,
-                                                            trade.precio_entrada,
+                                                            &BeTipo::Porcentaje,
+                                                            &symbol,
+                                                            &parametros.be_plus,
+                                                            &trade.precio_entrada,
                                                         );
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
@@ -4124,10 +4116,10 @@ impl Backtest {
                                                     {
                                                         trade.sl = trade.precio_entrada
                                                             + self.calcular_be_plus(
-                                                                BeTipo::Tick,
-                                                                symbol.clone(),
-                                                                parametros.be_plus,
-                                                                trade.precio_entrada,
+                                                                &BeTipo::Tick,
+                                                                &symbol,
+                                                                &parametros.be_plus,
+                                                                &trade.precio_entrada,
                                                             );
                                                     } else if trade.sl != trade.precio_entrada {
                                                         trade.sl = trade.precio_entrada;
@@ -4147,10 +4139,10 @@ impl Backtest {
                                                 {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
-                                                            BeTipo::Tick,
-                                                            symbol.clone(),
-                                                            parametros.be_plus,
-                                                            trade.precio_entrada,
+                                                            &BeTipo::Tick,
+                                                            &symbol,
+                                                            &parametros.be_plus,
+                                                            &trade.precio_entrada,
                                                         );
                                                 } else if trade.sl != trade.precio_entrada {
                                                     trade.sl = trade.precio_entrada;
@@ -4193,13 +4185,13 @@ impl Backtest {
                                     match trade.tipo {
                                         EntryDirection::Buy => {
                                             if self.activar_tsl(
-                                                df.clone(),
+                                                &df,
                                                 i.clone(),
-                                                EntryDirection::Buy,
-                                                parametros.clone(),
-                                                symbol.clone(),
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Buy,
+                                                &parametros,
+                                                &symbol,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 let precio_actual: f64 = df
                                                     .column("high")
@@ -4218,12 +4210,12 @@ impl Backtest {
                                                     .unwrap();
 
                                                 trade.sl = self.calcular_tls(
-                                                    EntryDirection::Buy,
-                                                    symbol.clone(),
-                                                    parametros.clone(),
-                                                    trade.clone(),
-                                                    precio_actual,
-                                                    precio_anterior,
+                                                    &EntryDirection::Buy,
+                                                    &symbol,
+                                                    &parametros,
+                                                    &trade,
+                                                    &precio_actual,
+                                                    &precio_anterior,
                                                 );
 
                                                 if LOGS_REGISTRO {
@@ -4236,13 +4228,13 @@ impl Backtest {
                                         }
                                         EntryDirection::Sell => {
                                             if self.activar_tsl(
-                                                df.clone(),
+                                                &df,
                                                 i.clone(),
-                                                EntryDirection::Sell,
-                                                parametros.clone(),
-                                                symbol.clone(),
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Sell,
+                                                &parametros,
+                                                &symbol,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 let precio_actual: f64 = df
                                                     .column("low")
@@ -4261,12 +4253,12 @@ impl Backtest {
                                                     .unwrap();
 
                                                 trade.sl = self.calcular_tls(
-                                                    EntryDirection::Sell,
-                                                    symbol.clone(),
-                                                    parametros.clone(),
-                                                    trade.clone(),
-                                                    precio_actual,
-                                                    precio_anterior,
+                                                    &EntryDirection::Sell,
+                                                    &symbol,
+                                                    &parametros,
+                                                    &trade,
+                                                    &precio_actual,
+                                                    &precio_anterior,
                                                 );
 
                                                 if LOGS_REGISTRO {
@@ -4285,13 +4277,13 @@ impl Backtest {
                                     match trade.tipo {
                                         EntryDirection::Buy => {
                                             if self.activar_tsl(
-                                                df.clone(),
+                                                &df,
                                                 i.clone(),
-                                                EntryDirection::Buy,
-                                                parametros.clone(),
-                                                symbol.clone(),
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Buy,
+                                                &parametros,
+                                                &symbol,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 let precio_actual: f64 = df
                                                     .column("high")
@@ -4310,12 +4302,12 @@ impl Backtest {
                                                     .unwrap();
 
                                                 trade.sl = self.calcular_tls(
-                                                    EntryDirection::Buy,
-                                                    symbol.clone(),
-                                                    parametros.clone(),
-                                                    trade.clone(),
-                                                    precio_actual,
-                                                    precio_anterior,
+                                                    &EntryDirection::Buy,
+                                                    &symbol,
+                                                    &parametros,
+                                                    &trade,
+                                                    &precio_actual,
+                                                    &precio_anterior,
                                                 );
 
                                                 if LOGS_REGISTRO {
@@ -4328,13 +4320,13 @@ impl Backtest {
                                         }
                                         EntryDirection::Sell => {
                                             if self.activar_tsl(
-                                                df.clone(),
+                                                &df,
                                                 i.clone(),
-                                                EntryDirection::Sell,
-                                                parametros.clone(),
-                                                symbol.clone(),
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Sell,
+                                                &parametros,
+                                                &symbol,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 let precio_actual: f64 = df
                                                     .column("low")
@@ -4353,12 +4345,12 @@ impl Backtest {
                                                     .unwrap();
 
                                                 trade.sl = self.calcular_tls(
-                                                    EntryDirection::Sell,
-                                                    symbol.clone(),
-                                                    parametros.clone(),
-                                                    trade.clone(),
-                                                    precio_actual,
-                                                    precio_anterior,
+                                                    &EntryDirection::Sell,
+                                                    &symbol,
+                                                    &parametros,
+                                                    &trade,
+                                                    &precio_actual,
+                                                    &precio_anterior,
                                                 );
 
                                                 if LOGS_REGISTRO {
@@ -4377,13 +4369,13 @@ impl Backtest {
                                     match trade.tipo {
                                         EntryDirection::Buy => {
                                             if self.activar_tsl(
-                                                df.clone(),
+                                                &df,
                                                 i.clone(),
-                                                EntryDirection::Buy,
-                                                parametros.clone(),
-                                                symbol.clone(),
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Buy,
+                                                &parametros,
+                                                &symbol,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 let precio_actual: f64 = df
                                                     .column("high")
@@ -4402,12 +4394,12 @@ impl Backtest {
                                                     .unwrap();
 
                                                 trade.sl = self.calcular_tls(
-                                                    EntryDirection::Buy,
-                                                    symbol.clone(),
-                                                    parametros.clone(),
-                                                    trade.clone(),
-                                                    precio_actual,
-                                                    precio_anterior,
+                                                    &EntryDirection::Buy,
+                                                    &symbol,
+                                                    &parametros,
+                                                    &trade,
+                                                    &precio_actual,
+                                                    &precio_anterior,
                                                 );
 
                                                 if LOGS_REGISTRO {
@@ -4420,13 +4412,13 @@ impl Backtest {
                                         }
                                         EntryDirection::Sell => {
                                             if self.activar_tsl(
-                                                df.clone(),
+                                                &df,
                                                 i.clone(),
-                                                EntryDirection::Sell,
-                                                parametros.clone(),
-                                                symbol.clone(),
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Sell,
+                                                &parametros,
+                                                &symbol,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 let precio_actual: f64 = df
                                                     .column("low")
@@ -4445,12 +4437,12 @@ impl Backtest {
                                                     .unwrap();
 
                                                 trade.sl = self.calcular_tls(
-                                                    EntryDirection::Sell,
-                                                    symbol.clone(),
-                                                    parametros.clone(),
-                                                    trade.clone(),
-                                                    precio_actual,
-                                                    precio_anterior,
+                                                    &EntryDirection::Sell,
+                                                    &symbol,
+                                                    &parametros,
+                                                    &trade,
+                                                    &precio_actual,
+                                                    &precio_anterior,
                                                 );
 
                                                 if LOGS_REGISTRO {
@@ -4469,13 +4461,13 @@ impl Backtest {
                                     match trade.tipo {
                                         EntryDirection::Buy => {
                                             if self.activar_tsl(
-                                                df.clone(),
+                                                &df,
                                                 i.clone(),
-                                                EntryDirection::Buy,
-                                                parametros.clone(),
-                                                symbol.clone(),
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Buy,
+                                                &parametros,
+                                                &symbol,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 let precio_actual: f64 = df
                                                     .column("high")
@@ -4494,12 +4486,12 @@ impl Backtest {
                                                     .unwrap();
 
                                                 trade.sl = self.calcular_tls(
-                                                    EntryDirection::Buy,
-                                                    symbol.clone(),
-                                                    parametros.clone(),
-                                                    trade.clone(),
-                                                    precio_actual,
-                                                    precio_anterior,
+                                                    &EntryDirection::Buy,
+                                                    &symbol,
+                                                    &parametros,
+                                                    &trade,
+                                                    &precio_actual,
+                                                    &precio_anterior,
                                                 );
 
                                                 if LOGS_REGISTRO {
@@ -4512,13 +4504,13 @@ impl Backtest {
                                         }
                                         EntryDirection::Sell => {
                                             if self.activar_tsl(
-                                                df.clone(),
+                                                &df,
                                                 i.clone(),
-                                                EntryDirection::Sell,
-                                                parametros.clone(),
-                                                symbol.clone(),
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Sell,
+                                                &parametros,
+                                                &symbol,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 let precio_actual: f64 = df
                                                     .column("low")
@@ -4537,12 +4529,12 @@ impl Backtest {
                                                     .unwrap();
 
                                                 trade.sl = self.calcular_tls(
-                                                    EntryDirection::Sell,
-                                                    symbol.clone(),
-                                                    parametros.clone(),
-                                                    trade.clone(),
-                                                    precio_actual,
-                                                    precio_anterior,
+                                                    &EntryDirection::Sell,
+                                                    &symbol,
+                                                    &parametros,
+                                                    &trade,
+                                                    &precio_actual,
+                                                    &precio_anterior,
                                                 );
 
                                                 if LOGS_REGISTRO {
@@ -4561,13 +4553,13 @@ impl Backtest {
                                     match trade.tipo {
                                         EntryDirection::Buy => {
                                             if self.activar_tsl(
-                                                df.clone(),
+                                                &df,
                                                 i.clone(),
-                                                EntryDirection::Buy,
-                                                parametros.clone(),
-                                                symbol.clone(),
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Buy,
+                                                &parametros,
+                                                &symbol,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 let precio_actual: f64 = df
                                                     .column("high")
@@ -4586,12 +4578,12 @@ impl Backtest {
                                                     .unwrap();
 
                                                 trade.sl = self.calcular_tls(
-                                                    EntryDirection::Buy,
-                                                    symbol.clone(),
-                                                    parametros.clone(),
-                                                    trade.clone(),
-                                                    precio_actual,
-                                                    precio_anterior,
+                                                    &EntryDirection::Buy,
+                                                    &symbol,
+                                                    &parametros,
+                                                    &trade,
+                                                    &precio_actual,
+                                                    &precio_anterior,
                                                 );
 
                                                 if LOGS_REGISTRO {
@@ -4604,13 +4596,13 @@ impl Backtest {
                                         }
                                         EntryDirection::Sell => {
                                             if self.activar_tsl(
-                                                df.clone(),
+                                                &df,
                                                 i.clone(),
-                                                EntryDirection::Sell,
-                                                parametros.clone(),
-                                                symbol.clone(),
-                                                trade.precio_entrada,
-                                                precio_cierre,
+                                                &EntryDirection::Sell,
+                                                &parametros,
+                                                &symbol,
+                                                &trade.precio_entrada,
+                                                &precio_cierre,
                                             ) {
                                                 let precio_actual: f64 = df
                                                     .column("low")
@@ -4629,12 +4621,12 @@ impl Backtest {
                                                     .unwrap();
 
                                                 trade.sl = self.calcular_tls(
-                                                    EntryDirection::Sell,
-                                                    symbol.clone(),
-                                                    parametros.clone(),
-                                                    trade.clone(),
-                                                    precio_actual,
-                                                    precio_anterior,
+                                                    &EntryDirection::Sell,
+                                                    &symbol,
+                                                    &parametros,
+                                                    &trade,
+                                                    &precio_actual,
+                                                    &precio_anterior,
                                                 );
 
                                                 if LOGS_REGISTRO {
@@ -4672,7 +4664,7 @@ impl Backtest {
                     Some(condition) => {
                         match accion.tipo {
                             Action::Buy => {
-                                if self.verificar_direccion(EntryDirection::Buy)
+                                if self.verificar_direccion(&EntryDirection::Buy)
                                     && self.entry_options(&open_trades)
                                     && self.check_conditions(&df, &condition, &i)
                                 {
@@ -4693,24 +4685,24 @@ impl Backtest {
                                         .unwrap();
 
                                     let tp: f64 = self.get_takeprofit(
-                                        precio_entrada,
-                                        df.clone(),
+                                        &precio_entrada,
+                                        &df,
                                         i,
-                                        EntryDirection::Buy,
+                                        &EntryDirection::Buy,
                                     );
                                     let sl: f64 = self.get_stoploss(
-                                        precio_entrada,
-                                        df.clone(),
+                                        &precio_entrada,
+                                        &df,
                                         i,
-                                        EntryDirection::Buy,
+                                        &EntryDirection::Buy,
                                     );
 
                                     let trade: Option<Trade> = self
                                         .ejecutar_entry(
                                             timestamp,
-                                            symbol.clone(),
-                                            EntryDirection::Buy,
-                                            precio_entrada,
+                                            &symbol,
+                                            &EntryDirection::Buy,
+                                            &precio_entrada,
                                             Some(sl),
                                             Some(tp),
                                         )
@@ -4723,7 +4715,7 @@ impl Backtest {
                                 }
                             }
                             Action::Sell => {
-                                if self.verificar_direccion(EntryDirection::Sell)
+                                if self.verificar_direccion(&EntryDirection::Sell)
                                     && self.entry_options(&open_trades)
                                     && self.check_conditions(&df, &condition, &i)
                                 {
@@ -4744,24 +4736,24 @@ impl Backtest {
                                         .unwrap();
 
                                     let tp: f64 = self.get_takeprofit(
-                                        precio_entrada.clone(),
-                                        df.clone(),
+                                        &precio_entrada,
+                                        &df,
                                         i,
-                                        EntryDirection::Sell,
+                                        &EntryDirection::Sell,
                                     );
                                     let sl: f64 = self.get_stoploss(
-                                        precio_entrada.clone(),
-                                        df.clone(),
+                                        &precio_entrada,
+                                        &df,
                                         i,
-                                        EntryDirection::Sell,
+                                        &EntryDirection::Sell,
                                     );
 
                                     let trade: Option<Trade> = self
                                         .ejecutar_entry(
                                             timestamp,
-                                            symbol.clone(),
-                                            EntryDirection::Sell,
-                                            precio_entrada.clone(),
+                                            &symbol,
+                                            &EntryDirection::Sell,
+                                            &precio_entrada,
                                             Some(sl),
                                             Some(tp),
                                         )
@@ -4774,57 +4766,45 @@ impl Backtest {
                                 }
                             }
                             Action::BuyLimit => {
-                                if self.verificar_direccion(EntryDirection::Buy)
+                                if self.verificar_direccion(&EntryDirection::Buy)
                                     && self.entry_options(&open_trades)
                                     && self.check_conditions(&df, &condition, &i)
                                 {
-                                    let precio_limite = self.get_limit(
-                                        df.clone(),
-                                        accion.parametros.to_string(),
-                                        i,
-                                    )?;
+                                    let precio_limite =
+                                        self.get_limit(&df, accion.parametros.to_string(), i)?;
                                     buy_limits.push(precio_limite);
                                     break;
                                 }
                             }
                             Action::SellLimit => {
-                                if self.verificar_direccion(EntryDirection::Sell)
+                                if self.verificar_direccion(&EntryDirection::Sell)
                                     && self.entry_options(&open_trades)
                                     && self.check_conditions(&df, &condition, &i)
                                 {
-                                    let precio_limite = self.get_limit(
-                                        df.clone(),
-                                        accion.parametros.to_string(),
-                                        i,
-                                    )?;
+                                    let precio_limite =
+                                        self.get_limit(&df, accion.parametros.to_string(), i)?;
                                     sell_limits.push(precio_limite);
                                     break;
                                 }
                             }
                             Action::BuyStop => {
-                                if self.verificar_direccion(EntryDirection::Buy)
+                                if self.verificar_direccion(&EntryDirection::Buy)
                                     && self.entry_options(&open_trades)
                                     && self.check_conditions(&df, &condition, &i)
                                 {
-                                    let precio_limite = self.get_limit(
-                                        df.clone(),
-                                        accion.parametros.to_string(),
-                                        i,
-                                    )?;
+                                    let precio_limite =
+                                        self.get_limit(&df, accion.parametros.to_string(), i)?;
                                     buy_stops.push(precio_limite);
                                     break;
                                 }
                             }
                             Action::SellStop => {
-                                if self.verificar_direccion(EntryDirection::Sell)
+                                if self.verificar_direccion(&EntryDirection::Sell)
                                     && self.entry_options(&open_trades)
                                     && self.check_conditions(&df, &condition, &i)
                                 {
-                                    let precio_limite = self.get_limit(
-                                        df.clone(),
-                                        accion.parametros.to_string(),
-                                        i,
-                                    )?;
+                                    let precio_limite =
+                                        self.get_limit(&df, accion.parametros.to_string(), i)?;
                                     sell_stops.push(precio_limite);
                                     break;
                                 }
@@ -4924,7 +4904,7 @@ impl Backtest {
                 self.add_registro(format!("{:?}", &df.head(Some(20))));
             }
 
-            self.backtest(&mut df, symbol.clone()).await.unwrap();
+            self.backtest(&mut df, &symbol).await.unwrap();
         }
 
         if !self.trades.is_empty() {

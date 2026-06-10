@@ -134,10 +134,10 @@ pub async fn run_backtest(
                 state.contador_belas = 0;
 
                 trade.sell(
-                    time_str.clone(),
-                    close,
-                    GestionStrategy::Formula,
-                    GestionParams {
+                    time_str.as_str(),
+                    &close,
+                    &GestionStrategy::Formula,
+                    &GestionParams {
                         multiplicador: 1.0,
                         lotaje_fijo: 10.0,
                     },
@@ -161,10 +161,10 @@ pub async fn run_backtest(
                 state.contador_belas = 0;
 
                 trade.buy(
-                    time_str.clone(),
-                    close,
-                    GestionStrategy::Formula,
-                    GestionParams {
+                    time_str.as_str(),
+                    &close,
+                    &GestionStrategy::Formula,
+                    &GestionParams {
                         multiplicador: 1.0,
                         lotaje_fijo: 10.0,
                     },
