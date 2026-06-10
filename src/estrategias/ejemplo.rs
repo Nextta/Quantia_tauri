@@ -133,10 +133,10 @@ pub async fn run_backtest(
                 state.trade_type = "Sell".to_string();
 
                 trade.sell(
-                    time_str.clone(),
-                    close,
-                    GestionStrategy::Fijo,
-                    GestionParams {
+                    time_str.as_str(),
+                    &close,
+                    &GestionStrategy::Fijo,
+                    &GestionParams {
                         lotaje_fijo: 0.01,
                         multiplicador: 1.0,
                     },
@@ -156,10 +156,10 @@ pub async fn run_backtest(
                 state.trade_type = "Buy".to_string();
 
                 trade.buy(
-                    time_str.clone(),
-                    close,
-                    GestionStrategy::Fijo,
-                    GestionParams {
+                    time_str.as_str(),
+                    &close,
+                    &GestionStrategy::Fijo,
+                    &GestionParams {
                         lotaje_fijo: 0.01,
                         multiplicador: 1.0,
                     },

@@ -109,17 +109,17 @@ impl Trade {
 
     pub fn buy(
         &mut self,
-        t0: String,
-        precio_entrada: f64,
-        gestion: GestionStrategy,
-        parametros: GestionParams,
+        t0: &str,
+        precio_entrada: &f64,
+        gestion: &GestionStrategy,
+        parametros: &GestionParams,
         backtest: &Backtest,
         tp: Option<f64>,
         sl: Option<f64>,
     ) {
         self.tipo = EntryDirection::Buy;
-        self.t0 = t0;
-        self.precio_entrada = precio_entrada; // + self.random_spread();
+        self.t0 = t0.to_string();
+        self.precio_entrada = precio_entrada.clone(); // + self.random_spread();
         self.tp = tp.unwrap_or(0.0);
         self.sl = sl.unwrap_or(0.0);
 
@@ -127,7 +127,7 @@ impl Trade {
             GestionStrategy::Fijo => self.lotaje = parametros.lotaje_fijo,
             GestionStrategy::Formula => {
                 self.multiplicador = parametros.multiplicador;
-                self.lotaje_quantia(precio_entrada, backtest);
+                self.lotaje_quantia(precio_entrada.clone(), backtest);
             }
             // GestionStrategy::Kelly => 0.0,
             // GestionStrategy::PocertajeEquity => 0.0,
@@ -138,17 +138,17 @@ impl Trade {
 
     pub fn sell(
         &mut self,
-        t0: String,
-        precio_entrada: f64,
-        gestion: GestionStrategy,
-        parametros: GestionParams,
+        t0: &str,
+        precio_entrada: &f64,
+        gestion: &GestionStrategy,
+        parametros: &GestionParams,
         backtest: &Backtest,
         tp: Option<f64>,
         sl: Option<f64>,
     ) {
         self.tipo = EntryDirection::Sell;
-        self.t0 = t0;
-        self.precio_entrada = precio_entrada;
+        self.t0 = t0.to_string();
+        self.precio_entrada = precio_entrada.clone();
         self.tp = tp.unwrap_or(0.0);
         self.sl = sl.unwrap_or(0.0);
 
@@ -156,7 +156,7 @@ impl Trade {
             GestionStrategy::Fijo => self.lotaje = parametros.lotaje_fijo,
             GestionStrategy::Formula => {
                 self.multiplicador = parametros.multiplicador;
-                self.lotaje_quantia(precio_entrada, backtest);
+                self.lotaje_quantia(precio_entrada.clone(), backtest);
             }
             // GestionStrategy::Kelly => 0.0,
             // GestionStrategy::PocertajeEquity => 0.0,
