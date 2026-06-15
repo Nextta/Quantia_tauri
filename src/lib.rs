@@ -1,6 +1,7 @@
 pub mod api;
 pub mod backtest;
 pub mod comandos;
+pub mod data_lab;
 pub mod enums;
 pub mod estrategias;
 pub mod indicators;
