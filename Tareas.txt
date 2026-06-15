@@ -20,6 +20,19 @@ Terminadas:
 
 
 TODO:
+-Crear la base de datos para almacenar los datos de los simbolos que tenemos con sus rutas y nombres:
+
+* Struct
+    + id
+    + Nombre
+    + Timeframe
+    + Ruta
+    + Fecha_inicio
+    + Fecha_fin
+    + Actualizado
+    + Cantidad_data
+    + Origen
+
 -Crear los primeros comandos para el frontend:
     * Comando GetBacktest: Que envia todas las estrategias de la base de datos.
     * Comando GetResults: Envia los resultados de un backtest pasando por parametro el id del backtest.
