@@ -54,7 +54,7 @@ fn prepare_backtest_slices(df: &DataFrame) -> PolarsResult<BacktestData> {
         high: get_slice("high", df)?,
         low: get_slice("low", df)?,
         close: get_slice("close", df)?,
-        time: get_slice_i64("timestamp", df)?,
+        time: get_slice_i64("time", df)?,
     })
 }
 

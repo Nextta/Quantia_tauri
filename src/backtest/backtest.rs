@@ -3278,7 +3278,7 @@ impl Backtest {
                     .filter(|(_, limit)| limit > &&low)
                 {
                     let timestamp = df
-                        .column("timestamp")
+                        .column("time")
                         .unwrap()
                         .get(i + 1)
                         .unwrap()
@@ -3340,7 +3340,7 @@ impl Backtest {
                     .filter(|(_, limit)| limit < &&high)
                 {
                     let timestamp = df
-                        .column("timestamp")
+                        .column("time")
                         .unwrap()
                         .get(i + 1)
                         .unwrap()
@@ -3404,7 +3404,7 @@ impl Backtest {
                     .filter(|(_, limit)| limit < &&high)
                 {
                     let timestamp = df
-                        .column("timestamp")
+                        .column("time")
                         .unwrap()
                         .get(i + 1)
                         .unwrap()
@@ -3468,7 +3468,7 @@ impl Backtest {
                     .filter(|(_, limit)| limit > &&low)
                 {
                     let timestamp = df
-                        .column("timestamp")
+                        .column("time")
                         .unwrap()
                         .get(i + 1)
                         .unwrap()
@@ -3534,7 +3534,7 @@ impl Backtest {
                         EntryDirection::Buy => {
                             if trade.sl > 0.00000 && precio_actual <= trade.sl {
                                 let timestamp: i64 = df
-                                    .column("timestamp")
+                                    .column("time")
                                     .unwrap()
                                     .get(i + 1)
                                     .unwrap()
@@ -3556,7 +3556,7 @@ impl Backtest {
                             }
                             if trade.tp > 0.00000 && precio_actual >= trade.tp {
                                 let timestamp: i64 = df
-                                    .column("timestamp")
+                                    .column("time")
                                     .unwrap()
                                     .get(i + 1)
                                     .unwrap()
@@ -3580,7 +3580,7 @@ impl Backtest {
                         EntryDirection::Sell => {
                             if trade.sl > 0.00000 && precio_actual >= trade.sl {
                                 let timestamp: i64 = df
-                                    .column("timestamp")
+                                    .column("time")
                                     .unwrap()
                                     .get(i + 1)
                                     .unwrap()
@@ -3602,7 +3602,7 @@ impl Backtest {
                             }
                             if trade.tp > 0.00000 && precio_actual <= trade.tp {
                                 let timestamp: i64 = df
-                                    .column("timestamp")
+                                    .column("time")
                                     .unwrap()
                                     .get(i + 1)
                                     .unwrap()
@@ -3638,7 +3638,7 @@ impl Backtest {
                                 Some(condition) => {
                                     if self.check_conditions(&df, &condition, &i) {
                                         let timestamp: i64 = df
-                                            .column("timestamp")
+                                            .column("time")
                                             .unwrap()
                                             .get(i + 1)
                                             .unwrap()
@@ -3683,7 +3683,7 @@ impl Backtest {
                                 Some(condition) => {
                                     if self.check_conditions(&df, &condition, &i) {
                                         let timestamp: i64 = df
-                                            .column("timestamp")
+                                            .column("time")
                                             .unwrap()
                                             .get(i + 1)
                                             .unwrap()
@@ -3729,7 +3729,7 @@ impl Backtest {
                                 serde_json::from_value(accion.parametros.clone()).unwrap();
 
                             let timestamp: i64 = df
-                                .column("timestamp")
+                                .column("time")
                                 .unwrap()
                                 .get(i - n_bars.valor)
                                 .unwrap()
@@ -3743,7 +3743,7 @@ impl Backtest {
                             for (idx, trade) in open_trades.iter_mut().enumerate() {
                                 if trade.t0 == time_actual {
                                     let timestamp: i64 = df
-                                        .column("timestamp")
+                                        .column("time")
                                         .unwrap()
                                         .get(i + 1)
                                         .unwrap()
@@ -3775,7 +3775,7 @@ impl Backtest {
                                 Some(condition) => {
                                     if self.check_conditions(&df, &condition, &i) {
                                         let timestamp: i64 = df
-                                            .column("timestamp")
+                                            .column("time")
                                             .unwrap()
                                             .get(i + 1)
                                             .unwrap()
@@ -4677,7 +4677,7 @@ impl Backtest {
                                         .unwrap();
 
                                     let timestamp = df
-                                        .column("timestamp")
+                                        .column("time")
                                         .unwrap()
                                         .get(i + 1)
                                         .unwrap()
@@ -4728,7 +4728,7 @@ impl Backtest {
                                         .unwrap();
 
                                     let timestamp = df
-                                        .column("timestamp")
+                                        .column("time")
                                         .unwrap()
                                         .get(i + 1)
                                         .unwrap()
