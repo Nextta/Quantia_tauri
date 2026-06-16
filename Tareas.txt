@@ -30,7 +30,7 @@ TODO:
     + Fecha_inicio
     + Fecha_fin
     + Actualizado
-    + Cantidad_data
+    + N_data
     + Origen
 
 -Crear los primeros comandos para el frontend:
