@@ -33,6 +33,7 @@ Terminadas:
 
 
 TODO:
+-Actualizar todas las funciones de data_labs para que funcionen con el struct de DataSymbol.
 -Crear los primeros comandos para el frontend:
     * Comando GetBacktest: Que envia todas las estrategias de la base de datos.
     * Comando GetResults: Envia los resultados de un backtest pasando por parametro el id del backtest.
