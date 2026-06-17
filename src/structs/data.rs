@@ -35,3 +35,10 @@ pub struct DataSymbol {
     pub n_data: u32,
     pub origen: Option<DataOrigen>,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DataBacktest {
+    pub id: u32,
+    pub id_backtest: i32,
+    pub id_data_symbol: u32,
+}
