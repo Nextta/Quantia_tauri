@@ -1,4 +1,5 @@
 use crate::enums::data_format::DataFormatSymbol;
+use crate::enums::data_origen::DataOrigen;
 use crate::enums::timeframe::Timeframe;
 use serde::{Deserialize, Serialize};
 
@@ -32,5 +33,5 @@ pub struct DataSymbol {
     pub fecha_fin: String,
     pub actualizado: bool,
     pub n_data: u32,
-    pub origen: String,
+    pub origen: Option<DataOrigen>,
 }

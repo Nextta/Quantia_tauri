@@ -1,4 +1,5 @@
 use crate::enums::data_format::DataFormatSymbol;
+use crate::enums::data_origen::DataOrigen;
 use crate::enums::timeframe::Timeframe;
 use crate::structs::data::DataSymbol;
 use crate::utils::configuracion::DB_LOCAL;
@@ -108,7 +109,7 @@ pub async fn insert_data(data_symbol: &DataSymbol) -> Result<u32> {
                     data_symbol.fecha_fin.as_str(),
                     data_symbol.actualizado,
                     data_symbol.n_data,
-                    data_symbol.origen.as_str()
+                    data_symbol.origen.unwrap().as_str()
                 ],
             )
             .await?;
@@ -156,7 +157,7 @@ pub async fn get_all_data() -> Result<Vec<DataSymbol>> {
             fecha_fin: row.get::<String>(6)?,
             actualizado: if row.get::<i32>(7)? == 0 { false } else { true },
             n_data: row.get::<u32>(8)?,
-            origen: row.get::<String>(9)?,
+            origen: DataOrigen::as_do(row.get::<String>(9)?.as_str()),
         };
         data_list.push(data);
     }
@@ -203,7 +204,7 @@ pub async fn get_data(id: u32) -> Result<DataSymbol> {
         fecha_fin: row.get::<String>(6)?,
         actualizado: if row.get::<i32>(7)? == 0 { false } else { true },
         n_data: row.get::<u32>(8)?,
-        origen: row.get::<String>(9)?,
+        origen: DataOrigen::as_do(row.get::<String>(9)?.as_str()),
     };
 
     Ok(data)
@@ -287,7 +288,7 @@ mod tests {
             fecha_fin: "01/01/2026".to_string(),
             actualizado: false,
             n_data: 2542156,
-            origen: "DukasCopy".to_string(),
+            origen: Some(DataOrigen::DukasCopy),
         };
 
         let id = insert_data(&data).await?;

@@ -5,7 +5,7 @@ use crate::api::strategies::{
 };
 
 use crate::api::trades::insert_trades;
-use crate::backtest::datos::Datos;
+// use crate::backtest::datos::Datos;
 use crate::backtest::resultados::Resultados;
 use crate::backtest::symbol::SymbolInfoCFD;
 use crate::backtest::trade::Trade;
@@ -32,6 +32,7 @@ use crate::enums::activos::Activo;
 use crate::enums::gestion::GestionStrategy;
 use crate::enums::logics::Logic;
 use crate::enums::tipos::{BeTipo, TlTipo};
+use crate::structs::data::DataSymbol;
 use crate::structs::logs::RegistroLog;
 use crate::structs::options::NBarsOptions;
 use crate::structs::parametros::{BeParams, GestionParams, LimitParams, TlParams};
@@ -46,7 +47,7 @@ pub struct Backtest {
     pub gestion_strategy: GestionStrategy,
     pub parametros_gestion: GestionParams,
     pub trades: Vec<Trade>,
-    pub datos: Vec<Datos>,
+    pub datos: Vec<DataSymbol>,
     pub estrategia: Strategy,
 }
 
@@ -68,7 +69,7 @@ impl Backtest {
             gestion_strategy,
             parametros_gestion,
             trades: Vec::<Trade>::new(),
-            datos: Vec::<Datos>::new(),
+            datos: Vec::<DataSymbol>::new(),
             estrategia: Strategy::new_empty(),
         };
         if LOGS_REGISTRO {
@@ -87,18 +88,30 @@ impl Backtest {
         backtest
     }
 
+    pub fn add_datasymbol(&mut self, data: DataSymbol) {
+        self.datos.push(data);
+    }
+
     /// Funciones Core Backtest
-    pub fn add_datos(&mut self, ruta: &str) -> Result<Datos, Box<dyn std::error::Error>> {
+    pub fn get_datos(
+        &mut self,
+        data: &DataSymbol,
+    ) -> Result<DataFrame, Box<dyn std::error::Error>> {
+        let ruta = format!(
+            "{}/{}.{}",
+            data.ruta,
+            data.name,
+            data.formato.unwrap().to_string()
+        );
+
         let df: DataFrame = CsvReadOptions::default()
             .try_into_reader_with_file_path(Some(ruta.into()))?
             .finish()?;
 
-        let data = Datos::new(df);
-        self.datos.push(data.clone());
         if LOGS_REGISTRO {
-            self.add_registro(format!("Datos agregados: {}", ruta));
+            self.add_registro(format!("Datos agregados: {:?}", data));
         }
-        Ok(data)
+        Ok(df)
     }
 
     pub fn add_trade(&mut self, trade: Trade) {
@@ -4892,7 +4905,7 @@ impl Backtest {
 
         for data in self.datos.clone() {
             // Verificamos los indicadores que tiene la estrategia para añadirlos a los datos del DataFrame
-            let mut df = data.get_datos();
+            let mut df = self.get_datos(&data).unwrap();
             self.set_indicators_strategy(&mut df);
             df = df
                 .lazy()
@@ -4962,6 +4975,9 @@ mod tests {
     use super::*;
     use crate::api::symbols::get_symbol_cfd_by_id;
     use crate::backtest::dias::Dias;
+    use crate::enums::data_format::DataFormatSymbol;
+    use crate::enums::data_origen::DataOrigen;
+    use crate::enums::timeframe::Timeframe;
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_bt_crucemedias() {
@@ -4987,6 +5003,19 @@ mod tests {
             lotaje_fijo: 0.10,
         };
 
+        let datasymbol = DataSymbol {
+            id: 1,
+            name: "xauusd-h1".to_string(),
+            timeframe: Some(Timeframe::H1),
+            ruta: "download".to_string(),
+            formato: Some(DataFormatSymbol::Csv),
+            fecha_inicio: "01/01/2020".to_string(),
+            fecha_fin: "01/01/2026".to_string(),
+            actualizado: false,
+            n_data: 252541,
+            origen: Some(DataOrigen::DukasCopy),
+        };
+
         let mut bt: Backtest = Backtest::new(
             "UnitTest: CruceMedias".to_string(),
             10000.0,
@@ -4996,7 +5025,7 @@ mod tests {
         )
         .await;
 
-        let _ = bt.add_datos("download/xauusd-h1.csv").unwrap();
+        let _ = bt.add_datasymbol(datasymbol);
 
         match bt.run(1, symbol).await {
             Ok(_) => assert!(true),

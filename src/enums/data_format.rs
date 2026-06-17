@@ -10,25 +10,25 @@ pub enum DataFormatSymbol {
 impl DataFormatSymbol {
     pub fn to_string(&self) -> String {
         match self {
-            DataFormatSymbol::Parquet => "Parquet".to_string(),
-            DataFormatSymbol::Csv => "Csv".to_string(),
-            DataFormatSymbol::Json => "Json".to_string(),
+            DataFormatSymbol::Parquet => "parquet".to_string(),
+            DataFormatSymbol::Csv => "csv".to_string(),
+            DataFormatSymbol::Json => "json".to_string(),
         }
     }
 
     pub fn as_str(&self) -> &str {
         match self {
-            DataFormatSymbol::Parquet => "Parquet",
-            DataFormatSymbol::Csv => "Csv",
-            DataFormatSymbol::Json => "Json",
+            DataFormatSymbol::Parquet => "parquet",
+            DataFormatSymbol::Csv => "csv",
+            DataFormatSymbol::Json => "json",
         }
     }
 
     pub fn as_tf(data_format: &str) -> Option<DataFormatSymbol> {
         match data_format {
-            "Parquet" => Some(DataFormatSymbol::Parquet),
-            "Csv" => Some(DataFormatSymbol::Csv),
-            "Json" => Some(DataFormatSymbol::Json),
+            "parquet" => Some(DataFormatSymbol::Parquet),
+            "csv" => Some(DataFormatSymbol::Csv),
+            "json" => Some(DataFormatSymbol::Json),
             _ => None,
         }
     }

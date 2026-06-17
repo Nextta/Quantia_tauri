@@ -14,6 +14,8 @@ TODO:
 -Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.
 
 Terminadas:
+-Actualizar el struct de backtest para en el campo datos sea de tipo Vec<DataSymbol>.
+-Actualizar el struct Strategy_indicators para añadir el campo de chart_type que sera de tipo enum Chart_Type que contendrá si el typo de chart es inchart o subchart.
 -Crear un proyecto de tauri para iniciar a crear la interfaz grafica.
 -Crear funcionalidad para usar spread variable en el backtest.
 -Añadir que se registre el precio maximo y minimo en el que ha estado un trade.
@@ -45,5 +47,3 @@ Terminadas:
     + Actualizado
     + N_data
     + Origen
-
--Actualizar el struct Strategy_indicators para añadir el campo de chart_type que sera de tipo enum Chart_Type que contendrá si el typo de chart es inchart o subchart.
