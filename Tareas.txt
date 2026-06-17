@@ -2,6 +2,7 @@ TODO:
 -Añadir en la api de backtets la opción de que obtenga los datos relacionados a ese backtest y los añada al struct.
 -Crear una función comand de tauri para enviar al frontend los datos de un dataframe formateados en {time, valor} para los indicadores.
 -Crear una función comand de tauri para enviar los datos de vela de un dataframe desde la fecha indicada hasta la fecha indicada.
+-Crear una función comand de tauri que reciba por parametros un conjunto de datos para un dataframe y se devuelvan los datos con los indicadores de un determinado backtest.
 
 -Actualizar todas las funciones de data_labs para que funcionen con el struct de DataSymbol.
 -Crear los primeros comandos para el frontend:
