@@ -1,8 +1,5 @@
 TODO:
--Crear una nueva tabla en la base de dato que almacene la relación entre data y bactktest almacenado los ids de los dos.
--Crear el CRUD completo de la nueva tabla que relaciona la data con el backtest.
--Crear el test unitario del CRUD que relaciona la data con el backtest.
--Añadir en la api de backtets la opción de que obtenga los datos relacionados a ese bactest y los añada al struct.
+-Añadir en la api de backtets la opción de que obtenga los datos relacionados a ese backtest y los añada al struct.
 -Crear una función comand de tauri para enviar al frontend los datos de un dataframe formateados en {time, valor} para los indicadores.
 -Crear una función comand de tauri para enviar los datos de vela de un dataframe desde la fecha indicada hasta la fecha indicada.
 
@@ -18,6 +15,9 @@ TODO:
 -Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.
 
 Terminadas:
+-Crear una nueva tabla en la base de dato que almacene la relación entre data y bactktest almacenado los ids de los dos.
+-Crear el CRUD completo de la nueva tabla que relaciona la data con el backtest.
+-Crear el test unitario del CRUD que relaciona la data con el backtest.
 -Crear el struct para los datos de DataBacktest.
 -Actualizar el struct de backtest para en el campo datos sea de tipo Vec<DataSymbol>.
 -Actualizar el struct Strategy_indicators para añadir el campo de chart_type que sera de tipo enum Chart_Type que contendrá si el typo de chart es inchart o subchart.
