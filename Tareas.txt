@@ -1,3 +1,18 @@
+TODO:
+-Crear una función comand de tauri para enviar al frontend los datos de un dataframe formateados en {time, valor} para los indicadores.
+-Crear una función comand de tauri para enviar los datos de vela de un dataframe desde la fecha indicada hasta la fecha indicada.
+
+-Actualizar todas las funciones de data_labs para que funcionen con el struct de DataSymbol.
+-Crear los primeros comandos para el frontend:
+    * Comando GetBacktest: Que envia todas las estrategias de la base de datos.
+    * Comando GetResults: Envia los resultados de un backtest pasando por parametro el id del backtest.
+    * Comando GetTrades: Envia todos los trades de un backtest pasando por parametro el id del backtest.
+
+-Crear plantillas para que genere el código en MQL5.
+-Crear funcionalidad para hacer que los backtest se hagan con ticks.
+-Leer un trackrecord de Metatrader 5 y guardar los datos en la base de datos.
+-Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.
+
 Terminadas:
 -Crear un proyecto de tauri para iniciar a crear la interfaz grafica.
 -Crear funcionalidad para usar spread variable en el backtest.
@@ -31,19 +46,4 @@ Terminadas:
     + N_data
     + Origen
 
-
-TODO:
 -Actualizar el struct Strategy_indicators para añadir el campo de chart_type que sera de tipo enum Chart_Type que contendrá si el typo de chart es inchart o subchart.
--Crear una función comand de tauri para enviar al frontend los datos de un dataframe formateados en {time, valor} para los indicadores.
--Crear una función comand de tauri para enviar los datos de vela de un dataframe desde la fecha indicada hasta la fecha indicada.
-
--Actualizar todas las funciones de data_labs para que funcionen con el struct de DataSymbol.
--Crear los primeros comandos para el frontend:
-    * Comando GetBacktest: Que envia todas las estrategias de la base de datos.
-    * Comando GetResults: Envia los resultados de un backtest pasando por parametro el id del backtest.
-    * Comando GetTrades: Envia todos los trades de un backtest pasando por parametro el id del backtest.
-
--Crear plantillas para que genere el código en MQL5.
--Crear funcionalidad para hacer que los backtest se hagan con ticks.
--Leer un trackrecord de Metatrader 5 y guardar los datos en la base de datos.
--Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.
