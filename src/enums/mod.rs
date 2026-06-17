@@ -1,5 +1,6 @@
 pub mod actions;
 pub mod activos;
+pub mod chart_type;
 pub mod data_format;
 pub mod entry;
 pub mod gestion;

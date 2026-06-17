@@ -1,3 +1,4 @@
+use crate::enums::chart_type::ChartType;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -5,18 +6,27 @@ use serde_json::Value;
 pub struct StrategyIndicator {
     pub id: i32,
     pub strategy_id: i32,
-    pub nombre: String,
-    pub tipo: String,
+    pub nombre: String, // Nombre del columna del indicador en los datos
+    pub tipo: String,   // Tipo de indicador EJ: EMA, MA, MACD...etc
+    pub chart_type: ChartType,
     pub parametros: Value,
 }
 
 impl StrategyIndicator {
-    pub fn new(id: i32, strategy_id: i32, nombre: String, tipo: String, parametros: Value) -> Self {
+    pub fn new(
+        id: i32,
+        strategy_id: i32,
+        nombre: String,
+        tipo: String,
+        chart_type: ChartType,
+        parametros: Value,
+    ) -> Self {
         Self {
             id,
             strategy_id,
             nombre,
             tipo,
+            chart_type,
             parametros,
         }
     }
@@ -27,6 +37,7 @@ impl StrategyIndicator {
             strategy_id: 0,
             nombre: String::new(),
             tipo: String::new(),
+            chart_type: ChartType::Inchart,
             parametros: Value::Null,
         }
     }

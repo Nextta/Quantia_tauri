@@ -1,3 +1,4 @@
+use crate::enums::chart_type::ChartType;
 use crate::enums::logics::Logic;
 use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_action::StrategyAction;
@@ -1012,6 +1013,7 @@ pub async fn table_strategy_indicators() -> Result<String> {
             strategy_id  INTEGER NOT NULL REFERENCES strategies(id),
             nombre       TEXT NOT NULL,  -- nombre del campo: 'sma_20'
             tipo         TEXT NOT NULL,  -- 'SMA', 'EMA', 'RSI', 'MACD', 'BB'
+            chart_type   TEXT NOT NULL,
             parametros   TEXT DEFAULT '{}'   -- JSON: '{\"period\": 20}'
         )",
         (),
@@ -1047,12 +1049,13 @@ pub async fn insert_strategies_indicator(indicator: &StrategyIndicator) -> Resul
 
     let parametros = params![
         indicator.strategy_id,
-        indicator.nombre.clone(),
-        indicator.tipo.clone(),
+        indicator.nombre.as_str(),
+        indicator.tipo.as_str(),
+        indicator.chart_type.as_str(),
         indicator.parametros.to_string()
     ];
     conn.query(
-        "INSERT INTO strategy_indicators (strategy_id, nombre, tipo, parametros) VALUES (?, ?, ?, ?) RETURNING id",
+        "INSERT INTO strategy_indicators (strategy_id, nombre, tipo, chart_type, parametros) VALUES (?, ?, ?, ?, ?) RETURNING id",
         parametros,
     )
     .await?;
@@ -1098,7 +1101,8 @@ pub async fn get_strategy_indicator_by_id(id: i32) -> Result<StrategyIndicator> 
         strategy_id: row.get::<i32>(1)?,
         nombre: row.get::<String>(2)?,
         tipo: row.get::<String>(3)?,
-        parametros: serde_json::from_str(&row.get::<String>(4)?).unwrap(),
+        chart_type: ChartType::as_ct(row.get::<String>(4)?.as_str()),
+        parametros: serde_json::from_str(&row.get::<String>(5)?).unwrap(),
     };
 
     Ok(indicator)
@@ -1143,7 +1147,8 @@ pub async fn get_strategies_indicators_by_strategy_id(
             strategy_id: row.get::<i32>(1)?,
             nombre: row.get::<String>(2)?,
             tipo: row.get::<String>(3)?,
-            parametros: serde_json::from_str(&row.get::<String>(4)?).unwrap(),
+            chart_type: ChartType::as_ct(row.get::<String>(4)?.as_str()),
+            parametros: serde_json::from_str(&row.get::<String>(5)?).unwrap(),
         };
         indicators.push(indicator);
     }
@@ -2174,6 +2179,7 @@ mod tests {
                                     strategy_id: id,
                                     nombre: "SMA_20".to_string(),
                                     tipo: "SMA".to_string(),
+                                    chart_type: ChartType::Inchart,
                                     parametros: serde_json::Value::String(
                                         "{
                                         period: 20

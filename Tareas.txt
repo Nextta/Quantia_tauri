@@ -33,6 +33,10 @@ Terminadas:
 
 
 TODO:
+-Actualizar el struct Strategy_indicators para añadir el campo de chart_type que sera de tipo enum Chart_Type que contendrá si el typo de chart es inchart o subchart.
+-Crear una función comand de tauri para enviar al frontend los datos de un dataframe formateados en {time, valor} para los indicadores.
+-Crear una función comand de tauri para enviar los datos de vela de un dataframe desde la fecha indicada hasta la fecha indicada.
+
 -Actualizar todas las funciones de data_labs para que funcionen con el struct de DataSymbol.
 -Crear los primeros comandos para el frontend:
     * Comando GetBacktest: Que envia todas las estrategias de la base de datos.
