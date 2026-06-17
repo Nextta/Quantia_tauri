@@ -1,4 +1,5 @@
-use crate::structs::data::DataBacktest;
+use crate::api::data::get_data;
+use crate::structs::data::{DataBacktest, DataSymbol};
 use crate::utils::configuracion::DB_LOCAL;
 use dotenvy::dotenv;
 use libsql::{params, Builder};
@@ -76,7 +77,7 @@ pub async fn table_data_backtest() -> Result<String> {
 ///
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la inserción.
-pub async fn insert_data_backtest(id_backtest: i32, id_data: u32) -> Result<i32> {
+pub async fn insert_data_backtest(data: &DataBacktest) -> Result<i32> {
     match table_data_backtest().await {
         Ok(_) => {
             let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -93,7 +94,7 @@ pub async fn insert_data_backtest(id_backtest: i32, id_data: u32) -> Result<i32>
 
             conn.query(
                 "INSERT INTO data_backtest (id_backtest, id_data_symbol) VALUES (?, ?) RETURNING id",
-                params![id_backtest, id_data],
+                params![data.id_backtest, data.id_data_symbol],
             )
             .await?;
 
@@ -138,4 +139,101 @@ pub async fn get_all_data() -> Result<Vec<DataBacktest>> {
     }
 
     Ok(data_list)
+}
+
+/// Obtiene todos los datos de data_backtest de la base de datos de un Backtest en especifico.
+///
+/// # Parámetros
+/// * `id_backtest`: identificador del backtest.
+///
+/// # Returns
+/// * `Result<Vec<DataSymbol>>` - Vector con todos los datos.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la inserción.
+pub async fn get_data_by_backtest(id_backtest: i32) -> Result<Vec<DataSymbol>> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = if !DB_LOCAL {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
+
+    let conn = db.connect()?;
+
+    let mut rows = conn
+        .query(
+            "SELECT * FROM data_backtest WHERE id_backtest = ?",
+            params![id_backtest],
+        )
+        .await?;
+
+    let mut data_list: Vec<DataSymbol> = Vec::new();
+
+    while let Some(row) = rows.next().await? {
+        match row.get::<u32>(2) {
+            Ok(id) => {
+                data_list.push(get_data(id).await.unwrap());
+            }
+            Err(_) => (),
+        }
+    }
+
+    Ok(data_list)
+}
+
+/// Elimina una data_backtest por su ID.
+///
+/// # Parámetros
+/// * `id`: ID de la data_backtest a eliminar.
+///
+/// # Returns
+/// * `Result<()>` - Ok si la eliminación es correcta.
+///
+/// # Errores
+/// Retorna error si falla la conexión a la base de datos o la eliminación.
+pub async fn delete_data(id: u32) -> Result<()> {
+    let (db_path, sync_url, auth_token) = get_db_config()?;
+
+    let db = if !DB_LOCAL {
+        Builder::new_remote_replica(db_path, sync_url, auth_token)
+            .build()
+            .await?
+    } else {
+        Builder::new_local(db_path).build().await?
+    };
+
+    let conn = db.connect()?;
+
+    conn.execute("DELETE FROM data_backtest WHERE id = ?", params![id])
+        .await?;
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_crud_data() -> Result<()> {
+        let data: DataBacktest = DataBacktest {
+            id: 0,
+            id_backtest: 32,
+            id_data_symbol: 1,
+        };
+
+        let id = insert_data_backtest(&data).await?;
+
+        let _ = get_data_by_backtest(data.id_backtest).await?;
+
+        let _ = get_all_data().await?;
+
+        let _ = delete_data(id as u32).await?;
+
+        Ok(())
+    }
 }
