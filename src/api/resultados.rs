@@ -57,7 +57,7 @@ pub async fn table_resultados() -> Result<String> {
                     (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     id_backtest INTEGER NOT NULL REFERENCES backtest(id),
-                    return REAL NOT NULL,
+                    retorno REAL NOT NULL,
                     return_percent REAL NOT NULL,
                     cagr REAL NOT NULL,
                     sharpe_ratio REAL NOT NULL,
@@ -227,7 +227,7 @@ pub async fn insert_resultados(resultados: &Resultados) -> Result<i32> {
 
     conn.query(
         "INSERT INTO resultados (
-            id_backtest, return, return_percent, cagr,
+            id_backtest, retorno, return_percent, cagr,
             sharpe_ratio, sortino_ratio, omega_ratio,
             expected_daily, expected_monthly, expected_yearly,
             best_day, worst_day, best_month, worst_month,
