@@ -99,7 +99,7 @@ pub async fn get_brokers_cfd() -> Result<Vec<BrokerCFD>, Error> {
 
     let mut brokers: Vec<BrokerCFD> = Vec::new();
     while let Some(row) = rows.next().await? {
-        let symbol_info = get_symbols_cfd_by_broker(row.get::<i32>(0)?).await.unwrap();
+        let symbol_info = get_symbols_cfd_by_broker(row.get::<i32>(0)?).await?;
 
         let broker: BrokerCFD = BrokerCFD {
             id: row.get::<i32>(0)?,
@@ -144,7 +144,7 @@ pub async fn get_brokers_cfd_by_name(name: &str) -> Result<Vec<BrokerCFD>, Error
     let mut brokers: Vec<BrokerCFD> = Vec::new();
 
     while let Some(row) = rows.next().await? {
-        let symbol_info = get_symbols_cfd_by_broker(row.get::<i32>(0)?).await.unwrap();
+        let symbol_info = get_symbols_cfd_by_broker(row.get::<i32>(0)?).await?;
 
         let broker: BrokerCFD = BrokerCFD {
             id: row.get::<i32>(0)?,
@@ -186,7 +186,7 @@ pub async fn get_broker_cfd_by_id(id: i32) -> Result<BrokerCFD, Error> {
 
     let row = rows.next().await?.unwrap();
 
-    let symbol_info = get_symbols_cfd_by_broker(row.get::<i32>(0)?).await.unwrap();
+    let symbol_info = get_symbols_cfd_by_broker(row.get::<i32>(0)?).await?;
 
     let broker: BrokerCFD = BrokerCFD {
         id: row.get::<i32>(0)?,

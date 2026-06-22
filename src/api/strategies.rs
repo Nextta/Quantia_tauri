@@ -1074,7 +1074,7 @@ pub async fn get_strategy_indicator_by_id(id: i32) -> Result<StrategyIndicator, 
         nombre: row.get::<String>(2)?,
         tipo: row.get::<String>(3)?,
         chart_type: ChartType::as_ct(row.get::<String>(4)?.as_str()),
-        parametros: serde_json::from_str(&row.get::<String>(5)?).unwrap(),
+        parametros: serde_json::from_str(&row.get::<String>(5)?)?,
     };
 
     Ok(indicator)
@@ -1120,7 +1120,7 @@ pub async fn get_strategies_indicators_by_strategy_id(
             nombre: row.get::<String>(2)?,
             tipo: row.get::<String>(3)?,
             chart_type: ChartType::as_ct(row.get::<String>(4)?.as_str()),
-            parametros: serde_json::from_str(&row.get::<String>(5)?).unwrap(),
+            parametros: serde_json::from_str(&row.get::<String>(5)?)?,
         };
         indicators.push(indicator);
     }
@@ -1319,7 +1319,7 @@ pub async fn get_strategy_action_by_id(id: i32) -> Result<StrategyAction, Error>
             "Close" => Action::Close,
             _ => Action::Buy,
         },
-        parametros: serde_json::from_str(&row.get::<String>(4)?).unwrap(),
+        parametros: serde_json::from_str(&row.get::<String>(4)?)?,
         conditions: None,
     };
 
@@ -1404,7 +1404,7 @@ pub async fn get_strategies_actions_by_strategy_id(
                 "Close" => Action::Close,
                 _ => Action::Buy,
             },
-            parametros: serde_json::from_str(&row.get::<String>(4)?).unwrap(),
+            parametros: serde_json::from_str(&row.get::<String>(4)?)?,
             conditions: None,
         };
 
@@ -1952,12 +1952,8 @@ pub async fn get_strategy_options_by_id(id: i32) -> Result<StrategyOptions, Erro
         hora_cierre_limite: DateTime::parse_from_rfc3339(&row.get::<String>(16)?)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
-        parametros_stoploss: Some(
-            serde_json::from_str::<StopLoss>(&row.get::<String>(17)?).unwrap(),
-        ),
-        parametros_takeprofit: Some(
-            serde_json::from_str::<TakeProfit>(&row.get::<String>(18)?).unwrap(),
-        ),
+        parametros_stoploss: Some(serde_json::from_str::<StopLoss>(&row.get::<String>(17)?)?),
+        parametros_takeprofit: Some(serde_json::from_str::<TakeProfit>(&row.get::<String>(18)?)?),
     };
 
     Ok(options)
@@ -2043,12 +2039,8 @@ pub async fn get_strategy_options_by_strategy_id(
         hora_cierre_limite: DateTime::parse_from_rfc3339(&row.get::<String>(16)?)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
-        parametros_stoploss: Some(
-            serde_json::from_str::<StopLoss>(&row.get::<String>(17)?).unwrap(),
-        ),
-        parametros_takeprofit: Some(
-            serde_json::from_str::<TakeProfit>(&row.get::<String>(18)?).unwrap(),
-        ),
+        parametros_stoploss: Some(serde_json::from_str::<StopLoss>(&row.get::<String>(17)?)?),
+        parametros_takeprofit: Some(serde_json::from_str::<TakeProfit>(&row.get::<String>(18)?)?),
     };
 
     Ok(options)

@@ -1967,7 +1967,7 @@ impl Backtest {
             self.add_registro("Obteniendo limite con la función get_limit".to_string());
         }
 
-        let params: LimitParams = serde_json::from_str(&params).unwrap();
+        let params: LimitParams = serde_json::from_str(&params)?;
         if LOGS_REGISTRO {
             self.add_registro(format!("Parametros de la limitada {:?}", params));
         }
@@ -3277,26 +3277,14 @@ impl Backtest {
                 }
 
                 let mut indices: Vec<usize> = Vec::new();
-                let low: f64 = df
-                    .column("low")
-                    .unwrap()
-                    .get(i)
-                    .unwrap()
-                    .try_extract::<f64>()
-                    .unwrap();
+                let low: f64 = df.column("low")?.get(i)?.try_extract::<f64>()?;
 
                 for (idx, limit) in buy_limits
                     .iter()
                     .enumerate()
                     .filter(|(_, limit)| limit > &&low)
                 {
-                    let timestamp = df
-                        .column("time")
-                        .unwrap()
-                        .get(i + 1)
-                        .unwrap()
-                        .try_extract::<i64>()
-                        .unwrap();
+                    let timestamp = df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
                     let tp: f64 = self.get_takeprofit(&limit, &df, i, &EntryDirection::Buy);
                     let sl: f64 = self.get_stoploss(&limit, &df, i, &EntryDirection::Buy);
@@ -3339,26 +3327,14 @@ impl Backtest {
                 }
 
                 let mut indices: Vec<usize> = Vec::new();
-                let high: f64 = df
-                    .column("high")
-                    .unwrap()
-                    .get(i)
-                    .unwrap()
-                    .try_extract::<f64>()
-                    .unwrap();
+                let high: f64 = df.column("high")?.get(i)?.try_extract::<f64>()?;
 
                 for (idx, limit) in buy_stops
                     .iter()
                     .enumerate()
                     .filter(|(_, limit)| limit < &&high)
                 {
-                    let timestamp = df
-                        .column("time")
-                        .unwrap()
-                        .get(i + 1)
-                        .unwrap()
-                        .try_extract::<i64>()
-                        .unwrap();
+                    let timestamp = df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
                     let tp: f64 = self.get_takeprofit(&limit, &df, i, &EntryDirection::Buy);
                     let sl: f64 = self.get_stoploss(&limit, &df, i, &EntryDirection::Buy);
@@ -3403,26 +3379,14 @@ impl Backtest {
                 }
 
                 let mut indices: Vec<usize> = Vec::new();
-                let high: f64 = df
-                    .column("high")
-                    .unwrap()
-                    .get(i)
-                    .unwrap()
-                    .try_extract::<f64>()
-                    .unwrap();
+                let high: f64 = df.column("high")?.get(i)?.try_extract::<f64>()?;
 
                 for (idx, limit) in sell_limits
                     .iter()
                     .enumerate()
                     .filter(|(_, limit)| limit < &&high)
                 {
-                    let timestamp = df
-                        .column("time")
-                        .unwrap()
-                        .get(i + 1)
-                        .unwrap()
-                        .try_extract::<i64>()
-                        .unwrap();
+                    let timestamp = df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
                     let tp: f64 = self.get_takeprofit(&limit, &df, i, &EntryDirection::Sell);
                     let sl: f64 = self.get_stoploss(&limit, &df, i, &EntryDirection::Sell);
@@ -3467,26 +3431,14 @@ impl Backtest {
                 }
 
                 let mut indices: Vec<usize> = Vec::new();
-                let low: f64 = df
-                    .column("low")
-                    .unwrap()
-                    .get(i)
-                    .unwrap()
-                    .try_extract::<f64>()
-                    .unwrap();
+                let low: f64 = df.column("low")?.get(i)?.try_extract::<f64>()?;
 
                 for (idx, limit) in sell_stops
                     .iter()
                     .enumerate()
                     .filter(|(_, limit)| limit > &&low)
                 {
-                    let timestamp = df
-                        .column("time")
-                        .unwrap()
-                        .get(i + 1)
-                        .unwrap()
-                        .try_extract::<i64>()
-                        .unwrap();
+                    let timestamp = df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
                     let tp: f64 = self.get_takeprofit(&limit, &df, i, &EntryDirection::Sell);
                     let sl: f64 = self.get_stoploss(&limit, &df, i, &EntryDirection::Sell);
@@ -3529,13 +3481,7 @@ impl Backtest {
                 if LOGS_REGISTRO {
                     self.add_registro(format!("Recorriendo los trades abiertos..."));
                 }
-                let precio_actual: f64 = df
-                    .column("close")
-                    .unwrap()
-                    .get(i)
-                    .unwrap()
-                    .try_extract::<f64>()
-                    .unwrap();
+                let precio_actual: f64 = df.column("close")?.get(i)?.try_extract::<f64>()?;
                 // Recorremos el vactor de operaciones abiertas(open_trades) y comprobamos si
                 // alcanzan los stop-loss o take-profit para cerrarlas.
                 let mut indices: Vec<usize> = Vec::new();
@@ -3546,13 +3492,8 @@ impl Backtest {
                     match trade.tipo {
                         EntryDirection::Buy => {
                             if trade.sl > 0.00000 && precio_actual <= trade.sl {
-                                let timestamp: i64 = df
-                                    .column("time")
-                                    .unwrap()
-                                    .get(i + 1)
-                                    .unwrap()
-                                    .try_extract::<i64>()
-                                    .unwrap();
+                                let timestamp: i64 =
+                                    df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
                                 let naive_time = DateTime::from_timestamp_millis(timestamp)
                                     .expect("timestamp inválido");
@@ -3568,13 +3509,8 @@ impl Backtest {
                                 }
                             }
                             if trade.tp > 0.00000 && precio_actual >= trade.tp {
-                                let timestamp: i64 = df
-                                    .column("time")
-                                    .unwrap()
-                                    .get(i + 1)
-                                    .unwrap()
-                                    .try_extract::<i64>()
-                                    .unwrap();
+                                let timestamp: i64 =
+                                    df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
                                 let naive_time = DateTime::from_timestamp_millis(timestamp)
                                     .expect("timestamp inválido");
@@ -3592,13 +3528,8 @@ impl Backtest {
                         }
                         EntryDirection::Sell => {
                             if trade.sl > 0.00000 && precio_actual >= trade.sl {
-                                let timestamp: i64 = df
-                                    .column("time")
-                                    .unwrap()
-                                    .get(i + 1)
-                                    .unwrap()
-                                    .try_extract::<i64>()
-                                    .unwrap();
+                                let timestamp: i64 =
+                                    df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
                                 let naive_time = DateTime::from_timestamp_millis(timestamp)
                                     .expect("timestamp inválido");
@@ -3614,13 +3545,8 @@ impl Backtest {
                                 }
                             }
                             if trade.tp > 0.00000 && precio_actual <= trade.tp {
-                                let timestamp: i64 = df
-                                    .column("time")
-                                    .unwrap()
-                                    .get(i + 1)
-                                    .unwrap()
-                                    .try_extract::<i64>()
-                                    .unwrap();
+                                let timestamp: i64 =
+                                    df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
                                 let naive_time = DateTime::from_timestamp_millis(timestamp)
                                     .expect("timestamp inválido");

@@ -148,7 +148,7 @@ pub async fn get_data_by_backtest(id_backtest: i32) -> Result<Vec<DataSymbol>, E
     while let Some(row) = rows.next().await? {
         match row.get::<u32>(2) {
             Ok(id) => {
-                data_list.push(get_data(id).await.unwrap());
+                data_list.push(get_data(id).await?);
             }
             Err(_) => (),
         }

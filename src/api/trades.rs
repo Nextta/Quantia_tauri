@@ -88,9 +88,9 @@ pub async fn insert_trades(id_backtest: i32, trade: &Trade) -> Result<i32, Error
 
     let conn = db.connect()?;
 
-    let pl: Decimal = trade.pl.to_string().parse().unwrap();
-    let plsc: Decimal = trade.plsc.to_string().parse().unwrap();
-    let pips_pl: Decimal = trade.pips_pl.to_string().parse().unwrap();
+    let pl: Decimal = trade.pl.to_string().parse()?;
+    let plsc: Decimal = trade.plsc.to_string().parse()?;
+    let pips_pl: Decimal = trade.pips_pl.to_string().parse()?;
 
     let parametros = params![
         id_backtest,
@@ -112,15 +112,9 @@ pub async fn insert_trades(id_backtest: i32, trade: &Trade) -> Result<i32, Error
         trade.duracion_horas.clone(),
         trade.duracion_dias.clone(),
         trade.label,
-        truncate_decimal(pl, 2).to_string().parse::<f64>().unwrap(),
-        truncate_decimal(plsc, 2)
-            .to_string()
-            .parse::<f64>()
-            .unwrap(),
-        truncate_decimal(pips_pl, 5)
-            .to_string()
-            .parse::<f64>()
-            .unwrap()
+        truncate_decimal(pl, 2).to_string().parse::<f64>()?,
+        truncate_decimal(plsc, 2).to_string().parse::<f64>()?,
+        truncate_decimal(pips_pl, 5).to_string().parse::<f64>()?
     ];
 
     conn.query("INSERT INTO trades (id_backtest, id_symbol, symbol, tipo, lotaje, multiplicador, t0, precio_entrada, tp, sl, t1, precio_cierre, precio_maximo, precio_minimo, duracion_segundos, duracion_minutos, duracion_horas, duracion_dias, label, pl, plsc, pips_pl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
@@ -161,7 +155,7 @@ pub async fn get_trades_by_backtest(id_backtest: i32) -> Result<Vec<Trade>, Erro
     let mut trades: Vec<Trade> = Vec::new();
 
     while let Some(row) = result.next().await? {
-        let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(row.get(2)?).await.unwrap(); // Necesito implementar la api de symbol.
+        let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(row.get(2)?).await?; // Necesito implementar la api de symbol.
         let mut trade: Trade = Trade::new(row.get(1)?, symbol).await;
 
         trade.id = row.get::<i32>(0)?;
@@ -236,7 +230,7 @@ pub async fn get_trades_by_backtest_limit(
     let mut trades: Vec<Trade> = Vec::new();
 
     while let Some(row) = result.next().await? {
-        let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(row.get(2)?).await.unwrap(); // Necesito implementar la api de symbol.
+        let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(row.get(2)?).await?; // Necesito implementar la api de symbol.
         let mut trade: Trade = Trade::new(row.get(1)?, symbol).await;
 
         trade.id = row.get::<i32>(0)?;
@@ -300,7 +294,7 @@ pub async fn get_trade_by_id(id: i32) -> Result<Trade, Error> {
         .await?;
 
     let row = result.next().await?.unwrap();
-    let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(row.get(2)?).await.unwrap(); // Necesito implementar la api de symbol.
+    let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(row.get(2)?).await?; // Necesito implementar la api de symbol.
     let mut trade: Trade = Trade::new(row.get::<i32>(1)?, symbol).await;
 
     trade.id = row.get::<i32>(0)?;
