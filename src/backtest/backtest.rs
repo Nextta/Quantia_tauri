@@ -1,9 +1,9 @@
 use crate::api::backtests::{insert_backtest_cfd, table_backtests_cfd};
+use crate::api::data_backtest::insert_data_backtest;
 use crate::api::strategies::{
     get_strategies_actions_by_strategy_id, get_strategies_by_id,
     get_strategies_indicators_by_strategy_id,
 };
-
 use crate::api::trades::insert_trades;
 // use crate::backtest::datos::Datos;
 use crate::backtest::resultados::Resultados;
@@ -24,19 +24,18 @@ use crate::strategy::strategy_condition::StrategyCondition;
 use crate::strategy::strategy_options::TradingDirection;
 use crate::utils::configuracion::LOGS_REGISTRO;
 
-use chrono::DateTime;
-use polars::prelude::*;
-use std::time::Instant;
-
 use crate::enums::activos::Activo;
 use crate::enums::gestion::GestionStrategy;
 use crate::enums::logics::Logic;
 use crate::enums::tipos::{BeTipo, TlTipo};
-use crate::structs::data::DataSymbol;
+use crate::structs::data::{DataBacktest, DataSymbol};
 use crate::structs::logs::RegistroLog;
 use crate::structs::options::NBarsOptions;
 use crate::structs::parametros::{BeParams, GestionParams, LimitParams, TlParams};
+use chrono::DateTime;
+use polars::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::time::Instant;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Backtest {
@@ -4832,6 +4831,15 @@ impl Backtest {
         for data in self.datos.clone() {
             // Verificamos los indicadores que tiene la estrategia para añadirlos a los datos del DataFrame
             let mut df = self.get_datos(&data).unwrap();
+
+            // Aquí añadir los datos de data_backtest... //
+            let data_backtest: DataBacktest = DataBacktest {
+                id: 1,
+                id_backtest: self.id,
+                id_data_symbol: data.id,
+            };
+            let _ = insert_data_backtest(&data_backtest).await.unwrap();
+
             self.set_indicators_strategy(&mut df);
             df = df
                 .lazy()
