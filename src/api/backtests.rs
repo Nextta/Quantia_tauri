@@ -1,3 +1,4 @@
+use crate::api::data_backtest::get_data_by_backtest;
 use crate::api::resultados::delete_resultados_by_backtest;
 use crate::api::trades::{delete_trades_by_backtest, get_trades_by_backtest};
 use crate::backtest::backtest::Backtest;
@@ -139,7 +140,7 @@ pub async fn get_backtests() -> Result<Vec<Backtest>, Error> {
             gestion_strategy: gestion_strategy,
             parametros_gestion: parametros_gestion,
             trades: trades,
-            datos: Vec::new(),
+            datos: get_data_by_backtest(row.get::<i32>(0)?).await?,
             estrategia: Strategy {
                 id: 0,
                 id_user: 0,
@@ -219,7 +220,7 @@ pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>, Error> {
             gestion_strategy: gestion_strategy,
             parametros_gestion: parametros_gestion,
             trades: trades,
-            datos: Vec::new(),
+            datos: get_data_by_backtest(row.get::<i32>(0)?).await?,
             estrategia: Strategy {
                 id: 0,
                 id_user: 0,
@@ -299,7 +300,7 @@ pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>, Er
             gestion_strategy: gestion_strategy,
             parametros_gestion: parametros_gestion,
             trades: trades,
-            datos: Vec::new(),
+            datos: get_data_by_backtest(row.get::<i32>(0)?).await?,
             estrategia: Strategy {
                 id: 0,
                 id_user: 0,
@@ -382,7 +383,7 @@ pub async fn get_backtests_by_tipo(tipo: &Activo) -> Result<Vec<Backtest>, Error
             gestion_strategy: gestion_strategy,
             parametros_gestion: parametros_gestion,
             trades: trades,
-            datos: Vec::new(),
+            datos: get_data_by_backtest(row.get::<i32>(0)?).await?,
             estrategia: Strategy {
                 id: 0,
                 id_user: 0,
