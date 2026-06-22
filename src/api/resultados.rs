@@ -1,35 +1,7 @@
 use crate::backtest::resultados::Resultados;
 use crate::utils::configuracion::DB_LOCAL;
-use dotenvy::dotenv;
+use crate::utils::configuracion::{get_db_config, Error};
 use libsql::{params, Builder};
-use serde::Serialize;
-use std::env;
-
-#[derive(Serialize, Debug)]
-pub struct Error {
-    msg: String,
-}
-
-type Result<T> = std::result::Result<T, Error>;
-
-impl<T> From<T> for Error
-where
-    T: std::error::Error,
-{
-    fn from(value: T) -> Self {
-        Self {
-            msg: value.to_string(),
-        }
-    }
-}
-
-fn get_db_config() -> Result<(String, String, String)> {
-    dotenv().expect(".env file not found");
-    let db_path = env::var("DB_PATH").unwrap();
-    let sync_url = env::var("TURSO_SYNC_URL").unwrap();
-    let auth_token = env::var("TURSO_AUTH_TOKEN").unwrap();
-    Ok((db_path, sync_url, auth_token))
-}
 
 /// Crea la tabla `resultados` en la base de datos si no existe.
 ///
@@ -39,7 +11,7 @@ fn get_db_config() -> Result<(String, String, String)> {
 /// # Errores
 /// Retorna un error si no se puede conectar a la base de datos o si la creación de la tabla falla.
 #[tauri::command]
-pub async fn table_resultados() -> Result<String> {
+pub async fn table_resultados() -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -142,7 +114,7 @@ pub async fn table_resultados() -> Result<String> {
 /// # Errores
 /// Retorna un error si no se puede conectar a la base de datos o si la inserción falla.
 #[tauri::command]
-pub async fn insert_resultados(resultados: &Resultados) -> Result<i32> {
+pub async fn insert_resultados(resultados: &Resultados) -> Result<i32, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -259,7 +231,7 @@ pub async fn insert_resultados(resultados: &Resultados) -> Result<i32> {
 /// # Errores
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
-pub async fn get_resultados() -> Result<Vec<Resultados>> {
+pub async fn get_resultados() -> Result<Vec<Resultados>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -362,7 +334,7 @@ pub async fn get_resultados() -> Result<Vec<Resultados>> {
 /// # Errores
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
-pub async fn get_resultados_by_id(id: i32) -> Result<Resultados> {
+pub async fn get_resultados_by_id(id: i32) -> Result<Resultados, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -465,7 +437,7 @@ pub async fn get_resultados_by_id(id: i32) -> Result<Resultados> {
 /// # Errores
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
-pub async fn get_resultados_by_id_backtest(id: i32) -> Result<Resultados> {
+pub async fn get_resultados_by_id_backtest(id: i32) -> Result<Resultados, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -568,7 +540,7 @@ pub async fn get_resultados_by_id_backtest(id: i32) -> Result<Resultados> {
 /// # Errores
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
-pub async fn delete_resultados(id: i32) -> Result<()> {
+pub async fn delete_resultados(id: i32) -> Result<(), Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -597,7 +569,7 @@ pub async fn delete_resultados(id: i32) -> Result<()> {
 /// # Errores
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
-pub async fn delete_resultados_by_backtest(id_backtest: i32) -> Result<()> {
+pub async fn delete_resultados_by_backtest(id_backtest: i32) -> Result<(), Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -623,7 +595,7 @@ mod tests {
     use super::*;
 
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_crud_resultados() -> Result<()> {
+    async fn test_crud_resultados() -> Result<(), Error> {
         let resultado: Resultados = Resultados {
             id: 1,
             id_backtest: 1,

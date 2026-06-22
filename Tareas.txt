@@ -1,4 +1,5 @@
 TODO:
+-Añadir los datos de data_backtest al realizar un backtest.
 -Añadir en la api de backtets la opción de que obtenga los datos relacionados a ese backtest y los añada al struct.
 -Crear una función comand de tauri para enviar al frontend los datos de un dataframe formateados en {time, valor} para los indicadores.
 -Crear una función comand de tauri para enviar los datos de vela de un dataframe desde la fecha indicada hasta la fecha indicada.
@@ -15,6 +16,7 @@ TODO:
 -Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.
 
 Terminadas:
+-Cambiar get_db_config() a utils > configuración.
 -Crear una nueva tabla en la base de dato que almacene la relación entre data y bactktest almacenado los ids de los dos.
 -Crear el CRUD completo de la nueva tabla que relaciona la data con el backtest.
 -Crear el test unitario del CRUD que relaciona la data con el backtest.

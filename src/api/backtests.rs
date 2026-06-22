@@ -9,36 +9,8 @@ use crate::structs::parametros::GestionParams;
 use crate::traits::tparametro::TParametro;
 use crate::traits::ttipos::TTipos;
 use crate::utils::configuracion::DB_LOCAL;
-use dotenvy::dotenv;
+use crate::utils::configuracion::{get_db_config, Error};
 use libsql::{params, Builder};
-use serde::Serialize;
-use std::env;
-
-#[derive(Serialize, Debug)]
-pub struct Error {
-    msg: String,
-}
-
-type Result<T> = std::result::Result<T, Error>;
-
-impl<T> From<T> for Error
-where
-    T: std::error::Error,
-{
-    fn from(value: T) -> Self {
-        Self {
-            msg: value.to_string(),
-        }
-    }
-}
-
-fn get_db_config() -> Result<(String, String, String)> {
-    dotenv().expect(".env file not found");
-    let db_path = env::var("DB_PATH").unwrap();
-    let sync_url = env::var("TURSO_SYNC_URL").unwrap();
-    let auth_token = env::var("TURSO_AUTH_TOKEN").unwrap();
-    Ok((db_path, sync_url, auth_token))
-}
 
 /// Crea la tabla de backtests en la base de datos.
 ///
@@ -48,7 +20,7 @@ fn get_db_config() -> Result<(String, String, String)> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
-pub async fn table_backtests_cfd() -> Result<String> {
+pub async fn table_backtests_cfd() -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -89,7 +61,7 @@ pub async fn table_backtests_cfd() -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
-pub async fn insert_backtest_cfd(backtest: &Backtest) -> Result<i32> {
+pub async fn insert_backtest_cfd(backtest: &Backtest) -> Result<i32, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -120,7 +92,7 @@ pub async fn insert_backtest_cfd(backtest: &Backtest) -> Result<i32> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_backtests() -> Result<Vec<Backtest>> {
+pub async fn get_backtests() -> Result<Vec<Backtest>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -198,7 +170,7 @@ pub async fn get_backtests() -> Result<Vec<Backtest>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>> {
+pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -278,7 +250,7 @@ pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
+pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -358,7 +330,7 @@ pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_backtests_by_tipo(tipo: &Activo) -> Result<Vec<Backtest>> {
+pub async fn get_backtests_by_tipo(tipo: &Activo) -> Result<Vec<Backtest>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -441,7 +413,7 @@ pub async fn get_backtests_by_tipo(tipo: &Activo) -> Result<Vec<Backtest>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
-pub async fn delete_backtest(id: i32) -> Result<()> {
+pub async fn delete_backtest(id: i32) -> Result<(), Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -475,7 +447,7 @@ mod tests {
     use super::*;
 
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_crud_backtest_cfd() -> Result<()> {
+    async fn test_crud_backtest_cfd() -> Result<(), Error> {
         let backtest: Backtest = Backtest {
             id: 0,
             titulo: "Test".to_string(),

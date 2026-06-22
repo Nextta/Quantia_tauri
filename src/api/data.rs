@@ -3,36 +3,8 @@ use crate::enums::data_origen::DataOrigen;
 use crate::enums::timeframe::Timeframe;
 use crate::structs::data::DataSymbol;
 use crate::utils::configuracion::DB_LOCAL;
-use dotenvy::dotenv;
+use crate::utils::configuracion::{get_db_config, Error};
 use libsql::{params, Builder};
-use serde::Serialize;
-use std::env;
-
-#[derive(Serialize, Debug)]
-pub struct Error {
-    msg: String,
-}
-
-type Result<T> = std::result::Result<T, Error>;
-
-impl<T> From<T> for Error
-where
-    T: std::error::Error,
-{
-    fn from(value: T) -> Self {
-        Self {
-            msg: value.to_string(),
-        }
-    }
-}
-
-fn get_db_config() -> Result<(String, String, String)> {
-    dotenv().expect(".env file not found");
-    let db_path = env::var("DB_PATH").unwrap();
-    let sync_url = env::var("TURSO_SYNC_URL").unwrap();
-    let auth_token = env::var("TURSO_AUTH_TOKEN").unwrap();
-    Ok((db_path, sync_url, auth_token))
-}
 
 /// Crea la tabla de datos en la base de datos.
 ///
@@ -41,7 +13,7 @@ fn get_db_config() -> Result<(String, String, String)> {
 ///
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
-pub async fn table_data() -> Result<String> {
+pub async fn table_data() -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -84,7 +56,7 @@ pub async fn table_data() -> Result<String> {
 ///
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la inserción.
-pub async fn insert_data(data_symbol: &DataSymbol) -> Result<u32> {
+pub async fn insert_data(data_symbol: &DataSymbol) -> Result<u32, Error> {
     match table_data().await {
         Ok(_) => {
             let (db_path, sync_url, auth_token) = get_db_config()?;
@@ -129,7 +101,7 @@ pub async fn insert_data(data_symbol: &DataSymbol) -> Result<u32> {
 ///
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
-pub async fn get_all_data() -> Result<Vec<DataSymbol>> {
+pub async fn get_all_data() -> Result<Vec<DataSymbol>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -175,7 +147,7 @@ pub async fn get_all_data() -> Result<Vec<DataSymbol>> {
 ///
 /// # Errores
 /// Retorna error si no se encuentra la data o falla la conexión.
-pub async fn get_data(id: u32) -> Result<DataSymbol> {
+pub async fn get_data(id: u32) -> Result<DataSymbol, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -220,7 +192,7 @@ pub async fn get_data(id: u32) -> Result<DataSymbol> {
 ///
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
-pub async fn delete_data(id: u32) -> Result<()> {
+pub async fn delete_data(id: u32) -> Result<(), Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -250,7 +222,7 @@ pub async fn delete_data(id: u32) -> Result<()> {
 ///
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
-pub async fn update_data_actualizado(id: u32, actualizado: bool) -> Result<()> {
+pub async fn update_data_actualizado(id: u32, actualizado: bool) -> Result<(), Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -277,7 +249,7 @@ mod tests {
     use super::*;
 
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_crud_data() -> Result<()> {
+    async fn test_crud_data() -> Result<(), Error> {
         let data: DataSymbol = DataSymbol {
             id: 0,
             name: "EURUSD".to_string(),
