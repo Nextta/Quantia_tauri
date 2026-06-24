@@ -123,7 +123,7 @@ pub async fn get_all_data() -> Result<Vec<DataBacktest>, Error> {
 ///
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la inserción.
-pub async fn get_data_by_backtest(id_backtest: i32) -> Result<Vec<DataSymbol>, Error> {
+pub async fn get_data_by_backtest(id_backtest: i32) -> Result<DataSymbol, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -143,18 +143,11 @@ pub async fn get_data_by_backtest(id_backtest: i32) -> Result<Vec<DataSymbol>, E
         )
         .await?;
 
-    let mut data_list: Vec<DataSymbol> = Vec::new();
+    let row = rows.next().await?.unwrap();
 
-    while let Some(row) = rows.next().await? {
-        match row.get::<u32>(2) {
-            Ok(id) => {
-                data_list.push(get_data(id).await?);
-            }
-            Err(_) => (),
-        }
-    }
+    let data_symbol = get_data(row.get::<u32>(2)?).await?;
 
-    Ok(data_list)
+    Ok(data_symbol)
 }
 
 /// Elimina una data_backtest por su ID.

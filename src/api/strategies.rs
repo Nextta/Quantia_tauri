@@ -135,14 +135,6 @@ pub async fn get_strategies() -> Result<Vec<Strategy>, Error> {
             ),
         }
 
-        // match get_strategies_conditions_by_strategy_id(id_startegy).await {
-        //     Ok(conditions) => str_conditions = conditions,
-        //     Err(e) => println!(
-        //         "Error al optener los conditions de strategy_id: {}. Error: {:?}",
-        //         id_startegy, e
-        //     ),
-        // }
-
         match get_strategies_actions_by_strategy_id(id_startegy).await {
             Ok(actions) => str_actions = actions,
             Err(e) => println!(
@@ -171,7 +163,6 @@ pub async fn get_strategies() -> Result<Vec<Strategy>, Error> {
             activa: activa,
             creada_en: row.get::<String>(5)?,
             indicadores: str_indicators,
-            // condiciones: str_conditions,
             acciones: str_actions,
             opciones: str_options,
         };
@@ -214,7 +205,6 @@ pub async fn get_strategies_by_id(id: i32) -> Result<Strategy, Error> {
     let row = result.next().await?.unwrap();
 
     let mut str_indicators: Vec<StrategyIndicator> = Vec::<StrategyIndicator>::new();
-    // let mut str_conditions: Vec<StrategyCondition> = Vec::<StrategyCondition>::new();
     let mut str_actions: Vec<StrategyAction> = Vec::<StrategyAction>::new();
     let mut str_options: StrategyOptions = StrategyOptions::new_empty();
 
@@ -227,14 +217,6 @@ pub async fn get_strategies_by_id(id: i32) -> Result<Strategy, Error> {
             id_startegy, e
         ),
     }
-
-    // match get_strategies_conditions_by_strategy_id(id_startegy).await {
-    //     Ok(conditions) => str_conditions = conditions,
-    //     Err(e) => println!(
-    //         "Error al optener los conditions de strategy_id: {}. Error: {:?}",
-    //         id_startegy, e
-    //     ),
-    // }
 
     match get_strategies_actions_by_strategy_id(id_startegy).await {
         Ok(actions) => str_actions = actions,
@@ -264,7 +246,6 @@ pub async fn get_strategies_by_id(id: i32) -> Result<Strategy, Error> {
         activa: activa,
         creada_en: row.get::<String>(5)?,
         indicadores: str_indicators,
-        // condiciones: str_conditions,
         acciones: str_actions,
         opciones: str_options,
     };
@@ -305,7 +286,6 @@ pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>, Er
     let mut strategies = Vec::new();
     while let Some(row) = result.next().await? {
         let mut str_indicators: Vec<StrategyIndicator> = Vec::<StrategyIndicator>::new();
-        // let mut str_conditions: Vec<StrategyCondition> = Vec::<StrategyCondition>::new();
         let mut str_actions: Vec<StrategyAction> = Vec::<StrategyAction>::new();
         let mut str_options: StrategyOptions = StrategyOptions::new_empty();
 
@@ -318,14 +298,6 @@ pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>, Er
                 id_startegy, e
             ),
         }
-
-        // match get_strategies_conditions_by_strategy_id(id_startegy).await {
-        //     Ok(conditions) => str_conditions = conditions,
-        //     Err(e) => println!(
-        //         "Error al optener los conditions de strategy_id: {}. Error: {:?}",
-        //         id_startegy, e
-        //     ),
-        // }
 
         match get_strategies_actions_by_strategy_id(id_startegy).await {
             Ok(actions) => str_actions = actions,
@@ -355,7 +327,6 @@ pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>, Er
             activa: activa,
             creada_en: row.get::<String>(5)?,
             indicadores: str_indicators,
-            // condiciones: str_conditions,
             acciones: str_actions,
             opciones: str_options,
         };

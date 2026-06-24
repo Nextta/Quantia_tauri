@@ -5,12 +5,14 @@ use crate::api::strategies::{
     get_strategies_indicators_by_strategy_id,
 };
 use crate::api::trades::insert_trades;
-// use crate::backtest::datos::Datos;
 use crate::backtest::resultados::Resultados;
 use crate::backtest::symbol::SymbolInfoCFD;
 use crate::backtest::trade::Trade;
 use crate::enums::actions::Action;
+use crate::enums::data_format::DataFormatSymbol;
+use crate::enums::data_origen::DataOrigen;
 use crate::enums::entry::EntryDirection;
+use crate::enums::timeframe::Timeframe;
 use crate::indicators::cycle::*;
 use crate::indicators::momentum::*;
 use crate::indicators::overlap::*;
@@ -46,7 +48,7 @@ pub struct Backtest {
     pub gestion_strategy: GestionStrategy,
     pub parametros_gestion: GestionParams,
     pub trades: Vec<Trade>,
-    pub datos: Vec<DataSymbol>,
+    pub datos: DataSymbol,
     pub estrategia: Strategy,
 }
 
@@ -68,7 +70,18 @@ impl Backtest {
             gestion_strategy,
             parametros_gestion,
             trades: Vec::<Trade>::new(),
-            datos: Vec::<DataSymbol>::new(),
+            datos: DataSymbol {
+                id: 0,
+                name: "INIT".to_string(),
+                timeframe: Some(Timeframe::D1),
+                ruta: "download".to_string(),
+                formato: Some(DataFormatSymbol::Parquet),
+                fecha_inicio: "00/00/0000".to_string(),
+                fecha_fin: "00/00/0000".to_string(),
+                actualizado: false,
+                n_data: 0,
+                origen: Some(DataOrigen::DukasCopy),
+            },
             estrategia: Strategy::new_empty(),
         };
         if LOGS_REGISTRO {
@@ -88,19 +101,16 @@ impl Backtest {
     }
 
     pub fn add_datasymbol(&mut self, data: DataSymbol) {
-        self.datos.push(data);
+        self.datos = data;
     }
 
     /// Funciones Core Backtest
-    pub fn get_datos(
-        &mut self,
-        data: &DataSymbol,
-    ) -> Result<DataFrame, Box<dyn std::error::Error>> {
+    pub fn get_datos(&mut self) -> Result<DataFrame, Box<dyn std::error::Error>> {
         let ruta = format!(
             "{}/{}.{}",
-            data.ruta,
-            data.name,
-            data.formato.unwrap().to_string()
+            self.datos.ruta,
+            self.datos.name,
+            self.datos.formato.unwrap().to_string()
         );
 
         let df: DataFrame = CsvReadOptions::default()
@@ -108,7 +118,7 @@ impl Backtest {
             .finish()?;
 
         if LOGS_REGISTRO {
-            self.add_registro(format!("Datos agregados: {:?}", data));
+            self.add_registro(format!("Datos agregados: {:?}", self.datos));
         }
         Ok(df)
     }
@@ -161,7 +171,7 @@ impl Backtest {
     ///
     /// # Retorna
     /// DataFrame con los nuevos datos.
-    fn set_indicators_strategy(&mut self, df: &mut DataFrame) {
+    pub fn set_indicators_strategy(&mut self, df: &mut DataFrame) {
         // let mut df: DataFrame = datos.clone();
         let indicadores = self.estrategia.indicadores.clone();
 
@@ -4821,39 +4831,39 @@ impl Backtest {
             }
         };
 
-        if self.datos.is_empty() {
+        if self.datos.id == 0 {
             if LOGS_REGISTRO {
                 self.add_registro("No hay datos para ejecutar el backtest".to_string());
             }
             return Ok("No hay datos para ejecutar el backtest".to_string());
         }
 
-        for data in self.datos.clone() {
-            // Verificamos los indicadores que tiene la estrategia para añadirlos a los datos del DataFrame
-            let mut df = self.get_datos(&data).unwrap();
+        // Optenemos el dataframe.
+        let mut df = self.get_datos().unwrap();
 
-            // Aquí añadir los datos de data_backtest... //
-            let data_backtest: DataBacktest = DataBacktest {
-                id: 1,
-                id_backtest: self.id,
-                id_data_symbol: data.id,
-            };
-            let _ = insert_data_backtest(&data_backtest).await.unwrap();
+        // Añadimos los datos de data_backtest...
+        let data_backtest: DataBacktest = DataBacktest {
+            id: 1,
+            id_backtest: self.id,
+            id_data_symbol: self.datos.id,
+        };
 
-            self.set_indicators_strategy(&mut df);
-            df = df
-                .lazy()
-                .fill_nan(lit(NULL))
-                .drop_nulls(None)
-                .collect()
-                .unwrap();
+        let _ = insert_data_backtest(&data_backtest).await.unwrap();
 
-            if LOGS_REGISTRO {
-                self.add_registro(format!("{:?}", &df.head(Some(20))));
-            }
+        // Verificamos los indicadores que tiene la estrategia para añadirlos a los datos del DataFrame
+        self.set_indicators_strategy(&mut df);
+        df = df
+            .lazy()
+            .fill_nan(lit(NULL))
+            .drop_nulls(None)
+            .collect()
+            .unwrap();
 
-            self.backtest(&mut df, &symbol).await.unwrap();
+        if LOGS_REGISTRO {
+            self.add_registro(format!("{:?}", &df.head(Some(20))));
         }
+
+        self.backtest(&mut df, &symbol).await.unwrap();
 
         if !self.trades.is_empty() {
             if LOGS_REGISTRO {

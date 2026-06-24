@@ -171,7 +171,7 @@ pub async fn get_backtests() -> Result<Vec<Backtest>, Error> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>, Error> {
+pub async fn get_backtest_by_id(id: i32) -> Result<Backtest, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -188,56 +188,57 @@ pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>, Error> {
         .query("SELECT * FROM backtest WHERE id = ?", [id])
         .await?;
 
-    let mut backtests = Vec::new();
-    while let Some(row) = rows.next().await? {
-        let trades = get_trades_by_backtest(row.get::<i32>(0)?).await?;
+    let row = rows.next().await?.unwrap();
 
-        let mut parametros_gestion: GestionParams = serde_json::from_str("{}")?;
+    let trades = get_trades_by_backtest(row.get::<i32>(0)?).await?;
 
-        let gestion_strategy = match row.get::<String>(4)?.as_str() {
-            "Formula" => {
-                parametros_gestion = serde_json::from_str(&row.get::<String>(5)?)?;
-                GestionStrategy::Formula
-            }
-            _ => GestionStrategy::Formula,
-        };
+    let mut parametros_gestion: GestionParams = GestionParams {
+        multiplicador: 1.0,
+        lotaje_fijo: 0.0,
+    };
 
-        let tipo: Activo = match row.get::<String>(3)?.as_str() {
-            "Forex" => Activo::Forex,
-            "Futuros" => Activo::Futuros,
-            "CDF" => Activo::CDF,
-            "Acciones" => Activo::Acciones,
-            "ETF" => Activo::ETF,
-            "Opciones" => Activo::Opciones,
-            _ => Activo::Forex,
-        };
+    let gestion_strategy = match row.get::<String>(4)?.as_str() {
+        "Formula" => {
+            parametros_gestion = serde_json::from_str(&row.get::<String>(5)?)?;
+            GestionStrategy::Formula
+        }
+        _ => GestionStrategy::Formula,
+    };
 
-        let backtest = Backtest {
-            id: row.get::<i32>(0)?,
-            titulo: row.get::<String>(1)?,
-            balance: row.get::<f64>(2)?,
-            tipo: tipo,
-            gestion_strategy: gestion_strategy,
-            parametros_gestion: parametros_gestion,
-            trades: trades,
-            datos: get_data_by_backtest(row.get::<i32>(0)?).await?,
-            estrategia: Strategy {
-                id: 0,
-                id_user: 0,
-                nombre: String::new(),
-                descripcion: None,
-                activa: false,
-                creada_en: String::new(),
-                indicadores: Vec::new(),
-                // condiciones: Vec::new(),
-                acciones: Vec::new(),
-                opciones: StrategyOptions::new_empty(),
-            },
-        };
-        backtests.push(backtest);
-    }
+    let tipo: Activo = match row.get::<String>(3)?.as_str() {
+        "Forex" => Activo::Forex,
+        "Futuros" => Activo::Futuros,
+        "CDF" => Activo::CDF,
+        "Acciones" => Activo::Acciones,
+        "ETF" => Activo::ETF,
+        "Opciones" => Activo::Opciones,
+        _ => Activo::Forex,
+    };
 
-    Ok(backtests)
+    let backtest = Backtest {
+        id: row.get::<i32>(0)?,
+        titulo: row.get::<String>(1)?,
+        balance: row.get::<f64>(2)?,
+        tipo: tipo,
+        gestion_strategy: gestion_strategy,
+        parametros_gestion: parametros_gestion,
+        trades: trades,
+        datos: get_data_by_backtest(row.get::<i32>(0)?).await?,
+        estrategia: Strategy {
+            id: 0,
+            id_user: 0,
+            nombre: String::new(),
+            descripcion: None,
+            activa: false,
+            creada_en: String::new(),
+            indicadores: Vec::new(),
+            // condiciones: Vec::new(),
+            acciones: Vec::new(),
+            opciones: StrategyOptions::new_empty(),
+        },
+    };
+
+    Ok(backtest)
 }
 
 /// Obtiene backtests por título.
@@ -446,6 +447,10 @@ pub async fn delete_backtest(id: i32) -> Result<(), Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::enums::data_format::DataFormatSymbol;
+    use crate::enums::data_origen::DataOrigen;
+    use crate::enums::timeframe::Timeframe;
+    use crate::structs::data::DataSymbol;
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_crud_backtest_cfd() -> Result<(), Error> {
@@ -457,7 +462,18 @@ mod tests {
             gestion_strategy: GestionStrategy::Formula,
             parametros_gestion: serde_json::from_str("{}")?,
             trades: Vec::new(),
-            datos: Vec::new(),
+            datos: DataSymbol {
+                id: 0,
+                name: "test".to_string(),
+                timeframe: Some(Timeframe::D1),
+                ruta: "download".to_string(),
+                formato: Some(DataFormatSymbol::Parquet),
+                fecha_inicio: "00/00/0000".to_string(),
+                fecha_fin: "00/00/0000".to_string(),
+                actualizado: false,
+                n_data: 0,
+                origen: Some(DataOrigen::DukasCopy),
+            },
             estrategia: Strategy {
                 id: 0,
                 id_user: 0,
