@@ -113,9 +113,19 @@ impl Backtest {
             self.datos.formato.unwrap().to_string()
         );
 
-        let df: DataFrame = CsvReadOptions::default()
-            .try_into_reader_with_file_path(Some(ruta.into()))?
-            .finish()?;
+        let df: DataFrame = match self.datos.formato.unwrap() {
+            DataFormatSymbol::Csv => CsvReadOptions::default()
+                .try_into_reader_with_file_path(Some(ruta.into()))?
+                .finish()?,
+            DataFormatSymbol::Parquet => {
+                let mut file = std::fs::File::open(ruta).unwrap();
+                ParquetReader::new(&mut file).finish().unwrap()
+            }
+            DataFormatSymbol::Json => {
+                let mut file = std::fs::File::open(ruta).unwrap();
+                JsonReader::new(&mut file).finish()?
+            }
+        };
 
         if LOGS_REGISTRO {
             self.add_registro(format!("Datos agregados: {:?}", self.datos));
