@@ -1,5 +1,5 @@
 TODO:
--Hacer que los dataframes que me llegan, se conviertan el timestamp en time y en segundos.
+-Hacer que los dataframes que me llegan, se conviertan el timestamp en time y en segundos. Para ello tengo que hacer una función comand donde me pasara los datos desde frontend.
 -Actualizar todas las funciones de data_labs para que funcionen con el struct de DataSymbol.
 
 -Crear los primeros comandos para el frontend:
