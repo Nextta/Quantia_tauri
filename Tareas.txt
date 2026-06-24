@@ -1,5 +1,6 @@
 TODO:
 -Crear una función comand de tauri para enviar los datos de vela de un dataframe desde la fecha indicada hasta la fecha indicada.
+-Hacer que los dataframes que me llegan, se conviertan el timestamp en time y en segundos.
 -Actualizar todas las funciones de data_labs para que funcionen con el struct de DataSymbol.
 
 -Crear los primeros comandos para el frontend:
