@@ -1,5 +1,6 @@
 TODO:
 -Crear todos los commands necesario para el apartado de data_labs.
+-Crear los test de data_labs.
 
 -Crear los primeros comandos para el frontend:
     * Comando GetBacktest: Que envia todas las estrategias de la base de datos.
