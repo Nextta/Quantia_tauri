@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 pub enum DataOrigen {
     DukasCopy,
     MT5,
+    Import,
 }
 
 impl DataOrigen {
@@ -11,6 +12,7 @@ impl DataOrigen {
         match self {
             DataOrigen::DukasCopy => "DukasCopy".to_string(),
             DataOrigen::MT5 => "MT5".to_string(),
+            DataOrigen::Import => "Import".to_string(),
         }
     }
 
@@ -18,6 +20,7 @@ impl DataOrigen {
         match self {
             DataOrigen::DukasCopy => "DukasCopy",
             DataOrigen::MT5 => "MT5",
+            DataOrigen::Import => "Import",
         }
     }
 
@@ -25,7 +28,7 @@ impl DataOrigen {
         match data_origen {
             "DukasCopy" => Some(DataOrigen::DukasCopy),
             "MT5" => Some(DataOrigen::MT5),
-            _ => None,
+            _ => Some(DataOrigen::Import),
         }
     }
 }

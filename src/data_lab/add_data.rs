@@ -1,4 +1,4 @@
-use crate::structs::data::{DataFormat, DataFormatTicks};
+use crate::enums::data_format::DataFormatSymbol;
 
 use polars::prelude::*;
 use std::fs::File;
@@ -13,48 +13,29 @@ use std::fs::File;
 /// # Return
 /// Delvuelve un string indicando que el archivo parquet se ha creado con exito.
 pub fn add_data(
-    data: &Vec<DataFormat>,
+    mut data: DataFrame,
     name: &str,
     ruta_dist: Option<&str>,
+    format: Option<DataFormatSymbol>,
 ) -> PolarsResult<String> {
     let ruta = ruta_dist.unwrap_or("download");
-    let parquet_path = format!("{}/{}.parquet", ruta, name);
+    let formato = format.unwrap_or(DataFormatSymbol::Parquet);
+    let parquet_path = format!("{}/{}.{}", ruta, name, formato.to_string());
 
-    let json_str = serde_json::to_string(data).unwrap();
-    let mut df = JsonReader::new(std::io::Cursor::new(json_str))
-        .with_json_format(JsonFormat::JsonLines)
-        .finish()?;
+    match formato {
+        DataFormatSymbol::Parquet => {
+            let mut file = std::fs::File::create(parquet_path).unwrap();
+            ParquetWriter::new(&mut file).finish(&mut data).unwrap();
+        }
+        DataFormatSymbol::Csv => {
+            let mut file = File::create(parquet_path)?;
+            CsvWriter::new(&mut file).finish(&mut data)?;
+        }
+        DataFormatSymbol::Json => {
+            let mut file = File::create(parquet_path)?;
+            let _ = ParquetWriter::new(&mut file).finish(&mut data)?;
+        }
+    }
 
-    let mut file = File::create(parquet_path)?;
-    let _ = ParquetWriter::new(&mut file).finish(&mut df)?;
-
-    Ok("Parquet creado exitosamente".to_string())
-}
-
-/// Guarda los datos de los activos descargados en ticks en un archivo parquet.
-///
-/// # Argments:
-/// data: El array de datos del activo descargado.
-/// name: Nombre con el que se guarda el archivo.
-/// ruta_dist: Ruta donde se guardará el archivo. Por defecto en la carpeta download.
-///
-/// # Return
-/// Delvuelve un string indicando que el archivo parquet se ha creado con exito.
-pub fn add_data_ticks(
-    data: &Vec<DataFormatTicks>,
-    name: &str,
-    ruta_dist: Option<&str>,
-) -> PolarsResult<String> {
-    let ruta = ruta_dist.unwrap_or("download");
-    let parquet_path = format!("{}/{}_Ticks.parquet", ruta, name);
-
-    let json_str = serde_json::to_string(data).unwrap();
-    let mut df = JsonReader::new(std::io::Cursor::new(json_str))
-        .with_json_format(JsonFormat::JsonLines)
-        .finish()?;
-
-    let mut file = File::create(parquet_path)?;
-    let _ = ParquetWriter::new(&mut file).finish(&mut df)?;
-
-    Ok("Parquet creado exitosamente".to_string())
+    Ok(format!("{} creado exitosamente", formato.to_string()))
 }
