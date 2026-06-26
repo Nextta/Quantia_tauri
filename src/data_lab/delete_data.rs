@@ -1,11 +1,13 @@
+use crate::structs::data::DataSymbol;
 use polars::prelude::*;
 use std::fs::remove_file;
 
-pub fn delete_parquet(parquet_name: &str, ruta_dist: Option<&str>) -> PolarsResult<String> {
+pub fn delete_data(data_info: &DataSymbol) -> PolarsResult<String> {
     let parquet_path = format!(
-        "{}/{}.parquet",
-        ruta_dist.unwrap_or("download"),
-        parquet_name
+        "{}/{}.{}",
+        data_info.ruta.clone(),
+        data_info.name.clone(),
+        data_info.formato.unwrap().to_string()
     );
 
     remove_file(parquet_path)?;

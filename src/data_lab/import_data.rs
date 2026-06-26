@@ -1,5 +1,21 @@
+use crate::enums::data_format::DataFormatSymbol;
+use crate::structs::data::DataSymbol;
 use polars::prelude::*;
 use std::fs::File;
+
+pub fn import_data(data_info: &DataSymbol, ruta_import: &str) {
+    match data_info.formato.unwrap() {
+        DataFormatSymbol::Csv => {
+            import_csv(&data_info.name, &data_info.ruta, ruta_import).unwrap();
+        }
+        DataFormatSymbol::Json => {
+            import_json(&data_info.name, &data_info.ruta, ruta_import).unwrap();
+        }
+        DataFormatSymbol::Parquet => {
+            import_parquet(&data_info.name, &data_info.ruta, ruta_import).unwrap();
+        }
+    }
+}
 
 /// Importar en formato csv
 pub fn import_csv(symbol_name: &str, ruta_data: &str, ruta_dist: &str) -> PolarsResult<String> {

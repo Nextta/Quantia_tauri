@@ -1,6 +1,5 @@
 TODO:
--Hacer que los dataframes que me llegan, se conviertan el timestamp en time y en segundos. Para ello tengo que hacer una función comand donde me pasara los datos desde frontend.
--Actualizar todas las funciones de data_labs para que funcionen con el struct de DataSymbol.
+-Crear todos los commands necesario para el apartado de data_labs.
 
 -Crear los primeros comandos para el frontend:
     * Comando GetBacktest: Que envia todas las estrategias de la base de datos.
@@ -13,6 +12,8 @@ TODO:
 -Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.
 
 Terminadas:
+-Actualizar todas las funciones de data_labs para que funcionen con el struct de DataSymbol.
+-Hacer que los dataframes que me llegan, se conviertan el timestamp en time y en segundos. Para ello tengo que hacer una función comand donde me pasara los datos desde frontend.
 -Crear una función comand de tauri para enviar los datos de vela de un dataframe desde la fecha indicada hasta la fecha indicada.
 -Crear una función comand de tauri para enviar al frontend los datos de un dataframe formateados en {time, valor} para los indicadores. (Indicando el rango de fechas)
 -Añadir en la api de backtets la opción de que obtenga los datos relacionados a ese backtest y los añada al struct.

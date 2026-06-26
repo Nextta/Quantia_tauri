@@ -103,12 +103,7 @@ pub async fn save_data_dukas(
         origen: Some(broker_data),
     };
 
-    match add_data(
-        df,
-        &data_symbol.name,
-        Some(&data_symbol.ruta),
-        Some(formato_data),
-    ) {
+    match add_data(df, &data_symbol) {
         Ok(_) => {
             insert_data(&data_symbol).await?;
         }
@@ -208,12 +203,7 @@ pub async fn save_data_dukas_ticks(
         origen: Some(broker_data),
     };
 
-    match add_data(
-        df,
-        &data_symbol.name,
-        Some(&data_symbol.ruta),
-        Some(formato_data),
-    ) {
+    match add_data(df, &data_symbol) {
         Ok(_) => {
             insert_data(&data_symbol).await?;
         }

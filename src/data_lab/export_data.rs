@@ -1,6 +1,40 @@
 use crate::data_lab::utils_data::get_timeframe_data;
+use crate::enums::data_format::DataFormatSymbol;
+use crate::structs::data::DataSymbol;
 use polars::prelude::*;
 use std::fs::File;
+
+pub fn export_data(data_info: &DataSymbol, ruta_export: &str) {
+    match data_info.formato.unwrap() {
+        DataFormatSymbol::Csv => {
+            export_csv(
+                &data_info.name,
+                &data_info.ruta,
+                ruta_export,
+                &data_info.timeframe.unwrap().as_str(),
+            )
+            .unwrap();
+        }
+        DataFormatSymbol::Json => {
+            export_json(
+                &data_info.name,
+                &data_info.ruta,
+                ruta_export,
+                &data_info.timeframe.unwrap().as_str(),
+            )
+            .unwrap();
+        }
+        DataFormatSymbol::Parquet => {
+            export_parquet(
+                &data_info.name,
+                &data_info.ruta,
+                ruta_export,
+                &data_info.timeframe.unwrap().as_str(),
+            )
+            .unwrap();
+        }
+    }
+}
 
 /// Exportar en formato csv
 pub fn export_csv(

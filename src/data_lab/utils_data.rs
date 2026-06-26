@@ -1,4 +1,3 @@
-use crate::structs::data::{DataFormat, DataFormatTicks};
 use chrono::DateTime;
 use polars::prelude::*;
 
@@ -100,21 +99,12 @@ pub fn get_last_date(symbol: &str, ruta_dist: &str) -> PolarsResult<String> {
 }
 
 /// Une los nuevos datos descargados al dataset ya exsitente para actualizarlos.
-pub fn join_datasets(
-    parquet_ruta: &str,
-    data_to_join: &Vec<DataFormat>,
-) -> PolarsResult<DataFrame> {
-    let json_str = serde_json::to_string(data_to_join).unwrap();
-
-    let df_csv = JsonReader::new(std::io::Cursor::new(json_str))
-        .with_json_format(JsonFormat::JsonLines)
-        .finish()?;
-
+pub fn join_datasets(parquet_ruta: &str, data_to_join: DataFrame) -> PolarsResult<DataFrame> {
     let ruta: String = parquet_ruta.to_string();
     let args = ScanArgsParquet::default();
     let lz: LazyFrame = LazyFrame::scan_parquet(PlRefPath::new(&ruta), args)?;
 
-    let new_data = df_csv.lazy().join(
+    let new_data = data_to_join.lazy().join(
         lz.clone(),
         [col("time")],
         [col("time")],
@@ -131,21 +121,12 @@ pub fn join_datasets(
 }
 
 /// Une los nuevos datos descargados al dataset ya exsitente para actualizarlos.
-pub fn join_datasets_ticks(
-    parquet_ruta: &str,
-    data_to_join: &Vec<DataFormatTicks>,
-) -> PolarsResult<DataFrame> {
-    let json_str = serde_json::to_string(data_to_join).unwrap();
-
-    let df_csv = JsonReader::new(std::io::Cursor::new(json_str))
-        .with_json_format(JsonFormat::JsonLines)
-        .finish()?;
-
+pub fn join_datasets_ticks(parquet_ruta: &str, data_to_join: DataFrame) -> PolarsResult<DataFrame> {
     let ruta: String = parquet_ruta.to_string();
     let args = ScanArgsParquet::default();
     let lz: LazyFrame = LazyFrame::scan_parquet(PlRefPath::new(&ruta), args)?;
 
-    let new_data = df_csv.lazy().join(
+    let new_data = data_to_join.lazy().join(
         lz.clone(),
         [col("time")],
         [col("time")],
