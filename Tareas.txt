@@ -8,6 +8,7 @@ TODO:
 -Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.
 
 Terminadas:
+-Crear la primera documentación de comandos para el frontend.
 -Crear el command para optener un backtest por su id. get_backtest(id)
 -Crear los primeros comandos para el frontend:
     * Comando GetBacktest: Que envia todas las estrategias de la base de datos.
