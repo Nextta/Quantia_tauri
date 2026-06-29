@@ -1,11 +1,7 @@
 TODO:
+-Crear el command para optener un backtest por su id. get_backtest(id)
 -Crear todos los commands necesario para el apartado de data_labs.
 -Crear los test de data_labs.
-
--Crear los primeros comandos para el frontend:
-    * Comando GetBacktest: Que envia todas las estrategias de la base de datos.
-    * Comando GetResults: Envia los resultados de un backtest pasando por parametro el id del backtest.
-    * Comando GetTrades: Envia todos los trades de un backtest pasando por parametro el id del backtest.
 
 -Crear plantillas para que genere el código en MQL5.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.
@@ -13,6 +9,10 @@ TODO:
 -Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.
 
 Terminadas:
+-Crear los primeros comandos para el frontend:
+    * Comando GetBacktest: Que envia todas las estrategias de la base de datos.
+    * Comando GetResults: Envia los resultados de un backtest pasando por parametro el id del backtest.
+    * Comando GetTrades: Envia todos los trades de un backtest pasando por parametro el id del backtest.
 -Actualizar todas las funciones de data_labs para que funcionen con el struct de DataSymbol.
 -Hacer que los dataframes que me llegan, se conviertan el timestamp en time y en segundos. Para ello tengo que hacer una función comand donde me pasara los datos desde frontend.
 -Crear una función comand de tauri para enviar los datos de vela de un dataframe desde la fecha indicada hasta la fecha indicada.
