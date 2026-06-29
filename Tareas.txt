@@ -1,5 +1,4 @@
 TODO:
--Crear el command para optener un backtest por su id. get_backtest(id)
 -Crear todos los commands necesario para el apartado de data_labs.
 -Crear los test de data_labs.
 
@@ -9,6 +8,7 @@ TODO:
 -Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.
 
 Terminadas:
+-Crear el command para optener un backtest por su id. get_backtest(id)
 -Crear los primeros comandos para el frontend:
     * Comando GetBacktest: Que envia todas las estrategias de la base de datos.
     * Comando GetResults: Envia los resultados de un backtest pasando por parametro el id del backtest.
