@@ -1,12 +1,13 @@
 use dotenvy::dotenv;
+use serde::Serialize;
 use std::env;
 
 pub const LOGS_REGISTRO: bool = false;
 pub const DB_LOCAL: bool = true;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Error {
-    msg: String,
+    pub msg: String,
 }
 
 type Result<T> = std::result::Result<T, Error>;

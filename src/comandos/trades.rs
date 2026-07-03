@@ -2,7 +2,7 @@ use crate::api::trades::{get_trade_by_id, get_trades_by_backtest, get_trades_by_
 use crate::backtest::trade::Trade;
 
 #[tauri::command]
-pub async fn get_tardes(id_backtest: i32) -> Vec<Trade> {
+pub async fn get_trades(id_backtest: i32) -> Vec<Trade> {
     let trades: Vec<Trade> = get_trades_by_backtest(id_backtest)
         .await
         .unwrap_or(Vec::new());
@@ -11,7 +11,7 @@ pub async fn get_tardes(id_backtest: i32) -> Vec<Trade> {
 }
 
 #[tauri::command]
-pub async fn get_tardes_page(id_backtest: i32, limite: i32, pagina: i32) -> Vec<Trade> {
+pub async fn get_trades_page(id_backtest: i32, limite: i32, pagina: i32) -> Vec<Trade> {
     let trades: Vec<Trade> = get_trades_by_backtest_limit(id_backtest, limite, pagina)
         .await
         .unwrap_or(Vec::new());

@@ -3,12 +3,14 @@ use crate::api::strategies::get_strategies_by_id;
 use crate::utils::configuracion::Error;
 use chrono::NaiveDateTime;
 use polars::prelude::*;
+use serde::{Deserialize, Serialize};
 
 fn parse_date_to_millis(s: &str) -> Result<i64, Error> {
     let naive = NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")?;
     Ok(naive.and_utc().timestamp_millis())
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DataIndicator {
     pub time: u32,
     pub value: f64,
