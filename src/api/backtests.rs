@@ -194,7 +194,7 @@ pub async fn get_backtest_by_id(id: i32) -> Result<Backtest, Error> {
 
     let mut parametros_gestion: GestionParams = GestionParams {
         multiplicador: 1.0,
-        lotaje_fijo: 0.0,
+        lotaje_fijo: 0.01,
     };
 
     let gestion_strategy = match row.get::<String>(4)?.as_str() {
