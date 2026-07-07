@@ -1,5 +1,4 @@
 TODO:
--Crear todos los commands necesario para el apartado de data_labs.
 -Crear los test de data_labs.
 -Documentar todas las funciones de comandos.
 
@@ -9,6 +8,7 @@ TODO:
 -Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.
 
 Terminadas:
+-Crear todos los commands necesario para el apartado de data_labs.
 -Crear la primera documentación de comandos para el frontend.
 -Crear el command para optener un backtest por su id. get_backtest(id)
 -Crear los primeros comandos para el frontend:

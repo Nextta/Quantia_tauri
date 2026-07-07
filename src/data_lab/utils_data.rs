@@ -1,3 +1,4 @@
+use crate::comandos::data::{DataDukas, DataDukasTicks};
 use chrono::DateTime;
 use polars::prelude::*;
 
@@ -140,4 +141,75 @@ pub fn join_datasets_ticks(parquet_ruta: &str, data_to_join: DataFrame) -> Polar
     let final_result = concat([lz, new_data], UnionArgs::default())?;
 
     Ok(final_result.collect()?)
+}
+
+pub fn to_dataframe_data(data: Vec<DataDukas>) -> DataFrame {
+    let timestamp: Vec<u64> = data.iter().map(|d| d.timestamp).collect();
+    let open: Vec<f64> = data.iter().map(|d| d.open).collect();
+    let high: Vec<f64> = data.iter().map(|d| d.high).collect();
+    let low: Vec<f64> = data.iter().map(|d| d.low).collect();
+    let close: Vec<f64> = data.iter().map(|d| d.close).collect();
+    let volume: Vec<f64> = data.iter().map(|d| d.volume).collect();
+
+    let columns: Vec<Column> = vec![
+        Series::new("timestamp".into(), timestamp).into(),
+        Series::new("open".into(), open).into(),
+        Series::new("high".into(), high).into(),
+        Series::new("low".into(), low).into(),
+        Series::new("close".into(), close).into(),
+        Series::new("volume".into(), volume).into(),
+    ];
+
+    let mut df = DataFrame::new_infer_height(columns).unwrap();
+
+    df = df
+        .lazy()
+        .select([
+            (col("timestamp") / lit(1000i64))
+                .cast(DataType::UInt32)
+                .alias("time"),
+            col("open"),
+            col("high"),
+            col("low"),
+            col("close"),
+            col("volume"),
+        ])
+        .collect()
+        .unwrap();
+
+    df
+}
+
+pub fn to_dataframe_data_ticks(data: Vec<DataDukasTicks>) -> DataFrame {
+    let timestamp: Vec<u64> = data.iter().map(|d| d.timestamp).collect();
+    let ask_price: Vec<f64> = data.iter().map(|d| d.askPrice).collect();
+    let bid_price: Vec<f64> = data.iter().map(|d| d.bidPrice).collect();
+    let ask_volume: Vec<f64> = data.iter().map(|d| d.askVolume).collect();
+    let bid_volume: Vec<f64> = data.iter().map(|d| d.bidVolume).collect();
+
+    let columns: Vec<Column> = vec![
+        Series::new("timestamp".into(), timestamp).into(),
+        Series::new("askPrice".into(), ask_price).into(),
+        Series::new("bidPrice".into(), bid_price).into(),
+        Series::new("askVolume".into(), ask_volume).into(),
+        Series::new("bidVolume".into(), bid_volume).into(),
+    ];
+
+    let mut df = DataFrame::new_infer_height(columns).unwrap();
+
+    df = df
+        .lazy()
+        .select([
+            (col("timestamp") / lit(1000i64))
+                .cast(DataType::UInt32)
+                .alias("time"),
+            col("askPrice"),
+            col("bidPrice"),
+            col("askVolume"),
+            col("bidVolume"),
+        ])
+        .collect()
+        .unwrap();
+
+    df
 }

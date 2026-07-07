@@ -1,6 +1,10 @@
 use crate::api::backtests::get_backtest_by_id;
-use crate::api::data::insert_data;
+use crate::api::data::{delete_data, insert_data, update_data_actualizado};
 use crate::data_lab::add_data::add_data;
+use crate::data_lab::delete_data::delete_data_local;
+use crate::data_lab::export_data::export_data;
+use crate::data_lab::update_data::{update_data, update_data_ticks};
+use crate::data_lab::utils_data::{to_dataframe_data, to_dataframe_data_ticks};
 use crate::enums::data_format::DataFormatSymbol;
 use crate::enums::data_origen::DataOrigen;
 use crate::enums::timeframe::Timeframe;
@@ -56,37 +60,7 @@ pub async fn save_data_dukas(
     let formato_data = format.unwrap_or(DataFormatSymbol::Parquet);
     let actualizado = actualized.unwrap_or(false);
 
-    let timestamp: Vec<u64> = data.iter().map(|d| d.timestamp).collect();
-    let open: Vec<f64> = data.iter().map(|d| d.open).collect();
-    let high: Vec<f64> = data.iter().map(|d| d.high).collect();
-    let low: Vec<f64> = data.iter().map(|d| d.low).collect();
-    let close: Vec<f64> = data.iter().map(|d| d.close).collect();
-    let volume: Vec<f64> = data.iter().map(|d| d.volume).collect();
-
-    let columns: Vec<Column> = vec![
-        Series::new("timestamp".into(), timestamp).into(),
-        Series::new("open".into(), open).into(),
-        Series::new("high".into(), high).into(),
-        Series::new("low".into(), low).into(),
-        Series::new("close".into(), close).into(),
-        Series::new("volume".into(), volume).into(),
-    ];
-
-    let mut df = DataFrame::new_infer_height(columns)?;
-
-    df = df
-        .lazy()
-        .select([
-            (col("timestamp") / lit(1000i64))
-                .cast(DataType::UInt32)
-                .alias("time"),
-            col("open"),
-            col("high"),
-            col("low"),
-            col("close"),
-            col("volume"),
-        ])
-        .collect()?;
+    let df = to_dataframe_data(data);
 
     let n_data: u32 = df.height() as u32;
 
@@ -142,7 +116,7 @@ pub struct DataDukasTicks {
 /// actualized: Si los datos estan actualizados a la fecha de hoy (true) o no (false).
 ///
 /// # Return
-/// Delvuelve un string indicando que elos datos se han guardado con exito.
+/// Delvuelve un string indicando que los datos se han guardado con exito.
 #[tauri::command]
 pub async fn save_data_dukas_ticks(
     data: Vec<DataDukasTicks>,
@@ -216,6 +190,152 @@ pub async fn save_data_dukas_ticks(
         formato_data.to_string(),
         data_symbol
     ))
+}
+
+/// Elimina los datos de un symbolo de forma fisica y la información de la base de datos.
+///
+/// # Argments:
+/// data_info: La información del symbolo a eliminar.
+///
+/// # Return
+/// Delvuelve un string indicando que los datos se han eliminado con exito.
+#[tauri::command]
+pub async fn delete_data_symbol(data_info: DataSymbol) -> Result<String, Error> {
+    match delete_data(data_info.id).await {
+        Ok(_) => match delete_data_local(&data_info) {
+            Ok(_) => {
+                return Ok(format!(
+                    "Symbol {} eliminado correctamente.",
+                    data_info.name
+                ));
+            }
+            Err(_) => {
+                return Err(Error {
+                    msg: "Error al eliminar los datos locales del symbolo".to_string(),
+                })
+            }
+        },
+        Err(_) => {
+            return Err(Error {
+                msg: "Error al eliminar los datos de la base de datos".to_string(),
+            })
+        }
+    }
+}
+
+/// Exporta un symbolo a la ruta expecificada.
+///
+/// # Argments:
+/// data_info: La información del symbolo a exportar.
+/// ruta_export: Ruta donde se exportará el símbolo.
+///
+/// # Return
+/// Delvuelve un string indicando que los datos se han exportado con exito.
+#[tauri::command]
+pub fn export_data_symbol(data_info: DataSymbol, ruta_export: &str) -> Result<String, Error> {
+    export_data(&data_info, &ruta_export);
+
+    Ok(format!(
+        "Symbolo {} exportado con exito en la ruta {}",
+        data_info.name,
+        ruta_export.to_string()
+    ))
+}
+
+/// Importa un symbolo a la ruta expecificada.
+///
+/// # Argments:
+/// data_info: La información del symbolo a importar.
+/// ruta_import: Ruta desde donde se importa el símbolo.
+///
+/// # Return
+/// Delvuelve un string indicando que los datos se han importado con exito.
+#[tauri::command]
+pub fn import_data_symbol(
+    data_info: DataSymbol,
+    ruta_import: Option<&str>,
+) -> Result<String, Error> {
+    let ruta = ruta_import.unwrap_or("download");
+
+    export_data(&data_info, &ruta);
+
+    Ok(format!("Symbolo {} importado con exito.", data_info.name))
+}
+
+/// Actualiza un symbolo expecifico.
+///
+/// # Argments:
+/// data: Vector con todos los datos OHLCV.
+/// data_info: La información del symbolo a actualizar.
+///
+/// # Return
+/// Delvuelve un string indicando que los datos se han actualizado con exito.
+#[tauri::command]
+pub async fn update_data_symbol(
+    data: Vec<DataDukas>,
+    data_info: DataSymbol,
+) -> Result<String, Error> {
+    let df = to_dataframe_data(data);
+
+    match update_data(&df, &data_info) {
+        Ok(_) => match update_data_actualizado(data_info.id, true).await {
+            Ok(_) => {
+                return Ok(format!(
+                    "Datos del Symbol {} actializado correctamnete en la base de datos.",
+                    data_info.name
+                ));
+            }
+            Err(_) => {
+                return Err(Error {
+                    msg: "No se han podido actualizar los datos del Symbol en la base de datos."
+                        .to_string(),
+                });
+            }
+        },
+        Err(_) => {
+            return Err(Error {
+                msg: "No se han podido actualizar los datos del Symbol en local.".to_string(),
+            });
+        }
+    }
+}
+
+/// Actualiza los ticks del symbolo expecifico.
+///
+/// # Argments:
+/// data: Vector con todos los datos en ticks.
+/// data_info: La información del symbolo a actualizar.
+///
+/// # Return
+/// Delvuelve un string indicando que los datos se han actualizado con exito.
+#[tauri::command]
+pub async fn update_data_symbol_ticks(
+    data: Vec<DataDukasTicks>,
+    data_info: DataSymbol,
+) -> Result<String, Error> {
+    let df = to_dataframe_data_ticks(data);
+
+    match update_data_ticks(&df, &data_info) {
+        Ok(_) => match update_data_actualizado(data_info.id, true).await {
+            Ok(_) => {
+                return Ok(format!(
+                    "Datos del Symbol {} actializado correctamnete en la base de datos.",
+                    data_info.name
+                ));
+            }
+            Err(_) => {
+                return Err(Error {
+                    msg: "No se han podido actualizar los datos del Symbol en la base de datos."
+                        .to_string(),
+                });
+            }
+        },
+        Err(_) => {
+            return Err(Error {
+                msg: "No se han podido actualizar los datos del Symbol en local.".to_string(),
+            });
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

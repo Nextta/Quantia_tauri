@@ -2,7 +2,7 @@ use crate::structs::data::DataSymbol;
 use polars::prelude::*;
 use std::fs::remove_file;
 
-pub fn delete_data(data_info: &DataSymbol) -> PolarsResult<String> {
+pub fn delete_data_local(data_info: &DataSymbol) -> PolarsResult<String> {
     let parquet_path = format!(
         "{}/{}.{}",
         data_info.ruta.clone(),
