@@ -1,6 +1,7 @@
 TODO:
 -Crear todos los commands necesario para el apartado de data_labs.
 -Crear los test de data_labs.
+-Documentar todas las funciones de comandos.
 
 -Crear plantillas para que genere el código en MQL5.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.

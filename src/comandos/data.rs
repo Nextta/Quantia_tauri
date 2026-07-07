@@ -228,6 +228,16 @@ pub struct DataTv {
     pub volume: f64,
 }
 
+/// Devuelve todos los datos de velas OHLCV dentro de un rango de fecha.
+///
+/// # Argments:
+/// id_backtest: El id correspondiente al backtest.
+/// from_date: Fecha desde donde inicia el rango de datos.
+/// to_date: Fecha desde donde inicia el rango de datos.
+/// prev_bars: Velas que se van a cargar previas al rango de fecha y despues del rango de fecha. Por defecto 20.
+///
+/// # Return
+/// Delvuelve un vector con los datos de velas OHLCV.
 #[tauri::command]
 pub async fn get_data_for_tv(
     id_backtest: i32,
@@ -239,7 +249,7 @@ pub async fn get_data_for_tv(
         Ok(mut backtest) => {
             let mut df = backtest.get_datos().unwrap();
 
-            let velas = prev_bars.unwrap_or(2000);
+            let velas = prev_bars.unwrap_or(20);
             let from_ts = parse_date_to_millis(from_date)?;
             let to_ts = parse_date_to_millis(to_date)?;
 
