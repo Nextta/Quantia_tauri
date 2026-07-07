@@ -16,6 +16,18 @@ pub struct DataIndicator {
     pub value: f64,
 }
 
+/// Optiene los datos de un indicador para mostrar el indicador en tradingview.
+///
+/// # Argments:
+/// id_backtest: Identificador del backtest al que vamos a optener los datos del indicador.
+/// id_estrategia: Identificador de la estrategia.
+/// column: Nombre de la columna del indicador.
+/// from_date: Fecha donde inician los datos.
+/// to_date: Fecha donde finalizan los datos.
+/// prev_bars: Velas previas a cargar antes de from_date y despues de to_date. Por defecto 20.
+///
+/// # Return
+/// Delvuelve un vector con los datos del indicador.
 #[tauri::command]
 pub async fn get_indicator_for_tv(
     id_backtest: i32,
@@ -38,7 +50,7 @@ pub async fn get_indicator_for_tv(
                 .collect()
                 .unwrap();
 
-            let velas = prev_bars.unwrap_or(2000);
+            let velas = prev_bars.unwrap_or(20);
             let from_ts = parse_date_to_millis(from_date)?;
             let to_ts = parse_date_to_millis(to_date)?;
 
