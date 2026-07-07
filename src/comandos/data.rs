@@ -133,34 +133,7 @@ pub async fn save_data_dukas_ticks(
     let formato_data = format.unwrap_or(DataFormatSymbol::Parquet);
     let actualizado = actualized.unwrap_or(false);
 
-    let timestamp: Vec<u64> = data.iter().map(|d| d.timestamp).collect();
-    let ask_price: Vec<f64> = data.iter().map(|d| d.askPrice).collect();
-    let bid_price: Vec<f64> = data.iter().map(|d| d.bidPrice).collect();
-    let ask_volume: Vec<f64> = data.iter().map(|d| d.askVolume).collect();
-    let bid_volume: Vec<f64> = data.iter().map(|d| d.bidVolume).collect();
-
-    let columns: Vec<Column> = vec![
-        Series::new("timestamp".into(), timestamp).into(),
-        Series::new("askPrice".into(), ask_price).into(),
-        Series::new("bidPrice".into(), bid_price).into(),
-        Series::new("askVolume".into(), ask_volume).into(),
-        Series::new("bidVolume".into(), bid_volume).into(),
-    ];
-
-    let mut df = DataFrame::new_infer_height(columns)?;
-
-    df = df
-        .lazy()
-        .select([
-            (col("timestamp") / lit(1000i64))
-                .cast(DataType::UInt32)
-                .alias("time"),
-            col("askPrice"),
-            col("bidPrice"),
-            col("askVolume"),
-            col("bidVolume"),
-        ])
-        .collect()?;
+    let df = to_dataframe_data_ticks(data);
 
     let n_data: u32 = df.height() as u32;
 
