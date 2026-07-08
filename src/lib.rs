@@ -1,8 +1,8 @@
 pub mod api;
 pub mod backtest;
 pub mod comandos;
+pub mod data_lab;
 pub mod enums;
-pub mod estrategias;
 pub mod indicators;
 pub mod strategy;
 pub mod structs;
@@ -16,8 +16,13 @@ pub fn run() {
             comandos::backtests::get_alls_backtests,
             comandos::resultados::get_results_by_backtest,
             comandos::trades::get_trade,
-            comandos::trades::get_tardes,
-            comandos::trades::get_tardes_page
+            comandos::trades::get_trades,
+            comandos::trades::get_trades_page,
+            comandos::backtests::get_backtest,
+            comandos::data::save_data_dukas,
+            comandos::data::save_data_dukas_ticks,
+            comandos::data::get_data_for_tv,
+            comandos::indicadores::get_indicator_for_tv,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

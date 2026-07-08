@@ -1,3 +1,4 @@
+use crate::api::data_backtest::get_data_by_backtest;
 use crate::api::resultados::delete_resultados_by_backtest;
 use crate::api::trades::{delete_trades_by_backtest, get_trades_by_backtest};
 use crate::backtest::backtest::Backtest;
@@ -9,36 +10,8 @@ use crate::structs::parametros::GestionParams;
 use crate::traits::tparametro::TParametro;
 use crate::traits::ttipos::TTipos;
 use crate::utils::configuracion::DB_LOCAL;
-use dotenvy::dotenv;
+use crate::utils::configuracion::{get_db_config, Error};
 use libsql::{params, Builder};
-use serde::Serialize;
-use std::env;
-
-#[derive(Serialize, Debug)]
-pub struct Error {
-    msg: String,
-}
-
-type Result<T> = std::result::Result<T, Error>;
-
-impl<T> From<T> for Error
-where
-    T: std::error::Error,
-{
-    fn from(value: T) -> Self {
-        Self {
-            msg: value.to_string(),
-        }
-    }
-}
-
-fn get_db_config() -> Result<(String, String, String)> {
-    dotenv().expect(".env file not found");
-    let db_path = env::var("DB_PATH").unwrap();
-    let sync_url = env::var("TURSO_SYNC_URL").unwrap();
-    let auth_token = env::var("TURSO_AUTH_TOKEN").unwrap();
-    Ok((db_path, sync_url, auth_token))
-}
 
 /// Crea la tabla de backtests en la base de datos.
 ///
@@ -48,7 +21,7 @@ fn get_db_config() -> Result<(String, String, String)> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
-pub async fn table_backtests_cfd() -> Result<String> {
+pub async fn table_backtests_cfd() -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -89,7 +62,7 @@ pub async fn table_backtests_cfd() -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
-pub async fn insert_backtest_cfd(backtest: &Backtest) -> Result<i32> {
+pub async fn insert_backtest_cfd(backtest: &Backtest) -> Result<i32, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -120,7 +93,7 @@ pub async fn insert_backtest_cfd(backtest: &Backtest) -> Result<i32> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_backtests() -> Result<Vec<Backtest>> {
+pub async fn get_backtests() -> Result<Vec<Backtest>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -137,13 +110,13 @@ pub async fn get_backtests() -> Result<Vec<Backtest>> {
 
     let mut backtests = Vec::new();
     while let Some(row) = rows.next().await? {
-        let trades = get_trades_by_backtest(row.get::<i32>(0)?).await.unwrap();
+        let trades = get_trades_by_backtest(row.get::<i32>(0)?).await?;
 
         let mut parametros_gestion: GestionParams = serde_json::from_str("{}")?;
 
         let gestion_strategy = match row.get::<String>(4)?.as_str() {
             "Formula" => {
-                parametros_gestion = serde_json::from_str(&row.get::<String>(5)?).unwrap();
+                parametros_gestion = serde_json::from_str(&row.get::<String>(5)?)?;
                 GestionStrategy::Formula
             }
             _ => GestionStrategy::Formula,
@@ -167,7 +140,7 @@ pub async fn get_backtests() -> Result<Vec<Backtest>> {
             gestion_strategy: gestion_strategy,
             parametros_gestion: parametros_gestion,
             trades: trades,
-            datos: Vec::new(),
+            datos: get_data_by_backtest(row.get::<i32>(0)?).await?,
             estrategia: Strategy {
                 id: 0,
                 id_user: 0,
@@ -198,7 +171,7 @@ pub async fn get_backtests() -> Result<Vec<Backtest>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>> {
+pub async fn get_backtest_by_id(id: i32) -> Result<Backtest, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -215,56 +188,57 @@ pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>> {
         .query("SELECT * FROM backtest WHERE id = ?", [id])
         .await?;
 
-    let mut backtests = Vec::new();
-    while let Some(row) = rows.next().await? {
-        let trades = get_trades_by_backtest(row.get::<i32>(0)?).await.unwrap();
+    let row = rows.next().await?.unwrap();
 
-        let mut parametros_gestion: GestionParams = serde_json::from_str("{}")?;
+    let trades = get_trades_by_backtest(row.get::<i32>(0)?).await?;
 
-        let gestion_strategy = match row.get::<String>(4)?.as_str() {
-            "Formula" => {
-                parametros_gestion = serde_json::from_str(&row.get::<String>(5)?).unwrap();
-                GestionStrategy::Formula
-            }
-            _ => GestionStrategy::Formula,
-        };
+    let mut parametros_gestion: GestionParams = GestionParams {
+        multiplicador: 1.0,
+        lotaje_fijo: 0.01,
+    };
 
-        let tipo: Activo = match row.get::<String>(3)?.as_str() {
-            "Forex" => Activo::Forex,
-            "Futuros" => Activo::Futuros,
-            "CDF" => Activo::CDF,
-            "Acciones" => Activo::Acciones,
-            "ETF" => Activo::ETF,
-            "Opciones" => Activo::Opciones,
-            _ => Activo::Forex,
-        };
+    let gestion_strategy = match row.get::<String>(4)?.as_str() {
+        "Formula" => {
+            parametros_gestion = serde_json::from_str(&row.get::<String>(5)?)?;
+            GestionStrategy::Formula
+        }
+        _ => GestionStrategy::Formula,
+    };
 
-        let backtest = Backtest {
-            id: row.get::<i32>(0)?,
-            titulo: row.get::<String>(1)?,
-            balance: row.get::<f64>(2)?,
-            tipo: tipo,
-            gestion_strategy: gestion_strategy,
-            parametros_gestion: parametros_gestion,
-            trades: trades,
-            datos: Vec::new(),
-            estrategia: Strategy {
-                id: 0,
-                id_user: 0,
-                nombre: String::new(),
-                descripcion: None,
-                activa: false,
-                creada_en: String::new(),
-                indicadores: Vec::new(),
-                // condiciones: Vec::new(),
-                acciones: Vec::new(),
-                opciones: StrategyOptions::new_empty(),
-            },
-        };
-        backtests.push(backtest);
-    }
+    let tipo: Activo = match row.get::<String>(3)?.as_str() {
+        "Forex" => Activo::Forex,
+        "Futuros" => Activo::Futuros,
+        "CDF" => Activo::CDF,
+        "Acciones" => Activo::Acciones,
+        "ETF" => Activo::ETF,
+        "Opciones" => Activo::Opciones,
+        _ => Activo::Forex,
+    };
 
-    Ok(backtests)
+    let backtest = Backtest {
+        id: row.get::<i32>(0)?,
+        titulo: row.get::<String>(1)?,
+        balance: row.get::<f64>(2)?,
+        tipo: tipo,
+        gestion_strategy: gestion_strategy,
+        parametros_gestion: parametros_gestion,
+        trades: trades,
+        datos: get_data_by_backtest(row.get::<i32>(0)?).await?,
+        estrategia: Strategy {
+            id: 0,
+            id_user: 0,
+            nombre: String::new(),
+            descripcion: None,
+            activa: false,
+            creada_en: String::new(),
+            indicadores: Vec::new(),
+            // condiciones: Vec::new(),
+            acciones: Vec::new(),
+            opciones: StrategyOptions::new_empty(),
+        },
+    };
+
+    Ok(backtest)
 }
 
 /// Obtiene backtests por título.
@@ -278,7 +252,7 @@ pub async fn get_backtest_by_id(id: i32) -> Result<Vec<Backtest>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
+pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -297,13 +271,13 @@ pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
 
     let mut backtests = Vec::new();
     while let Some(row) = rows.next().await? {
-        let trades = get_trades_by_backtest(row.get::<i32>(0)?).await.unwrap();
+        let trades = get_trades_by_backtest(row.get::<i32>(0)?).await?;
 
         let mut parametros_gestion: GestionParams = serde_json::from_str("{}")?;
 
         let gestion_strategy = match row.get::<String>(4)?.as_str() {
             "Formula" => {
-                parametros_gestion = serde_json::from_str(&row.get::<String>(5)?).unwrap();
+                parametros_gestion = serde_json::from_str(&row.get::<String>(5)?)?;
                 GestionStrategy::Formula
             }
             _ => GestionStrategy::Formula,
@@ -327,7 +301,7 @@ pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
             gestion_strategy: gestion_strategy,
             parametros_gestion: parametros_gestion,
             trades: trades,
-            datos: Vec::new(),
+            datos: get_data_by_backtest(row.get::<i32>(0)?).await?,
             estrategia: Strategy {
                 id: 0,
                 id_user: 0,
@@ -358,7 +332,7 @@ pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_backtests_by_tipo(tipo: &Activo) -> Result<Vec<Backtest>> {
+pub async fn get_backtests_by_tipo(tipo: &Activo) -> Result<Vec<Backtest>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -380,13 +354,13 @@ pub async fn get_backtests_by_tipo(tipo: &Activo) -> Result<Vec<Backtest>> {
 
     let mut backtests = Vec::new();
     while let Some(row) = rows.next().await? {
-        let trades = get_trades_by_backtest(row.get::<i32>(0)?).await.unwrap();
+        let trades = get_trades_by_backtest(row.get::<i32>(0)?).await?;
 
         let mut parametros_gestion: GestionParams = serde_json::from_str("{}")?;
 
         let gestion_strategy = match row.get::<String>(4)?.as_str() {
             "Formula" => {
-                parametros_gestion = serde_json::from_str(&row.get::<String>(5)?).unwrap();
+                parametros_gestion = serde_json::from_str(&row.get::<String>(5)?)?;
                 GestionStrategy::Formula
             }
             _ => GestionStrategy::Formula,
@@ -410,7 +384,7 @@ pub async fn get_backtests_by_tipo(tipo: &Activo) -> Result<Vec<Backtest>> {
             gestion_strategy: gestion_strategy,
             parametros_gestion: parametros_gestion,
             trades: trades,
-            datos: Vec::new(),
+            datos: get_data_by_backtest(row.get::<i32>(0)?).await?,
             estrategia: Strategy {
                 id: 0,
                 id_user: 0,
@@ -441,7 +415,7 @@ pub async fn get_backtests_by_tipo(tipo: &Activo) -> Result<Vec<Backtest>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
-pub async fn delete_backtest(id: i32) -> Result<()> {
+pub async fn delete_backtest(id: i32) -> Result<(), Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -473,9 +447,13 @@ pub async fn delete_backtest(id: i32) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::enums::data_format::DataFormatSymbol;
+    use crate::enums::data_origen::DataOrigen;
+    use crate::enums::timeframe::Timeframe;
+    use crate::structs::data::DataSymbol;
 
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_crud_backtest_cfd() -> Result<()> {
+    async fn test_crud_backtest_cfd() -> Result<(), Error> {
         let backtest: Backtest = Backtest {
             id: 0,
             titulo: "Test".to_string(),
@@ -484,7 +462,18 @@ mod tests {
             gestion_strategy: GestionStrategy::Formula,
             parametros_gestion: serde_json::from_str("{}")?,
             trades: Vec::new(),
-            datos: Vec::new(),
+            datos: DataSymbol {
+                id: 0,
+                name: "test".to_string(),
+                timeframe: Some(Timeframe::D1),
+                ruta: "download".to_string(),
+                formato: Some(DataFormatSymbol::Parquet),
+                fecha_inicio: "00/00/0000".to_string(),
+                fecha_fin: "00/00/0000".to_string(),
+                actualizado: false,
+                n_data: 0,
+                origen: Some(DataOrigen::DukasCopy),
+            },
             estrategia: Strategy {
                 id: 0,
                 id_user: 0,

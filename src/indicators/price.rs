@@ -251,7 +251,7 @@ pub fn daily_ohlc(
         .clone()
         .lazy()
         .with_column(
-            (col("timestamp") / lit(86400000i64)) // Convertir ms a días desde epoch
+            (col("time") / lit(86400000i64)) // Convertir ms a días desde epoch
                 .cast(DataType::Date) // Convertir a tipo Date
                 .alias("date"),
         )
@@ -329,7 +329,7 @@ pub fn weekly_ohlc(
 
     // Crear columna week
     let df_with_week = lf.with_column(
-        col("timestamp")
+        col("time")
             .cast(DataType::Datetime(TimeUnit::Milliseconds, None))
             .dt()
             .truncate(lit("1w"))
@@ -402,7 +402,7 @@ pub fn monthly_ohlc(
         .clone()
         .lazy()
         .with_column(
-            col("timestamp")
+            col("time")
                 .cast(DataType::Datetime(TimeUnit::Milliseconds, None))
                 .dt()
                 .truncate(lit("1mo"))

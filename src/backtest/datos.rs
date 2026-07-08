@@ -37,7 +37,7 @@ impl Datos {
         if schema {
             df = lz
                 .group_by_dynamic(
-                    col("timestamp"),
+                    col("time"),
                     [],
                     DynamicGroupOptions {
                         every: Duration::parse(&timeframe),
@@ -57,7 +57,7 @@ impl Datos {
         } else {
             df = lz
                 .select([
-                    col("timestamp"),
+                    col("time"),
                     col("bidPrice").alias("open"),
                     col("bidPrice").alias("high"),
                     col("bidPrice").alias("low"),
@@ -65,7 +65,7 @@ impl Datos {
                     (col("bidVolume") + col("askVolume")).alias("volume"),
                 ])
                 .group_by_dynamic(
-                    col("timestamp"),
+                    col("time"),
                     [],
                     DynamicGroupOptions {
                         every: Duration::parse(&timeframe),

@@ -1,16 +1,18 @@
 use crate::api::backtests::{insert_backtest_cfd, table_backtests_cfd};
+use crate::api::data_backtest::insert_data_backtest;
 use crate::api::strategies::{
     get_strategies_actions_by_strategy_id, get_strategies_by_id,
     get_strategies_indicators_by_strategy_id,
 };
-
 use crate::api::trades::insert_trades;
-use crate::backtest::datos::Datos;
 use crate::backtest::resultados::Resultados;
 use crate::backtest::symbol::SymbolInfoCFD;
 use crate::backtest::trade::Trade;
 use crate::enums::actions::Action;
+use crate::enums::data_format::DataFormatSymbol;
+use crate::enums::data_origen::DataOrigen;
 use crate::enums::entry::EntryDirection;
+use crate::enums::timeframe::Timeframe;
 use crate::indicators::cycle::*;
 use crate::indicators::momentum::*;
 use crate::indicators::overlap::*;
@@ -24,18 +26,18 @@ use crate::strategy::strategy_condition::StrategyCondition;
 use crate::strategy::strategy_options::TradingDirection;
 use crate::utils::configuracion::LOGS_REGISTRO;
 
-use chrono::DateTime;
-use polars::prelude::*;
-use std::time::Instant;
-
 use crate::enums::activos::Activo;
 use crate::enums::gestion::GestionStrategy;
 use crate::enums::logics::Logic;
 use crate::enums::tipos::{BeTipo, TlTipo};
+use crate::structs::data::{DataBacktest, DataSymbol};
 use crate::structs::logs::RegistroLog;
 use crate::structs::options::NBarsOptions;
 use crate::structs::parametros::{BeParams, GestionParams, LimitParams, TlParams};
+use chrono::DateTime;
+use polars::prelude::*;
 use serde::{Deserialize, Serialize};
+use std::time::Instant;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Backtest {
@@ -46,7 +48,7 @@ pub struct Backtest {
     pub gestion_strategy: GestionStrategy,
     pub parametros_gestion: GestionParams,
     pub trades: Vec<Trade>,
-    pub datos: Vec<Datos>,
+    pub datos: DataSymbol,
     pub estrategia: Strategy,
 }
 
@@ -68,7 +70,18 @@ impl Backtest {
             gestion_strategy,
             parametros_gestion,
             trades: Vec::<Trade>::new(),
-            datos: Vec::<Datos>::new(),
+            datos: DataSymbol {
+                id: 0,
+                name: "INIT".to_string(),
+                timeframe: Some(Timeframe::D1),
+                ruta: "download".to_string(),
+                formato: Some(DataFormatSymbol::Parquet),
+                fecha_inicio: "00/00/0000".to_string(),
+                fecha_fin: "00/00/0000".to_string(),
+                actualizado: false,
+                n_data: 0,
+                origen: Some(DataOrigen::DukasCopy),
+            },
             estrategia: Strategy::new_empty(),
         };
         if LOGS_REGISTRO {
@@ -87,18 +100,37 @@ impl Backtest {
         backtest
     }
 
-    /// Funciones Core Backtest
-    pub fn add_datos(&mut self, ruta: &str) -> Result<Datos, Box<dyn std::error::Error>> {
-        let df: DataFrame = CsvReadOptions::default()
-            .try_into_reader_with_file_path(Some(ruta.into()))?
-            .finish()?;
+    pub fn add_datasymbol(&mut self, data: DataSymbol) {
+        self.datos = data;
+    }
 
-        let data = Datos::new(df);
-        self.datos.push(data.clone());
+    /// Funciones Core Backtest
+    pub fn get_datos(&mut self) -> Result<DataFrame, Box<dyn std::error::Error>> {
+        let ruta = format!(
+            "{}/{}.{}",
+            self.datos.ruta,
+            self.datos.name,
+            self.datos.formato.unwrap().to_string()
+        );
+
+        let df: DataFrame = match self.datos.formato.unwrap() {
+            DataFormatSymbol::Csv => CsvReadOptions::default()
+                .try_into_reader_with_file_path(Some(ruta.into()))?
+                .finish()?,
+            DataFormatSymbol::Parquet => {
+                let mut file = std::fs::File::open(ruta).unwrap();
+                ParquetReader::new(&mut file).finish().unwrap()
+            }
+            DataFormatSymbol::Json => {
+                let mut file = std::fs::File::open(ruta).unwrap();
+                JsonReader::new(&mut file).finish()?
+            }
+        };
+
         if LOGS_REGISTRO {
-            self.add_registro(format!("Datos agregados: {}", ruta));
+            self.add_registro(format!("Datos agregados: {:?}", self.datos));
         }
-        Ok(data)
+        Ok(df)
     }
 
     pub fn add_trade(&mut self, trade: Trade) {
@@ -149,7 +181,7 @@ impl Backtest {
     ///
     /// # Retorna
     /// DataFrame con los nuevos datos.
-    fn set_indicators_strategy(&mut self, df: &mut DataFrame) {
+    pub fn set_indicators_strategy(&mut self, df: &mut DataFrame) {
         // let mut df: DataFrame = datos.clone();
         let indicadores = self.estrategia.indicadores.clone();
 
@@ -1954,7 +1986,7 @@ impl Backtest {
             self.add_registro("Obteniendo limite con la función get_limit".to_string());
         }
 
-        let params: LimitParams = serde_json::from_str(&params).unwrap();
+        let params: LimitParams = serde_json::from_str(&params)?;
         if LOGS_REGISTRO {
             self.add_registro(format!("Parametros de la limitada {:?}", params));
         }
@@ -3264,26 +3296,14 @@ impl Backtest {
                 }
 
                 let mut indices: Vec<usize> = Vec::new();
-                let low: f64 = df
-                    .column("low")
-                    .unwrap()
-                    .get(i)
-                    .unwrap()
-                    .try_extract::<f64>()
-                    .unwrap();
+                let low: f64 = df.column("low")?.get(i)?.try_extract::<f64>()?;
 
                 for (idx, limit) in buy_limits
                     .iter()
                     .enumerate()
                     .filter(|(_, limit)| limit > &&low)
                 {
-                    let timestamp = df
-                        .column("timestamp")
-                        .unwrap()
-                        .get(i + 1)
-                        .unwrap()
-                        .try_extract::<i64>()
-                        .unwrap();
+                    let timestamp = df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
                     let tp: f64 = self.get_takeprofit(&limit, &df, i, &EntryDirection::Buy);
                     let sl: f64 = self.get_stoploss(&limit, &df, i, &EntryDirection::Buy);
@@ -3326,26 +3346,14 @@ impl Backtest {
                 }
 
                 let mut indices: Vec<usize> = Vec::new();
-                let high: f64 = df
-                    .column("high")
-                    .unwrap()
-                    .get(i)
-                    .unwrap()
-                    .try_extract::<f64>()
-                    .unwrap();
+                let high: f64 = df.column("high")?.get(i)?.try_extract::<f64>()?;
 
                 for (idx, limit) in buy_stops
                     .iter()
                     .enumerate()
                     .filter(|(_, limit)| limit < &&high)
                 {
-                    let timestamp = df
-                        .column("timestamp")
-                        .unwrap()
-                        .get(i + 1)
-                        .unwrap()
-                        .try_extract::<i64>()
-                        .unwrap();
+                    let timestamp = df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
                     let tp: f64 = self.get_takeprofit(&limit, &df, i, &EntryDirection::Buy);
                     let sl: f64 = self.get_stoploss(&limit, &df, i, &EntryDirection::Buy);
@@ -3390,26 +3398,14 @@ impl Backtest {
                 }
 
                 let mut indices: Vec<usize> = Vec::new();
-                let high: f64 = df
-                    .column("high")
-                    .unwrap()
-                    .get(i)
-                    .unwrap()
-                    .try_extract::<f64>()
-                    .unwrap();
+                let high: f64 = df.column("high")?.get(i)?.try_extract::<f64>()?;
 
                 for (idx, limit) in sell_limits
                     .iter()
                     .enumerate()
                     .filter(|(_, limit)| limit < &&high)
                 {
-                    let timestamp = df
-                        .column("timestamp")
-                        .unwrap()
-                        .get(i + 1)
-                        .unwrap()
-                        .try_extract::<i64>()
-                        .unwrap();
+                    let timestamp = df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
                     let tp: f64 = self.get_takeprofit(&limit, &df, i, &EntryDirection::Sell);
                     let sl: f64 = self.get_stoploss(&limit, &df, i, &EntryDirection::Sell);
@@ -3454,26 +3450,14 @@ impl Backtest {
                 }
 
                 let mut indices: Vec<usize> = Vec::new();
-                let low: f64 = df
-                    .column("low")
-                    .unwrap()
-                    .get(i)
-                    .unwrap()
-                    .try_extract::<f64>()
-                    .unwrap();
+                let low: f64 = df.column("low")?.get(i)?.try_extract::<f64>()?;
 
                 for (idx, limit) in sell_stops
                     .iter()
                     .enumerate()
                     .filter(|(_, limit)| limit > &&low)
                 {
-                    let timestamp = df
-                        .column("timestamp")
-                        .unwrap()
-                        .get(i + 1)
-                        .unwrap()
-                        .try_extract::<i64>()
-                        .unwrap();
+                    let timestamp = df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
                     let tp: f64 = self.get_takeprofit(&limit, &df, i, &EntryDirection::Sell);
                     let sl: f64 = self.get_stoploss(&limit, &df, i, &EntryDirection::Sell);
@@ -3516,13 +3500,7 @@ impl Backtest {
                 if LOGS_REGISTRO {
                     self.add_registro(format!("Recorriendo los trades abiertos..."));
                 }
-                let precio_actual: f64 = df
-                    .column("close")
-                    .unwrap()
-                    .get(i)
-                    .unwrap()
-                    .try_extract::<f64>()
-                    .unwrap();
+                let precio_actual: f64 = df.column("close")?.get(i)?.try_extract::<f64>()?;
                 // Recorremos el vactor de operaciones abiertas(open_trades) y comprobamos si
                 // alcanzan los stop-loss o take-profit para cerrarlas.
                 let mut indices: Vec<usize> = Vec::new();
@@ -3533,13 +3511,8 @@ impl Backtest {
                     match trade.tipo {
                         EntryDirection::Buy => {
                             if trade.sl > 0.00000 && precio_actual <= trade.sl {
-                                let timestamp: i64 = df
-                                    .column("timestamp")
-                                    .unwrap()
-                                    .get(i + 1)
-                                    .unwrap()
-                                    .try_extract::<i64>()
-                                    .unwrap();
+                                let timestamp: i64 =
+                                    df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
                                 let naive_time = DateTime::from_timestamp_millis(timestamp)
                                     .expect("timestamp inválido");
@@ -3555,13 +3528,8 @@ impl Backtest {
                                 }
                             }
                             if trade.tp > 0.00000 && precio_actual >= trade.tp {
-                                let timestamp: i64 = df
-                                    .column("timestamp")
-                                    .unwrap()
-                                    .get(i + 1)
-                                    .unwrap()
-                                    .try_extract::<i64>()
-                                    .unwrap();
+                                let timestamp: i64 =
+                                    df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
                                 let naive_time = DateTime::from_timestamp_millis(timestamp)
                                     .expect("timestamp inválido");
@@ -3579,13 +3547,8 @@ impl Backtest {
                         }
                         EntryDirection::Sell => {
                             if trade.sl > 0.00000 && precio_actual >= trade.sl {
-                                let timestamp: i64 = df
-                                    .column("timestamp")
-                                    .unwrap()
-                                    .get(i + 1)
-                                    .unwrap()
-                                    .try_extract::<i64>()
-                                    .unwrap();
+                                let timestamp: i64 =
+                                    df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
                                 let naive_time = DateTime::from_timestamp_millis(timestamp)
                                     .expect("timestamp inválido");
@@ -3601,13 +3564,8 @@ impl Backtest {
                                 }
                             }
                             if trade.tp > 0.00000 && precio_actual <= trade.tp {
-                                let timestamp: i64 = df
-                                    .column("timestamp")
-                                    .unwrap()
-                                    .get(i + 1)
-                                    .unwrap()
-                                    .try_extract::<i64>()
-                                    .unwrap();
+                                let timestamp: i64 =
+                                    df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
                                 let naive_time = DateTime::from_timestamp_millis(timestamp)
                                     .expect("timestamp inválido");
@@ -3638,7 +3596,7 @@ impl Backtest {
                                 Some(condition) => {
                                     if self.check_conditions(&df, &condition, &i) {
                                         let timestamp: i64 = df
-                                            .column("timestamp")
+                                            .column("time")
                                             .unwrap()
                                             .get(i + 1)
                                             .unwrap()
@@ -3683,7 +3641,7 @@ impl Backtest {
                                 Some(condition) => {
                                     if self.check_conditions(&df, &condition, &i) {
                                         let timestamp: i64 = df
-                                            .column("timestamp")
+                                            .column("time")
                                             .unwrap()
                                             .get(i + 1)
                                             .unwrap()
@@ -3729,7 +3687,7 @@ impl Backtest {
                                 serde_json::from_value(accion.parametros.clone()).unwrap();
 
                             let timestamp: i64 = df
-                                .column("timestamp")
+                                .column("time")
                                 .unwrap()
                                 .get(i - n_bars.valor)
                                 .unwrap()
@@ -3743,7 +3701,7 @@ impl Backtest {
                             for (idx, trade) in open_trades.iter_mut().enumerate() {
                                 if trade.t0 == time_actual {
                                     let timestamp: i64 = df
-                                        .column("timestamp")
+                                        .column("time")
                                         .unwrap()
                                         .get(i + 1)
                                         .unwrap()
@@ -3775,7 +3733,7 @@ impl Backtest {
                                 Some(condition) => {
                                     if self.check_conditions(&df, &condition, &i) {
                                         let timestamp: i64 = df
-                                            .column("timestamp")
+                                            .column("time")
                                             .unwrap()
                                             .get(i + 1)
                                             .unwrap()
@@ -4677,7 +4635,7 @@ impl Backtest {
                                         .unwrap();
 
                                     let timestamp = df
-                                        .column("timestamp")
+                                        .column("time")
                                         .unwrap()
                                         .get(i + 1)
                                         .unwrap()
@@ -4728,7 +4686,7 @@ impl Backtest {
                                         .unwrap();
 
                                     let timestamp = df
-                                        .column("timestamp")
+                                        .column("time")
                                         .unwrap()
                                         .get(i + 1)
                                         .unwrap()
@@ -4883,30 +4841,39 @@ impl Backtest {
             }
         };
 
-        if self.datos.is_empty() {
+        if self.datos.id == 0 {
             if LOGS_REGISTRO {
                 self.add_registro("No hay datos para ejecutar el backtest".to_string());
             }
             return Ok("No hay datos para ejecutar el backtest".to_string());
         }
 
-        for data in self.datos.clone() {
-            // Verificamos los indicadores que tiene la estrategia para añadirlos a los datos del DataFrame
-            let mut df = data.get_datos();
-            self.set_indicators_strategy(&mut df);
-            df = df
-                .lazy()
-                .fill_nan(lit(NULL))
-                .drop_nulls(None)
-                .collect()
-                .unwrap();
+        // Optenemos el dataframe.
+        let mut df = self.get_datos().unwrap();
 
-            if LOGS_REGISTRO {
-                self.add_registro(format!("{:?}", &df.head(Some(20))));
-            }
+        // Añadimos los datos de data_backtest...
+        let data_backtest: DataBacktest = DataBacktest {
+            id: 1,
+            id_backtest: self.id,
+            id_data_symbol: self.datos.id,
+        };
 
-            self.backtest(&mut df, &symbol).await.unwrap();
+        let _ = insert_data_backtest(&data_backtest).await.unwrap();
+
+        // Verificamos los indicadores que tiene la estrategia para añadirlos a los datos del DataFrame
+        self.set_indicators_strategy(&mut df);
+        df = df
+            .lazy()
+            .fill_nan(lit(NULL))
+            .drop_nulls(None)
+            .collect()
+            .unwrap();
+
+        if LOGS_REGISTRO {
+            self.add_registro(format!("{:?}", &df.head(Some(20))));
         }
+
+        self.backtest(&mut df, &symbol).await.unwrap();
 
         if !self.trades.is_empty() {
             if LOGS_REGISTRO {
@@ -4962,6 +4929,9 @@ mod tests {
     use super::*;
     use crate::api::symbols::get_symbol_cfd_by_id;
     use crate::backtest::dias::Dias;
+    use crate::enums::data_format::DataFormatSymbol;
+    use crate::enums::data_origen::DataOrigen;
+    use crate::enums::timeframe::Timeframe;
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_bt_crucemedias() {
@@ -4987,6 +4957,19 @@ mod tests {
             lotaje_fijo: 0.10,
         };
 
+        let datasymbol = DataSymbol {
+            id: 1,
+            name: "xauusd-h1".to_string(),
+            timeframe: Some(Timeframe::H1),
+            ruta: "download".to_string(),
+            formato: Some(DataFormatSymbol::Csv),
+            fecha_inicio: "01/01/2020".to_string(),
+            fecha_fin: "01/01/2026".to_string(),
+            actualizado: false,
+            n_data: 252541,
+            origen: Some(DataOrigen::DukasCopy),
+        };
+
         let mut bt: Backtest = Backtest::new(
             "UnitTest: CruceMedias".to_string(),
             10000.0,
@@ -4996,7 +4979,7 @@ mod tests {
         )
         .await;
 
-        let _ = bt.add_datos("download/xauusd-h1.csv").unwrap();
+        let _ = bt.add_datasymbol(datasymbol);
 
         match bt.run(1, symbol).await {
             Ok(_) => assert!(true),

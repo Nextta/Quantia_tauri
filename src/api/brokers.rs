@@ -1,36 +1,8 @@
 use crate::api::symbols::get_symbols_cfd_by_broker;
 use crate::backtest::broker::BrokerCFD;
 use crate::utils::configuracion::DB_LOCAL;
-use dotenvy::dotenv;
+use crate::utils::configuracion::{get_db_config, Error};
 use libsql::{params, Builder};
-use serde::Serialize;
-use std::env;
-
-#[derive(Serialize, Debug)]
-pub struct Error {
-    msg: String,
-}
-
-type Result<T> = std::result::Result<T, Error>;
-
-impl<T> From<T> for Error
-where
-    T: std::error::Error,
-{
-    fn from(value: T) -> Self {
-        Self {
-            msg: value.to_string(),
-        }
-    }
-}
-
-fn get_db_config() -> Result<(String, String, String)> {
-    dotenv().expect(".env file not found");
-    let db_path = env::var("DB_PATH").unwrap();
-    let sync_url = env::var("TURSO_SYNC_URL").unwrap();
-    let auth_token = env::var("TURSO_AUTH_TOKEN").unwrap();
-    Ok((db_path, sync_url, auth_token))
-}
 
 /// Crea la tabla de brokers CFD en la base de datos.
 ///
@@ -40,7 +12,7 @@ fn get_db_config() -> Result<(String, String, String)> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
-pub async fn table_brokers_cfd() -> Result<String> {
+pub async fn table_brokers_cfd() -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -77,7 +49,7 @@ pub async fn table_brokers_cfd() -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
-pub async fn insert_broker_cfd(broker: &BrokerCFD) -> Result<i32> {
+pub async fn insert_broker_cfd(broker: &BrokerCFD) -> Result<i32, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -110,7 +82,7 @@ pub async fn insert_broker_cfd(broker: &BrokerCFD) -> Result<i32> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_brokers_cfd() -> Result<Vec<BrokerCFD>> {
+pub async fn get_brokers_cfd() -> Result<Vec<BrokerCFD>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -127,7 +99,7 @@ pub async fn get_brokers_cfd() -> Result<Vec<BrokerCFD>> {
 
     let mut brokers: Vec<BrokerCFD> = Vec::new();
     while let Some(row) = rows.next().await? {
-        let symbol_info = get_symbols_cfd_by_broker(row.get::<i32>(0)?).await.unwrap();
+        let symbol_info = get_symbols_cfd_by_broker(row.get::<i32>(0)?).await?;
 
         let broker: BrokerCFD = BrokerCFD {
             id: row.get::<i32>(0)?,
@@ -152,7 +124,7 @@ pub async fn get_brokers_cfd() -> Result<Vec<BrokerCFD>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_brokers_cfd_by_name(name: &str) -> Result<Vec<BrokerCFD>> {
+pub async fn get_brokers_cfd_by_name(name: &str) -> Result<Vec<BrokerCFD>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -172,7 +144,7 @@ pub async fn get_brokers_cfd_by_name(name: &str) -> Result<Vec<BrokerCFD>> {
     let mut brokers: Vec<BrokerCFD> = Vec::new();
 
     while let Some(row) = rows.next().await? {
-        let symbol_info = get_symbols_cfd_by_broker(row.get::<i32>(0)?).await.unwrap();
+        let symbol_info = get_symbols_cfd_by_broker(row.get::<i32>(0)?).await?;
 
         let broker: BrokerCFD = BrokerCFD {
             id: row.get::<i32>(0)?,
@@ -195,7 +167,7 @@ pub async fn get_brokers_cfd_by_name(name: &str) -> Result<Vec<BrokerCFD>> {
 /// # Errores
 /// Retorna error si no se encuentra el broker o falla la conexión.
 #[tauri::command]
-pub async fn get_broker_cfd_by_id(id: i32) -> Result<BrokerCFD> {
+pub async fn get_broker_cfd_by_id(id: i32) -> Result<BrokerCFD, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -214,7 +186,7 @@ pub async fn get_broker_cfd_by_id(id: i32) -> Result<BrokerCFD> {
 
     let row = rows.next().await?.unwrap();
 
-    let symbol_info = get_symbols_cfd_by_broker(row.get::<i32>(0)?).await.unwrap();
+    let symbol_info = get_symbols_cfd_by_broker(row.get::<i32>(0)?).await?;
 
     let broker: BrokerCFD = BrokerCFD {
         id: row.get::<i32>(0)?,
@@ -236,7 +208,7 @@ pub async fn get_broker_cfd_by_id(id: i32) -> Result<BrokerCFD> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
-pub async fn delete_broker_cfd(id: i32) -> Result<()> {
+pub async fn delete_broker_cfd(id: i32) -> Result<(), Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -260,7 +232,7 @@ mod tests {
     use super::*;
 
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_crud_broker_cfd() -> Result<()> {
+    async fn test_crud_broker_cfd() -> Result<(), Error> {
         let broker: BrokerCFD = BrokerCFD {
             id: 2,
             name: "Darwinex".to_string(),

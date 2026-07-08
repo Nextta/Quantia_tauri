@@ -3,38 +3,10 @@ use crate::backtest::symbol::SymbolInfoCFD;
 use crate::backtest::trade::Trade;
 use crate::enums::entry::EntryDirection;
 use crate::utils::configuracion::DB_LOCAL;
+use crate::utils::configuracion::{get_db_config, Error};
 use crate::utils::tools::truncate_decimal;
-use dotenvy::dotenv;
 use libsql::{params, Builder};
 use rust_decimal::Decimal;
-use serde::Serialize;
-use std::env;
-
-#[derive(Serialize, Debug)]
-pub struct Error {
-    msg: String,
-}
-
-type Result<T> = std::result::Result<T, Error>;
-
-impl<T> From<T> for Error
-where
-    T: std::error::Error,
-{
-    fn from(value: T) -> Self {
-        Self {
-            msg: value.to_string(),
-        }
-    }
-}
-
-fn get_db_config() -> Result<(String, String, String)> {
-    dotenv().expect(".env file not found");
-    let db_path = env::var("DB_PATH").unwrap();
-    let sync_url = env::var("TURSO_SYNC_URL").unwrap();
-    let auth_token = env::var("TURSO_AUTH_TOKEN").unwrap();
-    Ok((db_path, sync_url, auth_token))
-}
 
 /// Crea la tabla `trades` en la base de datos si no existe.
 ///
@@ -44,7 +16,7 @@ fn get_db_config() -> Result<(String, String, String)> {
 /// # Errores
 /// Retorna un error si no se puede conectar a la base de datos o si la creación de la tabla falla.
 #[tauri::command]
-pub async fn table_trades() -> Result<String> {
+pub async fn table_trades() -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -103,7 +75,7 @@ pub async fn table_trades() -> Result<String> {
 /// # Errores
 /// Retorna un error si no se puede conectar a la base de datos o si la inserción falla.
 #[tauri::command]
-pub async fn insert_trades(id_backtest: i32, trade: &Trade) -> Result<i32> {
+pub async fn insert_trades(id_backtest: i32, trade: &Trade) -> Result<i32, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -116,9 +88,9 @@ pub async fn insert_trades(id_backtest: i32, trade: &Trade) -> Result<i32> {
 
     let conn = db.connect()?;
 
-    let pl: Decimal = trade.pl.to_string().parse().unwrap();
-    let plsc: Decimal = trade.plsc.to_string().parse().unwrap();
-    let pips_pl: Decimal = trade.pips_pl.to_string().parse().unwrap();
+    let pl: Decimal = trade.pl.to_string().parse()?;
+    let plsc: Decimal = trade.plsc.to_string().parse()?;
+    let pips_pl: Decimal = trade.pips_pl.to_string().parse()?;
 
     let parametros = params![
         id_backtest,
@@ -140,15 +112,9 @@ pub async fn insert_trades(id_backtest: i32, trade: &Trade) -> Result<i32> {
         trade.duracion_horas.clone(),
         trade.duracion_dias.clone(),
         trade.label,
-        truncate_decimal(pl, 2).to_string().parse::<f64>().unwrap(),
-        truncate_decimal(plsc, 2)
-            .to_string()
-            .parse::<f64>()
-            .unwrap(),
-        truncate_decimal(pips_pl, 5)
-            .to_string()
-            .parse::<f64>()
-            .unwrap()
+        truncate_decimal(pl, 2).to_string().parse::<f64>()?,
+        truncate_decimal(plsc, 2).to_string().parse::<f64>()?,
+        truncate_decimal(pips_pl, 5).to_string().parse::<f64>()?
     ];
 
     conn.query("INSERT INTO trades (id_backtest, id_symbol, symbol, tipo, lotaje, multiplicador, t0, precio_entrada, tp, sl, t1, precio_cierre, precio_maximo, precio_minimo, duracion_segundos, duracion_minutos, duracion_horas, duracion_dias, label, pl, plsc, pips_pl) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
@@ -169,7 +135,7 @@ pub async fn insert_trades(id_backtest: i32, trade: &Trade) -> Result<i32> {
 /// # Errores
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
-pub async fn get_trades_by_backtest(id_backtest: i32) -> Result<Vec<Trade>> {
+pub async fn get_trades_by_backtest(id_backtest: i32) -> Result<Vec<Trade>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -189,7 +155,7 @@ pub async fn get_trades_by_backtest(id_backtest: i32) -> Result<Vec<Trade>> {
     let mut trades: Vec<Trade> = Vec::new();
 
     while let Some(row) = result.next().await? {
-        let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(row.get(2)?).await.unwrap(); // Necesito implementar la api de symbol.
+        let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(row.get(2)?).await?; // Necesito implementar la api de symbol.
         let mut trade: Trade = Trade::new(row.get(1)?, symbol).await;
 
         trade.id = row.get::<i32>(0)?;
@@ -241,7 +207,7 @@ pub async fn get_trades_by_backtest_limit(
     id_backtest: i32,
     limite: i32,
     pagina: i32,
-) -> Result<Vec<Trade>> {
+) -> Result<Vec<Trade>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -264,7 +230,7 @@ pub async fn get_trades_by_backtest_limit(
     let mut trades: Vec<Trade> = Vec::new();
 
     while let Some(row) = result.next().await? {
-        let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(row.get(2)?).await.unwrap(); // Necesito implementar la api de symbol.
+        let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(row.get(2)?).await?; // Necesito implementar la api de symbol.
         let mut trade: Trade = Trade::new(row.get(1)?, symbol).await;
 
         trade.id = row.get::<i32>(0)?;
@@ -310,7 +276,7 @@ pub async fn get_trades_by_backtest_limit(
 /// # Errores
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
-pub async fn get_trade_by_id(id: i32) -> Result<Trade> {
+pub async fn get_trade_by_id(id: i32) -> Result<Trade, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -328,7 +294,7 @@ pub async fn get_trade_by_id(id: i32) -> Result<Trade> {
         .await?;
 
     let row = result.next().await?.unwrap();
-    let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(row.get(2)?).await.unwrap(); // Necesito implementar la api de symbol.
+    let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(row.get(2)?).await?; // Necesito implementar la api de symbol.
     let mut trade: Trade = Trade::new(row.get::<i32>(1)?, symbol).await;
 
     trade.id = row.get::<i32>(0)?;
@@ -371,7 +337,7 @@ pub async fn get_trade_by_id(id: i32) -> Result<Trade> {
 /// # Errores
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
-pub async fn delete_trades(id: i32) -> Result<()> {
+pub async fn delete_trades(id: i32) -> Result<(), Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -400,7 +366,7 @@ pub async fn delete_trades(id: i32) -> Result<()> {
 /// # Errores
 /// Retorna un error si no se puede conectar a la base de datos o si la consulta falla.
 #[tauri::command]
-pub async fn delete_trades_by_backtest(id_backtest: i32) -> Result<()> {
+pub async fn delete_trades_by_backtest(id_backtest: i32) -> Result<(), Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -426,7 +392,7 @@ mod tests {
     use super::*;
 
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_crud_trade() -> Result<()> {
+    async fn test_crud_trade() -> Result<(), Error> {
         let mut trade: Trade = Trade::new(
             1,
             SymbolInfoCFD {

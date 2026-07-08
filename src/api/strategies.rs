@@ -1,3 +1,5 @@
+use crate::enums::actions::Action;
+use crate::enums::chart_type::ChartType;
 use crate::enums::logics::Logic;
 use crate::strategy::strategy::Strategy;
 use crate::strategy::strategy_action::StrategyAction;
@@ -5,41 +7,12 @@ use crate::strategy::strategy_condition::StrategyCondition;
 use crate::strategy::strategy_indicator::StrategyIndicator;
 use crate::strategy::strategy_options::{StopLoss, StrategyOptions, TakeProfit, TradingDirection};
 use crate::utils::configuracion::DB_LOCAL;
+use crate::utils::configuracion::{get_db_config, Error};
 use crate::utils::tools::add_condition;
 use chrono::DateTime;
 use chrono::Utc;
-use dotenvy::dotenv;
 use libsql::{params, Builder};
-use serde::Serialize;
-use std::env;
 
-use crate::enums::actions::Action;
-
-#[derive(Serialize, Debug)]
-pub struct Error {
-    msg: String,
-}
-
-type Result<T> = std::result::Result<T, Error>;
-
-impl<T> From<T> for Error
-where
-    T: std::error::Error,
-{
-    fn from(value: T) -> Self {
-        Self {
-            msg: value.to_string(),
-        }
-    }
-}
-
-fn get_db_config() -> Result<(String, String, String)> {
-    dotenv().expect(".env file not found");
-    let db_path = env::var("DB_PATH").unwrap();
-    let sync_url = env::var("TURSO_SYNC_URL").unwrap();
-    let auth_token = env::var("TURSO_AUTH_TOKEN").unwrap();
-    Ok((db_path, sync_url, auth_token))
-}
 //================================Strategies================================
 
 /// Crea la tabla de estrategias en la base de datos.
@@ -50,7 +23,7 @@ fn get_db_config() -> Result<(String, String, String)> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
-pub async fn table_strategies() -> Result<String> {
+pub async fn table_strategies() -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -90,7 +63,7 @@ pub async fn table_strategies() -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
-pub async fn insert_strategies(strategy: &Strategy) -> Result<i32> {
+pub async fn insert_strategies(strategy: &Strategy) -> Result<i32, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -128,7 +101,7 @@ pub async fn insert_strategies(strategy: &Strategy) -> Result<i32> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_strategies() -> Result<Vec<Strategy>> {
+pub async fn get_strategies() -> Result<Vec<Strategy>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -162,14 +135,6 @@ pub async fn get_strategies() -> Result<Vec<Strategy>> {
             ),
         }
 
-        // match get_strategies_conditions_by_strategy_id(id_startegy).await {
-        //     Ok(conditions) => str_conditions = conditions,
-        //     Err(e) => println!(
-        //         "Error al optener los conditions de strategy_id: {}. Error: {:?}",
-        //         id_startegy, e
-        //     ),
-        // }
-
         match get_strategies_actions_by_strategy_id(id_startegy).await {
             Ok(actions) => str_actions = actions,
             Err(e) => println!(
@@ -198,7 +163,6 @@ pub async fn get_strategies() -> Result<Vec<Strategy>> {
             activa: activa,
             creada_en: row.get::<String>(5)?,
             indicadores: str_indicators,
-            // condiciones: str_conditions,
             acciones: str_actions,
             opciones: str_options,
         };
@@ -219,7 +183,7 @@ pub async fn get_strategies() -> Result<Vec<Strategy>> {
 /// # Errores
 /// Retorna error si no se encuentra la estrategia o falla la conexión.
 #[tauri::command]
-pub async fn get_strategies_by_id(id: i32) -> Result<Strategy> {
+pub async fn get_strategies_by_id(id: i32) -> Result<Strategy, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -241,7 +205,6 @@ pub async fn get_strategies_by_id(id: i32) -> Result<Strategy> {
     let row = result.next().await?.unwrap();
 
     let mut str_indicators: Vec<StrategyIndicator> = Vec::<StrategyIndicator>::new();
-    // let mut str_conditions: Vec<StrategyCondition> = Vec::<StrategyCondition>::new();
     let mut str_actions: Vec<StrategyAction> = Vec::<StrategyAction>::new();
     let mut str_options: StrategyOptions = StrategyOptions::new_empty();
 
@@ -254,14 +217,6 @@ pub async fn get_strategies_by_id(id: i32) -> Result<Strategy> {
             id_startegy, e
         ),
     }
-
-    // match get_strategies_conditions_by_strategy_id(id_startegy).await {
-    //     Ok(conditions) => str_conditions = conditions,
-    //     Err(e) => println!(
-    //         "Error al optener los conditions de strategy_id: {}. Error: {:?}",
-    //         id_startegy, e
-    //     ),
-    // }
 
     match get_strategies_actions_by_strategy_id(id_startegy).await {
         Ok(actions) => str_actions = actions,
@@ -291,7 +246,6 @@ pub async fn get_strategies_by_id(id: i32) -> Result<Strategy> {
         activa: activa,
         creada_en: row.get::<String>(5)?,
         indicadores: str_indicators,
-        // condiciones: str_conditions,
         acciones: str_actions,
         opciones: str_options,
     };
@@ -310,7 +264,7 @@ pub async fn get_strategies_by_id(id: i32) -> Result<Strategy> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>> {
+pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -332,7 +286,6 @@ pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>> {
     let mut strategies = Vec::new();
     while let Some(row) = result.next().await? {
         let mut str_indicators: Vec<StrategyIndicator> = Vec::<StrategyIndicator>::new();
-        // let mut str_conditions: Vec<StrategyCondition> = Vec::<StrategyCondition>::new();
         let mut str_actions: Vec<StrategyAction> = Vec::<StrategyAction>::new();
         let mut str_options: StrategyOptions = StrategyOptions::new_empty();
 
@@ -345,14 +298,6 @@ pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>> {
                 id_startegy, e
             ),
         }
-
-        // match get_strategies_conditions_by_strategy_id(id_startegy).await {
-        //     Ok(conditions) => str_conditions = conditions,
-        //     Err(e) => println!(
-        //         "Error al optener los conditions de strategy_id: {}. Error: {:?}",
-        //         id_startegy, e
-        //     ),
-        // }
 
         match get_strategies_actions_by_strategy_id(id_startegy).await {
             Ok(actions) => str_actions = actions,
@@ -382,7 +327,6 @@ pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>> {
             activa: activa,
             creada_en: row.get::<String>(5)?,
             indicadores: str_indicators,
-            // condiciones: str_conditions,
             acciones: str_actions,
             opciones: str_options,
         };
@@ -403,7 +347,7 @@ pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_strategies_by_nombre(nombre: String) -> Result<Vec<Strategy>> {
+pub async fn get_strategies_by_nombre(nombre: String) -> Result<Vec<Strategy>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -496,7 +440,7 @@ pub async fn get_strategies_by_nombre(nombre: String) -> Result<Vec<Strategy>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_active_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>> {
+pub async fn get_active_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -586,7 +530,7 @@ pub async fn get_active_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_all_active_strategies() -> Result<Vec<Strategy>> {
+pub async fn get_all_active_strategies() -> Result<Vec<Strategy>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -679,7 +623,7 @@ pub async fn get_all_active_strategies() -> Result<Vec<Strategy>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_desactive_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>> {
+pub async fn get_desactive_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -769,7 +713,7 @@ pub async fn get_desactive_strategies_by_user(id_user: i32) -> Result<Vec<Strate
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_all_desactive_strategies() -> Result<Vec<Strategy>> {
+pub async fn get_all_desactive_strategies() -> Result<Vec<Strategy>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -862,7 +806,7 @@ pub async fn get_all_desactive_strategies() -> Result<Vec<Strategy>> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la consulta.
 #[tauri::command]
-pub async fn get_active_strategies_by_date(fecha: String) -> Result<Vec<Strategy>> {
+pub async fn get_active_strategies_by_date(fecha: String) -> Result<Vec<Strategy>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -958,7 +902,7 @@ pub async fn get_active_strategies_by_date(fecha: String) -> Result<Vec<Strategy
 /// # Nota
 /// Esta función elimina en cascada los indicadores, acciones y condiciones asociados a la estrategia.
 #[tauri::command]
-pub async fn delete_strategy(id: i32) -> Result<String> {
+pub async fn delete_strategy(id: i32) -> Result<String, Error> {
     let _ = delete_strategy_condition_by_strategy(id).await;
     let _ = delete_strategy_indicator_by_strategy(id).await;
     let _ = delete_strategy_action_by_strategy(id).await;
@@ -993,7 +937,7 @@ pub async fn delete_strategy(id: i32) -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
-pub async fn table_strategy_indicators() -> Result<String> {
+pub async fn table_strategy_indicators() -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1012,6 +956,7 @@ pub async fn table_strategy_indicators() -> Result<String> {
             strategy_id  INTEGER NOT NULL REFERENCES strategies(id),
             nombre       TEXT NOT NULL,  -- nombre del campo: 'sma_20'
             tipo         TEXT NOT NULL,  -- 'SMA', 'EMA', 'RSI', 'MACD', 'BB'
+            chart_type   TEXT NOT NULL,
             parametros   TEXT DEFAULT '{}'   -- JSON: '{\"period\": 20}'
         )",
         (),
@@ -1032,7 +977,7 @@ pub async fn table_strategy_indicators() -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
-pub async fn insert_strategies_indicator(indicator: &StrategyIndicator) -> Result<i32> {
+pub async fn insert_strategies_indicator(indicator: &StrategyIndicator) -> Result<i32, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1047,12 +992,13 @@ pub async fn insert_strategies_indicator(indicator: &StrategyIndicator) -> Resul
 
     let parametros = params![
         indicator.strategy_id,
-        indicator.nombre.clone(),
-        indicator.tipo.clone(),
+        indicator.nombre.as_str(),
+        indicator.tipo.as_str(),
+        indicator.chart_type.as_str(),
         indicator.parametros.to_string()
     ];
     conn.query(
-        "INSERT INTO strategy_indicators (strategy_id, nombre, tipo, parametros) VALUES (?, ?, ?, ?) RETURNING id",
+        "INSERT INTO strategy_indicators (strategy_id, nombre, tipo, chart_type, parametros) VALUES (?, ?, ?, ?, ?) RETURNING id",
         parametros,
     )
     .await?;
@@ -1072,7 +1018,7 @@ pub async fn insert_strategies_indicator(indicator: &StrategyIndicator) -> Resul
 /// # Errores
 /// Retorna error si no se encuentra el indicador o falla la conexión.
 #[tauri::command]
-pub async fn get_strategy_indicator_by_id(id: i32) -> Result<StrategyIndicator> {
+pub async fn get_strategy_indicator_by_id(id: i32) -> Result<StrategyIndicator, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1098,7 +1044,8 @@ pub async fn get_strategy_indicator_by_id(id: i32) -> Result<StrategyIndicator> 
         strategy_id: row.get::<i32>(1)?,
         nombre: row.get::<String>(2)?,
         tipo: row.get::<String>(3)?,
-        parametros: serde_json::from_str(&row.get::<String>(4)?).unwrap(),
+        chart_type: ChartType::as_ct(row.get::<String>(4)?.as_str()),
+        parametros: serde_json::from_str(&row.get::<String>(5)?)?,
     };
 
     Ok(indicator)
@@ -1117,7 +1064,7 @@ pub async fn get_strategy_indicator_by_id(id: i32) -> Result<StrategyIndicator> 
 #[tauri::command]
 pub async fn get_strategies_indicators_by_strategy_id(
     startegy_id: i32,
-) -> Result<Vec<StrategyIndicator>> {
+) -> Result<Vec<StrategyIndicator>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1143,7 +1090,8 @@ pub async fn get_strategies_indicators_by_strategy_id(
             strategy_id: row.get::<i32>(1)?,
             nombre: row.get::<String>(2)?,
             tipo: row.get::<String>(3)?,
-            parametros: serde_json::from_str(&row.get::<String>(4)?).unwrap(),
+            chart_type: ChartType::as_ct(row.get::<String>(4)?.as_str()),
+            parametros: serde_json::from_str(&row.get::<String>(5)?)?,
         };
         indicators.push(indicator);
     }
@@ -1162,7 +1110,7 @@ pub async fn get_strategies_indicators_by_strategy_id(
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
-pub async fn delete_strategy_indicator(id: i32) -> Result<String> {
+pub async fn delete_strategy_indicator(id: i32) -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1194,7 +1142,7 @@ pub async fn delete_strategy_indicator(id: i32) -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
-pub async fn delete_strategy_indicator_by_strategy(strategy_id: i32) -> Result<String> {
+pub async fn delete_strategy_indicator_by_strategy(strategy_id: i32) -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1228,7 +1176,7 @@ pub async fn delete_strategy_indicator_by_strategy(strategy_id: i32) -> Result<S
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
-pub async fn table_strategy_actions() -> Result<String> {
+pub async fn table_strategy_actions() -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1267,7 +1215,7 @@ pub async fn table_strategy_actions() -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
-pub async fn insert_strategies_action(action: &StrategyAction) -> Result<i32> {
+pub async fn insert_strategies_action(action: &StrategyAction) -> Result<i32, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1307,7 +1255,7 @@ pub async fn insert_strategies_action(action: &StrategyAction) -> Result<i32> {
 /// # Errores
 /// Retorna error si no se encuentra la acción o falla la conexión.
 #[tauri::command]
-pub async fn get_strategy_action_by_id(id: i32) -> Result<StrategyAction> {
+pub async fn get_strategy_action_by_id(id: i32) -> Result<StrategyAction, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1342,7 +1290,7 @@ pub async fn get_strategy_action_by_id(id: i32) -> Result<StrategyAction> {
             "Close" => Action::Close,
             _ => Action::Buy,
         },
-        parametros: serde_json::from_str(&row.get::<String>(4)?).unwrap(),
+        parametros: serde_json::from_str(&row.get::<String>(4)?)?,
         conditions: None,
     };
 
@@ -1392,7 +1340,7 @@ pub async fn get_strategy_action_by_id(id: i32) -> Result<StrategyAction> {
 #[tauri::command]
 pub async fn get_strategies_actions_by_strategy_id(
     startegy_id: i32,
-) -> Result<Vec<StrategyAction>> {
+) -> Result<Vec<StrategyAction>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1427,7 +1375,7 @@ pub async fn get_strategies_actions_by_strategy_id(
                 "Close" => Action::Close,
                 _ => Action::Buy,
             },
-            parametros: serde_json::from_str(&row.get::<String>(4)?).unwrap(),
+            parametros: serde_json::from_str(&row.get::<String>(4)?)?,
             conditions: None,
         };
 
@@ -1477,7 +1425,7 @@ pub async fn get_strategies_actions_by_strategy_id(
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
-pub async fn delete_strategy_action(id: i32) -> Result<String> {
+pub async fn delete_strategy_action(id: i32) -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1509,7 +1457,7 @@ pub async fn delete_strategy_action(id: i32) -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
-pub async fn delete_strategy_action_by_strategy(strategy_id: i32) -> Result<String> {
+pub async fn delete_strategy_action_by_strategy(strategy_id: i32) -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1542,7 +1490,7 @@ pub async fn delete_strategy_action_by_strategy(strategy_id: i32) -> Result<Stri
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
-pub async fn table_strategy_conditions() -> Result<String> {
+pub async fn table_strategy_conditions() -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1586,7 +1534,7 @@ pub async fn table_strategy_conditions() -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la inserción.
 #[tauri::command]
-pub async fn insert_strategy_condition(condition: &StrategyCondition) -> Result<i32> {
+pub async fn insert_strategy_condition(condition: &StrategyCondition) -> Result<i32, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1631,7 +1579,7 @@ pub async fn insert_strategy_condition(condition: &StrategyCondition) -> Result<
 /// # Errores
 /// Retorna error si no se encuentra la condición o falla la conexión.
 #[tauri::command]
-pub async fn get_strategy_condition_by_id(id: i32) -> Result<StrategyCondition> {
+pub async fn get_strategy_condition_by_id(id: i32) -> Result<StrategyCondition, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1686,7 +1634,7 @@ pub async fn get_strategy_condition_by_id(id: i32) -> Result<StrategyCondition> 
 #[tauri::command]
 pub async fn get_strategies_conditions_by_strategy_id(
     startegy_id: i32,
-) -> Result<Vec<StrategyCondition>> {
+) -> Result<Vec<StrategyCondition>, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1741,7 +1689,7 @@ pub async fn get_strategies_conditions_by_strategy_id(
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
-pub async fn delete_strategy_condition(id: i32) -> Result<String> {
+pub async fn delete_strategy_condition(id: i32) -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1773,7 +1721,7 @@ pub async fn delete_strategy_condition(id: i32) -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
-pub async fn delete_strategy_condition_by_strategy(strategy_id: i32) -> Result<String> {
+pub async fn delete_strategy_condition_by_strategy(strategy_id: i32) -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1806,7 +1754,7 @@ pub async fn delete_strategy_condition_by_strategy(strategy_id: i32) -> Result<S
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la ejecución de la query.
 #[tauri::command]
-pub async fn table_strategy_options() -> Result<String> {
+pub async fn table_strategy_options() -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1857,7 +1805,7 @@ pub async fn table_strategy_options() -> Result<String> {
 /// * `Ok(())` - Las opciones de estrategia fueron insertadas correctamente.
 /// * `Err(Error)` - Ocurrió un error al insertar las opciones de estrategia.
 #[tauri::command]
-pub async fn insert_strategy_options(options: &StrategyOptions) -> Result<i32> {
+pub async fn insert_strategy_options(options: &StrategyOptions) -> Result<i32, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1908,7 +1856,7 @@ pub async fn insert_strategy_options(options: &StrategyOptions) -> Result<i32> {
 /// # Errores
 /// Retorna error si no se encuentra la estrategia o falla la conexión.
 #[tauri::command]
-pub async fn get_strategy_options_by_id(id: i32) -> Result<StrategyOptions> {
+pub async fn get_strategy_options_by_id(id: i32) -> Result<StrategyOptions, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -1975,12 +1923,8 @@ pub async fn get_strategy_options_by_id(id: i32) -> Result<StrategyOptions> {
         hora_cierre_limite: DateTime::parse_from_rfc3339(&row.get::<String>(16)?)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
-        parametros_stoploss: Some(
-            serde_json::from_str::<StopLoss>(&row.get::<String>(17)?).unwrap(),
-        ),
-        parametros_takeprofit: Some(
-            serde_json::from_str::<TakeProfit>(&row.get::<String>(18)?).unwrap(),
-        ),
+        parametros_stoploss: Some(serde_json::from_str::<StopLoss>(&row.get::<String>(17)?)?),
+        parametros_takeprofit: Some(serde_json::from_str::<TakeProfit>(&row.get::<String>(18)?)?),
     };
 
     Ok(options)
@@ -1997,7 +1941,9 @@ pub async fn get_strategy_options_by_id(id: i32) -> Result<StrategyOptions> {
 /// # Errores
 /// Retorna error si no se encuentra la estrategia o falla la conexión.
 #[tauri::command]
-pub async fn get_strategy_options_by_strategy_id(strategy_id: i32) -> Result<StrategyOptions> {
+pub async fn get_strategy_options_by_strategy_id(
+    strategy_id: i32,
+) -> Result<StrategyOptions, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -2064,12 +2010,8 @@ pub async fn get_strategy_options_by_strategy_id(strategy_id: i32) -> Result<Str
         hora_cierre_limite: DateTime::parse_from_rfc3339(&row.get::<String>(16)?)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
-        parametros_stoploss: Some(
-            serde_json::from_str::<StopLoss>(&row.get::<String>(17)?).unwrap(),
-        ),
-        parametros_takeprofit: Some(
-            serde_json::from_str::<TakeProfit>(&row.get::<String>(18)?).unwrap(),
-        ),
+        parametros_stoploss: Some(serde_json::from_str::<StopLoss>(&row.get::<String>(17)?)?),
+        parametros_takeprofit: Some(serde_json::from_str::<TakeProfit>(&row.get::<String>(18)?)?),
     };
 
     Ok(options)
@@ -2086,7 +2028,7 @@ pub async fn get_strategy_options_by_strategy_id(strategy_id: i32) -> Result<Str
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
-pub async fn delete_strategy_option(id: i32) -> Result<String> {
+pub async fn delete_strategy_option(id: i32) -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -2118,7 +2060,7 @@ pub async fn delete_strategy_option(id: i32) -> Result<String> {
 /// # Errores
 /// Retorna error si falla la conexión a la base de datos o la eliminación.
 #[tauri::command]
-pub async fn delete_strategy_options_by_strategy(strategy_id: i32) -> Result<String> {
+pub async fn delete_strategy_options_by_strategy(strategy_id: i32) -> Result<String, Error> {
     let (db_path, sync_url, auth_token) = get_db_config()?;
 
     let db = if !DB_LOCAL {
@@ -2148,7 +2090,7 @@ mod tests {
 
     //================================TEST: Strategies================================
     #[tokio::test(flavor = "multi_thread")]
-    async fn test_crud_strategies() -> Result<()> {
+    async fn test_crud_strategies() -> Result<(), Error> {
         match table_strategies().await {
             Ok(_) => {
                 let estrategia: Strategy = Strategy {
@@ -2174,6 +2116,7 @@ mod tests {
                                     strategy_id: id,
                                     nombre: "SMA_20".to_string(),
                                     tipo: "SMA".to_string(),
+                                    chart_type: ChartType::Inchart,
                                     parametros: serde_json::Value::String(
                                         "{
                                         period: 20

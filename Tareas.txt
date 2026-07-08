@@ -1,4 +1,34 @@
+TODO:
+-Añadir el remove_file a todos los test que trabajen con archivos locales de datos y a los que necesiten datos de test añadir la función que crea los datos para test.
+
+-Crear plantillas para que genere el código en MQL5.
+-Crear funcionalidad para hacer que los backtest se hagan con ticks.
+-Leer un trackrecord de Metatrader 5 y guardar los datos en la base de datos.
+-Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.
+
 Terminadas:
+-Crear los test de data_labs.
+-Documentar todas las funciones de comandos.
+-Crear todos los commands necesario para el apartado de data_labs.
+-Crear la primera documentación de comandos para el frontend.
+-Crear el command para optener un backtest por su id. get_backtest(id)
+-Crear los primeros comandos para el frontend:
+    * Comando GetBacktest: Que envia todas las estrategias de la base de datos.
+    * Comando GetResults: Envia los resultados de un backtest pasando por parametro el id del backtest.
+    * Comando GetTrades: Envia todos los trades de un backtest pasando por parametro el id del backtest.
+-Actualizar todas las funciones de data_labs para que funcionen con el struct de DataSymbol.
+-Hacer que los dataframes que me llegan, se conviertan el timestamp en time y en segundos. Para ello tengo que hacer una función comand donde me pasara los datos desde frontend.
+-Crear una función comand de tauri para enviar los datos de vela de un dataframe desde la fecha indicada hasta la fecha indicada.
+-Crear una función comand de tauri para enviar al frontend los datos de un dataframe formateados en {time, valor} para los indicadores. (Indicando el rango de fechas)
+-Añadir en la api de backtets la opción de que obtenga los datos relacionados a ese backtest y los añada al struct.
+-Añadir los datos de data_backtest al realizar un backtest.
+-Cambiar get_db_config() a utils > configuración.
+-Crear una nueva tabla en la base de dato que almacene la relación entre data y bactktest almacenado los ids de los dos.
+-Crear el CRUD completo de la nueva tabla que relaciona la data con el backtest.
+-Crear el test unitario del CRUD que relaciona la data con el backtest.
+-Crear el struct para los datos de DataBacktest.
+-Actualizar el struct de backtest para en el campo datos sea de tipo Vec<DataSymbol>.
+-Actualizar el struct Strategy_indicators para añadir el campo de chart_type que sera de tipo enum Chart_Type que contendrá si el typo de chart es inchart o subchart.
 -Crear un proyecto de tauri para iniciar a crear la interfaz grafica.
 -Crear funcionalidad para usar spread variable en el backtest.
 -Añadir que se registre el precio maximo y minimo en el que ha estado un trade.
@@ -18,14 +48,15 @@ Terminadas:
    * En todos los atr de las operaciones limits cambiar de valor por parametro a precio de los datos.
 -Optimizar backtest para aumentar velocidad.
 
+-Crear la base de datos para almacenar los datos de los simbolos que tenemos con sus rutas y nombres:
 
-TODO:
--Crear los primeros comandos para el frontend:
-    * Comando GetBacktest: Que envia todas las estrategias de la base de datos.
-    * Comando GetResults: Envia los resultados de un backtest pasando por parametro el id del backtest.
-    * Comando GetTrades: Envia todos los trades de un backtest pasando por parametro el id del backtest.
-
--Crear plantillas para que genere el código en MQL5.
--Crear funcionalidad para hacer que los backtest se hagan con ticks.
--Leer un trackrecord de Metatrader 5 y guardar los datos en la base de datos.
--Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.
+* Struct
+    + id
+    + Nombre
+    + Timeframe
+    + Ruta
+    + Fecha_inicio
+    + Fecha_fin
+    + Actualizado
+    + N_data
+    + Origen

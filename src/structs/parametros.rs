@@ -37,8 +37,18 @@ impl TParametro for TlParams {
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct GestionParams {
+    #[serde(default = "default_multiplicador")]
     pub multiplicador: f64,
+    #[serde(default = "default_lotaje")]
     pub lotaje_fijo: f64,
+}
+
+fn default_multiplicador() -> f64 {
+    1.0
+}
+
+fn default_lotaje() -> f64 {
+    0.01
 }
 
 impl TParametro for GestionParams {
