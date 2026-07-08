@@ -1,5 +1,4 @@
 TODO:
--Crear los test de data_labs.
 -Añadir el remove_file a todos los test que trabajen con archivos locales de datos.
 
 -Crear plantillas para que genere el código en MQL5.
@@ -8,6 +7,7 @@ TODO:
 -Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.
 
 Terminadas:
+-Crear los test de data_labs.
 -Documentar todas las funciones de comandos.
 -Crear todos los commands necesario para el apartado de data_labs.
 -Crear la primera documentación de comandos para el frontend.
