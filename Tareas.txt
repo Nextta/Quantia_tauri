@@ -1,5 +1,5 @@
 TODO:
--Añadir el remove_file a todos los test que trabajen con archivos locales de datos.
+-Añadir el remove_file a todos los test que trabajen con archivos locales de datos y a los que necesiten datos de test añadir la función que crea los datos para test.
 
 -Crear plantillas para que genere el código en MQL5.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.
