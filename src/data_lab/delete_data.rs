@@ -22,12 +22,18 @@ mod tests {
     use crate::enums::data_origen::DataOrigen;
     use crate::enums::timeframe::Timeframe;
     use crate::utils::configuracion::Error;
-
+    use std::fs::File;
+    use std::path::Path;
     //Para los test crear una carpeta llamada download en la raiz de este proyecto
     // y llamar a los datos test_delete.csv para hacer la prueba.
 
     #[test]
     fn delete_data_local_test() -> Result<(), Error> {
+        let path = "download/test_delete.csv";
+        if !Path::new(path).exists() {
+            File::create(path)?;
+        }
+
         let data_info: DataSymbol = DataSymbol {
             id: 0,
             name: "test_delete".to_string(),
@@ -40,6 +46,7 @@ mod tests {
             n_data: 100,
             origen: Some(DataOrigen::DukasCopy),
         };
+
         match delete_data_local(&data_info) {
             Ok(_) => return Ok(()),
             Err(_) => {
