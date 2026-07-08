@@ -6,13 +6,13 @@ use std::fs::File;
 pub fn import_data(data_info: &DataSymbol, ruta_import: &str) {
     match data_info.formato.unwrap() {
         DataFormatSymbol::Csv => {
-            import_csv(&data_info.name, &data_info.ruta, ruta_import).unwrap();
+            import_csv(&data_info.name, ruta_import, &data_info.ruta).unwrap();
         }
         DataFormatSymbol::Json => {
-            import_json(&data_info.name, &data_info.ruta, ruta_import).unwrap();
+            import_json(&data_info.name, ruta_import, &data_info.ruta).unwrap();
         }
         DataFormatSymbol::Parquet => {
-            import_parquet(&data_info.name, &data_info.ruta, ruta_import).unwrap();
+            import_parquet(&data_info.name, ruta_import, &data_info.ruta).unwrap();
         }
     }
 }
@@ -52,4 +52,46 @@ pub fn import_parquet(symbol_name: &str, ruta_data: &str, ruta_dist: &str) -> Po
     let _ = ParquetWriter::new(&mut file).finish(&mut df)?;
 
     Ok("Parquet importado exitosamente".to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::enums::data_format::DataFormatSymbol;
+    use crate::enums::data_origen::DataOrigen;
+    use crate::enums::timeframe::Timeframe;
+    use crate::utils::configuracion::Error;
+    use crate::utils::data_test::create_test_data;
+    use std::fs::remove_file;
+
+    #[test]
+    fn import_data_test() -> Result<(), Error> {
+        create_test_data(&DataFormatSymbol::Parquet);
+
+        let data_info: DataSymbol = DataSymbol {
+            id: 0,
+            name: "test".to_string(),
+            timeframe: Some(Timeframe::M1),
+            ruta: "download".to_string(),
+            formato: Some(DataFormatSymbol::Csv),
+            fecha_inicio: "00/00/0000".to_string(),
+            fecha_fin: "00/00/0000".to_string(),
+            actualizado: false,
+            n_data: 100,
+            origen: Some(DataOrigen::DukasCopy),
+        };
+
+        let ruta = format!(
+            "{}/{}.{}",
+            data_info.ruta,
+            data_info.name,
+            data_info.formato.unwrap().to_string()
+        );
+
+        import_data(&data_info, &ruta);
+
+        remove_file("download/test.csv")?;
+        remove_file("download/test.parquet")?;
+        Ok(())
+    }
 }
