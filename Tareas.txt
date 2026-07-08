@@ -1,5 +1,6 @@
 TODO:
 -Crear los test de data_labs.
+-Añadir el remove_file a todos los test que trabajen con archivos locales de datos.
 
 -Crear plantillas para que genere el código en MQL5.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.
