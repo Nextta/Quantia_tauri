@@ -24,8 +24,6 @@ mod tests {
     use crate::utils::configuracion::Error;
     use std::fs::File;
     use std::path::Path;
-    //Para los test crear una carpeta llamada download en la raiz de este proyecto
-    // y llamar a los datos test_delete.csv para hacer la prueba.
 
     #[test]
     fn delete_data_local_test() -> Result<(), Error> {

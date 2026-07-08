@@ -48,10 +48,14 @@ mod tests {
     use crate::enums::data_origen::DataOrigen;
     use crate::enums::timeframe::Timeframe;
     use crate::utils::configuracion::Error;
+    use crate::utils::data_test::create_test_data;
+    use std::fs::remove_file;
 
     //Para los test crear una carpeta llamada download en la raiz de este proyecto
     // y llamar a los datos test.csv
     fn load_data() -> PolarsResult<DataFrame> {
+        create_test_data();
+
         let df = CsvReadOptions::default()
             .try_into_reader_with_file_path(Some("download/test.csv".into()))
             .unwrap()
@@ -78,8 +82,13 @@ mod tests {
                 };
 
                 match add_data(df, &data_info) {
-                    Ok(_) => return Ok(()),
+                    Ok(_) => {
+                        remove_file("download/test.csv").unwrap();
+                        remove_file("download/Test_csv.csv").unwrap();
+                        return Ok(());
+                    }
                     Err(_) => {
+                        remove_file("download/test.csv").unwrap();
                         return Err(Error {
                             msg: "No se ha podido añadir los datos en el test".to_string(),
                         });
@@ -87,6 +96,7 @@ mod tests {
                 }
             }
             Err(_) => {
+                remove_file("download/test.csv").unwrap();
                 return Err(Error {
                     msg: "No se ha podido cargar el dataframe para el test".to_string(),
                 });
@@ -112,8 +122,13 @@ mod tests {
                 };
 
                 match add_data(df, &data_info) {
-                    Ok(_) => return Ok(()),
+                    Ok(_) => {
+                        remove_file("download/test.csv").unwrap();
+                        remove_file("download/Test_json.json").unwrap();
+                        return Ok(());
+                    }
                     Err(_) => {
+                        remove_file("download/test.csv").unwrap();
                         return Err(Error {
                             msg: "No se ha podido añadir los datos en el test".to_string(),
                         });
@@ -121,6 +136,7 @@ mod tests {
                 }
             }
             Err(_) => {
+                remove_file("download/test.csv").unwrap();
                 return Err(Error {
                     msg: "No se ha podido cargar el dataframe para el test".to_string(),
                 });
@@ -146,8 +162,13 @@ mod tests {
                 };
 
                 match add_data(df, &data_info) {
-                    Ok(_) => return Ok(()),
+                    Ok(_) => {
+                        remove_file("download/test.csv").unwrap();
+                        remove_file("download/Test_parquet.parquet").unwrap();
+                        return Ok(());
+                    }
                     Err(_) => {
+                        remove_file("download/test.csv").unwrap();
                         return Err(Error {
                             msg: "No se ha podido añadir los datos en el test".to_string(),
                         });
@@ -155,6 +176,7 @@ mod tests {
                 }
             }
             Err(_) => {
+                remove_file("download/test.csv").unwrap();
                 return Err(Error {
                     msg: "No se ha podido cargar el dataframe para el test".to_string(),
                 });
