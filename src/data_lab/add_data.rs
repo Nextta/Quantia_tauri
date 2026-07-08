@@ -54,7 +54,7 @@ mod tests {
     //Para los test crear una carpeta llamada download en la raiz de este proyecto
     // y llamar a los datos test.csv
     fn load_data() -> PolarsResult<DataFrame> {
-        create_test_data();
+        create_test_data(&DataFormatSymbol::Csv);
 
         let df = CsvReadOptions::default()
             .try_into_reader_with_file_path(Some("download/test.csv".into()))

@@ -2,6 +2,21 @@ use crate::comandos::data::{DataDukas, DataDukasTicks};
 use chrono::DateTime;
 use polars::prelude::*;
 
+fn timeframe_to_seconds(tf: &str) -> i64 {
+    match tf {
+        "M1" => 60,
+        "M5" => 300,
+        "M10" => 600,
+        "M15" => 900,
+        "M30" => 1800,
+        "H1" => 3600,
+        "H4" => 14400,
+        "D1" => 86400,
+        "W1" => 604800,
+        _ => 3600,
+    }
+}
+
 /// Devuelve un Dataframe con los datos formateados en un timeframe especifico.
 pub fn get_timeframe_data(
     data_name: &str,
@@ -12,6 +27,9 @@ pub fn get_timeframe_data(
 
     let args = ScanArgsParquet::default();
     let lz: LazyFrame = LazyFrame::scan_parquet(PlRefPath::new(ruta_data.as_str()), args)?;
+
+    let seconds = timeframe_to_seconds(timeframe);
+    let duration_str = format!("{}i", seconds);
 
     let df: DataFrame;
     let schema = lz
@@ -25,11 +43,11 @@ pub fn get_timeframe_data(
     if schema {
         df = lz
             .group_by_dynamic(
-                col("timestamp"),
+                col("time"),
                 [],
                 DynamicGroupOptions {
-                    every: Duration::parse(&timeframe),
-                    period: Duration::parse(&timeframe),
+                    every: Duration::parse(&duration_str),
+                    period: Duration::parse(&duration_str),
                     offset: Duration::parse("0ms"),
                     ..Default::default()
                 },
@@ -45,7 +63,7 @@ pub fn get_timeframe_data(
     } else {
         df = lz
             .select([
-                col("timestamp"),
+                col("time"),
                 col("bidPrice").alias("open"),
                 col("bidPrice").alias("high"),
                 col("bidPrice").alias("low"),
@@ -53,11 +71,11 @@ pub fn get_timeframe_data(
                 (col("bidVolume") + col("askVolume")).alias("volume"),
             ])
             .group_by_dynamic(
-                col("timestamp"),
+                col("time"),
                 [],
                 DynamicGroupOptions {
-                    every: Duration::parse(&timeframe),
-                    period: Duration::parse(&timeframe),
+                    every: Duration::parse(&duration_str),
+                    period: Duration::parse(&duration_str),
                     offset: Duration::parse("0ms"),
                     ..Default::default()
                 },
