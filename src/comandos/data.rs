@@ -445,37 +445,30 @@ pub async fn get_data_for_tv(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs::remove_file;
 
-    fn save_data(df_result: Vec<DataTv>, path: &str) -> PolarsResult<()> {
-        let times: Vec<u32> = df_result.iter().map(|d| d.time).collect();
-        let open: Vec<f64> = df_result.iter().map(|d| d.open).collect();
-        let high: Vec<f64> = df_result.iter().map(|d| d.high).collect();
-        let low: Vec<f64> = df_result.iter().map(|d| d.low).collect();
-        let close: Vec<f64> = df_result.iter().map(|d| d.close).collect();
-        let volume: Vec<f64> = df_result.iter().map(|d| d.volume).collect();
+    // fn save_data(df_result: Vec<DataTv>, path: &str) -> PolarsResult<()> {
+    //     let times: Vec<u32> = df_result.iter().map(|d| d.time).collect();
+    //     let open: Vec<f64> = df_result.iter().map(|d| d.open).collect();
+    //     let high: Vec<f64> = df_result.iter().map(|d| d.high).collect();
+    //     let low: Vec<f64> = df_result.iter().map(|d| d.low).collect();
+    //     let close: Vec<f64> = df_result.iter().map(|d| d.close).collect();
+    //     let volume: Vec<f64> = df_result.iter().map(|d| d.volume).collect();
 
-        let columns: Vec<Column> = vec![
-            Series::new("time".into(), times).into(),
-            Series::new("open".into(), open).into(),
-            Series::new("high".into(), high).into(),
-            Series::new("low".into(), low).into(),
-            Series::new("close".into(), close).into(),
-            Series::new("volume".into(), volume).into(),
-        ];
-        let mut df = DataFrame::new_infer_height(columns)?;
+    //     let columns: Vec<Column> = vec![
+    //         Series::new("time".into(), times).into(),
+    //         Series::new("open".into(), open).into(),
+    //         Series::new("high".into(), high).into(),
+    //         Series::new("low".into(), low).into(),
+    //         Series::new("close".into(), close).into(),
+    //         Series::new("volume".into(), volume).into(),
+    //     ];
+    //     let mut df = DataFrame::new_infer_height(columns)?;
 
-        let mut file = std::fs::File::create(path).unwrap();
-        CsvWriter::new(&mut file).finish(&mut df).unwrap();
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_data_for_tv() -> Result<(), Error> {
-        let datos =
-            get_data_for_tv(35, "2024-08-19 04:00:00", "2024-08-19 11:00:00", Some(40)).await?;
-        save_data(datos, "download/get_data_tv.csv").unwrap();
-        Ok(())
-    }
+    //     let mut file = std::fs::File::create(path).unwrap();
+    //     CsvWriter::new(&mut file).finish(&mut df).unwrap();
+    //     Ok(())
+    // }
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_save_data_dukas() -> Result<(), Error> {
@@ -506,6 +499,8 @@ mod tests {
             Some(true),
         )
         .await?;
+
+        remove_file("download/name.csv").unwrap();
 
         Ok(())
     }
@@ -538,6 +533,8 @@ mod tests {
             Some(true),
         )
         .await?;
+
+        remove_file("download/name_ticks.csv").unwrap();
 
         Ok(())
     }

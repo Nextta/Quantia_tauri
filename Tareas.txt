@@ -1,7 +1,4 @@
 TODO:
--Corregir estos errores en los tests:
-    comandos::data::tests::test_get_data_for_tv ... FAILED
-    comandos::indicadores::tests::test_get_indicator ... FAILED
 -Crear plantillas para que genere el código en MQL5.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.
 -Leer un trackrecord de Metatrader 5 y guardar los datos en la base de datos.
