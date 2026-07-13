@@ -447,10 +447,12 @@ pub async fn delete_backtest(id: i32) -> Result<(), Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::api::data::{delete_data, insert_data};
+    use crate::api::data_backtest::insert_data_backtest;
     use crate::enums::data_format::DataFormatSymbol;
     use crate::enums::data_origen::DataOrigen;
     use crate::enums::timeframe::Timeframe;
-    use crate::structs::data::DataSymbol;
+    use crate::structs::data::{DataBacktest, DataSymbol};
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_crud_backtest_cfd() -> Result<(), Error> {
@@ -492,6 +494,16 @@ mod tests {
 
         let id: i32 = insert_backtest_cfd(&backtest).await?;
 
+        let id_datos: u32 = insert_data(&backtest.datos).await?;
+
+        let data_backtest: DataBacktest = DataBacktest {
+            id: 0,
+            id_backtest: id,
+            id_data_symbol: id_datos,
+        };
+
+        let id_dbac: i32 = insert_data_backtest(&data_backtest).await?;
+
         let _ = get_backtests().await?;
 
         let _ = get_backtests_by_tipo(&backtest.tipo).await?;
@@ -501,6 +513,10 @@ mod tests {
         let _ = get_backtests_by_titulo(backtest.titulo.clone()).await?;
 
         let _ = delete_backtest(id).await?;
+
+        let _ = delete_data(id_datos).await?;
+
+        let _ = crate::api::data_backtest::delete_data(id_dbac as u32).await?;
 
         Ok(())
     }

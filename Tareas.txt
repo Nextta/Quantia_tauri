@@ -1,4 +1,9 @@
 TODO:
+-Corregir estos errores en los tests:
+    test api::backtests::tests::test_crud_backtest_cfd ... FAILED
+    test api::data_backtest::tests::test_crud_data ... FAILED
+    test api::resultados::tests::test_crud_resultados ... FAILED
+
 -Crear plantillas para que genere el código en MQL5.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.
 -Leer un trackrecord de Metatrader 5 y guardar los datos en la base de datos.
