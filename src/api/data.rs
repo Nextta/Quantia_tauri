@@ -70,7 +70,7 @@ pub async fn insert_data(data_symbol: &DataSymbol) -> Result<u32, Error> {
             };
 
             let conn = db.connect()?;
-            conn.query(
+            let mut rows = conn.query(
                 "INSERT INTO data (name, timeframe, ruta, formato, fecha_inicio, fecha_fin, actualizado, n_data, origen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
                 params![
                     data_symbol.name.as_str(),
@@ -86,7 +86,11 @@ pub async fn insert_data(data_symbol: &DataSymbol) -> Result<u32, Error> {
             )
             .await?;
 
-            let id = conn.last_insert_rowid() as u32;
+            let row = rows.next().await?.ok_or_else(|| Error {
+                msg: format!("No se han insertado los dato.s"),
+            })?;
+
+            let id = row.get::<u32>(0)?;
 
             Ok(id)
         }

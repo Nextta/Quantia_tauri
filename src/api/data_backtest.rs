@@ -64,13 +64,17 @@ pub async fn insert_data_backtest(data: &DataBacktest) -> Result<i32, Error> {
 
             let conn = db.connect()?;
 
-            conn.query(
+            let mut rows = conn.query(
                 "INSERT INTO data_backtest (id_backtest, id_data_symbol) VALUES (?, ?) RETURNING id",
                 params![data.id_backtest, data.id_data_symbol],
             )
             .await?;
 
-            let id = conn.last_insert_rowid() as i32;
+            let row = rows.next().await?.ok_or_else(|| Error {
+                msg: format!("No se ha podido insertar los datos."),
+            })?;
+            let id = row.get::<i32>(0)?;
+
             Ok(id)
         }
         Err(e) => Err(e),
@@ -143,7 +147,9 @@ pub async fn get_data_by_backtest(id_backtest: i32) -> Result<DataSymbol, Error>
         )
         .await?;
 
-    let row = rows.next().await?.unwrap();
+    let row = rows.next().await?.ok_or_else(|| Error {
+        msg: format!("No data found for backtest {}", id_backtest),
+    })?;
 
     let data_symbol = get_data(row.get::<u32>(2)?).await?;
 
@@ -182,13 +188,98 @@ pub async fn delete_data(id: u32) -> Result<(), Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::api::backtests::{delete_backtest, insert_backtest_cfd};
+    use crate::backtest::backtest::Backtest;
+    use crate::enums::activos::Activo;
+    use crate::enums::data_format::DataFormatSymbol;
+    use crate::enums::data_origen::DataOrigen;
+    use crate::enums::gestion::GestionStrategy;
+    use crate::enums::timeframe::Timeframe;
+    use crate::strategy::strategy::Strategy;
+    use crate::strategy::strategy_options::{StrategyOptions, TradingDirection};
+    use crate::structs::data::DataSymbol;
+    use crate::structs::parametros::GestionParams;
+    use chrono::Utc;
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_crud_data() -> Result<(), Error> {
+        let backtest: Backtest = Backtest {
+            id: 0,
+            titulo: "Test_resultados".to_string(),
+            balance: 1000.0,
+            tipo: Activo::CDF,
+            gestion_strategy: GestionStrategy::Fijo,
+            parametros_gestion: GestionParams {
+                multiplicador: 1.0,
+                lotaje_fijo: 0.01,
+            },
+            trades: Vec::new(),
+            datos: DataSymbol {
+                id: 0,
+                name: "Test".to_string(),
+                timeframe: Some(Timeframe::D1),
+                ruta: "download".to_string(),
+                formato: Some(DataFormatSymbol::Csv),
+                fecha_inicio: "00/00/0000".to_string(),
+                fecha_fin: "00/00/0000".to_string(),
+                actualizado: false,
+                n_data: 1252,
+                origen: Some(DataOrigen::DukasCopy),
+            },
+            estrategia: Strategy {
+                id: 0,
+                id_user: 0,
+                nombre: "Test_Resultados".to_string(),
+                descripcion: Some("None".to_string()),
+                activa: false,
+                creada_en: "00/00/0000".to_string(),
+                indicadores: Vec::new(),
+                acciones: Vec::new(),
+                opciones: StrategyOptions {
+                    id: 0,
+                    strategy_id: 0,
+                    multiples_trades: false,
+                    trading_direccion: TradingDirection::Both,
+                    operar_finde: false,
+                    cerrar_fin_de_dia: false,
+                    hora_fin_de_dia: Utc::now(),
+                    cerrar_viernes: false,
+                    hora_cierre_viernes: Utc::now(),
+                    rango_operativo: false,
+                    rango_operativo_inicio: Utc::now(),
+                    rango_operativo_fin: Utc::now(),
+                    cerrar_fin_rango_operativo: false,
+                    activar_cierre_numero_velas: false,
+                    numero_velas_cierre: 32,
+                    cierre_limite_hora: false,
+                    hora_cierre_limite: Utc::now(),
+                    parametros_stoploss: None,
+                    parametros_takeprofit: None,
+                },
+            },
+        };
+
+        let id_back = insert_backtest_cfd(&backtest).await?;
+
+        let data: DataSymbol = DataSymbol {
+            id: 0,
+            name: "EURUSD".to_string(),
+            timeframe: Some(Timeframe::H1),
+            ruta: "download".to_string(),
+            formato: Some(DataFormatSymbol::Parquet),
+            fecha_inicio: "01/01/2020".to_string(),
+            fecha_fin: "01/01/2026".to_string(),
+            actualizado: false,
+            n_data: 2542156,
+            origen: Some(DataOrigen::DukasCopy),
+        };
+
+        let id_data = crate::api::data::insert_data(&data).await?;
+
         let data: DataBacktest = DataBacktest {
             id: 0,
-            id_backtest: 32,
-            id_data_symbol: 1,
+            id_backtest: id_back,
+            id_data_symbol: id_data,
         };
 
         let id = insert_data_backtest(&data).await?;
@@ -198,6 +289,10 @@ mod tests {
         let _ = get_all_data().await?;
 
         let _ = delete_data(id as u32).await?;
+
+        let _ = delete_backtest(id_back).await?;
+
+        let _ = crate::api::data::delete_data(id_data).await?;
 
         Ok(())
     }

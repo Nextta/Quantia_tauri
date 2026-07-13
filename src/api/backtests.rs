@@ -75,13 +75,16 @@ pub async fn insert_backtest_cfd(backtest: &Backtest) -> Result<i32, Error> {
 
     let conn = db.connect()?;
 
-    conn.query(
+    let mut rows = conn.query(
         "INSERT INTO backtest (titulo, balance, tipo, gestion_strategy, parametros_gestion) VALUES (?, ?, ?, ?, ?) RETURNING id",
         params![backtest.titulo.clone(), backtest.balance, backtest.tipo.to_string(), backtest.gestion_strategy.to_string(), backtest.parametros_gestion.to_json()],
     )
     .await?;
 
-    let id = conn.last_insert_rowid() as i32;
+    let row = rows.next().await?.ok_or_else(|| Error {
+        msg: format!("No se ha insertado el backtest"),
+    })?;
+    let id = row.get::<i32>(0)?;
     Ok(id)
 }
 
@@ -512,11 +515,11 @@ mod tests {
 
         let _ = get_backtests_by_titulo(backtest.titulo.clone()).await?;
 
-        let _ = delete_backtest(id).await?;
+        let _ = crate::api::data_backtest::delete_data(id_dbac as u32).await?;
 
         let _ = delete_data(id_datos).await?;
 
-        let _ = crate::api::data_backtest::delete_data(id_dbac as u32).await?;
+        let _ = delete_backtest(id).await?;
 
         Ok(())
     }
