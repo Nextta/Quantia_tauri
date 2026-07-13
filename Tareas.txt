@@ -1,12 +1,11 @@
 TODO:
--Añadir el remove_file a todos los test que trabajen con archivos locales de datos y a los que necesiten datos de test añadir la función que crea los datos para test.
-
 -Crear plantillas para que genere el código en MQL5.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.
 -Leer un trackrecord de Metatrader 5 y guardar los datos en la base de datos.
 -Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.
 
 Terminadas:
+-Añadir el remove_file a todos los test que trabajen con archivos locales de datos y a los que necesiten datos de test añadir la función que crea los datos para test.
 -Crear los test de data_labs.
 -Documentar todas las funciones de comandos.
 -Crear todos los commands necesario para el apartado de data_labs.
