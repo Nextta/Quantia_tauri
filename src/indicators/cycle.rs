@@ -555,10 +555,14 @@ pub fn ht_trendmode(df: &mut DataFrame, output_col: Option<&str>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::enums::data_format::DataFormatSymbol;
+    use crate::utils::data_test::create_test_data;
+    use std::fs::remove_file;
 
     //Para los test crear una carpeta llamada download en la raiz de este proyecto
     // y llamar a los datos test.csv
     fn load_data() -> PolarsResult<DataFrame> {
+        create_test_data(&DataFormatSymbol::Csv);
         let df = CsvReadOptions::default()
             .try_into_reader_with_file_path(Some("download/test.csv".into()))
             .unwrap()
@@ -567,19 +571,22 @@ mod tests {
         Ok(df)
     }
 
-    fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
-        let mut df: DataFrame = df_result.clone();
-        let mut file = std::fs::File::create(path).unwrap();
-        CsvWriter::new(&mut file).finish(&mut df).unwrap();
-        Ok(())
-    }
+    // fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
+    //     let mut df: DataFrame = df_result.clone();
+    //     let mut file = std::fs::File::create(path).unwrap();
+    //     CsvWriter::new(&mut file).finish(&mut df).unwrap();
+    //     Ok(())
+    // }
 
     #[test]
     fn test_ht_dcperiod() {
         match load_data() {
             Ok(mut df) => {
                 ht_dcperiod(&mut df, None);
-                save_data(&df, "download/test_ht_dcperiod.csv").unwrap();
+                // save_data(&df, "download/test_ht_dcperiod.csv").unwrap();
+                // remove_file("download/test_ht_dcperiod.csv").unwrap();
+                remove_file("download/test.csv").unwrap();
+                remove_file("download/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
@@ -590,7 +597,10 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 ht_dcphase(&mut df, None);
-                save_data(&df, "download/test_ht_dcphase.csv").unwrap();
+                // save_data(&df, "download/test_ht_dcphase.csv").unwrap();
+                // remove_file("download/test_ht_dcphase.csv").unwrap();
+                remove_file("download/test.csv").unwrap();
+                remove_file("download/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
@@ -601,7 +611,10 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 ht_phasor(&mut df, None, None);
-                save_data(&df, "download/test_ht_phasor.csv").unwrap();
+                // save_data(&df, "download/test_ht_phasor.csv").unwrap();
+                // remove_file("download/test_ht_phasor.csv").unwrap();
+                remove_file("download/test.csv").unwrap();
+                remove_file("download/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
@@ -612,7 +625,10 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 ht_sine(&mut df, None, None);
-                save_data(&df, "download/test_ht_sine.csv").unwrap();
+                // save_data(&df, "download/test_ht_sine.csv").unwrap();
+                // remove_file("download/test_ht_sine.csv").unwrap();
+                remove_file("download/test.csv").unwrap();
+                remove_file("download/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
@@ -623,7 +639,10 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 ht_trendmode(&mut df, None);
-                save_data(&df, "download/test_ht_trendmode.csv").unwrap();
+                // save_data(&df, "download/test_ht_trendmode.csv").unwrap();
+                // remove_file("download/test_ht_trendmode.csv").unwrap();
+                remove_file("download/test.csv").unwrap();
+                remove_file("download/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }

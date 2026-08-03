@@ -196,8 +196,13 @@ pub fn natr(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&s
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::enums::data_format::DataFormatSymbol;
+    use crate::utils::data_test::create_test_data;
+    use std::fs::remove_file;
 
     fn load_data() -> PolarsResult<DataFrame> {
+        create_test_data(&DataFormatSymbol::Csv);
+
         let df = CsvReadOptions::default()
             .try_into_reader_with_file_path(Some("download/test.csv".into()))
             .unwrap()
@@ -206,19 +211,21 @@ mod tests {
         Ok(df)
     }
 
-    fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
-        let mut df: DataFrame = df_result.clone();
-        let mut file = std::fs::File::create(path).unwrap();
-        CsvWriter::new(&mut file).finish(&mut df).unwrap();
-        Ok(())
-    }
+    // fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
+    //     let mut df: DataFrame = df_result.clone();
+    //     let mut file = std::fs::File::create(path).unwrap();
+    //     CsvWriter::new(&mut file).finish(&mut df).unwrap();
+    //     Ok(())
+    // }
 
     #[test]
     fn test_trange() {
         match load_data() {
             Ok(mut df) => {
                 trange(&mut df, None);
-                save_data(&df, "download/test_trange.csv").unwrap();
+                // save_data(&df, "download/test_trange.csv").unwrap();
+                remove_file("download/test.csv").unwrap();
+                remove_file("download/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
@@ -229,7 +236,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 atr(&mut df, Some(14), Some(1.0), None);
-                save_data(&df, "download/test_atr.csv").unwrap();
+                // save_data(&df, "download/test_atr.csv").unwrap();
+                remove_file("download/test.csv").unwrap();
+                remove_file("download/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
@@ -240,7 +249,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 natr(&mut df, Some(14), None);
-                save_data(&df, "download/test_natr.csv").unwrap();
+                // save_data(&df, "download/test_natr.csv").unwrap();
+                remove_file("download/test.csv").unwrap();
+                remove_file("download/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }

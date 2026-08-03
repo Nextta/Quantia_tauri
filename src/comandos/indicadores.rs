@@ -109,38 +109,3 @@ pub async fn get_indicator_for_tv(
         Err(e) => return Err(e),
     };
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn save_data(df_result: Vec<DataIndicator>, path: &str) -> PolarsResult<()> {
-        let times: Vec<u32> = df_result.iter().map(|d| d.time).collect();
-        let values: Vec<f64> = df_result.iter().map(|d| d.value).collect();
-
-        let columns: Vec<Column> = vec![
-            Series::new("time".into(), times).into(),
-            Series::new("value".into(), values).into(),
-        ];
-        let mut df = DataFrame::new_infer_height(columns)?;
-
-        let mut file = std::fs::File::create(path).unwrap();
-        CsvWriter::new(&mut file).finish(&mut df).unwrap();
-        Ok(())
-    }
-
-    #[tokio::test(flavor = "multi_thread")]
-    async fn test_get_indicator() -> Result<(), Error> {
-        let datos = get_indicator_for_tv(
-            35,
-            1,
-            "ema_50",
-            "2024-08-19 04:00:00",
-            "2024-08-19 11:00:00",
-            Some(40),
-        )
-        .await?;
-        save_data(datos, "download/get_indicador.csv").unwrap();
-        Ok(())
-    }
-}

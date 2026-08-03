@@ -1,12 +1,18 @@
 TODO:
--Añadir el remove_file a todos los test que trabajen con archivos locales de datos y a los que necesiten datos de test añadir la función que crea los datos para test.
-
--Crear plantillas para que genere el código en MQL5.
+-Implementar el frontend que tenemos hasta ahora para probar y adactar funcionalidades.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.
+    *Nota: Todos los backtest se harán con ticks para un mayor calidad de resultados.
+    *Hay que mejorar el motor de backtest para hacer que sea lo más fiel y realista a la hora de hacer los backtest.
+-Crear plantillas para que genere el código en MQL5.
 -Leer un trackrecord de Metatrader 5 y guardar los datos en la base de datos.
 -Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.
 
 Terminadas:
+-Corregir estos errores en los tests:
+    test api::backtests::tests::test_crud_backtest_cfd ... FAILED
+    test api::data_backtest::tests::test_crud_data ... FAILED
+    test api::resultados::tests::test_crud_resultados ... FAILED
+-Añadir el remove_file a todos los test que trabajen con archivos locales de datos y a los que necesiten datos de test añadir la función que crea los datos para test.
 -Crear los test de data_labs.
 -Documentar todas las funciones de comandos.
 -Crear todos los commands necesario para el apartado de data_labs.

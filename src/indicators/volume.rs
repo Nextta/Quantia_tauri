@@ -292,8 +292,13 @@ pub fn obv(df: &mut DataFrame, output_col: Option<&str>) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::enums::data_format::DataFormatSymbol;
+    use crate::utils::data_test::create_test_data;
+    use std::fs::remove_file;
 
     fn load_data() -> PolarsResult<DataFrame> {
+        create_test_data(&DataFormatSymbol::Csv);
+
         let df = CsvReadOptions::default()
             .try_into_reader_with_file_path(Some("download/test.csv".into()))
             .unwrap()
@@ -302,18 +307,20 @@ mod tests {
         Ok(df)
     }
 
-    fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
-        let mut df: DataFrame = df_result.clone();
-        let mut file = std::fs::File::create(path).unwrap();
-        CsvWriter::new(&mut file).finish(&mut df).unwrap();
-        Ok(())
-    }
+    // fn save_data(df_result: &DataFrame, path: &str) -> PolarsResult<()> {
+    //     let mut df: DataFrame = df_result.clone();
+    //     let mut file = std::fs::File::create(path).unwrap();
+    //     CsvWriter::new(&mut file).finish(&mut df).unwrap();
+    //     Ok(())
+    // }
 
     #[test]
     fn test_ad() {
         if let Ok(mut df) = load_data() {
             ad(&mut df, None);
-            save_data(&df, "download/test_ad.csv").unwrap();
+            // save_data(&df, "download/test_ad.csv").unwrap();
+            remove_file("download/test.csv").unwrap();
+            remove_file("download/test.parquet").unwrap();
         }
     }
 
@@ -321,7 +328,9 @@ mod tests {
     fn test_adosc() {
         if let Ok(mut df) = load_data() {
             adosc(&mut df, None, None, None);
-            save_data(&df, "download/test_adosc.csv").unwrap();
+            // save_data(&df, "download/test_adosc.csv").unwrap();
+            remove_file("download/test.csv").unwrap();
+            remove_file("download/test.parquet").unwrap();
         }
     }
 
@@ -329,7 +338,9 @@ mod tests {
     fn test_obv() {
         if let Ok(mut df) = load_data() {
             obv(&mut df, None);
-            save_data(&df, "download/test_obv.csv").unwrap();
+            // save_data(&df, "download/test_obv.csv").unwrap();
+            remove_file("download/test.csv").unwrap();
+            remove_file("download/test.parquet").unwrap();
         }
     }
 }

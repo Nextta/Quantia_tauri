@@ -54,7 +54,7 @@ impl SymbolInfoCFD {
         };
         match table {
             Ok(_) => {
-                println!("Symbol creado: {:?}", symbol);
+                //println!("Symbol creado: {:?}", symbol);
             }
             Err(e) => println!("Error al crear symbol: {:?}", e),
         }

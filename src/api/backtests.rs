@@ -75,13 +75,16 @@ pub async fn insert_backtest_cfd(backtest: &Backtest) -> Result<i32, Error> {
 
     let conn = db.connect()?;
 
-    conn.query(
+    let mut rows = conn.query(
         "INSERT INTO backtest (titulo, balance, tipo, gestion_strategy, parametros_gestion) VALUES (?, ?, ?, ?, ?) RETURNING id",
         params![backtest.titulo.clone(), backtest.balance, backtest.tipo.to_string(), backtest.gestion_strategy.to_string(), backtest.parametros_gestion.to_json()],
     )
     .await?;
 
-    let id = conn.last_insert_rowid() as i32;
+    let row = rows.next().await?.ok_or_else(|| Error {
+        msg: format!("No se ha insertado el backtest"),
+    })?;
+    let id = row.get::<i32>(0)?;
     Ok(id)
 }
 
@@ -447,10 +450,12 @@ pub async fn delete_backtest(id: i32) -> Result<(), Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::api::data::{delete_data, insert_data};
+    use crate::api::data_backtest::insert_data_backtest;
     use crate::enums::data_format::DataFormatSymbol;
     use crate::enums::data_origen::DataOrigen;
     use crate::enums::timeframe::Timeframe;
-    use crate::structs::data::DataSymbol;
+    use crate::structs::data::{DataBacktest, DataSymbol};
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_crud_backtest_cfd() -> Result<(), Error> {
@@ -492,6 +497,16 @@ mod tests {
 
         let id: i32 = insert_backtest_cfd(&backtest).await?;
 
+        let id_datos: u32 = insert_data(&backtest.datos).await?;
+
+        let data_backtest: DataBacktest = DataBacktest {
+            id: 0,
+            id_backtest: id,
+            id_data_symbol: id_datos,
+        };
+
+        let id_dbac: i32 = insert_data_backtest(&data_backtest).await?;
+
         let _ = get_backtests().await?;
 
         let _ = get_backtests_by_tipo(&backtest.tipo).await?;
@@ -499,6 +514,10 @@ mod tests {
         let _ = get_backtest_by_id(id).await?;
 
         let _ = get_backtests_by_titulo(backtest.titulo.clone()).await?;
+
+        let _ = crate::api::data_backtest::delete_data(id_dbac as u32).await?;
+
+        let _ = delete_data(id_datos).await?;
 
         let _ = delete_backtest(id).await?;
 
