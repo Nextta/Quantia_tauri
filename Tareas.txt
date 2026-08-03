@@ -1,6 +1,9 @@
 TODO:
--Crear plantillas para que genere el código en MQL5.
+-Implementar el frontend que tenemos hasta ahora para probar y adactar funcionalidades.
 -Crear funcionalidad para hacer que los backtest se hagan con ticks.
+    *Nota: Todos los backtest se harán con ticks para un mayor calidad de resultados.
+    *Hay que mejorar el motor de backtest para hacer que sea lo más fiel y realista a la hora de hacer los backtest.
+-Crear plantillas para que genere el código en MQL5.
 -Leer un trackrecord de Metatrader 5 y guardar los datos en la base de datos.
 -Leer un trackrecord de Strategyquant y guardar los datos en la base de datos.
 
