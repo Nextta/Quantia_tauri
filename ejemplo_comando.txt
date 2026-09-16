@@ -1,0 +1,9 @@
+Ejecutar tests
+# Con salida visible (los println! de tus tests)
+cargo test --lib api:: -- --nocapture
+
+# Un solo archivo/módulo, ej. brokers
+cargo test --lib api::brokers::
+
+# Un test específico
+cargo test --lib test_crud_broker_cfd
