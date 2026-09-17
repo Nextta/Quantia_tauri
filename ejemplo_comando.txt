@@ -1,6 +1,6 @@
 Ejecutar tests
 # Con salida visible (los println! de tus tests)
-cargo test --lib api:: -- --nocapture
+cargo test --lib api:: -- --nocapture --test-threads=1
 
 # Un solo archivo/módulo, ej. brokers
 cargo test --lib api::brokers::

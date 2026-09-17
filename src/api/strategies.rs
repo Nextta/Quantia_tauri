@@ -1235,7 +1235,7 @@ pub async fn insert_strategies_action(action: &StrategyAction) -> Result<i32, Er
         action.parametros.to_string()
     ];
     conn.query(
-        "INSERT INTO strategy_actions (strategy_id, tipo_signal, tipo, parametro) VALUES (?, ?, ?, ?) RETURNING id",
+        "INSERT INTO strategy_actions (strategy_id, tipo_signal, tipo, parametros) VALUES (?, ?, ?, ?) RETURNING id",
         parametros,
     )
     .await?;
@@ -1839,7 +1839,7 @@ pub async fn insert_strategy_options(options: &StrategyOptions) -> Result<i32, E
         options.parametros_takeprofit.as_ref().unwrap().to_json(),
     ];
 
-    conn.execute("INSERT INTO strategy_options (strategy_id, multiples_tardes, trading_direccion, operar_finde, cerrar_fin_de_dia, hora_fin_de_dia, cerrar_viernes, hora_cierre_viernes, rango_operativo, rango_operativo_inicio, rango_operativo_fin, cerrar_fin_rango_operativo, activar_cierre_numero_velas, numero_velas_cierre, cierre_limite_hora, hora_cierre_limite, parametros_stoploss, parametros_takeprofit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", parametros).await?;
+    conn.execute("INSERT INTO strategy_options (strategy_id, multiples_trades, trading_direccion, operar_finde, cerrar_fin_de_dia, hora_fin_de_dia, cerrar_viernes, hora_cierre_viernes, rango_operativo, rango_operativo_inicio, rango_operativo_fin, cerrar_fin_rango_operativo, activar_cierre_numero_velas, numero_velas_cierre, cierre_limite_hora, hora_cierre_limite, parametros_stoploss, parametros_takeprofit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", parametros).await?;
 
     let id = conn.last_insert_rowid() as i32;
     Ok(id)
