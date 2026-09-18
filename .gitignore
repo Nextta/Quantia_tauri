@@ -11,3 +11,4 @@ Quantia.db-wal
 /download
 logs.txt
 *.json
+/data/*

@@ -57,6 +57,8 @@ tracing-subscriber = "0.3"
 tracing = "0.1.40"
 sqlite3-parser = "0.16.0"
 libsql = "0.9.30"
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
 
 # [patch.crates-io]
 # sqlite3-parser = { git = "https://github.com/LucioFranco/lemon-rs" }

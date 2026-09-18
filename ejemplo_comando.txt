@@ -7,3 +7,7 @@ cargo test --lib api::brokers::
 
 # Un test específico
 cargo test --lib test_crud_broker_cfd
+
+
+Descargar datos de DukasCopy:
+npx dukascopy-node -i btcusd -from 2019-01-01 -to 2026-01-01 -t h1 -f csv -fl true -fn btcusd -v true
