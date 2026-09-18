@@ -13,6 +13,9 @@
     "core:window:allow-toggle-maximize",
     "core:window:allow-internal-toggle-maximize",
     "dialog:default",
-    "fs:default"
+    "fs:default",
+    "fs:allow-write-file",
+    "fs:scope-document",
+    "fs:scope-desktop"
   ]
 }

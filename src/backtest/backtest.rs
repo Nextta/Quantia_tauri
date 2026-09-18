@@ -4938,7 +4938,7 @@ mod tests {
         let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(1).await.unwrap_or(SymbolInfoCFD {
             id: 1,
             broker_id: 1,
-            name: "EURUSD".to_string(),
+            name: "BTCUSD".to_string(),
             valor_contrato: 100000.0,
             comision_lote: 6.0,
             swap_long: -7.0,
@@ -4959,11 +4959,11 @@ mod tests {
 
         let datasymbol = DataSymbol {
             id: 1,
-            name: "xauusd-h1".to_string(),
+            name: "btcusd".to_string(),
             timeframe: Some(Timeframe::H1),
-            ruta: "download".to_string(),
+            ruta: "data".to_string(),
             formato: Some(DataFormatSymbol::Csv),
-            fecha_inicio: "01/01/2020".to_string(),
+            fecha_inicio: "01/01/2019".to_string(),
             fecha_fin: "01/01/2026".to_string(),
             actualizado: false,
             n_data: 252541,
@@ -4971,7 +4971,7 @@ mod tests {
         };
 
         let mut bt: Backtest = Backtest::new(
-            "UnitTest: CruceMedias".to_string(),
+            "UnitTest: CruceMedias BTCUSD".to_string(),
             10000.0,
             Activo::CDF,
             gestion,
