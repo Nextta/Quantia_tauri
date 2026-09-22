@@ -6,3 +6,4 @@ pub mod resultados;
 pub mod strategies;
 pub mod symbols;
 pub mod trades;
+pub mod users;
