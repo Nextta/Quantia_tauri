@@ -347,3 +347,79 @@ pub async fn delete_user(id_clerk: String) -> Result<(), Error> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_crud_users() -> Result<(), Error> {
+        let id_clerk = "test_user_001".to_string();
+
+        // Limpieza defensiva por si quedó algún residuo de un test anterior.
+        let _ = delete_user(id_clerk.clone()).await;
+
+        let usuario = User {
+            id_clerk: id_clerk.clone(),
+            nombre: "Nombre".to_string(),
+            apellidos: "Apellidos".to_string(),
+            username: "test_user_001".to_string(),
+            descripcion: None,
+            clave_activacion: None,
+            usuario_activo: false,
+        };
+
+        // Crear la tabla.
+        let _ = table_users().await?;
+
+        // Insertar el usuario de prueba.
+        insert_user(&usuario).await?;
+
+        // Obtenerlo por id de Clerk: los campos opcionales deben ser None.
+        let user = get_user_by_id_clerk(id_clerk.clone()).await?;
+        assert_eq!(user.nombre, "Nombre");
+        assert_eq!(user.apellidos, "Apellidos");
+        assert!(user.descripcion.is_none());
+        assert!(user.clave_activacion.is_none());
+        assert!(!user.usuario_activo);
+
+        // Obtenerlo por username.
+        let user = get_user_by_username("test_user_001".to_string()).await?;
+        assert_eq!(user.id_clerk, id_clerk);
+
+        // Actualizar el perfil y asignar la clave de activación.
+        let actualizado = User {
+            id_clerk: id_clerk.clone(),
+            nombre: "Nombre2".to_string(),
+            apellidos: "Apellidos2".to_string(),
+            username: "test_user_001".to_string(),
+            descripcion: Some("Descripción de prueba".to_string()),
+            clave_activacion: None,
+            usuario_activo: false,
+        };
+        update_user(&actualizado).await?;
+        update_user_clave(id_clerk.clone(), "CLAVE-TEST-123".to_string()).await?;
+
+        // Activar el usuario.
+        update_user_activo(id_clerk.clone(), true).await?;
+
+        // Comprobar el estado final.
+        let user = get_user_by_id_clerk(id_clerk.clone()).await?;
+        assert_eq!(user.nombre, "Nombre2");
+        assert!(user.descripcion.is_some());
+        assert_eq!(user.clave_activacion.as_deref(), Some("CLAVE-TEST-123"));
+        assert!(user.usuario_activo);
+
+        // Listado de usuarios.
+        let _ = get_users().await?;
+
+        // Eliminar el usuario de prueba.
+        delete_user(id_clerk.clone()).await?;
+
+        // Ya no debe existir: la búsqueda devuelve error.
+        let resultado = get_user_by_id_clerk(id_clerk.clone()).await;
+        assert!(resultado.is_err());
+
+        Ok(())
+    }
+}
