@@ -321,7 +321,190 @@ invoke('get_trade', { id: 150 })
 
 ---
 
-## 6. Tipos de datos compartidos
+## 6. Usuarios (`users.rs`)
+
+Gestión de usuarios de la aplicación. La autenticación se gestiona en el
+frontend con Clerk; el backend solo almacena el `id_clerk` y los datos de
+perfil. Todos los comandos de esta sección devuelven `Result` y propagan
+errores (captúralos con `try/catch` en el frontend).
+
+> **Seguridad:** la `clave_activacion` es un dato sensible; no la registres en
+> logs ni la muestres en la consola del navegador.
+
+### `table_users`
+
+Crea la tabla de usuarios en la base de datos (idempotente).
+
+**Parámetros:** Ninguno
+
+**Respuesta:** `String` — Mensaje de confirmación.
+
+**Ejemplo:**
+```js
+invoke('table_users')
+```
+
+---
+
+### `insert_user`
+
+Inserta un nuevo usuario. El `id_clerk` actúa como clave primaria: si ya
+existe un usuario con ese id, el comando devuelve error.
+
+| Parámetro | Tipo   | Requerido | Descripción                  |
+|-----------|--------|-----------|------------------------------|
+| `user`    | `User` | Sí        | Datos del usuario a insertar |
+
+**Respuesta:** `void` (`null`) — Ok si la inserción es correcta.
+
+**Ejemplo:**
+```js
+invoke('insert_user', {
+  user: {
+    id_clerk: "user_2abc...",
+    nombre: "Nombre",
+    apellidos: "Apellidos",
+    username: "usuario1",
+    descripcion: null,
+    clave_activacion: null,
+    usuario_activo: false
+  }
+})
+```
+
+---
+
+### `get_users`
+
+Obtiene todos los usuarios.
+
+**Parámetros:** Ninguno
+
+**Respuesta:** `Vec<User>`
+
+**Ejemplo:**
+```js
+invoke('get_users')
+```
+
+---
+
+### `get_user_by_id_clerk`
+
+Obtiene un usuario por su identificador de Clerk.
+
+| Parámetro  | Tipo     | Requerido | Descripción             |
+|------------|----------|-----------|-------------------------|
+| `id_clerk` | `String` | Sí        | ID del usuario en Clerk |
+
+**Respuesta:** `User` — Error si no existe.
+
+**Ejemplo:**
+```js
+invoke('get_user_by_id_clerk', { id_clerk: "user_2abc..." })
+```
+
+---
+
+### `get_user_by_username`
+
+Obtiene un usuario por su username.
+
+| Parámetro  | Tipo     | Requerido | Descripción |
+|------------|----------|-----------|-------------|
+| `username` | `String` | Sí        | Username    |
+
+**Respuesta:** `User` — Error si no existe.
+
+**Ejemplo:**
+```js
+invoke('get_user_by_username', { username: "usuario1" })
+```
+
+---
+
+### `update_user`
+
+Actualiza el perfil de un usuario (nombre, apellidos, username y descripción).
+No modifica `clave_activacion` ni `usuario_activo`.
+
+| Parámetro | Tipo   | Requerido | Descripción                                 |
+|-----------|--------|-----------|---------------------------------------------|
+| `user`    | `User` | Sí        | Datos nuevos, con el `id_clerk` del usuario |
+
+**Respuesta:** `void` (`null`)
+
+**Ejemplo:**
+```js
+invoke('update_user', {
+  user: {
+    id_clerk: "user_2abc...",
+    nombre: "NombreNuevo",
+    apellidos: "Apellidos",
+    username: "usuario1",
+    descripcion: "Trader de divisas",
+    clave_activacion: null,
+    usuario_activo: false
+  }
+})
+```
+
+---
+
+### `update_user_clave`
+
+Asigna o actualiza la clave de activación de un usuario.
+
+| Parámetro  | Tipo     | Requerido | Descripción               |
+|------------|----------|-----------|---------------------------|
+| `id_clerk` | `String` | Sí        | ID del usuario en Clerk   |
+| `clave`    | `String` | Sí        | Nueva clave de activación |
+
+**Respuesta:** `void` (`null`)
+
+**Ejemplo:**
+```js
+invoke('update_user_clave', { id_clerk: "user_2abc...", clave: "XXXX-XXXX" })
+```
+
+---
+
+### `update_user_activo`
+
+Activa o desactiva el acceso de un usuario al programa.
+
+| Parámetro  | Tipo      | Requerido | Descripción                     |
+|------------|-----------|-----------|---------------------------------|
+| `id_clerk` | `String`  | Sí        | ID del usuario en Clerk         |
+| `activo`   | `boolean` | Sí        | `true` = activado, `false` = no |
+
+**Respuesta:** `void` (`null`)
+
+**Ejemplo:**
+```js
+invoke('update_user_activo', { id_clerk: "user_2abc...", activo: true })
+```
+
+---
+
+### `delete_user`
+
+Elimina un usuario por su identificador de Clerk.
+
+| Parámetro  | Tipo     | Requerido | Descripción             |
+|------------|----------|-----------|-------------------------|
+| `id_clerk` | `String` | Sí        | ID del usuario en Clerk |
+
+**Respuesta:** `void` (`null`)
+
+**Ejemplo:**
+```js
+invoke('delete_user', { id_clerk: "user_2abc..." })
+```
+
+---
+
+## 7. Tipos de datos compartidos
 
 ### `Backtest`
 ```typescript
@@ -409,9 +592,22 @@ interface DataSymbol {
 }
 ```
 
+### `User`
+```typescript
+interface User {
+  id_clerk: string;            // ID del usuario en Clerk (clave primaria)
+  nombre: string;
+  apellidos: string;
+  username: string;
+  descripcion: string | null;
+  clave_activacion: string | null;
+  usuario_activo: boolean;
+}
+```
+
 ---
 
-## 7. Enumeraciones
+## 8. Enumeraciones
 
 ### `Timeframe`
 ```typescript

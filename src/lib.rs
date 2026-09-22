@@ -25,6 +25,15 @@ pub fn run() {
             comandos::data::save_data_dukas_ticks,
             comandos::data::get_data_for_tv,
             comandos::indicadores::get_indicator_for_tv,
+            comandos::users::table_users,
+            comandos::users::insert_user,
+            comandos::users::get_users,
+            comandos::users::get_user_by_id_clerk,
+            comandos::users::get_user_by_username,
+            comandos::users::update_user,
+            comandos::users::update_user_clave,
+            comandos::users::update_user_activo,
+            comandos::users::delete_user,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

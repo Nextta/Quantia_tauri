@@ -12,3 +12,4 @@ Quantia.db-wal
 logs.txt
 *.json
 /data/*
+/specs
