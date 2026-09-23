@@ -1,3 +1,4 @@
+pub mod activation_keys;
 pub mod backtests;
 pub mod data;
 pub mod indicadores;

@@ -34,6 +34,15 @@ pub fn run() {
             comandos::users::update_user_clave,
             comandos::users::update_user_activo,
             comandos::users::delete_user,
+            comandos::activation_keys::table_activation_keys,
+            comandos::activation_keys::insert_key,
+            comandos::activation_keys::get_keys,
+            comandos::activation_keys::get_available_keys,
+            comandos::activation_keys::get_key_by_id,
+            comandos::activation_keys::delete_key,
+            comandos::activation_keys::generate_keys,
+            comandos::activation_keys::activar_usuario,
+            comandos::activation_keys::release_key,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {
