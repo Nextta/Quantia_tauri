@@ -390,6 +390,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_crud_symbol_cfd() -> Result<(), Error> {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.lock().await;
         let symbol: SymbolInfoCFD = SymbolInfoCFD {
             id: 0,
             broker_id: 1,

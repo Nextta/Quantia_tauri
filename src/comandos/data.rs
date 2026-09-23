@@ -472,6 +472,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_save_data_dukas() -> Result<(), Error> {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.lock().await;
         let mut datos: Vec<DataDukas> = vec![];
         let dato: DataDukas = DataDukas {
             timestamp: 1547416809672,
@@ -507,6 +508,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_save_data_dukas_ticks() -> Result<(), Error> {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.lock().await;
         let mut datos: Vec<DataDukasTicks> = vec![];
         let dato: DataDukasTicks = DataDukasTicks {
             timestamp: 1547416809672,

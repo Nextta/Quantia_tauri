@@ -580,6 +580,7 @@ mod tests {
 
     #[test]
     fn test_ht_dcperiod() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 ht_dcperiod(&mut df, None);
@@ -594,6 +595,7 @@ mod tests {
 
     #[test]
     fn test_ht_dcphase() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 ht_dcphase(&mut df, None);
@@ -608,6 +610,7 @@ mod tests {
 
     #[test]
     fn test_ht_phasor() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 ht_phasor(&mut df, None, None);
@@ -622,6 +625,7 @@ mod tests {
 
     #[test]
     fn test_ht_sine() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 ht_sine(&mut df, None, None);
@@ -636,6 +640,7 @@ mod tests {
 
     #[test]
     fn test_ht_trendmode() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 ht_trendmode(&mut df, None);

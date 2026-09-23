@@ -393,6 +393,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_crud_trade() -> Result<(), Error> {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.lock().await;
         let mut trade: Trade = Trade::new(
             1,
             SymbolInfoCFD {

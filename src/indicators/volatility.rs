@@ -220,6 +220,7 @@ mod tests {
 
     #[test]
     fn test_trange() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 trange(&mut df, None);
@@ -233,6 +234,7 @@ mod tests {
 
     #[test]
     fn test_atr() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 atr(&mut df, Some(14), Some(1.0), None);
@@ -246,6 +248,7 @@ mod tests {
 
     #[test]
     fn test_natr() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 natr(&mut df, Some(14), None);

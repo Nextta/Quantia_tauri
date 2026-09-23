@@ -4,6 +4,21 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
+/// Bloqueo global que serializa los tests que acceden a recursos compartidos
+/// (la base de datos `Quantia.db` y los ficheros de `data/`).
+///
+/// Al ejecutar `cargo test` en paralelo, los tests de `api/`, `backtest/`,
+/// `comandos/data`, `data_lab/` e `indicators/` compiten por la misma base
+/// de datos SQLite y por los mismos ficheros de prueba, lo que provoca
+/// bloqueos (`database is locked`), carreras de lectura/escritura y errores
+/// de permisos. Adquiriendo este mutex al inicio de cada uno de esos tests
+/// la suite queda serializada y determinista.
+///
+/// - Tests asíncronos (`#[tokio::test]`): `BLOQUEO_RECURSOS.lock().await`.
+/// - Tests síncronos (`#[test]`): `BLOQUEO_RECURSOS.blocking_lock()`.
+#[cfg(test)]
+pub static BLOQUEO_RECURSOS: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
 pub fn create_test_data(format: &DataFormatSymbol) {
     let ruta = format!("data/test.{}", format.to_string());
 

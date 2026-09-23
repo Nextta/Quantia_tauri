@@ -2091,6 +2091,7 @@ mod tests {
     //================================TEST: Strategies================================
     #[tokio::test(flavor = "multi_thread")]
     async fn test_crud_strategies() -> Result<(), Error> {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.lock().await;
         match table_strategies().await {
             Ok(_) => {
                 let estrategia: Strategy = Strategy {

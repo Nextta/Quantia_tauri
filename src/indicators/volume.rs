@@ -316,6 +316,7 @@ mod tests {
 
     #[test]
     fn test_ad() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         if let Ok(mut df) = load_data() {
             ad(&mut df, None);
             // save_data(&df, "data/test_ad.csv").unwrap();
@@ -326,6 +327,7 @@ mod tests {
 
     #[test]
     fn test_adosc() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         if let Ok(mut df) = load_data() {
             adosc(&mut df, None, None, None);
             // save_data(&df, "data/test_adosc.csv").unwrap();
@@ -336,6 +338,7 @@ mod tests {
 
     #[test]
     fn test_obv() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         if let Ok(mut df) = load_data() {
             obv(&mut df, None);
             // save_data(&df, "data/test_obv.csv").unwrap();

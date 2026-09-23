@@ -254,6 +254,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_crud_data() -> Result<(), Error> {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.lock().await;
         let data: DataSymbol = DataSymbol {
             id: 0,
             name: "EURUSD".to_string(),

@@ -4935,6 +4935,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_bt_crucemedias() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.lock().await;
         let symbol: SymbolInfoCFD = get_symbol_cfd_by_id(1).await.unwrap_or(SymbolInfoCFD {
             id: 1,
             broker_id: 1,

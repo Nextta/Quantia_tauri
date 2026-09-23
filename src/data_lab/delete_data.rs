@@ -27,6 +27,7 @@ mod tests {
 
     #[test]
     fn delete_data_local_test() -> Result<(), Error> {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         let path = "data/test_delete.csv";
         if !Path::new(path).exists() {
             File::create(path)?;

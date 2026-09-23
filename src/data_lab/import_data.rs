@@ -66,6 +66,7 @@ mod tests {
 
     #[test]
     fn import_data_test() -> Result<(), Error> {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         create_test_data(&DataFormatSymbol::Parquet);
 
         let data_info: DataSymbol = DataSymbol {

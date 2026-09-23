@@ -482,6 +482,7 @@ mod tests {
 
     #[test]
     fn test_weekly_ohlc() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 weekly_ohlc(&mut df, None, None, None, None);
@@ -495,6 +496,7 @@ mod tests {
 
     #[test]
     fn test_daily_ohlc() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 daily_ohlc(&mut df, None, None, None, None);
@@ -508,6 +510,7 @@ mod tests {
 
     #[test]
     fn test_monthly_ohlc() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 monthly_ohlc(&mut df, None, None, None, None);
@@ -521,6 +524,7 @@ mod tests {
 
     #[test]
     fn test_avgprice() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 avgprice(&mut df, None);
@@ -534,6 +538,7 @@ mod tests {
 
     #[test]
     fn test_medprice() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 medprice(&mut df, None);
@@ -547,6 +552,7 @@ mod tests {
 
     #[test]
     fn test_typprice() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 typprice(&mut df, None);
@@ -560,6 +566,7 @@ mod tests {
 
     #[test]
     fn test_wclprice() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 wclprice(&mut df, None);
