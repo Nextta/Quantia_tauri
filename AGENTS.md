@@ -36,6 +36,7 @@ Estructura clave de `src/`:
   `tauri.conf.json`.
 - No añadir dependencias (crates) ni features de Polars sin consultar.
 - No renombrar ni eliminar comandos Tauri existentes (rompe el frontend).
+- Documenta todo el código que crees en español.
 
 ## Al terminar cualquier tarea
 - Ejecutar `cargo test` y verificar que compila (`cargo check`).
