@@ -150,7 +150,10 @@ pub async fn get_user_by_id_clerk(id_clerk: String) -> Result<User, Error> {
     let conn = db.connect()?;
 
     let mut rows = conn
-        .query("SELECT * FROM users WHERE id_clerk = ?", params![id_clerk])
+        .query(
+            "SELECT * FROM users WHERE id_clerk = ?",
+            params![id_clerk.as_str()],
+        )
         .await?;
 
     let row = rows.next().await?.ok_or_else(|| Error {
@@ -194,7 +197,10 @@ pub async fn get_user_by_username(username: String) -> Result<User, Error> {
     let conn = db.connect()?;
 
     let mut rows = conn
-        .query("SELECT * FROM users WHERE username = ?", params![username])
+        .query(
+            "SELECT * FROM users WHERE username = ?",
+            params![username.as_str()],
+        )
         .await?;
 
     let row = rows.next().await?.ok_or_else(|| Error {
