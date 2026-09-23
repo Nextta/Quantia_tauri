@@ -8,7 +8,7 @@ Quantia.db-info
 Quantia.db-shm
 Quantia.db-wal
 .qwen
-/download
+/data
 logs.txt
 *.json
 /data/*

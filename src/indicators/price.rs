@@ -460,13 +460,13 @@ mod tests {
     use crate::utils::data_test::create_test_data;
     use std::fs::remove_file;
 
-    //Para los test crear una carpeta llamada download en la raiz de este proyecto
+    //Para los test crear una carpeta llamada data en la raiz de este proyecto
     // y llamar a los datos test.csv
     fn load_data() -> PolarsResult<DataFrame> {
         create_test_data(&DataFormatSymbol::Csv);
 
         let df = CsvReadOptions::default()
-            .try_into_reader_with_file_path(Some("download/test.csv".into()))
+            .try_into_reader_with_file_path(Some("data/test.csv".into()))
             .unwrap()
             .finish()
             .unwrap();
@@ -485,9 +485,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 weekly_ohlc(&mut df, None, None, None, None);
-                // save_data(&df, "download/test_weekly_ohlc.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_weekly_ohlc.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
@@ -498,9 +498,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 daily_ohlc(&mut df, None, None, None, None);
-                // save_data(&df, "download/test_daily_ohlc.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_daily_ohlc.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
@@ -511,9 +511,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 monthly_ohlc(&mut df, None, None, None, None);
-                // save_data(&df, "download/test_monthly_ohlc.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_monthly_ohlc.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
@@ -524,9 +524,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 avgprice(&mut df, None);
-                // save_data(&df, "download/test_avgprice.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_avgprice.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
@@ -537,9 +537,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 medprice(&mut df, None);
-                // save_data(&df, "download/test_medprice.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_medprice.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
@@ -550,9 +550,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 typprice(&mut df, None);
-                // save_data(&df, "download/test_typprice.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_typprice.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
@@ -563,9 +563,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 wclprice(&mut df, None);
-                // save_data(&df, "download/test_wclprice.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_wclprice.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }

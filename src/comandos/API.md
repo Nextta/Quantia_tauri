@@ -68,7 +68,7 @@ Guarda datos OHLC descargados (velas con open, high, low, close, volume) en el f
 | `from_date`   | `String`          | Sí        | Fecha inicio ("YYYY-MM-DD HH:MM:SS")           |
 | `to_date`     | `String`          | Sí        | Fecha fin ("YYYY-MM-DD HH:MM:SS")              |
 | `broker_data` | `DataOrigen`      | Sí        | Origen ("DukasCopy", "MT5", "Import")          |
-| `ruta`        | `Option<String>`  | No        | Carpeta destino (default: "download")          |
+| `ruta`        | `Option<String>`  | No        | Carpeta destino (default: "data")          |
 | `format`      | `Option<DataFormatSymbol>` | No | Formato ("Parquet", "Csv", "Json")             |
 | `actualized`  | `Option<bool>`    | No        | Si está actualizado (default: false)           |
 
@@ -116,7 +116,7 @@ Guarda datos de ticks descargados (askPrice, bidPrice, askVolume, bidVolume). So
 | `from_date`   | `String`              | Sí        | Fecha inicio                                 |
 | `to_date`     | `String`              | Sí        | Fecha fin                                    |
 | `broker_data` | `DataOrigen`          | Sí        | Origen de datos                              |
-| `ruta`        | `Option<String>`      | No        | Carpeta destino (default: "download")        |
+| `ruta`        | `Option<String>`      | No        | Carpeta destino (default: "data")        |
 | `format`      | `Option<DataFormatSymbol>` | No | Formato ("Parquet", "Csv", "Json")           |
 | `actualized`  | `Option<bool>`        | No        | Si está actualizado (default: false)         |
 
@@ -504,7 +504,175 @@ invoke('delete_user', { id_clerk: "user_2abc..." })
 
 ---
 
-## 7. Tipos de datos compartidos
+## 7. Claves de activación (`activation_keys.rs`)
+
+Gestión de las claves que activan el acceso al producto. El formato de las
+claves es `XXXX-XX-XXX-XXXXXXXXXX`. Todos los comandos de esta sección
+devuelven `Result` y propagan errores (captúralos con `try/catch` en el
+frontend).
+
+> **Seguridad:** las claves son datos sensibles; no las registres en logs ni
+> las muestres en la consola del navegador.
+
+### `table_activation_keys`
+
+Crea la tabla de claves de activación en la base de datos (idempotente).
+
+**Parámetros:** Ninguno
+
+**Respuesta:** `String` — Mensaje de confirmación.
+
+**Ejemplo:**
+```js
+invoke('table_activation_keys')
+```
+
+---
+
+### `insert_key`
+
+Inserta una nueva clave de activación (nace disponible, sin usuario).
+
+| Parámetro | Tipo     | Requerido | Descripción                       |
+|-----------|----------|-----------|-----------------------------------|
+| `clave`   | `String` | Sí        | Valor de la clave de activación   |
+
+**Respuesta:** `number` — ID de la clave insertada.
+
+**Ejemplo:**
+```js
+invoke('insert_key', { clave: "XXXX-XX-XXX-XXXXXXXXXX" })
+```
+
+---
+
+### `get_keys`
+
+Obtiene todas las claves de activación con su estado.
+
+**Parámetros:** Ninguno
+
+**Respuesta:** `Vec<ActivationKey>`
+
+**Ejemplo:**
+```js
+invoke('get_keys')
+```
+
+---
+
+### `get_available_keys`
+
+Obtiene solo las claves disponibles (no usadas).
+
+**Parámetros:** Ninguno
+
+**Respuesta:** `Vec<ActivationKey>`
+
+**Ejemplo:**
+```js
+invoke('get_available_keys')
+```
+
+---
+
+### `get_key_by_id`
+
+Obtiene una clave de activación por su ID.
+
+| Parámetro | Tipo     | Requerido | Descripción              |
+|-----------|----------|-----------|--------------------------|
+| `id`      | `number` | Sí        | ID de la clave           |
+
+**Respuesta:** `ActivationKey` — Error si no existe.
+
+**Ejemplo:**
+```js
+invoke('get_key_by_id', { id: 1 })
+```
+
+---
+
+### `delete_key`
+
+Elimina una clave de activación por su ID.
+
+| Parámetro | Tipo     | Requerido | Descripción              |
+|-----------|----------|-----------|--------------------------|
+| `id`      | `number` | Sí        | ID de la clave           |
+
+**Respuesta:** `void` (`null`)
+
+**Ejemplo:**
+```js
+invoke('delete_key', { id: 1 })
+```
+
+---
+
+### `generate_keys`
+
+Genera claves aleatorias con formato `XXXX-XX-XXX-XXXXXXXXXX` y las guarda
+en la base de datos.
+
+| Parámetro  | Tipo     | Requerido | Descripción                |
+|------------|----------|-----------|----------------------------|
+| `cantidad` | `number` | Sí        | Número de claves a generar |
+
+**Respuesta:** `Vec<string>` — Las claves generadas.
+
+**Ejemplo:**
+```js
+invoke('generate_keys', { cantidad: 10 })
+```
+
+---
+
+### `activar_usuario`
+
+Activa el acceso de un usuario mediante una clave de activación. Si todo es
+correcto: la clave queda vinculada al usuario (`usada`, `id_clerk`,
+`fecha_activacion`), se guarda también en `users.clave_activacion` y el
+usuario queda activado.
+
+| Parámetro  | Tipo     | Requerido | Descripción                        |
+|------------|----------|-----------|------------------------------------|
+| `id_clerk` | `String` | Sí        | ID del usuario en Clerk            |
+| `clave`    | `String` | Sí        | Clave de activación del usuario    |
+
+**Respuesta:** `void` (`null`)
+
+**Errores** (la base de datos no se modifica): no existe el usuario; el
+usuario ya está activo; la clave no existe o ya está usada (mismo error
+genérico en ambos casos).
+
+**Ejemplo:**
+```js
+invoke('activar_usuario', { id_clerk: "user_2abc...", clave: "XXXX-XX-XXX-XXXXXXXXXX" })
+```
+
+---
+
+### `release_key`
+
+Libera una clave usada para poder reutilizarla: limpia `usada`, `id_clerk` y
+`fecha_activacion`. No modifica al usuario que la tenía (desactívalo aparte
+con `update_user_activo` si procede).
+
+| Parámetro | Tipo     | Requerido | Descripción              |
+|-----------|----------|-----------|--------------------------|
+| `id`      | `number` | Sí        | ID de la clave           |
+
+**Respuesta:** `void` (`null`)
+
+**Ejemplo:**
+```js
+invoke('release_key', { id: 1 })
+```
+
+---
+
+## 8. Tipos de datos compartidos
 
 ### `Backtest`
 ```typescript
@@ -605,9 +773,20 @@ interface User {
 }
 ```
 
+### `ActivationKey`
+```typescript
+interface ActivationKey {
+  id: number;                // ID de la clave
+  clave: string;             // Formato XXXX-XX-XXX-XXXXXXXXXX
+  usada: boolean;            // true si ya ha sido consumida
+  id_clerk: string | null;   // Usuario que la consumió (null si disponible)
+  fecha_activacion: string | null;  // "YYYY-MM-DD HH:MM:SS" (null si disponible)
+}
+```
+
 ---
 
-## 8. Enumeraciones
+## 9. Enumeraciones
 
 ### `Timeframe`
 ```typescript

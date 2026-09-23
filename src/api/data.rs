@@ -258,7 +258,7 @@ mod tests {
             id: 0,
             name: "EURUSD".to_string(),
             timeframe: Some(Timeframe::H1),
-            ruta: "download".to_string(),
+            ruta: "data".to_string(),
             formato: Some(DataFormatSymbol::Parquet),
             fecha_inicio: "01/01/2020".to_string(),
             fecha_fin: "01/01/2026".to_string(),

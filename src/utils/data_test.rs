@@ -5,10 +5,10 @@ use std::io::Write;
 use std::path::Path;
 
 pub fn create_test_data(format: &DataFormatSymbol) {
-    let ruta = format!("download/test.{}", format.to_string());
+    let ruta = format!("data/test.{}", format.to_string());
 
     if !Path::new(ruta.as_str()).exists() {
-        let mut file = File::create("download/test.csv").unwrap();
+        let mut file = File::create("data/test.csv").unwrap();
         writeln!(file, "time,open,high,low,close,volume").unwrap();
         writeln!(
             file,
@@ -136,21 +136,21 @@ pub fn create_test_data(format: &DataFormatSymbol) {
         .unwrap();
 
         let mut df = CsvReadOptions::default()
-            .try_into_reader_with_file_path(Some("download/test.csv".into()))
+            .try_into_reader_with_file_path(Some("data/test.csv".into()))
             .unwrap()
             .finish()
             .unwrap();
 
-        let mut file = std::fs::File::create("download/test.parquet").unwrap();
+        let mut file = std::fs::File::create("data/test.parquet").unwrap();
         ParquetWriter::new(&mut file).finish(&mut df).unwrap();
     }
 }
 
 pub fn create_test_data_ticks(format: &DataFormatSymbol) {
-    let ruta = format!("download/test_ticks.{}", format.to_string());
+    let ruta = format!("data/test_ticks.{}", format.to_string());
 
     if !Path::new(ruta.as_str()).exists() {
-        let mut file = File::create("download/test_ticks.csv").unwrap();
+        let mut file = File::create("data/test_ticks.csv").unwrap();
         writeln!(file, "time,askPrice,bidPrice,askVolume,bidVolume").unwrap();
         writeln!(
             file,
@@ -6447,12 +6447,12 @@ pub fn create_test_data_ticks(format: &DataFormatSymbol) {
         .unwrap();
 
         let mut df = CsvReadOptions::default()
-            .try_into_reader_with_file_path(Some("download/test_ticks.csv".into()))
+            .try_into_reader_with_file_path(Some("data/test_ticks.csv".into()))
             .unwrap()
             .finish()
             .unwrap();
 
-        let mut file = std::fs::File::create("download/test_ticks.parquet").unwrap();
+        let mut file = std::fs::File::create("data/test_ticks.parquet").unwrap();
         ParquetWriter::new(&mut file).finish(&mut df).unwrap();
     }
 }

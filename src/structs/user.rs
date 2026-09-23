@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 /// Usuario de la aplicación.
 ///
 /// Representa a un usuario registrado en la base de datos (`users`).

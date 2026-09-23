@@ -74,7 +74,7 @@ impl Backtest {
                 id: 0,
                 name: "INIT".to_string(),
                 timeframe: Some(Timeframe::D1),
-                ruta: "download".to_string(),
+                ruta: "data".to_string(),
                 formato: Some(DataFormatSymbol::Parquet),
                 fecha_inicio: "00/00/0000".to_string(),
                 fecha_fin: "00/00/0000".to_string(),

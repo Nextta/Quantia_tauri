@@ -204,7 +204,7 @@ mod tests {
         create_test_data(&DataFormatSymbol::Csv);
 
         let df = CsvReadOptions::default()
-            .try_into_reader_with_file_path(Some("download/test.csv".into()))
+            .try_into_reader_with_file_path(Some("data/test.csv".into()))
             .unwrap()
             .finish()
             .unwrap();
@@ -223,9 +223,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 trange(&mut df, None);
-                // save_data(&df, "download/test_trange.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_trange.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
@@ -236,9 +236,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 atr(&mut df, Some(14), Some(1.0), None);
-                // save_data(&df, "download/test_atr.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_atr.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }
@@ -249,9 +249,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 natr(&mut df, Some(14), None);
-                // save_data(&df, "download/test_natr.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_natr.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         }

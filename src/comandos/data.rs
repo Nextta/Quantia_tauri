@@ -56,7 +56,7 @@ pub async fn save_data_dukas(
     format: Option<DataFormatSymbol>,
     actualized: Option<bool>,
 ) -> Result<String, Error> {
-    let ruta_data = ruta.unwrap_or("download".to_string());
+    let ruta_data = ruta.unwrap_or("data".to_string());
     let formato_data = format.unwrap_or(DataFormatSymbol::Parquet);
     let actualizado = actualized.unwrap_or(false);
 
@@ -129,7 +129,7 @@ pub async fn save_data_dukas_ticks(
     format: Option<DataFormatSymbol>,
     actualized: Option<bool>,
 ) -> Result<String, Error> {
-    let ruta_data = ruta.unwrap_or("download".to_string());
+    let ruta_data = ruta.unwrap_or("data".to_string());
     let formato_data = format.unwrap_or(DataFormatSymbol::Parquet);
     let actualizado = actualized.unwrap_or(false);
 
@@ -228,7 +228,7 @@ pub fn import_data_symbol(
     data_info: DataSymbol,
     ruta_import: Option<&str>,
 ) -> Result<String, Error> {
-    let ruta = ruta_import.unwrap_or("download");
+    let ruta = ruta_import.unwrap_or("data");
 
     export_data(&data_info, &ruta);
 
@@ -500,7 +500,7 @@ mod tests {
         )
         .await?;
 
-        remove_file("download/name.csv").unwrap();
+        remove_file("data/name.csv").unwrap();
 
         Ok(())
     }
@@ -534,7 +534,7 @@ mod tests {
         )
         .await?;
 
-        remove_file("download/name_ticks.csv").unwrap();
+        remove_file("data/name_ticks.csv").unwrap();
 
         Ok(())
     }

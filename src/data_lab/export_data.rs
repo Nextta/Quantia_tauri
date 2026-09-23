@@ -144,7 +144,7 @@ mod tests {
             id: 0,
             name: "test".to_string(),
             timeframe: Some(Timeframe::M1),
-            ruta: "download".to_string(),
+            ruta: "data".to_string(),
             formato: Some(DataFormatSymbol::Csv),
             fecha_inicio: "00/00/0000".to_string(),
             fecha_fin: "00/00/0000".to_string(),
@@ -153,13 +153,13 @@ mod tests {
             origen: Some(DataOrigen::DukasCopy),
         };
 
-        export_data(&data_info_csv, "download");
+        export_data(&data_info_csv, "data");
 
         let data_info_csv_tick: DataSymbol = DataSymbol {
             id: 0,
             name: "test_ticks".to_string(),
             timeframe: Some(Timeframe::Ticks),
-            ruta: "download".to_string(),
+            ruta: "data".to_string(),
             formato: Some(DataFormatSymbol::Csv),
             fecha_inicio: "00/00/0000".to_string(),
             fecha_fin: "00/00/0000".to_string(),
@@ -168,13 +168,13 @@ mod tests {
             origen: Some(DataOrigen::DukasCopy),
         };
 
-        export_data(&data_info_csv_tick, "download");
+        export_data(&data_info_csv_tick, "data");
 
         let data_info_csv_tf_change: DataSymbol = DataSymbol {
             id: 0,
             name: "test".to_string(),
             timeframe: Some(Timeframe::M15),
-            ruta: "download".to_string(),
+            ruta: "data".to_string(),
             formato: Some(DataFormatSymbol::Csv),
             fecha_inicio: "00/00/0000".to_string(),
             fecha_fin: "00/00/0000".to_string(),
@@ -183,12 +183,12 @@ mod tests {
             origen: Some(DataOrigen::DukasCopy),
         };
 
-        export_data(&data_info_csv_tf_change, "download");
+        export_data(&data_info_csv_tf_change, "data");
 
-        remove_file("download/test.csv")?;
-        remove_file("download/test_ticks.csv")?;
-        remove_file("download/test.parquet")?;
-        remove_file("download/test_ticks.parquet")?;
+        remove_file("data/test.csv")?;
+        remove_file("data/test_ticks.csv")?;
+        remove_file("data/test.parquet")?;
+        remove_file("data/test_ticks.parquet")?;
         Ok(())
     }
 }

@@ -300,7 +300,7 @@ mod tests {
         create_test_data(&DataFormatSymbol::Csv);
 
         let df = CsvReadOptions::default()
-            .try_into_reader_with_file_path(Some("download/test.csv".into()))
+            .try_into_reader_with_file_path(Some("data/test.csv".into()))
             .unwrap()
             .finish()
             .unwrap();
@@ -318,9 +318,9 @@ mod tests {
     fn test_ad() {
         if let Ok(mut df) = load_data() {
             ad(&mut df, None);
-            // save_data(&df, "download/test_ad.csv").unwrap();
-            remove_file("download/test.csv").unwrap();
-            remove_file("download/test.parquet").unwrap();
+            // save_data(&df, "data/test_ad.csv").unwrap();
+            remove_file("data/test.csv").unwrap();
+            remove_file("data/test.parquet").unwrap();
         }
     }
 
@@ -328,9 +328,9 @@ mod tests {
     fn test_adosc() {
         if let Ok(mut df) = load_data() {
             adosc(&mut df, None, None, None);
-            // save_data(&df, "download/test_adosc.csv").unwrap();
-            remove_file("download/test.csv").unwrap();
-            remove_file("download/test.parquet").unwrap();
+            // save_data(&df, "data/test_adosc.csv").unwrap();
+            remove_file("data/test.csv").unwrap();
+            remove_file("data/test.parquet").unwrap();
         }
     }
 
@@ -338,9 +338,9 @@ mod tests {
     fn test_obv() {
         if let Ok(mut df) = load_data() {
             obv(&mut df, None);
-            // save_data(&df, "download/test_obv.csv").unwrap();
-            remove_file("download/test.csv").unwrap();
-            remove_file("download/test.parquet").unwrap();
+            // save_data(&df, "data/test_obv.csv").unwrap();
+            remove_file("data/test.csv").unwrap();
+            remove_file("data/test.parquet").unwrap();
         }
     }
 }

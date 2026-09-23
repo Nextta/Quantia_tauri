@@ -570,7 +570,7 @@ mod tests {
         create_test_data(&DataFormatSymbol::Csv);
 
         let df = CsvReadOptions::default()
-            .try_into_reader_with_file_path(Some("download/test.csv".into()))
+            .try_into_reader_with_file_path(Some("data/test.csv".into()))
             .unwrap()
             .finish()
             .unwrap();
@@ -589,9 +589,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 beta(&mut df, "close", "open", None, Some("beta"));
-                // save_data(&df, "download/test_beta.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_beta.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -602,9 +602,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 correl(&mut df, "close", "open", None, None);
-                // save_data(&df, "download/test_correl.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_correl.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -615,9 +615,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 linearreg(&mut df, "close", None, None);
-                // save_data(&df, "download/test_linearreg.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_linearreg.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -628,9 +628,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 stddev(&mut df, "close", None, None, None);
-                // save_data(&df, "download/test_stddev.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_stddev.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -641,9 +641,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 linearreg_angle(&mut df, "close", None, None);
-                // save_data(&df, "download/test_linearreg_angle.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_linearreg_angle.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -654,9 +654,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 linearreg_intercept(&mut df, "close", None, None);
-                // save_data(&df, "download/test_linearreg_intercept.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_linearreg_intercept.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -667,9 +667,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 linearreg_slope(&mut df, "close", None, None);
-                // save_data(&df, "download/test_linearreg_slope.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_linearreg_slope.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -680,9 +680,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 tsf(&mut df, "close", None, None);
-                // save_data(&df, "download/test_tsf.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_tsf.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -693,9 +693,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 var(&mut df, "close", None, None, None);
-                // save_data(&df, "download/test_var.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_var.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };

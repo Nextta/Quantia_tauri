@@ -41,7 +41,7 @@ mod tests {
         create_test_data(&DataFormatSymbol::Csv);
 
         let df = CsvReadOptions::default()
-            .try_into_reader_with_file_path(Some("download/test.csv".into()))
+            .try_into_reader_with_file_path(Some("data/test.csv".into()))
             .unwrap()
             .finish()
             .unwrap();
@@ -52,7 +52,7 @@ mod tests {
         create_test_data_ticks(&DataFormatSymbol::Csv);
 
         let df = CsvReadOptions::default()
-            .try_into_reader_with_file_path(Some("download/test_ticks.csv".into()))
+            .try_into_reader_with_file_path(Some("data/test_ticks.csv".into()))
             .unwrap()
             .finish()
             .unwrap();
@@ -67,7 +67,7 @@ mod tests {
                     id: 0,
                     name: "test".to_string(),
                     timeframe: Some(Timeframe::M1),
-                    ruta: "download".to_string(),
+                    ruta: "data".to_string(),
                     formato: Some(DataFormatSymbol::Csv),
                     fecha_inicio: "00/00/0000".to_string(),
                     fecha_fin: "00/00/0000".to_string(),
@@ -78,13 +78,13 @@ mod tests {
 
                 match update_data(&df, &data_info) {
                     Ok(_) => {
-                        remove_file("download/test.csv").unwrap();
-                        remove_file("download/test.parquet").unwrap();
+                        remove_file("data/test.csv").unwrap();
+                        remove_file("data/test.parquet").unwrap();
                         return Ok(());
                     }
                     Err(_) => {
-                        remove_file("download/test.csv").unwrap();
-                        remove_file("download/test.parquet").unwrap();
+                        remove_file("data/test.csv").unwrap();
+                        remove_file("data/test.parquet").unwrap();
                         return Err(Error {
                             msg: "No se ha podido actualizar los datos".to_string(),
                         });
@@ -92,8 +92,8 @@ mod tests {
                 }
             }
             Err(_) => {
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
                 return Err(Error {
                     msg: "No se ha podido cargar los datos".to_string(),
                 });
@@ -109,7 +109,7 @@ mod tests {
                     id: 0,
                     name: "test_ticks".to_string(),
                     timeframe: Some(Timeframe::M1),
-                    ruta: "download".to_string(),
+                    ruta: "data".to_string(),
                     formato: Some(DataFormatSymbol::Csv),
                     fecha_inicio: "00/00/0000".to_string(),
                     fecha_fin: "00/00/0000".to_string(),
@@ -120,13 +120,13 @@ mod tests {
 
                 match update_data_ticks(&df, &data_info) {
                     Ok(_) => {
-                        remove_file("download/test_ticks.csv").unwrap();
-                        remove_file("download/test_ticks.parquet").unwrap();
+                        remove_file("data/test_ticks.csv").unwrap();
+                        remove_file("data/test_ticks.parquet").unwrap();
                         return Ok(());
                     }
                     Err(_) => {
-                        remove_file("download/test_ticks.csv").unwrap();
-                        remove_file("download/test_ticks.parquet").unwrap();
+                        remove_file("data/test_ticks.csv").unwrap();
+                        remove_file("data/test_ticks.parquet").unwrap();
                         return Err(Error {
                             msg: "No se ha podido actualizar los datos".to_string(),
                         });
@@ -134,8 +134,8 @@ mod tests {
                 }
             }
             Err(_) => {
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
                 return Err(Error {
                     msg: "No se ha podido cargar los datos".to_string(),
                 });
