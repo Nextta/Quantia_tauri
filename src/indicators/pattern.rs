@@ -4120,6 +4120,7 @@ mod tests {
 
     #[test]
     fn test_cdl2crows() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdl2crows(&mut df, Some("cdl2crows"));
@@ -4133,6 +4134,7 @@ mod tests {
 
     #[test]
     fn test_cdl3blackcrows() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdl3blackcrows(&mut df, Some("cdl3blackcrows"));
@@ -4146,6 +4148,7 @@ mod tests {
 
     #[test]
     fn test_cdl3inside() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdl3inside(&mut df, Some("cdl3inside"));
@@ -4159,6 +4162,7 @@ mod tests {
 
     #[test]
     fn test_cdl3linestrike() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdl3linestrike(&mut df, Some("cdl3linestrike"));
@@ -4172,6 +4176,7 @@ mod tests {
 
     #[test]
     fn test_cdl3outside() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdl3outside(&mut df, Some("cdl3outside"));
@@ -4185,6 +4190,7 @@ mod tests {
 
     #[test]
     fn test_cdl3starsinsouth() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdl3starsinsouth(&mut df, Some("cdl3starsinsouth"));
@@ -4198,6 +4204,7 @@ mod tests {
 
     #[test]
     fn test_cdl3whitesoldiers() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdl3whitesoldiers(&mut df, Some("cdl3whitesoldiers"));
@@ -4211,6 +4218,7 @@ mod tests {
 
     #[test]
     fn test_cdlabandonedbaby() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlabandonedbaby(&mut df, Some("cdlabandonedbaby"));
@@ -4224,6 +4232,7 @@ mod tests {
 
     #[test]
     fn test_cdladvanceblock() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdladvanceblock(&mut df, Some("cdladvanceblock"));
@@ -4237,6 +4246,7 @@ mod tests {
 
     #[test]
     fn test_cdlbelthold() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlbelthold(&mut df, Some("cdlbelthold"));
@@ -4250,6 +4260,7 @@ mod tests {
 
     #[test]
     fn test_cdlbreakaway() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlbreakaway(&mut df, Some("cdlbreakaway"));
@@ -4263,6 +4274,7 @@ mod tests {
 
     #[test]
     fn test_cdlclosingmarubuzo() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlclosingmarubuzo(&mut df, Some("cdlclosingmarubuzo"));
@@ -4276,6 +4288,7 @@ mod tests {
 
     #[test]
     fn test_cdlconcealbabyswall() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlconcealbabyswall(&mut df, Some("cdlconcealbabyswall"));
@@ -4289,6 +4302,7 @@ mod tests {
 
     #[test]
     fn test_cdlcounterattack() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlcounterattack(&mut df, Some("cdlcounterattack"));
@@ -4302,6 +4316,7 @@ mod tests {
 
     #[test]
     fn test_cdldarkcloudcover() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdldarkcloudcover(&mut df, Some("cdldarkcloudcover"));
@@ -4315,6 +4330,7 @@ mod tests {
 
     #[test]
     fn test_cdldoji() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdldoji(&mut df, Some("cdldoji"));
@@ -4328,6 +4344,7 @@ mod tests {
 
     #[test]
     fn test_cdldojistar() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdldojistar(&mut df, Some("cdldojistar"));
@@ -4341,6 +4358,7 @@ mod tests {
 
     #[test]
     fn test_cdldragonflydoji() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdldragonflydoji(&mut df, Some("cdldragonflydoji"));
@@ -4354,6 +4372,7 @@ mod tests {
 
     #[test]
     fn test_cdlengulfing() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlengulfing(&mut df, Some("cdlengulfing"));
@@ -4367,6 +4386,7 @@ mod tests {
 
     #[test]
     fn test_cdleveningdojistar() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdleveningdojistar(&mut df, Some("cdleveningdojistar"));
@@ -4380,6 +4400,7 @@ mod tests {
 
     #[test]
     fn test_cdlmorningdojistar() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlmorningdojistar(&mut df, None, Some("cdlmorningdojistar"));
@@ -4393,6 +4414,7 @@ mod tests {
 
     #[test]
     fn test_cdlmorningstar() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlmorningstar(&mut df, None, Some("cdlmorningstar"));
@@ -4406,6 +4428,7 @@ mod tests {
 
     #[test]
     fn test_cdlonneck() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlonneck(&mut df, Some("cdlonneck"));
@@ -4419,6 +4442,7 @@ mod tests {
 
     #[test]
     fn test_cdlpiercing() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlpiercing(&mut df, None, Some("cdlpiercing"));
@@ -4432,6 +4456,7 @@ mod tests {
 
     #[test]
     fn test_cdlrickshawman() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlrickshawman(&mut df, Some("cdlrickshawman"));
@@ -4445,6 +4470,7 @@ mod tests {
 
     #[test]
     fn test_cdlrisefall3methods() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlrisefall3methods(&mut df, Some("cdlrisefall3methods"));
@@ -4458,6 +4484,7 @@ mod tests {
 
     #[test]
     fn test_cdlseparatinglines() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlseparatinglines(&mut df, Some("cdlseparatinglines"));
@@ -4471,6 +4498,7 @@ mod tests {
 
     #[test]
     fn test_cdlshootingstar() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlshootingstar(&mut df, Some("cdlshootingstar"));
@@ -4484,6 +4512,7 @@ mod tests {
 
     #[test]
     fn test_cdlshortline() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlshortline(&mut df, Some("cdlshortline"));
@@ -4497,6 +4526,7 @@ mod tests {
 
     #[test]
     fn test_cdlspinningtop() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlspinningtop(&mut df, Some("cdlspinningtop"));
@@ -4510,6 +4540,7 @@ mod tests {
 
     #[test]
     fn test_cdlstalledpattern() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlstalledpattern(&mut df, Some("cdlstalledpattern"));
@@ -4523,6 +4554,7 @@ mod tests {
 
     #[test]
     fn test_cdlsticksandwich() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlsticksandwich(&mut df, Some("cdlsticksandwich"));
@@ -4536,6 +4568,7 @@ mod tests {
 
     #[test]
     fn test_cdltakuri() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdltakuri(&mut df, Some("cdltakuri"));
@@ -4549,6 +4582,7 @@ mod tests {
 
     #[test]
     fn test_cdltasukigap() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdltasukigap(&mut df, Some("cdltasukigap"));
@@ -4562,6 +4596,7 @@ mod tests {
 
     #[test]
     fn test_cdlthrusting() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlthrusting(&mut df, Some("cdlthrusting"));
@@ -4575,6 +4610,7 @@ mod tests {
 
     #[test]
     fn test_cdltristar() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdltristar(&mut df, Some("cdltristar"));
@@ -4588,6 +4624,7 @@ mod tests {
 
     #[test]
     fn test_cdlunique3river() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlunique3river(&mut df, Some("cdlunique3river"));
@@ -4601,6 +4638,7 @@ mod tests {
 
     #[test]
     fn test_cdlupsidegap2crows() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlupsidegap2crows(&mut df, Some("cdlupsidegap2crows"));
@@ -4614,6 +4652,7 @@ mod tests {
 
     #[test]
     fn test_cdlxsidegap3methods() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlxsidegap3methods(&mut df, Some("cdlxsidegap3methods"));
@@ -4627,6 +4666,7 @@ mod tests {
 
     #[test]
     fn test_cdleveningstar() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdleveningstar(&mut df, Some("cdleveningstar"));
@@ -4640,6 +4680,7 @@ mod tests {
 
     #[test]
     fn test_cdlgapsidesidewhite() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlgapsidesidewhite(&mut df, Some("cdlgapsidesidewhite"));
@@ -4653,6 +4694,7 @@ mod tests {
 
     #[test]
     fn test_cdlgravestonedoji() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlgravestonedoji(&mut df, Some("cdlgravestonedoji"));
@@ -4666,6 +4708,7 @@ mod tests {
 
     #[test]
     fn test_cdlhammer() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlhammer(&mut df, Some("cdlhammer"));
@@ -4679,6 +4722,7 @@ mod tests {
 
     #[test]
     fn test_cdlhangingman() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlhangingman(&mut df, Some("cdlhangingman"));
@@ -4692,6 +4736,7 @@ mod tests {
 
     #[test]
     fn test_cdlharami() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlharami(&mut df, Some("cdlharami"));
@@ -4705,6 +4750,7 @@ mod tests {
 
     #[test]
     fn test_cdlharamicross() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlharamicross(&mut df, Some("cdlharamicross"));
@@ -4718,6 +4764,7 @@ mod tests {
 
     #[test]
     fn test_cdlhighwave() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlhighwave(&mut df, Some("cdlhighwave"));
@@ -4731,6 +4778,7 @@ mod tests {
 
     #[test]
     fn test_cdlhikkake() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlhikkake(&mut df, Some("cdlhikkake"));
@@ -4744,6 +4792,7 @@ mod tests {
 
     #[test]
     fn test_cdlhikkakemod() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlhikkakemod(&mut df, Some("cdlhikkakemod"));
@@ -4757,6 +4806,7 @@ mod tests {
 
     #[test]
     fn test_cdlhomingpigeon() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlhomingpigeon(&mut df, Some("cdlhomingpigeon"));
@@ -4770,6 +4820,7 @@ mod tests {
 
     #[test]
     fn test_cdlidentical3crows() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlidentical3crows(&mut df, Some("cdlidentical3crows"));
@@ -4783,6 +4834,7 @@ mod tests {
 
     #[test]
     fn test_cdlinneck() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlinneck(&mut df, Some("cdlinneck"));
@@ -4796,6 +4848,7 @@ mod tests {
 
     #[test]
     fn test_cdlinvertedhammer() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlinvertedhammer(&mut df, Some("cdlinvertedhammer"));
@@ -4809,6 +4862,7 @@ mod tests {
 
     #[test]
     fn test_cdlkicking() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlkicking(&mut df, Some("cdlkicking"));
@@ -4822,6 +4876,7 @@ mod tests {
 
     #[test]
     fn test_cdlkickingbylength() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlkickingbylength(&mut df, Some("cdlkickingbylength"));
@@ -4835,6 +4890,7 @@ mod tests {
 
     #[test]
     fn test_cdladderbottom() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdladderbottom(&mut df, Some("cdladderbottom"));
@@ -4848,6 +4904,7 @@ mod tests {
 
     #[test]
     fn test_cdllongleggeddoji() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdllongleggeddoji(&mut df, Some("cdllongleggeddoji"));
@@ -4861,6 +4918,7 @@ mod tests {
 
     #[test]
     fn test_cdllongline() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdllongline(&mut df, Some("cdllongline"));
@@ -4874,6 +4932,7 @@ mod tests {
 
     #[test]
     fn test_cdlmarubozu() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlmarubozu(&mut df, Some("cdlmarubozu"));
@@ -4887,6 +4946,7 @@ mod tests {
 
     #[test]
     fn test_cdlmatchinglow() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlmatchinglow(&mut df, Some("cdlmatchinglow"));
@@ -4900,6 +4960,7 @@ mod tests {
 
     #[test]
     fn test_cdlmathold() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 cdlmathold(&mut df, Some("cdlmathold"));

@@ -314,8 +314,16 @@ impl HTState {
 /// Período = 360 / |arctan(Im/Re)| → Suavizado doble exponencial
 ///
 /// # Ejemplo
-/// ```rust
-/// let df_with_period = ht_dcperiod(df, None);
+/// ```no_run
+/// use polars::prelude::*;
+/// use app_lib::indicators::cycle::ht_dcperiod;
+///
+/// let mut df = df!(
+///     "close" => &[1.0_f64, 2.0, 3.0, 4.0, 5.0],
+/// )
+/// .unwrap();
+///
+/// ht_dcperiod(&mut df, None);
 /// ```
 pub fn ht_dcperiod(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("ht_dcperiod");
@@ -360,8 +368,16 @@ pub fn ht_dcperiod(df: &mut DataFrame, output_col: Option<&str>) {
 /// donde I1 y Q1 son los componentes de fase y cuadratura de la Transformada de Hilbert
 ///
 /// # Ejemplo
-/// ```rust
-/// let df_with_phase = ht_dcphase(df, None);
+/// ```no_run
+/// use polars::prelude::*;
+/// use app_lib::indicators::cycle::ht_dcphase;
+///
+/// let mut df = df!(
+///     "close" => &[1.0_f64, 2.0, 3.0, 4.0, 5.0],
+/// )
+/// .unwrap();
+///
+/// ht_dcphase(&mut df, None);
 /// ```
 pub fn ht_dcphase(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("ht_dcphase");
@@ -408,8 +424,16 @@ pub fn ht_dcphase(df: &mut DataFrame, output_col: Option<&str>) {
 /// donde Detrender es un filtro FIR de Hilbert con coefientes a=0.0962, b=0.5769
 ///
 /// # Ejemplo
-/// ```rust
-/// let df_with_phasors = ht_phasor(df, None, None);
+/// ```no_run
+/// use polars::prelude::*;
+/// use app_lib::indicators::cycle::ht_phasor;
+///
+/// let mut df = df!(
+///     "close" => &[1.0_f64, 2.0, 3.0, 4.0, 5.0],
+/// )
+/// .unwrap();
+///
+/// ht_phasor(&mut df, None, None);
 /// ```
 pub fn ht_phasor(
     df: &mut DataFrame,
@@ -467,8 +491,16 @@ pub fn ht_phasor(
 /// donde Fase es la fase instantánea del ciclo dominante
 ///
 /// # Ejemplo
-/// ```rust
-/// let df_with_sine = ht_sine(df, None, None);
+/// ```no_run
+/// use polars::prelude::*;
+/// use app_lib::indicators::cycle::ht_sine;
+///
+/// let mut df = df!(
+///     "close" => &[1.0_f64, 2.0, 3.0, 4.0, 5.0],
+/// )
+/// .unwrap();
+///
+/// ht_sine(&mut df, None, None);
 /// ```
 pub fn ht_sine(
     df: &mut DataFrame,
@@ -528,8 +560,16 @@ pub fn ht_sine(
 /// Si no → 0 (Ciclo)
 ///
 /// # Ejemplo
-/// ```rust
-/// let df_with_trend = ht_trendmode(df, None);
+/// ```no_run
+/// use polars::prelude::*;
+/// use app_lib::indicators::cycle::ht_trendmode;
+///
+/// let mut df = df!(
+///     "close" => &[1.0_f64, 2.0, 3.0, 4.0, 5.0],
+/// )
+/// .unwrap();
+///
+/// ht_trendmode(&mut df, None);
 /// ```
 pub fn ht_trendmode(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("ht_trendmode");
@@ -580,6 +620,7 @@ mod tests {
 
     #[test]
     fn test_ht_dcperiod() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 ht_dcperiod(&mut df, None);
@@ -594,6 +635,7 @@ mod tests {
 
     #[test]
     fn test_ht_dcphase() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 ht_dcphase(&mut df, None);
@@ -608,6 +650,7 @@ mod tests {
 
     #[test]
     fn test_ht_phasor() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 ht_phasor(&mut df, None, None);
@@ -622,6 +665,7 @@ mod tests {
 
     #[test]
     fn test_ht_sine() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 ht_sine(&mut df, None, None);
@@ -636,6 +680,7 @@ mod tests {
 
     #[test]
     fn test_ht_trendmode() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 ht_trendmode(&mut df, None);

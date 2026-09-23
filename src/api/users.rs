@@ -360,6 +360,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_crud_users() -> Result<(), Error> {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.lock().await;
         let id_clerk = "test_user_001".to_string();
 
         // Limpieza defensiva por si quedó algún residuo de un test anterior.

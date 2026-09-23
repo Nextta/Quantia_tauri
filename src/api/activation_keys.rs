@@ -458,14 +458,9 @@ mod tests {
     use crate::api::users::{delete_user, insert_user};
     use crate::structs::user::User;
 
-    /// Serializa los tests del módulo: al tocar todos la misma base de datos
-    /// SQLite con conexiones por operación, la ejecución en paralelo provoca
-    /// errores de bloqueo (`database is locked`).
-    static BLOQUEO_BD: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
-
     #[tokio::test(flavor = "multi_thread")]
     async fn test_crud_keys() -> Result<(), Error> {
-        let _guardia = BLOQUEO_BD.lock().await;
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.lock().await;
         let clave_test = "TEST-XX-XXX-CRUDTEST001".to_string();
 
         // Limpieza defensiva por si quedó algún residuo de un test anterior.
@@ -500,7 +495,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_generacion_claves() -> Result<(), Error> {
-        let _guardia = BLOQUEO_BD.lock().await;
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.lock().await;
         let claves = generate_keys(3).await?;
         assert_eq!(claves.len(), 3);
 
@@ -538,7 +533,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_activacion_usuario() -> Result<(), Error> {
-        let _guardia = BLOQUEO_BD.lock().await;
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.lock().await;
         let id_clerk_1 = "test_user_keys_001".to_string();
         let id_clerk_2 = "test_user_keys_002".to_string();
         let clave_test = "TEST-XX-XXX-TESTCLAVE01".to_string();

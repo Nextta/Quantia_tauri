@@ -586,6 +586,7 @@ mod tests {
 
     #[test]
     fn test_beta() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 beta(&mut df, "close", "open", None, Some("beta"));
@@ -599,6 +600,7 @@ mod tests {
 
     #[test]
     fn test_correl() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 correl(&mut df, "close", "open", None, None);
@@ -612,6 +614,7 @@ mod tests {
 
     #[test]
     fn test_linearreg() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 linearreg(&mut df, "close", None, None);
@@ -625,6 +628,7 @@ mod tests {
 
     #[test]
     fn test_stddev() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 stddev(&mut df, "close", None, None, None);
@@ -638,6 +642,7 @@ mod tests {
 
     #[test]
     fn test_linearreg_angle() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 linearreg_angle(&mut df, "close", None, None);
@@ -651,6 +656,7 @@ mod tests {
 
     #[test]
     fn test_linearreg_intercept() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 linearreg_intercept(&mut df, "close", None, None);
@@ -664,6 +670,7 @@ mod tests {
 
     #[test]
     fn test_linearreg_slope() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 linearreg_slope(&mut df, "close", None, None);
@@ -677,6 +684,7 @@ mod tests {
 
     #[test]
     fn test_tsf() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 tsf(&mut df, "close", None, None);
@@ -690,6 +698,7 @@ mod tests {
 
     #[test]
     fn test_var() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 var(&mut df, "close", None, None, None);

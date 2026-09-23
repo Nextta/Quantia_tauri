@@ -1545,6 +1545,7 @@ mod tests {
 
     #[test]
     fn test_bbands() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 bbands(&mut df, None, None, None, None, None, None, None);
@@ -1559,6 +1560,7 @@ mod tests {
 
     #[test]
     fn test_dema() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 dema(&mut df, None, None);
@@ -1573,6 +1575,7 @@ mod tests {
 
     #[test]
     fn test_ema() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 ema(&mut df, None, None);
@@ -1587,6 +1590,7 @@ mod tests {
 
     #[test]
     fn test_kama() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 kama(&mut df, None, None);
@@ -1601,6 +1605,7 @@ mod tests {
 
     #[test]
     fn test_ma() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 ma(&mut df, None, None, None);
@@ -1615,6 +1620,7 @@ mod tests {
 
     #[test]
     fn test_mama() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 mama(&mut df, None, None, None, None);
@@ -1629,6 +1635,7 @@ mod tests {
 
     #[test]
     fn test_midpoint() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 midpoint(&mut df, None, None);
@@ -1643,6 +1650,7 @@ mod tests {
 
     #[test]
     fn test_midprice() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 midprice(&mut df, None, None);
@@ -1657,6 +1665,7 @@ mod tests {
 
     #[test]
     fn test_sar() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 sar(&mut df, None, None, None);
@@ -1671,6 +1680,7 @@ mod tests {
 
     #[test]
     fn test_sarext() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 sarext(&mut df, None, None, None, None, None, None);
@@ -1685,6 +1695,7 @@ mod tests {
 
     #[test]
     fn test_sma() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 sma(&mut df, None, None);
@@ -1699,6 +1710,7 @@ mod tests {
 
     #[test]
     fn test_t3() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 t3(&mut df, None, None, None);
@@ -1713,6 +1725,7 @@ mod tests {
 
     #[test]
     fn test_tema() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 tema(&mut df, None, None);
@@ -1727,6 +1740,7 @@ mod tests {
 
     #[test]
     fn test_trima() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 trima(&mut df, None, None);
@@ -1741,6 +1755,7 @@ mod tests {
 
     #[test]
     fn test_wma() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 wma(&mut df, None, None);

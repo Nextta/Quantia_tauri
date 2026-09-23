@@ -66,6 +66,7 @@ mod tests {
 
     #[test]
     fn add_data_test_csv() -> Result<(), Error> {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(df) => {
                 let data_info: DataSymbol = DataSymbol {
@@ -106,6 +107,7 @@ mod tests {
 
     #[test]
     fn add_data_test_json() -> Result<(), Error> {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(df) => {
                 let data_info: DataSymbol = DataSymbol {
@@ -146,6 +148,7 @@ mod tests {
 
     #[test]
     fn add_data_test_parquet() -> Result<(), Error> {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(df) => {
                 let data_info: DataSymbol = DataSymbol {

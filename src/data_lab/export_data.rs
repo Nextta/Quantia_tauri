@@ -137,6 +137,7 @@ mod tests {
 
     #[test]
     fn export_data_test() -> Result<(), Error> {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         create_test_data(&DataFormatSymbol::Parquet);
         create_test_data_ticks(&DataFormatSymbol::Parquet);
 

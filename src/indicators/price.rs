@@ -66,8 +66,19 @@ fn get_open(df: &DataFrame) -> PolarsResult<Series> {
 /// AVGPRICE = (open + high + low + close) / 4
 ///
 /// # Ejemplo
-/// ```rust
-/// let df_with_avg = avgprice(df, None).unwrap();
+/// ```no_run
+/// use polars::prelude::*;
+/// use app_lib::indicators::price::avgprice;
+///
+/// let mut df = df!(
+///     "open"  => &[1.0_f64, 2.0, 3.0],
+///     "high"  => &[2.0, 3.0, 4.0],
+///     "low"   => &[0.5, 1.5, 2.5],
+///     "close" => &[1.5, 2.5, 3.5],
+/// )
+/// .unwrap();
+///
+/// avgprice(&mut df, None);
 /// ```
 pub fn avgprice(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("avgprice");
@@ -111,8 +122,17 @@ pub fn avgprice(df: &mut DataFrame, output_col: Option<&str>) {
 /// MEDPRICE = (high + low) / 2
 ///
 /// # Ejemplo
-/// ```rust
-/// let df_with_med = medprice(df, None).unwrap();
+/// ```no_run
+/// use polars::prelude::*;
+/// use app_lib::indicators::price::medprice;
+///
+/// let mut df = df!(
+///     "high" => &[2.0_f64, 3.0, 4.0],
+///     "low"  => &[1.0, 2.0, 3.0],
+/// )
+/// .unwrap();
+///
+/// medprice(&mut df, None);
 /// ```
 pub fn medprice(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("medprice");
@@ -152,8 +172,18 @@ pub fn medprice(df: &mut DataFrame, output_col: Option<&str>) {
 /// TYPPRICE = (high + low + close) / 3
 ///
 /// # Ejemplo
-/// ```rust
-/// let df_with_typ = typprice(df, None).unwrap();
+/// ```no_run
+/// use polars::prelude::*;
+/// use app_lib::indicators::price::typprice;
+///
+/// let mut df = df!(
+///     "high"  => &[2.0_f64, 3.0, 4.0],
+///     "low"   => &[1.0, 2.0, 3.0],
+///     "close" => &[1.5, 2.5, 3.5],
+/// )
+/// .unwrap();
+///
+/// typprice(&mut df, None);
 /// ```
 pub fn typprice(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("typprice");
@@ -196,8 +226,18 @@ pub fn typprice(df: &mut DataFrame, output_col: Option<&str>) {
 /// WCLPRICE = (high + low + 2 * close) / 4
 ///
 /// # Ejemplo
-/// ```rust
-/// let df_with_wcl = wclprice(df, None).unwrap();
+/// ```no_run
+/// use polars::prelude::*;
+/// use app_lib::indicators::price::wclprice;
+///
+/// let mut df = df!(
+///     "high"  => &[2.0_f64, 3.0, 4.0],
+///     "low"   => &[1.0, 2.0, 3.0],
+///     "close" => &[1.5, 2.5, 3.5],
+/// )
+/// .unwrap();
+///
+/// wclprice(&mut df, None);
 /// ```
 pub fn wclprice(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("wclprice");
@@ -232,8 +272,20 @@ pub fn wclprice(df: &mut DataFrame, output_col: Option<&str>) {
 /// Un DataFrame con las velas OHLC diarias.
 ///
 /// # Ejemplo
-/// ```rust
-/// let df_daily = daily_ohlc(df, None, None, None, None).unwrap();
+/// ```no_run
+/// use polars::prelude::*;
+/// use app_lib::indicators::price::daily_ohlc;
+///
+/// let mut df = df!(
+///     "time"  => &[1547416800000_i64, 1547420400000, 1547424000000],
+///     "open"  => &[1.0_f64, 2.0, 3.0],
+///     "high"  => &[2.0, 3.0, 4.0],
+///     "low"   => &[0.5, 1.5, 2.5],
+///     "close" => &[1.5, 2.5, 3.5],
+/// )
+/// .unwrap();
+///
+/// daily_ohlc(&mut df, None, None, None, None);
 /// ```
 pub fn daily_ohlc(
     df: &mut DataFrame,
@@ -310,8 +362,20 @@ pub fn daily_ohlc(
 /// Un DataFrame con las velas OHLC semanales.
 ///
 /// # Ejemplo
-/// ```rust
-/// let df_weekly = weekly_ohlc(df, None, None, None, None).unwrap();
+/// ```no_run
+/// use polars::prelude::*;
+/// use app_lib::indicators::price::weekly_ohlc;
+///
+/// let mut df = df!(
+///     "time"  => &[1547416800000_i64, 1547420400000, 1547424000000],
+///     "open"  => &[1.0_f64, 2.0, 3.0],
+///     "high"  => &[2.0, 3.0, 4.0],
+///     "low"   => &[0.5, 1.5, 2.5],
+///     "close" => &[1.5, 2.5, 3.5],
+/// )
+/// .unwrap();
+///
+/// weekly_ohlc(&mut df, None, None, None, None);
 /// ```
 pub fn weekly_ohlc(
     df: &mut DataFrame,
@@ -382,8 +446,20 @@ pub fn weekly_ohlc(
 /// Un DataFrame con las velas OHLC mensuales.
 ///
 /// # Ejemplo
-/// ```rust
-/// let df_monthly = monthly_ohlc(df, None, None, None, None);
+/// ```no_run
+/// use polars::prelude::*;
+/// use app_lib::indicators::price::monthly_ohlc;
+///
+/// let mut df = df!(
+///     "time"  => &[1547416800000_i64, 1547420400000, 1547424000000],
+///     "open"  => &[1.0_f64, 2.0, 3.0],
+///     "high"  => &[2.0, 3.0, 4.0],
+///     "low"   => &[0.5, 1.5, 2.5],
+///     "close" => &[1.5, 2.5, 3.5],
+/// )
+/// .unwrap();
+///
+/// monthly_ohlc(&mut df, None, None, None, None);
 /// ```
 pub fn monthly_ohlc(
     df: &mut DataFrame,
@@ -482,6 +558,7 @@ mod tests {
 
     #[test]
     fn test_weekly_ohlc() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 weekly_ohlc(&mut df, None, None, None, None);
@@ -495,6 +572,7 @@ mod tests {
 
     #[test]
     fn test_daily_ohlc() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 daily_ohlc(&mut df, None, None, None, None);
@@ -508,6 +586,7 @@ mod tests {
 
     #[test]
     fn test_monthly_ohlc() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 monthly_ohlc(&mut df, None, None, None, None);
@@ -521,6 +600,7 @@ mod tests {
 
     #[test]
     fn test_avgprice() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 avgprice(&mut df, None);
@@ -534,6 +614,7 @@ mod tests {
 
     #[test]
     fn test_medprice() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 medprice(&mut df, None);
@@ -547,6 +628,7 @@ mod tests {
 
     #[test]
     fn test_typprice() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 typprice(&mut df, None);
@@ -560,6 +642,7 @@ mod tests {
 
     #[test]
     fn test_wclprice() {
+        let _guardia = crate::utils::data_test::BLOQUEO_RECURSOS.blocking_lock();
         match load_data() {
             Ok(mut df) => {
                 wclprice(&mut df, None);
