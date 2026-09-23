@@ -95,11 +95,12 @@ pub async fn insert_key(clave: String) -> Result<i32, Error> {
 
             let conn = db.connect()?;
 
-            let mut rows = conn.query(
-                "INSERT INTO activation_keys (clave) VALUES (?) RETURNING id",
-                params![clave.as_str()],
-            )
-            .await?;
+            let mut rows = conn
+                .query(
+                    "INSERT INTO activation_keys (clave) VALUES (?) RETURNING id",
+                    params![clave.as_str()],
+                )
+                .await?;
 
             let row = rows.next().await?.ok_or_else(|| Error {
                 msg: "No se ha insertado la clave de activación.".to_string(),
@@ -584,7 +585,9 @@ mod tests {
         assert_eq!(user.clave_activacion.as_deref(), Some(clave_test.as_str()));
 
         // Un usuario ya activo no puede activarse de nuevo.
-        assert!(activar_usuario(id_clerk_1.clone(), clave_otra.clone()).await.is_err());
+        assert!(activar_usuario(id_clerk_1.clone(), clave_otra.clone())
+            .await
+            .is_err());
 
         // Clave inexistente: error.
         assert!(
@@ -594,7 +597,9 @@ mod tests {
         );
 
         // Clave ya usada: error.
-        assert!(activar_usuario(id_clerk_2.clone(), clave_test.clone()).await.is_err());
+        assert!(activar_usuario(id_clerk_2.clone(), clave_test.clone())
+            .await
+            .is_err());
 
         // Liberar la clave y reutilizarla con otro usuario.
         release_key(id_clave).await?;
