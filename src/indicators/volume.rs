@@ -103,8 +103,19 @@ fn calc_ema(values: &[f64], period: usize) -> Vec<f64> {
 /// 3. AD = AD previo + MFV actual
 ///
 /// # Ejemplo
-/// ```rust
-/// let df_with_ad = ad(df, Some("mi_ad"))?;
+/// ```no_run
+/// use polars::prelude::*;
+/// use app_lib::indicators::volume::ad;
+///
+/// let mut df = df!(
+///     "high"   => &[2.0_f64, 3.0, 4.0],
+///     "low"    => &[1.0, 2.0, 3.0],
+///     "close"  => &[1.5, 2.5, 3.5],
+///     "volume" => &[10.0, 20.0, 30.0],
+/// )
+/// .unwrap();
+///
+/// ad(&mut df, Some("mi_ad"));
 /// ```
 pub fn ad(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("ad");
@@ -173,8 +184,19 @@ pub struct AdoscParams {
 /// ADOSC = EMA(AD, fastperiod) - EMA(AD, slowperiod)
 ///
 /// # Ejemplo
-/// ```rust
-/// let df_with_adosc = adosc(df, Some(3), Some(10), None).unwrap();
+/// ```no_run
+/// use polars::prelude::*;
+/// use app_lib::indicators::volume::adosc;
+///
+/// let mut df = df!(
+///     "high"   => &[2.0_f64, 3.0, 4.0],
+///     "low"    => &[1.0, 2.0, 3.0],
+///     "close"  => &[1.5, 2.5, 3.5],
+///     "volume" => &[10.0, 20.0, 30.0],
+/// )
+/// .unwrap();
+///
+/// adosc(&mut df, Some(3), Some(10), None);
 /// ```
 pub fn adosc(
     df: &mut DataFrame,
@@ -237,8 +259,17 @@ pub fn adosc(
 /// * Si Close == Close_prev: OBV = OBV_prev
 ///
 /// # Ejemplo
-/// ```rust
-/// let df_with_obv = obv(df, None).unwrap();
+/// ```no_run
+/// use polars::prelude::*;
+/// use app_lib::indicators::volume::obv;
+///
+/// let mut df = df!(
+///     "close"  => &[1.5_f64, 2.5, 3.5],
+///     "volume" => &[10.0, 20.0, 30.0],
+/// )
+/// .unwrap();
+///
+/// obv(&mut df, None);
 /// ```
 pub fn obv(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("obv");
