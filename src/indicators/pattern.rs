@@ -4104,7 +4104,7 @@ mod tests {
         create_test_data(&DataFormatSymbol::Csv);
 
         let df = CsvReadOptions::default()
-            .try_into_reader_with_file_path(Some("download/test.csv".into()))
+            .try_into_reader_with_file_path(Some("data/test.csv".into()))
             .unwrap()
             .finish()
             .unwrap();
@@ -4123,9 +4123,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdl2crows(&mut df, Some("cdl2crows"));
-                // save_data(&df, "download/test_cdl2crows.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdl2crows.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4136,9 +4136,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdl3blackcrows(&mut df, Some("cdl3blackcrows"));
-                // save_data(&df, "download/test_cdl3blackcrows.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdl3blackcrows.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4149,9 +4149,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdl3inside(&mut df, Some("cdl3inside"));
-                // save_data(&df, "download/test_cdl3inside.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdl3inside.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4162,9 +4162,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdl3linestrike(&mut df, Some("cdl3linestrike"));
-                // save_data(&df, "download/test_cdl3linestrike.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdl3linestrike.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4175,9 +4175,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdl3outside(&mut df, Some("cdl3outside"));
-                // save_data(&df, "download/test_cdl3outside.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdl3outside.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4188,9 +4188,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdl3starsinsouth(&mut df, Some("cdl3starsinsouth"));
-                // save_data(&df, "download/test_cdl3starsinsouth.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdl3starsinsouth.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4201,9 +4201,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdl3whitesoldiers(&mut df, Some("cdl3whitesoldiers"));
-                // save_data(&df, "download/test_cdl3whitesoldiers.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdl3whitesoldiers.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4214,9 +4214,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlabandonedbaby(&mut df, Some("cdlabandonedbaby"));
-                // save_data(&df, "download/test_cdlabandonedbaby.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlabandonedbaby.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4227,9 +4227,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdladvanceblock(&mut df, Some("cdladvanceblock"));
-                // save_data(&df, "download/test_cdladvanceblock.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdladvanceblock.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4240,9 +4240,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlbelthold(&mut df, Some("cdlbelthold"));
-                // save_data(&df, "download/test_cdlbelthold.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlbelthold.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4253,9 +4253,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlbreakaway(&mut df, Some("cdlbreakaway"));
-                // save_data(&df, "download/test_cdlbreakaway.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlbreakaway.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4266,9 +4266,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlclosingmarubuzo(&mut df, Some("cdlclosingmarubuzo"));
-                // save_data(&df, "download/test_cdlclosingmarubuzo.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlclosingmarubuzo.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4279,9 +4279,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlconcealbabyswall(&mut df, Some("cdlconcealbabyswall"));
-                // save_data(&df, "download/test_cdlconcealbabyswall.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlconcealbabyswall.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4292,9 +4292,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlcounterattack(&mut df, Some("cdlcounterattack"));
-                // save_data(&df, "download/test_cdlcounterattack.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlcounterattack.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4305,9 +4305,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdldarkcloudcover(&mut df, Some("cdldarkcloudcover"));
-                // save_data(&df, "download/test_cdldarkcloudcover.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdldarkcloudcover.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4318,9 +4318,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdldoji(&mut df, Some("cdldoji"));
-                // save_data(&df, "download/test_cdldoji.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdldoji.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4331,9 +4331,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdldojistar(&mut df, Some("cdldojistar"));
-                // save_data(&df, "download/test_cdldojistar.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdldojistar.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4344,9 +4344,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdldragonflydoji(&mut df, Some("cdldragonflydoji"));
-                // save_data(&df, "download/test_cdldragonflydoji.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdldragonflydoji.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4357,9 +4357,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlengulfing(&mut df, Some("cdlengulfing"));
-                // save_data(&df, "download/test_cdlengulfing.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlengulfing.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4370,9 +4370,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdleveningdojistar(&mut df, Some("cdleveningdojistar"));
-                // save_data(&df, "download/test_cdleveningdojistar.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdleveningdojistar.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4383,9 +4383,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlmorningdojistar(&mut df, None, Some("cdlmorningdojistar"));
-                // save_data(&df, "download/test_cdlmorningdojistar.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlmorningdojistar.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4396,9 +4396,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlmorningstar(&mut df, None, Some("cdlmorningstar"));
-                // save_data(&df, "download/test_cdlmorningstar.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlmorningstar.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4409,9 +4409,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlonneck(&mut df, Some("cdlonneck"));
-                // save_data(&df, "download/test_cdlonneck.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlonneck.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4422,9 +4422,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlpiercing(&mut df, None, Some("cdlpiercing"));
-                // save_data(&df, "download/test_cdlpiercing.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlpiercing.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4435,9 +4435,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlrickshawman(&mut df, Some("cdlrickshawman"));
-                // save_data(&df, "download/test_cdlrickshawman.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlrickshawman.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4448,9 +4448,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlrisefall3methods(&mut df, Some("cdlrisefall3methods"));
-                // save_data(&df, "download/test_cdlrisefall3methods.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlrisefall3methods.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4461,9 +4461,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlseparatinglines(&mut df, Some("cdlseparatinglines"));
-                // save_data(&df, "download/test_cdlseparatinglines.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlseparatinglines.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4474,9 +4474,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlshootingstar(&mut df, Some("cdlshootingstar"));
-                // save_data(&df, "download/test_cdlshootingstar.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlshootingstar.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4487,9 +4487,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlshortline(&mut df, Some("cdlshortline"));
-                // save_data(&df, "download/test_cdlshortline.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlshortline.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4500,9 +4500,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlspinningtop(&mut df, Some("cdlspinningtop"));
-                // save_data(&df, "download/test_cdlspinningtop.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlspinningtop.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4513,9 +4513,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlstalledpattern(&mut df, Some("cdlstalledpattern"));
-                // save_data(&df, "download/test_cdlstalledpattern.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlstalledpattern.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4526,9 +4526,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlsticksandwich(&mut df, Some("cdlsticksandwich"));
-                // save_data(&df, "download/test_cdlsticksandwich.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlsticksandwich.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4539,9 +4539,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdltakuri(&mut df, Some("cdltakuri"));
-                // save_data(&df, "download/test_cdltakuri.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdltakuri.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4552,9 +4552,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdltasukigap(&mut df, Some("cdltasukigap"));
-                // save_data(&df, "download/test_cdltasukigap.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdltasukigap.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4565,9 +4565,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlthrusting(&mut df, Some("cdlthrusting"));
-                // save_data(&df, "download/test_cdlthrusting.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlthrusting.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4578,9 +4578,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdltristar(&mut df, Some("cdltristar"));
-                // save_data(&df, "download/test_cdltristar.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdltristar.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4591,9 +4591,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlunique3river(&mut df, Some("cdlunique3river"));
-                // save_data(&df, "download/test_cdlunique3river.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlunique3river.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4604,9 +4604,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlupsidegap2crows(&mut df, Some("cdlupsidegap2crows"));
-                // save_data(&df, "download/test_cdlupsidegap2crows.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlupsidegap2crows.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4617,9 +4617,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlxsidegap3methods(&mut df, Some("cdlxsidegap3methods"));
-                // save_data(&df, "download/test_cdlxsidegap3methods.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlxsidegap3methods.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4630,9 +4630,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdleveningstar(&mut df, Some("cdleveningstar"));
-                // save_data(&df, "download/test_cdleveningstar.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdleveningstar.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4643,9 +4643,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlgapsidesidewhite(&mut df, Some("cdlgapsidesidewhite"));
-                // save_data(&df, "download/test_cdlgapsidesidewhite.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlgapsidesidewhite.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4656,9 +4656,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlgravestonedoji(&mut df, Some("cdlgravestonedoji"));
-                // save_data(&df, "download/test_cdlgravestonedoji.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlgravestonedoji.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4669,9 +4669,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlhammer(&mut df, Some("cdlhammer"));
-                // save_data(&df, "download/test_cdlhammer.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlhammer.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4682,9 +4682,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlhangingman(&mut df, Some("cdlhangingman"));
-                // save_data(&df, "download/test_cdlhangingman.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlhangingman.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4695,9 +4695,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlharami(&mut df, Some("cdlharami"));
-                // save_data(&df, "download/test_cdlharami.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlharami.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4708,9 +4708,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlharamicross(&mut df, Some("cdlharamicross"));
-                // save_data(&df, "download/test_cdlharamicross.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlharamicross.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4721,9 +4721,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlhighwave(&mut df, Some("cdlhighwave"));
-                // save_data(&df, "download/test_cdlhighwave.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlhighwave.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4734,9 +4734,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlhikkake(&mut df, Some("cdlhikkake"));
-                // save_data(&df, "download/test_cdlhikkake.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlhikkake.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4747,9 +4747,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlhikkakemod(&mut df, Some("cdlhikkakemod"));
-                // save_data(&df, "download/test_cdlhikkakemod.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlhikkakemod.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4760,9 +4760,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlhomingpigeon(&mut df, Some("cdlhomingpigeon"));
-                // save_data(&df, "download/test_cdlhomingpigeon.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlhomingpigeon.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4773,9 +4773,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlidentical3crows(&mut df, Some("cdlidentical3crows"));
-                // save_data(&df, "download/test_cdlidentical3crows.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlidentical3crows.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4786,9 +4786,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlinneck(&mut df, Some("cdlinneck"));
-                // save_data(&df, "download/test_cdlinneck.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlinneck.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4799,9 +4799,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlinvertedhammer(&mut df, Some("cdlinvertedhammer"));
-                // save_data(&df, "download/test_cdlinvertedhammer.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlinvertedhammer.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4812,9 +4812,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlkicking(&mut df, Some("cdlkicking"));
-                // save_data(&df, "download/test_cdlkicking.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlkicking.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4825,9 +4825,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlkickingbylength(&mut df, Some("cdlkickingbylength"));
-                // save_data(&df, "download/test_cdlkickingbylength.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlkickingbylength.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4838,9 +4838,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdladderbottom(&mut df, Some("cdladderbottom"));
-                // save_data(&df, "download/test_cdladderbottom.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdladderbottom.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4851,9 +4851,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdllongleggeddoji(&mut df, Some("cdllongleggeddoji"));
-                // save_data(&df, "download/test_cdllongleggeddoji.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdllongleggeddoji.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4864,9 +4864,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdllongline(&mut df, Some("cdllongline"));
-                // save_data(&df, "download/test_cdllongline.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdllongline.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4877,9 +4877,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlmarubozu(&mut df, Some("cdlmarubozu"));
-                // save_data(&df, "download/test_cdlmarubozu.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlmarubozu.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4890,9 +4890,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlmatchinglow(&mut df, Some("cdlmatchinglow"));
-                // save_data(&df, "download/test_cdlmatchinglow.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlmatchinglow.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };
@@ -4903,9 +4903,9 @@ mod tests {
         match load_data() {
             Ok(mut df) => {
                 cdlmathold(&mut df, Some("cdlmathold"));
-                // save_data(&df, "download/test_cdlmathold.csv").unwrap();
-                remove_file("download/test.csv").unwrap();
-                remove_file("download/test.parquet").unwrap();
+                // save_data(&df, "data/test_cdlmathold.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
+                remove_file("data/test.parquet").unwrap();
             }
             Err(e) => panic!("Failed to load data: {:?}", e),
         };

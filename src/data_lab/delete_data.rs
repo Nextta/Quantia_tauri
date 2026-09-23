@@ -27,7 +27,7 @@ mod tests {
 
     #[test]
     fn delete_data_local_test() -> Result<(), Error> {
-        let path = "download/test_delete.csv";
+        let path = "data/test_delete.csv";
         if !Path::new(path).exists() {
             File::create(path)?;
         }
@@ -36,7 +36,7 @@ mod tests {
             id: 0,
             name: "test_delete".to_string(),
             timeframe: Some(Timeframe::H1),
-            ruta: "download".to_string(),
+            ruta: "data".to_string(),
             formato: Some(DataFormatSymbol::Csv),
             fecha_inicio: "00/00/0000".to_string(),
             fecha_fin: "00/00/0000".to_string(),

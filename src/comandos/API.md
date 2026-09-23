@@ -68,7 +68,7 @@ Guarda datos OHLC descargados (velas con open, high, low, close, volume) en el f
 | `from_date`   | `String`          | Sí        | Fecha inicio ("YYYY-MM-DD HH:MM:SS")           |
 | `to_date`     | `String`          | Sí        | Fecha fin ("YYYY-MM-DD HH:MM:SS")              |
 | `broker_data` | `DataOrigen`      | Sí        | Origen ("DukasCopy", "MT5", "Import")          |
-| `ruta`        | `Option<String>`  | No        | Carpeta destino (default: "download")          |
+| `ruta`        | `Option<String>`  | No        | Carpeta destino (default: "data")          |
 | `format`      | `Option<DataFormatSymbol>` | No | Formato ("Parquet", "Csv", "Json")             |
 | `actualized`  | `Option<bool>`    | No        | Si está actualizado (default: false)           |
 
@@ -116,7 +116,7 @@ Guarda datos de ticks descargados (askPrice, bidPrice, askVolume, bidVolume). So
 | `from_date`   | `String`              | Sí        | Fecha inicio                                 |
 | `to_date`     | `String`              | Sí        | Fecha fin                                    |
 | `broker_data` | `DataOrigen`          | Sí        | Origen de datos                              |
-| `ruta`        | `Option<String>`      | No        | Carpeta destino (default: "download")        |
+| `ruta`        | `Option<String>`      | No        | Carpeta destino (default: "data")        |
 | `format`      | `Option<DataFormatSymbol>` | No | Formato ("Parquet", "Csv", "Json")           |
 | `actualized`  | `Option<bool>`        | No        | Si está actualizado (default: false)         |
 

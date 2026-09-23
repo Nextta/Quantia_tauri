@@ -72,7 +72,7 @@ mod tests {
             id: 0,
             name: "test".to_string(),
             timeframe: Some(Timeframe::M1),
-            ruta: "download".to_string(),
+            ruta: "data".to_string(),
             formato: Some(DataFormatSymbol::Csv),
             fecha_inicio: "00/00/0000".to_string(),
             fecha_fin: "00/00/0000".to_string(),
@@ -90,8 +90,8 @@ mod tests {
 
         import_data(&data_info, &ruta);
 
-        remove_file("download/test.csv")?;
-        remove_file("download/test.parquet")?;
+        remove_file("data/test.csv")?;
+        remove_file("data/test.parquet")?;
         Ok(())
     }
 }

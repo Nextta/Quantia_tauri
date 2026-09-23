@@ -9,7 +9,7 @@ use std::fs::File;
 /// # Argments:
 /// data: El array de datos del activo descargado.
 /// name: Nombre con el que se guarda el archivo.
-/// ruta_dist: Ruta donde se guardará el archivo. Por defecto en la carpeta download.
+/// ruta_dist: Ruta donde se guardará el archivo. Por defecto en la carpeta data.
 ///
 /// # Return
 /// Delvuelve un string indicando que el archivo parquet se ha creado con exito.
@@ -51,13 +51,13 @@ mod tests {
     use crate::utils::data_test::create_test_data;
     use std::fs::remove_file;
 
-    //Para los test crear una carpeta llamada download en la raiz de este proyecto
+    //Para los test crear una carpeta llamada data en la raiz de este proyecto
     // y llamar a los datos test.csv
     fn load_data() -> PolarsResult<DataFrame> {
         create_test_data(&DataFormatSymbol::Csv);
 
         let df = CsvReadOptions::default()
-            .try_into_reader_with_file_path(Some("download/test.csv".into()))
+            .try_into_reader_with_file_path(Some("data/test.csv".into()))
             .unwrap()
             .finish()
             .unwrap();
@@ -72,7 +72,7 @@ mod tests {
                     id: 0,
                     name: "Test_csv".to_string(),
                     timeframe: Some(Timeframe::H1),
-                    ruta: "download".to_string(),
+                    ruta: "data".to_string(),
                     formato: Some(DataFormatSymbol::Csv),
                     fecha_inicio: "00/00/0000".to_string(),
                     fecha_fin: "00/00/0000".to_string(),
@@ -83,12 +83,12 @@ mod tests {
 
                 match add_data(df, &data_info) {
                     Ok(_) => {
-                        remove_file("download/test.csv").unwrap();
-                        remove_file("download/Test_csv.csv").unwrap();
+                        remove_file("data/test.csv").unwrap();
+                        remove_file("data/Test_csv.csv").unwrap();
                         return Ok(());
                     }
                     Err(_) => {
-                        remove_file("download/test.csv").unwrap();
+                        remove_file("data/test.csv").unwrap();
                         return Err(Error {
                             msg: "No se ha podido añadir los datos en el test".to_string(),
                         });
@@ -96,7 +96,7 @@ mod tests {
                 }
             }
             Err(_) => {
-                remove_file("download/test.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
                 return Err(Error {
                     msg: "No se ha podido cargar el dataframe para el test".to_string(),
                 });
@@ -112,7 +112,7 @@ mod tests {
                     id: 0,
                     name: "Test_json".to_string(),
                     timeframe: Some(Timeframe::H1),
-                    ruta: "download".to_string(),
+                    ruta: "data".to_string(),
                     formato: Some(DataFormatSymbol::Json),
                     fecha_inicio: "00/00/0000".to_string(),
                     fecha_fin: "00/00/0000".to_string(),
@@ -123,12 +123,12 @@ mod tests {
 
                 match add_data(df, &data_info) {
                     Ok(_) => {
-                        remove_file("download/test.csv").unwrap();
-                        remove_file("download/Test_json.json").unwrap();
+                        remove_file("data/test.csv").unwrap();
+                        remove_file("data/Test_json.json").unwrap();
                         return Ok(());
                     }
                     Err(_) => {
-                        remove_file("download/test.csv").unwrap();
+                        remove_file("data/test.csv").unwrap();
                         return Err(Error {
                             msg: "No se ha podido añadir los datos en el test".to_string(),
                         });
@@ -136,7 +136,7 @@ mod tests {
                 }
             }
             Err(_) => {
-                remove_file("download/test.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
                 return Err(Error {
                     msg: "No se ha podido cargar el dataframe para el test".to_string(),
                 });
@@ -152,7 +152,7 @@ mod tests {
                     id: 0,
                     name: "Test_parquet".to_string(),
                     timeframe: Some(Timeframe::H1),
-                    ruta: "download".to_string(),
+                    ruta: "data".to_string(),
                     formato: Some(DataFormatSymbol::Parquet),
                     fecha_inicio: "00/00/0000".to_string(),
                     fecha_fin: "00/00/0000".to_string(),
@@ -163,12 +163,12 @@ mod tests {
 
                 match add_data(df, &data_info) {
                     Ok(_) => {
-                        remove_file("download/test.csv").unwrap();
-                        remove_file("download/Test_parquet.parquet").unwrap();
+                        remove_file("data/test.csv").unwrap();
+                        remove_file("data/Test_parquet.parquet").unwrap();
                         return Ok(());
                     }
                     Err(_) => {
-                        remove_file("download/test.csv").unwrap();
+                        remove_file("data/test.csv").unwrap();
                         return Err(Error {
                             msg: "No se ha podido añadir los datos en el test".to_string(),
                         });
@@ -176,7 +176,7 @@ mod tests {
                 }
             }
             Err(_) => {
-                remove_file("download/test.csv").unwrap();
+                remove_file("data/test.csv").unwrap();
                 return Err(Error {
                     msg: "No se ha podido cargar el dataframe para el test".to_string(),
                 });

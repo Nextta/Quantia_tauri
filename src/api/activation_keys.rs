@@ -450,3 +450,172 @@ pub async fn release_key(id: i32) -> Result<(), Error> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::api::users::{delete_user, insert_user};
+    use crate::structs::user::User;
+
+    /// Serializa los tests del módulo: al tocar todos la misma base de datos
+    /// SQLite con conexiones por operación, la ejecución en paralelo provoca
+    /// errores de bloqueo (`database is locked`).
+    static BLOQUEO_BD: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_crud_keys() -> Result<(), Error> {
+        let _guardia = BLOQUEO_BD.lock().await;
+        let clave_test = "TEST-XX-XXX-CRUDTEST001".to_string();
+
+        // Limpieza defensiva por si quedó algún residuo de un test anterior.
+        if let Ok(k) = get_key_by_clave(clave_test.clone()).await {
+            let _ = delete_key(k.id).await;
+        }
+
+        // Crear la tabla.
+        let _ = table_activation_keys().await?;
+
+        // Insertar la clave de prueba.
+        let id = insert_key(clave_test.clone()).await?;
+
+        // Obtenerla por id: debe estar disponible y sin usuario vinculado.
+        let key = get_key_by_id(id).await?;
+        assert_eq!(key.clave, clave_test);
+        assert!(!key.usada);
+        assert!(key.id_clerk.is_none());
+        assert!(key.fecha_activacion.is_none());
+
+        // Listados.
+        let _ = get_keys().await?;
+        let disponibles = get_available_keys().await?;
+        assert!(disponibles.iter().any(|k| k.id == id));
+
+        // Eliminar la clave de prueba.
+        delete_key(id).await?;
+        assert!(get_key_by_id(id).await.is_err());
+
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_generacion_claves() -> Result<(), Error> {
+        let _guardia = BLOQUEO_BD.lock().await;
+        let claves = generate_keys(3).await?;
+        assert_eq!(claves.len(), 3);
+
+        for clave in &claves {
+            // Formato XXXX-XX-XXX-XXXXXXXXXX: longitud 22 y guiones en las
+            // posiciones 4, 7 y 11.
+            assert_eq!(clave.len(), 22);
+            let bytes = clave.as_bytes();
+            assert_eq!(bytes[4], b'-');
+            assert_eq!(bytes[7], b'-');
+            assert_eq!(bytes[11], b'-');
+
+            // Solo caracteres del juego permitido.
+            for &b in bytes {
+                assert!(
+                    b == b'-' || CARACTERES_CLAVE.contains(&b),
+                    "Carácter no válido en la clave generada: {clave}"
+                );
+            }
+        }
+
+        // Las claves generadas deben ser distintas entre sí.
+        assert_ne!(claves[0], claves[1]);
+        assert_ne!(claves[1], claves[2]);
+        assert_ne!(claves[0], claves[2]);
+
+        // Limpieza: eliminar las claves generadas.
+        for clave in claves {
+            let k = get_key_by_clave(clave).await?;
+            delete_key(k.id).await?;
+        }
+
+        Ok(())
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_activacion_usuario() -> Result<(), Error> {
+        let _guardia = BLOQUEO_BD.lock().await;
+        let id_clerk_1 = "test_user_keys_001".to_string();
+        let id_clerk_2 = "test_user_keys_002".to_string();
+        let clave_test = "TEST-XX-XXX-TESTCLAVE01".to_string();
+        let clave_otra = "TEST-XX-XXX-TESTCLAVE02".to_string();
+
+        // Limpieza defensiva por si quedó algún residuo de un test anterior.
+        let _ = delete_user(id_clerk_1.clone()).await;
+        let _ = delete_user(id_clerk_2.clone()).await;
+        if let Ok(k) = get_key_by_clave(clave_test.clone()).await {
+            let _ = delete_key(k.id).await;
+        }
+        if let Ok(k) = get_key_by_clave(clave_otra.clone()).await {
+            let _ = delete_key(k.id).await;
+        }
+
+        // Preparar usuarios de prueba (inactivos) y claves.
+        let _ = crate::api::users::table_users().await?;
+        for id_clerk in [&id_clerk_1, &id_clerk_2] {
+            insert_user(&User {
+                id_clerk: id_clerk.clone(),
+                nombre: "Nombre".to_string(),
+                apellidos: "Apellidos".to_string(),
+                username: id_clerk.clone(),
+                descripcion: None,
+                clave_activacion: None,
+                usuario_activo: false,
+            })
+            .await?;
+        }
+        let id_clave = insert_key(clave_test.clone()).await?;
+        let id_clave_otra = insert_key(clave_otra.clone()).await?;
+
+        // Activación correcta: usuario activo, clave vinculada y guardada
+        // también en el perfil del usuario.
+        activar_usuario(id_clerk_1.clone(), clave_test.clone()).await?;
+
+        let key = get_key_by_id(id_clave).await?;
+        assert!(key.usada);
+        assert_eq!(key.id_clerk.as_deref(), Some(id_clerk_1.as_str()));
+        assert!(key.fecha_activacion.is_some());
+
+        let user = get_user_by_id_clerk(id_clerk_1.clone()).await?;
+        assert!(user.usuario_activo);
+        assert_eq!(user.clave_activacion.as_deref(), Some(clave_test.as_str()));
+
+        // Un usuario ya activo no puede activarse de nuevo.
+        assert!(activar_usuario(id_clerk_1.clone(), clave_otra.clone()).await.is_err());
+
+        // Clave inexistente: error.
+        assert!(
+            activar_usuario(id_clerk_2.clone(), "CLAVE-INEXISTENTE".to_string())
+                .await
+                .is_err()
+        );
+
+        // Clave ya usada: error.
+        assert!(activar_usuario(id_clerk_2.clone(), clave_test.clone()).await.is_err());
+
+        // Liberar la clave y reutilizarla con otro usuario.
+        release_key(id_clave).await?;
+
+        let key = get_key_by_id(id_clave).await?;
+        assert!(!key.usada);
+        assert!(key.id_clerk.is_none());
+        assert!(key.fecha_activacion.is_none());
+
+        activar_usuario(id_clerk_2.clone(), clave_test.clone()).await?;
+
+        let user = get_user_by_id_clerk(id_clerk_2.clone()).await?;
+        assert!(user.usuario_activo);
+        assert_eq!(user.clave_activacion.as_deref(), Some(clave_test.as_str()));
+
+        // Limpieza final: usuarios y claves de prueba.
+        delete_user(id_clerk_1).await?;
+        delete_user(id_clerk_2).await?;
+        delete_key(id_clave).await?;
+        delete_key(id_clave_otra).await?;
+
+        Ok(())
+    }
+}
