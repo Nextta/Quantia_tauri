@@ -944,6 +944,8 @@ pub struct MacdextParams {
 ///
 /// # Retorna
 /// DataFrame con columnas "macd", "macd_signal" y "macd_hist" añadidas
+// Convención TA-Lib: parámetros opcionales por indicador.
+#[allow(clippy::too_many_arguments)]
 pub fn macdext(
     df: &mut DataFrame,
     fastperiod: Option<usize>,

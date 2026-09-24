@@ -17,6 +17,8 @@ pub struct StrategyCondition {
 }
 
 impl StrategyCondition {
+    // Constructor con todos los campos de la entidad; agrupar en structs sería un refactor mayor.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         id: i32,
         strategy_id: i32,

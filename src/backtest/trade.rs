@@ -105,6 +105,8 @@ impl Trade {
         numero
     }
 
+    // Firma del dominio del motor; agrupar en structs sería un refactor mayor.
+    #[allow(clippy::too_many_arguments)]
     pub fn buy(
         &mut self,
         t0: &str,
@@ -134,6 +136,8 @@ impl Trade {
         }
     }
 
+    // Firma del dominio del motor; agrupar en structs sería un refactor mayor.
+    #[allow(clippy::too_many_arguments)]
     pub fn sell(
         &mut self,
         t0: &str,
