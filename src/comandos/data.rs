@@ -45,6 +45,8 @@ pub struct DataDukas {
 /// # Return
 /// Delvuelve un string indicando que elos datos se han guardado con exito.
 #[tauri::command]
+// Comando Tauri: la firma es el contrato con el frontend (Art. 4 de la constitución).
+#[allow(clippy::too_many_arguments)]
 pub async fn save_data_dukas(
     data: Vec<DataDukas>,
     name: String,
@@ -113,6 +115,8 @@ pub struct DataDukasTicks {
 /// # Return
 /// Delvuelve un string indicando que los datos se han guardado con exito.
 #[tauri::command]
+// Comando Tauri: la firma es el contrato con el frontend (Art. 4 de la constitución).
+#[allow(clippy::too_many_arguments)]
 pub async fn save_data_dukas_ticks(
     data: Vec<DataDukasTicks>,
     name: String,

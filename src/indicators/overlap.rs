@@ -287,6 +287,8 @@ pub struct BbandsParams {
 /// Middle = MA(close, timeperiod, matype)
 /// Upper = Middle + (nbdevup * StdDev(close, timeperiod))
 /// Lower = Middle - (nbdevdn * StdDev(close, timeperiod))
+// Convención TA-Lib: parámetros opcionales por indicador.
+#[allow(clippy::too_many_arguments)]
 pub fn bbands(
     df: &mut DataFrame,
     timeperiod: Option<usize>,

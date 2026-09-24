@@ -3042,6 +3042,8 @@ impl Backtest {
     /// # Returns
     ///
     /// `true` si el TSL se activa, `false` en caso contrario.
+    // Firma del dominio del motor; agrupar en structs sería un refactor mayor.
+    #[allow(clippy::too_many_arguments)]
     fn activar_tsl(
         &mut self,
         data: &DataFrame,

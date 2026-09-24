@@ -20,6 +20,8 @@ pub struct SymbolInfoCFD {
 }
 
 impl SymbolInfoCFD {
+    // Constructor con todos los campos de la entidad; agrupar en structs sería un refactor mayor.
+    #[allow(clippy::too_many_arguments)]
     pub async fn new(
         id: i32,
         broker_id: i32,
