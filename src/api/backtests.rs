@@ -82,7 +82,7 @@ pub async fn insert_backtest_cfd(backtest: &Backtest) -> Result<i32, Error> {
     .await?;
 
     let row = rows.next().await?.ok_or_else(|| Error {
-        msg: format!("No se ha insertado el backtest"),
+        msg: "No se ha insertado el backtest".to_string(),
     })?;
     let id = row.get::<i32>(0)?;
     Ok(id)
@@ -139,10 +139,10 @@ pub async fn get_backtests() -> Result<Vec<Backtest>, Error> {
             id: row.get::<i32>(0)?,
             titulo: row.get::<String>(1)?,
             balance: row.get::<f64>(2)?,
-            tipo: tipo,
-            gestion_strategy: gestion_strategy,
-            parametros_gestion: parametros_gestion,
-            trades: trades,
+            tipo,
+            gestion_strategy,
+            parametros_gestion,
+            trades,
             datos: get_data_by_backtest(row.get::<i32>(0)?).await?,
             estrategia: Strategy {
                 id: 0,
@@ -222,10 +222,10 @@ pub async fn get_backtest_by_id(id: i32) -> Result<Backtest, Error> {
         id: row.get::<i32>(0)?,
         titulo: row.get::<String>(1)?,
         balance: row.get::<f64>(2)?,
-        tipo: tipo,
-        gestion_strategy: gestion_strategy,
-        parametros_gestion: parametros_gestion,
-        trades: trades,
+        tipo,
+        gestion_strategy,
+        parametros_gestion,
+        trades,
         datos: get_data_by_backtest(row.get::<i32>(0)?).await?,
         estrategia: Strategy {
             id: 0,
@@ -300,10 +300,10 @@ pub async fn get_backtests_by_titulo(titulo: String) -> Result<Vec<Backtest>, Er
             id: row.get::<i32>(0)?,
             titulo: row.get::<String>(1)?,
             balance: row.get::<f64>(2)?,
-            tipo: tipo,
-            gestion_strategy: gestion_strategy,
-            parametros_gestion: parametros_gestion,
-            trades: trades,
+            tipo,
+            gestion_strategy,
+            parametros_gestion,
+            trades,
             datos: get_data_by_backtest(row.get::<i32>(0)?).await?,
             estrategia: Strategy {
                 id: 0,
@@ -383,10 +383,10 @@ pub async fn get_backtests_by_tipo(tipo: &Activo) -> Result<Vec<Backtest>, Error
             id: row.get::<i32>(0)?,
             titulo: row.get::<String>(1)?,
             balance: row.get::<f64>(2)?,
-            tipo: tipo,
-            gestion_strategy: gestion_strategy,
-            parametros_gestion: parametros_gestion,
-            trades: trades,
+            tipo,
+            gestion_strategy,
+            parametros_gestion,
+            trades,
             datos: get_data_by_backtest(row.get::<i32>(0)?).await?,
             estrategia: Strategy {
                 id: 0,

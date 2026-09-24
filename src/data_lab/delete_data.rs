@@ -7,7 +7,7 @@ pub fn delete_data_local(data_info: &DataSymbol) -> PolarsResult<String> {
         "{}/{}.{}",
         data_info.ruta.clone(),
         data_info.name.clone(),
-        data_info.formato.unwrap().to_string()
+        data_info.formato.unwrap()
     );
 
     remove_file(parquet_path)?;

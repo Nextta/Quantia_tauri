@@ -71,7 +71,7 @@ pub async fn insert_data_backtest(data: &DataBacktest) -> Result<i32, Error> {
             .await?;
 
             let row = rows.next().await?.ok_or_else(|| Error {
-                msg: format!("No se ha podido insertar los datos."),
+                msg: "No se ha podido insertar los datos.".to_string(),
             })?;
             let id = row.get::<i32>(0)?;
 

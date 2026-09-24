@@ -212,7 +212,7 @@ pub async fn get_symbols_cfd() -> Result<Vec<SymbolInfoCFD>, Error> {
             lotaje_minimo: row.get::<f64>(8)?,
             lotaje_maximo: row.get::<f64>(9)?,
             digitos: row.get::<u32>(10)?,
-            open_weekend: open_weekend,
+            open_weekend,
             spread: row.get::<f64>(12)?,
         };
         symbols.push(symbol);
@@ -279,7 +279,7 @@ pub async fn get_symbols_cfd_by_name(name: &str) -> Result<Vec<SymbolInfoCFD>, E
             lotaje_minimo: row.get::<f64>(8)?,
             lotaje_maximo: row.get::<f64>(9)?,
             digitos: row.get::<u32>(10)?,
-            open_weekend: open_weekend,
+            open_weekend,
             spread: row.get::<f64>(12)?,
         };
         symbols.push(symbol);
@@ -346,7 +346,7 @@ pub async fn get_symbols_cfd_by_broker(broker_id: i32) -> Result<Vec<SymbolInfoC
             lotaje_minimo: row.get::<f64>(8)?,
             lotaje_maximo: row.get::<f64>(9)?,
             digitos: row.get::<u32>(10)?,
-            open_weekend: open_weekend,
+            open_weekend,
             spread: row.get::<f64>(12)?,
         };
         symbols.push(symbol);

@@ -1,37 +1,37 @@
 use polars::prelude::*;
 use serde::{Deserialize, Serialize};
 
-/// Lista de indicadores:
-/// ADX                  Average Directional Movement Index
-/// ADXR                 Average Directional Movement Index Rating
-/// APO                  Absolute Price Oscillator
-/// AROON                Aroon
-/// AROONOSC             Aroon Oscillator
-/// BOP                  Balance Of Power
-/// CCI                  Commodity Channel Index
-/// CMO                  Chande Momentum Oscillator
-/// DX                   Directional Movement Index
-/// MACD                 Moving Average Convergence/Divergence
-/// MACDEXT              MACD with controllable MA type
-/// MACDFIX              Moving Average Convergence/Divergence Fix 12/26
-/// MFI                  Money Flow Index
-/// MINUS_DI             Minus Directional Indicator
-/// MINUS_DM             Minus Directional Movement
-/// MOM                  Momentum
-/// PLUS_DI              Plus Directional Indicator
-/// PLUS_DM              Plus Directional Movement
-/// PPO                  Percentage Price Oscillator
-/// ROC                  Rate of change : ((price/prevPrice)-1)*100
-/// ROCP                 Rate of change Percentage: (price-prevPrice)/prevPrice
-/// ROCR                 Rate of change ratio: (price/prevPrice)
-/// ROCR100              Rate of change ratio 100 scale: (price/prevPrice)*100
-/// RSI                  Relative Strength Index
-/// STOCH                Stochastic
-/// STOCHF               Stochastic Fast
-/// STOCHRSI             Stochastic Relative Strength Index
-/// TRIX                 1-day Rate-Of-Change (ROC) of a Triple Smooth EMA
-/// ULTOSC               Ultimate Oscillator
-/// WILLR                Williams' %R
+// Lista de indicadores:
+// ADX                  Average Directional Movement Index
+// ADXR                 Average Directional Movement Index Rating
+// APO                  Absolute Price Oscillator
+// AROON                Aroon
+// AROONOSC             Aroon Oscillator
+// BOP                  Balance Of Power
+// CCI                  Commodity Channel Index
+// CMO                  Chande Momentum Oscillator
+// DX                   Directional Movement Index
+// MACD                 Moving Average Convergence/Divergence
+// MACDEXT              MACD with controllable MA type
+// MACDFIX              Moving Average Convergence/Divergence Fix 12/26
+// MFI                  Money Flow Index
+// MINUS_DI             Minus Directional Indicator
+// MINUS_DM             Minus Directional Movement
+// MOM                  Momentum
+// PLUS_DI              Plus Directional Indicator
+// PLUS_DM              Plus Directional Movement
+// PPO                  Percentage Price Oscillator
+// ROC                  Rate of change : ((price/prevPrice)-1)*100
+// ROCP                 Rate of change Percentage: (price-prevPrice)/prevPrice
+// ROCR                 Rate of change ratio: (price/prevPrice)
+// ROCR100              Rate of change ratio 100 scale: (price/prevPrice)*100
+// RSI                  Relative Strength Index
+// STOCH                Stochastic
+// STOCHF               Stochastic Fast
+// STOCHRSI             Stochastic Relative Strength Index
+// TRIX                 1-day Rate-Of-Change (ROC) of a Triple Smooth EMA
+// ULTOSC               Ultimate Oscillator
+// WILLR                Williams' %R
 
 // Helper function: Exponential Moving Average
 fn ema_series(values: &Series, period: usize) -> Series {
@@ -45,7 +45,7 @@ fn ema_series(values: &Series, period: usize) -> Series {
     let mut init_sum: f64 = 0.0;
     let mut start_idx = 0;
 
-    for i in 0..n {
+    for (i, slot) in ema_values.iter_mut().enumerate() {
         if let Some(val) = ca.get(i) {
             if !val.is_nan() {
                 init_sum += val;
@@ -53,7 +53,7 @@ fn ema_series(values: &Series, period: usize) -> Series {
 
                 if valid_count == period {
                     // Initialize EMA with SMA
-                    ema_values[i] = init_sum / period as f64;
+                    *slot = init_sum / period as f64;
                     start_idx = i;
                     break;
                 }
@@ -68,11 +68,11 @@ fn ema_series(values: &Series, period: usize) -> Series {
 
     // Continue EMA from start_idx + 1
     let mut current_ema = ema_values[start_idx];
-    for i in (start_idx + 1)..n {
+    for (i, slot) in ema_values.iter_mut().enumerate().skip(start_idx + 1) {
         if let Some(val) = ca.get(i) {
             if !val.is_nan() {
                 current_ema = val * multiplier + current_ema * (1.0 - multiplier);
-                ema_values[i] = current_ema;
+                *slot = current_ema;
             }
         }
     }
@@ -86,7 +86,7 @@ fn sma_series(values: &Series, period: usize) -> Series {
     let n = ca.len();
     let mut sma_values: Vec<f64> = vec![f64::NAN; n];
 
-    for i in (period - 1)..n {
+    for (i, slot) in sma_values.iter_mut().enumerate().skip(period - 1) {
         let mut sum = 0.0;
         let mut valid = true;
         let start_j = i + 1 - period;
@@ -105,7 +105,7 @@ fn sma_series(values: &Series, period: usize) -> Series {
         }
 
         if valid {
-            sma_values[i] = sum / period as f64;
+            *slot = sum / period as f64;
         }
     }
 
@@ -124,14 +124,14 @@ fn rma_series(values: &Series, period: usize) -> Series {
     let mut init_sum: f64 = 0.0;
     let mut start_idx = 0;
 
-    for i in 0..n {
+    for (i, slot) in rma_values.iter_mut().enumerate() {
         if let Some(val) = ca.get(i) {
             if !val.is_nan() {
                 init_sum += val;
                 valid_count += 1;
 
                 if valid_count == period {
-                    rma_values[i] = init_sum / period as f64;
+                    *slot = init_sum / period as f64;
                     start_idx = i;
                     break;
                 }
@@ -145,11 +145,11 @@ fn rma_series(values: &Series, period: usize) -> Series {
 
     // Continue RMA from start_idx + 1
     let mut current_rma = rma_values[start_idx];
-    for i in (start_idx + 1)..n {
+    for (i, slot) in rma_values.iter_mut().enumerate().skip(start_idx + 1) {
         if let Some(val) = ca.get(i) {
             if !val.is_nan() {
                 current_rma = val * alpha + current_rma * (1.0 - alpha);
-                rma_values[i] = current_rma;
+                *slot = current_rma;
             }
         }
     }
@@ -205,9 +205,9 @@ pub struct AdxParams {
 pub fn adx(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_name = output_col.unwrap_or("adx");
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
 
     let high_vals = high.f64().unwrap();
     let low_vals = low.f64().unwrap();
@@ -272,7 +272,7 @@ pub fn adx(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&st
 
     let mut dx_vals = vec![f64::NAN; n];
 
-    for i in 0..n {
+    for (i, slot) in dx_vals.iter_mut().enumerate() {
         let tr_val = tr_v.get(i).unwrap_or(f64::NAN);
         let pdm_val = pdm_v.get(i).unwrap_or(f64::NAN);
         let mdm_val = mdm_v.get(i).unwrap_or(f64::NAN);
@@ -282,9 +282,9 @@ pub fn adx(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&st
             let minus_di = (mdm_val / tr_val) * 100.0;
             let di_sum = plus_di + minus_di;
             if di_sum != 0.0 {
-                dx_vals[i] = ((plus_di - minus_di).abs() / di_sum) * 100.0;
+                *slot = ((plus_di - minus_di).abs() / di_sum) * 100.0;
             } else {
-                dx_vals[i] = 0.0;
+                *slot = 0.0;
             }
         }
     }
@@ -327,12 +327,12 @@ pub fn adxr(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&s
 
     // ADXR = (ADX[i] + ADX[i - (timeperiod - 1)]) / 2
     let lookback = timeperiod - 1;
-    for i in lookback..n {
+    for (i, slot) in adxr_vals.iter_mut().enumerate().skip(lookback) {
         let current_adx = adx_col.get(i).unwrap_or(f64::NAN);
         let past_adx = adx_col.get(i - lookback).unwrap_or(f64::NAN);
 
         if !current_adx.is_nan() && !past_adx.is_nan() {
-            adxr_vals[i] = (current_adx + past_adx) / 2.0;
+            *slot = (current_adx + past_adx) / 2.0;
         }
     }
 
@@ -371,7 +371,7 @@ pub fn apo(
     let slowperiod = slowperiod.unwrap_or(26);
     let output_name = output_col.unwrap_or("apo");
 
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
 
     let fast_ema = ema_series(&close, fastperiod);
     let slow_ema = ema_series(&close, slowperiod);
@@ -422,8 +422,8 @@ pub fn aroon(
     let output_col_up = output_col_up.unwrap_or("aroon_up");
     let output_col_down = output_col_down.unwrap_or("aroon_down");
 
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
 
     let high_ca = high.f64().unwrap();
     let low_ca = low.f64().unwrap();
@@ -514,7 +514,7 @@ pub fn aroonosc(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Optio
     // AROONOSC = Aroon Up - Aroon Down
     let aroonosc_series = (up_col - down_col).unwrap().with_name(output_name.into());
 
-    df.with_column(aroonosc_series.into()).unwrap();
+    df.with_column(aroonosc_series).unwrap();
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -540,10 +540,10 @@ pub fn bop(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&st
     let timeperiod = timeperiod.unwrap_or(14);
     let output_name = output_col.unwrap_or("bop");
 
-    let open = get_open(&df).unwrap();
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
+    let open = get_open(df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
 
     // Calcular BOP raw usando expresiones de Polars para eficiencia y alineación
     let denominator = (&high - &low).unwrap();
@@ -582,9 +582,9 @@ pub fn cci(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&st
     let timeperiod = timeperiod.max(2);
     let output_name = output_col.unwrap_or("cci");
 
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
 
     let high_vals = high
         .f64()
@@ -619,7 +619,7 @@ pub fn cci(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&st
         .map(|(a, b)| (a + b) / 3.0)
         .collect();
 
-    let tp_vals: Vec<f64> = typical_price_series.into_iter().map(|v| v).collect();
+    let tp_vals: Vec<f64> = typical_price_series.into_iter().collect();
 
     let n = tp_vals.len();
     let mut cci_vals: Vec<f64> = vec![f64::NAN; n];
@@ -673,7 +673,7 @@ pub fn cmo(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&st
     let timeperiod = timeperiod.unwrap_or(14);
     let output_col = output_col.unwrap_or("cmo");
 
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
     let close_ca = close.f64().unwrap();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
@@ -738,9 +738,9 @@ pub struct DxParams {
 pub fn dx(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_name = output_col.unwrap_or("dx");
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
 
     let high_vals = high.f64().unwrap();
     let low_vals = low.f64().unwrap();
@@ -869,7 +869,7 @@ pub fn macd(
     let output_col_signal = output_col_signal.unwrap_or("macd_signal");
     let output_col_hist = output_col_hist.unwrap_or("macd_hist");
 
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
     let fast_ema = ema_series(&close, fastperiod);
     let slow_ema = ema_series(&close, slowperiod);
 
@@ -879,13 +879,13 @@ pub fn macd(
 
     let mut macd_vals: Vec<f64> = vec![f64::NAN; n];
 
-    for i in 0..n {
+    for (i, slot) in macd_vals.iter_mut().enumerate() {
         let f = fast_ca.get(i);
         let s = slow_ca.get(i);
 
         if let (Some(f_val), Some(s_val)) = (f, s) {
             if !f_val.is_nan() && !s_val.is_nan() {
-                macd_vals[i] = f_val - s_val;
+                *slot = f_val - s_val;
             }
         }
     }
@@ -969,7 +969,7 @@ pub fn macdext(
     let output_col_signal = output_col_signal.unwrap_or("macd_signal");
     let output_col_hist = output_col_hist.unwrap_or("macd_hist");
 
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
 
     // Helper para despachar tipos de MA
     fn get_ma(series: &Series, period: usize, ma_type: usize) -> Series {
@@ -989,13 +989,13 @@ pub fn macdext(
 
     let mut macd_vals: Vec<f64> = vec![f64::NAN; n];
 
-    for i in 0..n {
+    for (i, slot) in macd_vals.iter_mut().enumerate() {
         let f = fast_ca.get(i);
         let s = slow_ca.get(i);
 
         if let (Some(f_val), Some(s_val)) = (f, s) {
             if !f_val.is_nan() && !s_val.is_nan() {
-                macd_vals[i] = f_val - s_val;
+                *slot = f_val - s_val;
             }
         }
     }
@@ -1089,10 +1089,10 @@ pub struct MfiParams {
 pub fn mfi(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_col = output_col.unwrap_or("mfi");
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
-    let volume = get_volume(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
+    let volume = get_volume(df).unwrap();
 
     let high_ca = high.f64().unwrap();
     let low_ca = low.f64().unwrap();
@@ -1182,9 +1182,9 @@ pub struct MinusDiParams {
 pub fn minus_di(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_name = output_col.unwrap_or("minus_di");
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
 
     let high_vals = high.f64().unwrap();
     let low_vals = low.f64().unwrap();
@@ -1267,8 +1267,8 @@ pub struct MinusDmParams {
 pub fn minus_dm(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_name = output_col.unwrap_or("minus_dm");
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
 
     let high_vals = high.f64().unwrap();
     let low_vals = low.f64().unwrap();
@@ -1276,7 +1276,7 @@ pub fn minus_dm(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Optio
     let n = high_vals.len();
     let mut minus_dm = vec![0.0; n];
 
-    for i in 1..n {
+    for (i, slot) in minus_dm.iter_mut().enumerate().skip(1) {
         let h_curr = high_vals.get(i).unwrap();
         let h_prev = high_vals.get(i - 1).unwrap();
         let l_curr = low_vals.get(i).unwrap();
@@ -1286,9 +1286,9 @@ pub fn minus_dm(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Optio
         let low_diff = l_prev - l_curr;
 
         if low_diff > high_diff && low_diff > 0.0 {
-            minus_dm[i] = low_diff;
+            *slot = low_diff;
         } else {
-            minus_dm[i] = 0.0;
+            *slot = 0.0;
         }
     }
 
@@ -1320,7 +1320,7 @@ pub struct MomParams {
 pub fn mom(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(10);
     let output_col = output_col.unwrap_or("mom");
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
 
     let close_ca = close.f64().unwrap();
     let n = close_ca.len();
@@ -1369,9 +1369,9 @@ pub struct PlusDiParams {
 pub fn plus_di(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_name = output_col.unwrap_or("plus_di");
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
 
     let high_vals = high.f64().unwrap();
     let low_vals = low.f64().unwrap();
@@ -1454,8 +1454,8 @@ pub struct PlusDmParams {
 pub fn plus_dm(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_name = output_col.unwrap_or("plus_dm");
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
 
     let high_vals = high.f64().unwrap();
     let low_vals = low.f64().unwrap();
@@ -1463,7 +1463,7 @@ pub fn plus_dm(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option
     let n = high_vals.len();
     let mut plus_dm = vec![0.0; n];
 
-    for i in 1..n {
+    for (i, slot) in plus_dm.iter_mut().enumerate().skip(1) {
         let h_curr = high_vals.get(i).unwrap();
         let h_prev = high_vals.get(i - 1).unwrap();
         let l_curr = low_vals.get(i).unwrap();
@@ -1473,9 +1473,9 @@ pub fn plus_dm(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option
         let low_diff = l_prev - l_curr;
 
         if high_diff > low_diff && high_diff > 0.0 {
-            plus_dm[i] = high_diff;
+            *slot = high_diff;
         } else {
-            plus_dm[i] = 0.0;
+            *slot = 0.0;
         }
     }
 
@@ -1515,7 +1515,7 @@ pub fn ppo(
     let fastperiod = fastperiod.unwrap_or(12);
     let slowperiod = slowperiod.unwrap_or(26);
     let output_name = output_col.unwrap_or("ppo");
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
 
     let fast_ema = ema_series(&close, fastperiod);
     let slow_ema = ema_series(&close, slowperiod);
@@ -1555,7 +1555,7 @@ pub struct RocParams {
 pub fn roc(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(10);
     let output_col = output_col.unwrap_or("roc");
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
 
     let close_ca = close.f64().unwrap();
     let n = close_ca.len();
@@ -1603,7 +1603,7 @@ pub struct RocpParams {
 pub fn rocp(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(10);
     let output_col = output_col.unwrap_or("rocp");
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
 
     let close_ca = close.f64().unwrap();
     let n = close_ca.len();
@@ -1651,7 +1651,7 @@ pub struct RocrParams {
 pub fn rocr(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(10);
     let output_col = output_col.unwrap_or("rocr");
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
 
     let close_ca = close.f64().unwrap();
     let n = close_ca.len();
@@ -1699,7 +1699,7 @@ pub struct Roc100Params {
 pub fn rocr100(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(10);
     let output_col = output_col.unwrap_or("rocr100");
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
 
     let close_ca = close.f64().unwrap();
     let n = close_ca.len();
@@ -1749,7 +1749,7 @@ pub struct RsiParams {
 pub fn rsi(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14);
     let output_col = output_col.unwrap_or("rsi");
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
 
     let close_ca = close.f64().unwrap();
     let n = close_ca.len();
@@ -1795,19 +1795,19 @@ pub fn rsi(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&st
 
     let mut rsi_vals = vec![f64::NAN; n];
 
-    for i in 0..n {
+    for (i, slot) in rsi_vals.iter_mut().enumerate() {
         let g = avg_gain_ca.get(i);
         let l = avg_loss_ca.get(i);
 
         if let (Some(g_val), Some(l_val)) = (g, l) {
             if !g_val.is_nan() && !l_val.is_nan() {
                 if l_val == 0.0 {
-                    rsi_vals[i] = 100.0;
+                    *slot = 100.0;
                 } else if g_val == 0.0 {
-                    rsi_vals[i] = 0.0;
+                    *slot = 0.0;
                 } else {
                     let rs = g_val / l_val;
-                    rsi_vals[i] = 100.0 - (100.0 / (1.0 + rs));
+                    *slot = 100.0 - (100.0 / (1.0 + rs));
                 }
             }
         }
@@ -1866,9 +1866,9 @@ pub fn stoch(
     let output_col_k = output_col_k.unwrap_or("slow_k");
     let output_col_d = output_col_d.unwrap_or("slow_d");
 
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
 
     let high_ca = high.f64().unwrap();
     let low_ca = low.f64().unwrap();
@@ -1974,9 +1974,9 @@ pub fn stochf(
     let output_col_k = output_col_k.unwrap_or("fast_k");
     let output_col_d = output_col_d.unwrap_or("fast_d");
 
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
 
     let high_ca = high.f64().unwrap();
     let low_ca = low.f64().unwrap();
@@ -2098,8 +2098,7 @@ pub fn stochrsi(
         let mut valid = true;
 
         let start_j = i + 1 - fastk_period;
-        for j in start_j..=i {
-            let rsi_val = rsi_v[j];
+        for &rsi_val in &rsi_v[start_j..=i] {
             if rsi_val.is_nan() {
                 valid = false;
                 break;
@@ -2162,7 +2161,7 @@ pub struct TrixParams {
 pub fn trix(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(30);
     let output_col = output_col.unwrap_or("trix");
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
 
     let ema1 = ema_series(&close, timeperiod);
     let ema2 = ema_series(&ema1, timeperiod);
@@ -2227,9 +2226,9 @@ pub fn ultosc(
     let t3 = timeperiod3.unwrap_or(28);
     let output_col = output_col.unwrap_or("ultosc");
 
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
 
     let h_ca = high.f64().unwrap();
     let l_ca = low.f64().unwrap();
@@ -2334,9 +2333,9 @@ pub struct WillrParams {
 pub fn willr(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&str>) {
     let timeperiod = timeperiod.unwrap_or(14).max(2);
     let output_col = output_col.unwrap_or("willr");
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
 
     let high_ca = high.f64().unwrap();
     let low_ca = low.f64().unwrap();

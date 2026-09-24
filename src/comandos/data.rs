@@ -66,29 +66,24 @@ pub async fn save_data_dukas(
 
     let data_symbol: DataSymbol = DataSymbol {
         id: 0,
-        name: name,
+        name,
         timeframe: Some(timeframe),
         ruta: ruta_data.clone(),
         formato: Some(formato_data),
         fecha_inicio: from_date,
         fecha_fin: to_date,
-        actualizado: actualizado,
-        n_data: n_data,
+        actualizado,
+        n_data,
         origen: Some(broker_data),
     };
 
-    match add_data(df, &data_symbol) {
-        Ok(_) => {
-            insert_data(&data_symbol).await?;
-        }
-        Err(_) => (),
+    if add_data(df, &data_symbol).is_ok() {
+        insert_data(&data_symbol).await?;
     }
 
     Ok(format!(
         "Datos guardados correctamente en {}/{} - Data: {:?}",
-        ruta_data,
-        formato_data.to_string(),
-        data_symbol
+        ruta_data, formato_data, data_symbol
     ))
 }
 
@@ -139,29 +134,24 @@ pub async fn save_data_dukas_ticks(
 
     let data_symbol: DataSymbol = DataSymbol {
         id: 0,
-        name: name,
+        name,
         timeframe: Some(timeframe),
         ruta: ruta_data.clone(),
         formato: Some(formato_data),
         fecha_inicio: from_date,
         fecha_fin: to_date,
-        actualizado: actualizado,
-        n_data: n_data,
+        actualizado,
+        n_data,
         origen: Some(broker_data),
     };
 
-    match add_data(df, &data_symbol) {
-        Ok(_) => {
-            insert_data(&data_symbol).await?;
-        }
-        Err(_) => (),
+    if add_data(df, &data_symbol).is_ok() {
+        insert_data(&data_symbol).await?;
     }
 
     Ok(format!(
         "Datos guardados correctamente en {}/{} - Data: {:?}",
-        ruta_data,
-        formato_data.to_string(),
-        data_symbol
+        ruta_data, formato_data, data_symbol
     ))
 }
 
@@ -176,23 +166,17 @@ pub async fn save_data_dukas_ticks(
 pub async fn delete_data_symbol(data_info: DataSymbol) -> Result<String, Error> {
     match delete_data(data_info.id).await {
         Ok(_) => match delete_data_local(&data_info) {
-            Ok(_) => {
-                return Ok(format!(
-                    "Symbol {} eliminado correctamente.",
-                    data_info.name
-                ));
-            }
-            Err(_) => {
-                return Err(Error {
-                    msg: "Error al eliminar los datos locales del symbolo".to_string(),
-                })
-            }
+            Ok(_) => Ok(format!(
+                "Symbol {} eliminado correctamente.",
+                data_info.name
+            )),
+            Err(_) => Err(Error {
+                msg: "Error al eliminar los datos locales del symbolo".to_string(),
+            }),
         },
-        Err(_) => {
-            return Err(Error {
-                msg: "Error al eliminar los datos de la base de datos".to_string(),
-            })
-        }
+        Err(_) => Err(Error {
+            msg: "Error al eliminar los datos de la base de datos".to_string(),
+        }),
     }
 }
 
@@ -206,12 +190,11 @@ pub async fn delete_data_symbol(data_info: DataSymbol) -> Result<String, Error> 
 /// Delvuelve un string indicando que los datos se han exportado con exito.
 #[tauri::command]
 pub fn export_data_symbol(data_info: DataSymbol, ruta_export: &str) -> Result<String, Error> {
-    export_data(&data_info, &ruta_export);
+    export_data(&data_info, ruta_export);
 
     Ok(format!(
         "Symbolo {} exportado con exito en la ruta {}",
-        data_info.name,
-        ruta_export.to_string()
+        data_info.name, ruta_export
     ))
 }
 
@@ -230,7 +213,7 @@ pub fn import_data_symbol(
 ) -> Result<String, Error> {
     let ruta = ruta_import.unwrap_or("data");
 
-    export_data(&data_info, &ruta);
+    export_data(&data_info, ruta);
 
     Ok(format!("Symbolo {} importado con exito.", data_info.name))
 }
@@ -252,24 +235,18 @@ pub async fn update_data_symbol(
 
     match update_data(&df, &data_info) {
         Ok(_) => match update_data_actualizado(data_info.id, true).await {
-            Ok(_) => {
-                return Ok(format!(
-                    "Datos del Symbol {} actializado correctamnete en la base de datos.",
-                    data_info.name
-                ));
-            }
-            Err(_) => {
-                return Err(Error {
-                    msg: "No se han podido actualizar los datos del Symbol en la base de datos."
-                        .to_string(),
-                });
-            }
+            Ok(_) => Ok(format!(
+                "Datos del Symbol {} actializado correctamnete en la base de datos.",
+                data_info.name
+            )),
+            Err(_) => Err(Error {
+                msg: "No se han podido actualizar los datos del Symbol en la base de datos."
+                    .to_string(),
+            }),
         },
-        Err(_) => {
-            return Err(Error {
-                msg: "No se han podido actualizar los datos del Symbol en local.".to_string(),
-            });
-        }
+        Err(_) => Err(Error {
+            msg: "No se han podido actualizar los datos del Symbol en local.".to_string(),
+        }),
     }
 }
 
@@ -290,24 +267,18 @@ pub async fn update_data_symbol_ticks(
 
     match update_data_ticks(&df, &data_info) {
         Ok(_) => match update_data_actualizado(data_info.id, true).await {
-            Ok(_) => {
-                return Ok(format!(
-                    "Datos del Symbol {} actializado correctamnete en la base de datos.",
-                    data_info.name
-                ));
-            }
-            Err(_) => {
-                return Err(Error {
-                    msg: "No se han podido actualizar los datos del Symbol en la base de datos."
-                        .to_string(),
-                });
-            }
+            Ok(_) => Ok(format!(
+                "Datos del Symbol {} actializado correctamnete en la base de datos.",
+                data_info.name
+            )),
+            Err(_) => Err(Error {
+                msg: "No se han podido actualizar los datos del Symbol en la base de datos."
+                    .to_string(),
+            }),
         },
-        Err(_) => {
-            return Err(Error {
-                msg: "No se han podido actualizar los datos del Symbol en local.".to_string(),
-            });
-        }
+        Err(_) => Err(Error {
+            msg: "No se han podido actualizar los datos del Symbol en local.".to_string(),
+        }),
     }
 }
 
@@ -436,10 +407,10 @@ pub async fn get_data_for_tv(
                 })
                 .collect();
 
-            return Ok(indicators);
+            Ok(indicators)
         }
-        Err(e) => return Err(e),
-    };
+        Err(e) => Err(e),
+    }
 }
 
 #[cfg(test)]

@@ -25,7 +25,6 @@ impl Datos {
     pub fn timeframe(&self, timeframe: &str) -> PolarsResult<DataFrame> {
         let lz: LazyFrame = self.datos.clone().lazy();
 
-        let df: DataFrame;
         let schema = lz
             .clone()
             .limit(0)
@@ -34,55 +33,53 @@ impl Datos {
             .get("open")
             .is_some();
 
-        if schema {
-            df = lz
-                .group_by_dynamic(
-                    col("time"),
-                    [],
-                    DynamicGroupOptions {
-                        every: Duration::parse(&timeframe),
-                        period: Duration::parse(&timeframe),
-                        offset: Duration::parse("0ms"),
-                        ..Default::default()
-                    },
-                )
-                .agg([
-                    col("open").first(),
-                    col("high").max(),
-                    col("low").min(),
-                    col("close").last(),
-                    col("volume").sum(),
-                ])
-                .collect()?;
+        let df: DataFrame = if schema {
+            lz.group_by_dynamic(
+                col("time"),
+                [],
+                DynamicGroupOptions {
+                    every: Duration::parse(timeframe),
+                    period: Duration::parse(timeframe),
+                    offset: Duration::parse("0ms"),
+                    ..Default::default()
+                },
+            )
+            .agg([
+                col("open").first(),
+                col("high").max(),
+                col("low").min(),
+                col("close").last(),
+                col("volume").sum(),
+            ])
+            .collect()?
         } else {
-            df = lz
-                .select([
-                    col("time"),
-                    col("bidPrice").alias("open"),
-                    col("bidPrice").alias("high"),
-                    col("bidPrice").alias("low"),
-                    col("bidPrice").alias("close"),
-                    (col("bidVolume") + col("askVolume")).alias("volume"),
-                ])
-                .group_by_dynamic(
-                    col("time"),
-                    [],
-                    DynamicGroupOptions {
-                        every: Duration::parse(&timeframe),
-                        period: Duration::parse(&timeframe),
-                        offset: Duration::parse("0ms"),
-                        ..Default::default()
-                    },
-                )
-                .agg([
-                    col("open").first(),
-                    col("high").max(),
-                    col("low").min(),
-                    col("close").last(),
-                    col("volume").sum(),
-                ])
-                .collect()?;
-        }
+            lz.select([
+                col("time"),
+                col("bidPrice").alias("open"),
+                col("bidPrice").alias("high"),
+                col("bidPrice").alias("low"),
+                col("bidPrice").alias("close"),
+                (col("bidVolume") + col("askVolume")).alias("volume"),
+            ])
+            .group_by_dynamic(
+                col("time"),
+                [],
+                DynamicGroupOptions {
+                    every: Duration::parse(timeframe),
+                    period: Duration::parse(timeframe),
+                    offset: Duration::parse("0ms"),
+                    ..Default::default()
+                },
+            )
+            .agg([
+                col("open").first(),
+                col("high").max(),
+                col("low").min(),
+                col("close").last(),
+                col("volume").sum(),
+            ])
+            .collect()?
+        };
 
         Ok(df)
     }

@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -9,14 +11,15 @@ pub enum GestionStrategy {
     PorcentajeBalance,
 }
 
-impl ToString for GestionStrategy {
-    fn to_string(&self) -> String {
-        match self {
-            GestionStrategy::Formula => "Formula".to_string(),
-            GestionStrategy::Fijo => "Fijo".to_string(),
-            GestionStrategy::Kelly => "Kelly".to_string(),
-            GestionStrategy::PocertajeEquity => "PocertajeEquity".to_string(),
-            GestionStrategy::PorcentajeBalance => "PorcentajeBalance".to_string(),
-        }
+impl fmt::Display for GestionStrategy {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            GestionStrategy::Formula => "Formula",
+            GestionStrategy::Fijo => "Fijo",
+            GestionStrategy::Kelly => "Kelly",
+            GestionStrategy::PocertajeEquity => "PocertajeEquity",
+            GestionStrategy::PorcentajeBalance => "PorcentajeBalance",
+        };
+        write!(f, "{}", s)
     }
 }

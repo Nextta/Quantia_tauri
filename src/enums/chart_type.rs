@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
@@ -6,14 +8,13 @@ pub enum ChartType {
     Subchart,
 }
 
-impl ChartType {
-    pub fn to_string(&self) -> String {
-        match self {
-            ChartType::Inchart => "Inchart".to_string(),
-            ChartType::Subchart => "Subchart".to_string(),
-        }
+impl fmt::Display for ChartType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.as_str())
     }
+}
 
+impl ChartType {
     pub fn as_str(&self) -> &str {
         match self {
             ChartType::Inchart => "Inchart",

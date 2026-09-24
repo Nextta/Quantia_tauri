@@ -5,7 +5,7 @@ use std::fs::File;
 
 /// Actualiza los datos descargados de los archivos parquet
 pub fn update_data(data: &DataFrame, data_info: &DataSymbol) -> PolarsResult<String> {
-    let ruta: String = format!("{}/{}.parquet", &data_info.ruta, &data_info.name);
+    let ruta: String = format!("{}/{}.parquet", data_info.ruta, data_info.name);
 
     let mut df_result = join_datasets(&ruta, data.clone())?;
 
@@ -17,7 +17,7 @@ pub fn update_data(data: &DataFrame, data_info: &DataSymbol) -> PolarsResult<Str
 
 /// Actualiza los datos descargados de los archivos parquet
 pub fn update_data_ticks(data: &DataFrame, data_info: &DataSymbol) -> PolarsResult<String> {
-    let ruta: String = format!("{}/{}.parquet", &data_info.ruta, &data_info.name);
+    let ruta: String = format!("{}/{}.parquet", data_info.ruta, data_info.name);
 
     let mut df_result = join_datasets_ticks(&ruta, data.clone())?;
 

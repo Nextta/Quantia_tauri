@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
@@ -15,23 +17,13 @@ pub enum Timeframe {
     MM1,
 }
 
-impl Timeframe {
-    pub fn to_string(&self) -> String {
-        match self {
-            Timeframe::M1 => "M1".to_string(),
-            Timeframe::M5 => "M5".to_string(),
-            Timeframe::M10 => "M10".to_string(),
-            Timeframe::M15 => "M15".to_string(),
-            Timeframe::M30 => "M30".to_string(),
-            Timeframe::H1 => "H1".to_string(),
-            Timeframe::H4 => "H4".to_string(),
-            Timeframe::D1 => "D1".to_string(),
-            Timeframe::W1 => "W1".to_string(),
-            Timeframe::MM1 => "MM1".to_string(),
-            Timeframe::Ticks => "Ticks".to_string(),
-        }
+impl fmt::Display for Timeframe {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.as_str())
     }
+}
 
+impl Timeframe {
     pub fn as_str(&self) -> &str {
         match self {
             Timeframe::M1 => "M1",

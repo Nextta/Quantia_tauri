@@ -110,7 +110,7 @@ impl Backtest {
             "{}/{}.{}",
             self.datos.ruta,
             self.datos.name,
-            self.datos.formato.unwrap().to_string()
+            self.datos.formato.unwrap()
         );
 
         let df: DataFrame = match self.datos.formato.unwrap() {
@@ -217,8 +217,8 @@ impl Backtest {
 
                     ht_phasor(
                         df,
-                        Some(format!("{}_in_phase", &indicator.nombre).as_str()),
-                        Some(format!("{}_quadrature", &indicator.nombre).as_str()),
+                        Some(format!("{}_in_phase", indicator.nombre).as_str()),
+                        Some(format!("{}_quadrature", indicator.nombre).as_str()),
                     );
                 }
                 "HT_SINE" => {
@@ -231,8 +231,8 @@ impl Backtest {
 
                     ht_sine(
                         df,
-                        Some(format!("{}_sine", &indicator.nombre).as_str()),
-                        Some(format!("{}_lead_sine", &indicator.nombre).as_str()),
+                        Some(format!("{}_sine", indicator.nombre).as_str()),
+                        Some(format!("{}_lead_sine", indicator.nombre).as_str()),
                     );
                 }
                 "HT_TRENDMODE" => {
@@ -263,9 +263,9 @@ impl Backtest {
                         Some(parametros.nbdevup),
                         Some(parametros.nbdevdn),
                         Some(parametros.matype),
-                        Some(format!("{}_bb_upper", &indicator.nombre).as_str()),
-                        Some(format!("{}_bb_upper", &indicator.nombre).as_str()),
-                        Some(format!("{}_bb_upper", &indicator.nombre).as_str()),
+                        Some(format!("{}_bb_upper", indicator.nombre).as_str()),
+                        Some(format!("{}_bb_upper", indicator.nombre).as_str()),
+                        Some(format!("{}_bb_upper", indicator.nombre).as_str()),
                     );
                 }
                 "DEMA" => {
@@ -321,8 +321,8 @@ impl Backtest {
                         df,
                         Some(parametros.fastlimit),
                         Some(parametros.slowlimit),
-                        Some(format!("{}_mama", &indicator.nombre).as_str()),
-                        Some(format!("{}_fama", &indicator.nombre).as_str()),
+                        Some(format!("{}_mama", indicator.nombre).as_str()),
+                        Some(format!("{}_fama", indicator.nombre).as_str()),
                     );
                 }
                 "MIDPOINT" => {
@@ -1119,8 +1119,8 @@ impl Backtest {
                     aroon(
                         df,
                         Some(params.timeperiod),
-                        Some(format!("{}_col_up", &indicator.nombre).as_str()),
-                        Some(format!("{}_col_down", &indicator.nombre).as_str()),
+                        Some(format!("{}_col_up", indicator.nombre).as_str()),
+                        Some(format!("{}_col_down", indicator.nombre).as_str()),
                     );
                 }
                 "AROONOSC" => {
@@ -1191,8 +1191,8 @@ impl Backtest {
                         Some(params.slowperiod),
                         Some(params.signalperiod),
                         Some(&indicator.nombre),
-                        Some(format!("{}_col_signal", &indicator.nombre).as_str()),
-                        Some(format!("{}_col_hist", &indicator.nombre).as_str()),
+                        Some(format!("{}_col_signal", indicator.nombre).as_str()),
+                        Some(format!("{}_col_hist", indicator.nombre).as_str()),
                     );
                 }
                 "MACDEXT" => {
@@ -1216,8 +1216,8 @@ impl Backtest {
                         Some(params.slowmatype),
                         Some(params.signalmatype),
                         Some(&indicator.nombre),
-                        Some(format!("{}_col_signal", &indicator.nombre).as_str()),
-                        Some(format!("{}_col_hist", &indicator.nombre).as_str()),
+                        Some(format!("{}_col_signal", indicator.nombre).as_str()),
+                        Some(format!("{}_col_hist", indicator.nombre).as_str()),
                     );
                 }
                 "MACDFIX" => {
@@ -1236,8 +1236,8 @@ impl Backtest {
                         df,
                         Some(params.signalperiod),
                         Some(&indicator.nombre),
-                        Some(format!("{}_col_signal", &indicator.nombre).as_str()),
-                        Some(format!("{}_col_hist", &indicator.nombre).as_str()),
+                        Some(format!("{}_col_signal", indicator.nombre).as_str()),
+                        Some(format!("{}_col_hist", indicator.nombre).as_str()),
                     );
                 }
                 "MFI" => {
@@ -1403,8 +1403,8 @@ impl Backtest {
                         Some(params.slowk_period),
                         Some(params.slowk_matype),
                         Some(params.slowd_period),
-                        Some(format!("{}_col_k", &indicator.nombre).as_str()),
-                        Some(format!("{}_col_d", &indicator.nombre).as_str()),
+                        Some(format!("{}_col_k", indicator.nombre).as_str()),
+                        Some(format!("{}_col_d", indicator.nombre).as_str()),
                     );
                 }
                 "STOCHF" => {
@@ -1424,8 +1424,8 @@ impl Backtest {
                         Some(params.fastk_period),
                         Some(params.fastd_period),
                         Some(params.fastd_matype),
-                        Some(format!("{}_col_k", &indicator.nombre).as_str()),
-                        Some(format!("{}_col_d", &indicator.nombre).as_str()),
+                        Some(format!("{}_col_k", indicator.nombre).as_str()),
+                        Some(format!("{}_col_d", indicator.nombre).as_str()),
                     );
                 }
                 "STOCHRSI" => {
@@ -1446,8 +1446,8 @@ impl Backtest {
                         Some(params.fastk_period),
                         Some(params.fastd_period),
                         Some(params.fastd_matype),
-                        Some(format!("{}_col_k", &indicator.nombre).as_str()),
-                        Some(format!("{}_col_d", &indicator.nombre).as_str()),
+                        Some(format!("{}_col_k", indicator.nombre).as_str()),
+                        Some(format!("{}_col_d", indicator.nombre).as_str()),
                     );
                 }
                 "TRIX" => {
@@ -1772,7 +1772,7 @@ impl Backtest {
                 }
                 _ => {
                     if LOGS_REGISTRO {
-                        self.add_registro(format!("El indicador no existe."));
+                        self.add_registro("El indicador no existe.".to_string());
                     }
                 }
             }
@@ -1790,13 +1790,13 @@ impl Backtest {
         match tipo {
             EntryDirection::Buy => {
                 if LOGS_REGISTRO {
-                    self.add_registro(format!("Verificando: Buy"));
+                    self.add_registro("Verificando: Buy".to_string());
                 }
                 if self.estrategia.opciones.trading_direccion == TradingDirection::Long
                     || self.estrategia.opciones.trading_direccion == TradingDirection::Both
                 {
                     if LOGS_REGISTRO {
-                        self.add_registro(format!("Direccion de Buy: OK"));
+                        self.add_registro("Direccion de Buy: OK".to_string());
                     }
                     true
                 } else {
@@ -1805,13 +1805,13 @@ impl Backtest {
             }
             EntryDirection::Sell => {
                 if LOGS_REGISTRO {
-                    self.add_registro(format!("Verificando: Sell"));
+                    self.add_registro("Verificando: Sell".to_string());
                 }
                 if self.estrategia.opciones.trading_direccion == TradingDirection::Short
                     || self.estrategia.opciones.trading_direccion == TradingDirection::Both
                 {
                     if LOGS_REGISTRO {
-                        self.add_registro(format!("Direccion de Sell: OK"));
+                        self.add_registro("Direccion de Sell: OK".to_string());
                     }
                     true
                 } else {
@@ -1848,9 +1848,7 @@ impl Backtest {
             _ => false,
         };
 
-        if (i.clone() as i32 - condiciones.shift_b) >= 0
-            && (i.clone() as i32 - condiciones.shift_a) >= 0
-        {
+        if (*i as i32 - condiciones.shift_b) >= 0 && (*i as i32 - condiciones.shift_a) >= 0 {
             let campo_a = df
                 .column(&condiciones.campo_a)
                 .unwrap()
@@ -1868,7 +1866,7 @@ impl Backtest {
                 .unwrap_or(0.0);
 
             if let Some(next_condition) = &condiciones.next_condition {
-                let result = self.check_conditions(df, &*next_condition, i);
+                let result = self.check_conditions(df, next_condition, i);
 
                 let resultado = check_condition(campo_a, campo_b, &condiciones.operador);
 
@@ -1878,18 +1876,18 @@ impl Backtest {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
                                     "La condición {} se cumple",
-                                    condiciones.logica.unwrap().to_string()
+                                    condiciones.logica.unwrap()
                                 ));
                             }
-                            return true;
+                            true
                         } else {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
                                     "La condición {} no se cumple",
-                                    condiciones.logica.unwrap().to_string()
+                                    condiciones.logica.unwrap()
                                 ));
                             }
-                            return false;
+                            false
                         }
                     }
                     Some(Logic::OR) => {
@@ -1897,18 +1895,18 @@ impl Backtest {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
                                     "La condición {} se cumple",
-                                    condiciones.logica.unwrap().to_string()
+                                    condiciones.logica.unwrap()
                                 ));
                             }
-                            return true;
+                            true
                         } else {
                             if LOGS_REGISTRO {
                                 self.add_registro(format!(
                                     "La condición {} no se cumple",
-                                    condiciones.logica.unwrap().to_string()
+                                    condiciones.logica.unwrap()
                                 ));
                             }
-                            return false;
+                            false
                         }
                     }
                     _ => resultado,
@@ -1918,24 +1916,24 @@ impl Backtest {
 
                 if !resultado {
                     if LOGS_REGISTRO {
-                        self.add_registro(format!("La condición no se cumple",));
+                        self.add_registro("La condición no se cumple".to_string());
                     }
-                    return false;
+                    false
                 } else {
                     if LOGS_REGISTRO {
-                        self.add_registro(format!("La condición se cumple",));
+                        self.add_registro("La condición se cumple".to_string());
                     }
-                    return true;
+                    true
                 }
             }
         } else {
             if LOGS_REGISTRO {
                 self.add_registro(format!(
                     "El indice {} del shift es incorrecto",
-                    (i.clone() as i32 - condiciones.shift_b)
+                    (*i as i32 - condiciones.shift_b)
                 ));
             }
-            return false;
+            false
         }
     }
 
@@ -1946,22 +1944,22 @@ impl Backtest {
     ///
     /// # Retorna
     /// True si se puede operar en la dirección indicada, false en caso contrario.
-    fn entry_options(&mut self, open_trades: &Vec<Trade>) -> bool {
+    fn entry_options(&mut self, open_trades: &[Trade]) -> bool {
         let entry_options: bool;
 
         if LOGS_REGISTRO {
-            self.add_registro(format!("Comprobando opciones de entrada"));
+            self.add_registro("Comprobando opciones de entrada".to_string());
         }
 
         if !self.estrategia.opciones.multiples_trades && !open_trades.is_empty() {
             entry_options = false;
             if LOGS_REGISTRO {
-                self.add_registro(format!("No se puede operar con mas de un trade"));
+                self.add_registro("No se puede operar con mas de un trade".to_string());
             }
         } else {
             entry_options = true;
             if LOGS_REGISTRO {
-                self.add_registro(format!("Se puede operar con mas de un trade"));
+                self.add_registro("Se puede operar con mas de un trade".to_string());
             }
         }
         entry_options
@@ -1993,7 +1991,7 @@ impl Backtest {
 
         let mut valor: f64 = 0.0;
 
-        if (i as i32 - params.shift.clone() as i32) >= 0 {
+        if (i as i32 - params.shift as i32) >= 0 {
             valor = df
                 .column(&params.nombre_col)
                 .unwrap()
@@ -2024,13 +2022,13 @@ impl Backtest {
                         valor - params.valor
                     } else {
                         if LOGS_REGISTRO {
-                            self.add_registro(format!("Limite por pip no valido"));
+                            self.add_registro("Limite por pip no valido".to_string());
                         }
                         0.0
                     }
                 } else {
                     if LOGS_REGISTRO {
-                        self.add_registro(format!("Limite por pip no valido"));
+                        self.add_registro("Limite por pip no valido".to_string());
                     }
                     0.0
                 }
@@ -2055,13 +2053,13 @@ impl Backtest {
                         valor - params.valor
                     } else {
                         if LOGS_REGISTRO {
-                            self.add_registro(format!("Limite por tick no valido"));
+                            self.add_registro("Limite por tick no valido".to_string());
                         }
                         0.0
                     }
                 } else {
                     if LOGS_REGISTRO {
-                        self.add_registro(format!("Limite por tick no valido"));
+                        self.add_registro("Limite por tick no valido".to_string());
                     }
                     0.0
                 }
@@ -2086,13 +2084,13 @@ impl Backtest {
                         valor - params.valor
                     } else {
                         if LOGS_REGISTRO {
-                            self.add_registro(format!("Limite por punto no valido"));
+                            self.add_registro("Limite por punto no valido".to_string());
                         }
                         0.0
                     }
                 } else {
                     if LOGS_REGISTRO {
-                        self.add_registro(format!("Limite por punto no valido"));
+                        self.add_registro("Limite por punto no valido".to_string());
                     }
                     0.0
                 }
@@ -2117,13 +2115,13 @@ impl Backtest {
                         valor - (valor * params.valor)
                     } else {
                         if LOGS_REGISTRO {
-                            self.add_registro(format!("Limite por porcentaje no valido"));
+                            self.add_registro("Limite por porcentaje no valido".to_string());
                         }
                         0.0
                     }
                 } else {
                     if LOGS_REGISTRO {
-                        self.add_registro(format!("Limite por porcentaje no valido"));
+                        self.add_registro("Limite por porcentaje no valido".to_string());
                     }
                     0.0
                 }
@@ -2148,13 +2146,13 @@ impl Backtest {
                         valor - params.valor
                     } else {
                         if LOGS_REGISTRO {
-                            self.add_registro(format!("Limite por atr no valido"));
+                            self.add_registro("Limite por atr no valido".to_string());
                         }
                         0.0
                     }
                 } else {
                     if LOGS_REGISTRO {
-                        self.add_registro(format!("Limite por atr no valido"));
+                        self.add_registro("Limite por atr no valido".to_string());
                     }
                     0.0
                 }
@@ -2183,7 +2181,7 @@ impl Backtest {
         direccion: &EntryDirection,
     ) -> f64 {
         if LOGS_REGISTRO {
-            self.add_registro(format!("Obteniendo stop loss"));
+            self.add_registro("Obteniendo stop loss".to_string());
         }
 
         let params = &self
@@ -2202,11 +2200,11 @@ impl Backtest {
 
         let mut valor: f64 = 0.0;
 
-        if (i as i32 - params.shift.clone() as i32) >= 0 {
+        if (i as i32 - params.shift as i32) >= 0 {
             valor = df
                 .column(&params.nombre_col)
                 .unwrap()
-                .get(i - &params.shift)
+                .get(i - params.shift)
                 .unwrap()
                 .try_extract::<f64>()
                 .unwrap_or(0.0);
@@ -2231,7 +2229,7 @@ impl Backtest {
                             valor - params.valor
                         } else {
                             if LOGS_REGISTRO {
-                                self.add_registro(format!("stop loss por pip no valido"));
+                                self.add_registro("stop loss por pip no valido".to_string());
                             }
                             0.0
                         }
@@ -2245,7 +2243,7 @@ impl Backtest {
                         valor + params.valor
                     } else {
                         if LOGS_REGISTRO {
-                            self.add_registro(format!("stop loss por pip no valido"));
+                            self.add_registro("stop loss por pip no valido".to_string());
                         }
                         0.0
                     }
@@ -2262,7 +2260,7 @@ impl Backtest {
                             valor - params.valor
                         } else {
                             if LOGS_REGISTRO {
-                                self.add_registro(format!("stop loss por tick no valido"));
+                                self.add_registro("stop loss por tick no valido".to_string());
                             }
                             0.0
                         }
@@ -2276,7 +2274,7 @@ impl Backtest {
                         valor + params.valor
                     } else {
                         if LOGS_REGISTRO {
-                            self.add_registro(format!("stop loss por tick no valido"));
+                            self.add_registro("stop loss por tick no valido".to_string());
                         }
                         0.0
                     }
@@ -2293,7 +2291,7 @@ impl Backtest {
                             valor - params.valor
                         } else {
                             if LOGS_REGISTRO {
-                                self.add_registro(format!("stop loss por punto no valido"));
+                                self.add_registro("stop loss por punto no valido".to_string());
                             }
                             0.0
                         }
@@ -2307,7 +2305,7 @@ impl Backtest {
                         valor + params.valor
                     } else {
                         if LOGS_REGISTRO {
-                            self.add_registro(format!("stop loss por punto no valido"));
+                            self.add_registro("stop loss por punto no valido".to_string());
                         }
                         0.0
                     }
@@ -2324,7 +2322,7 @@ impl Backtest {
                             valor - (valor * params.valor)
                         } else {
                             if LOGS_REGISTRO {
-                                self.add_registro(format!("stop loss por porcentaje no valido"));
+                                self.add_registro("stop loss por porcentaje no valido".to_string());
                             }
                             0.0
                         }
@@ -2338,7 +2336,7 @@ impl Backtest {
                         valor + (valor * params.valor)
                     } else {
                         if LOGS_REGISTRO {
-                            self.add_registro(format!("stop loss por porcentaje no valido"));
+                            self.add_registro("stop loss por porcentaje no valido".to_string());
                         }
                         0.0
                     }
@@ -2355,7 +2353,7 @@ impl Backtest {
                             precio_entrada - valor
                         } else {
                             if LOGS_REGISTRO {
-                                self.add_registro(format!("stop loss por atr no valido"));
+                                self.add_registro("stop loss por atr no valido".to_string());
                             }
                             0.0
                         }
@@ -2369,7 +2367,7 @@ impl Backtest {
                         precio_entrada + valor
                     } else {
                         if LOGS_REGISTRO {
-                            self.add_registro(format!("stop loss por atr no valido"));
+                            self.add_registro("stop loss por atr no valido".to_string());
                         }
                         0.0
                     }
@@ -2400,7 +2398,7 @@ impl Backtest {
         direccion: &EntryDirection,
     ) -> f64 {
         if LOGS_REGISTRO {
-            self.add_registro(format!("Obteniendo take profit"));
+            self.add_registro("Obteniendo take profit".to_string());
         }
 
         let params = &self
@@ -2419,11 +2417,11 @@ impl Backtest {
 
         let mut valor: f64 = 0.0;
 
-        if (i as i32 - params.shift.clone() as i32) >= 0 {
+        if (i as i32 - params.shift as i32) >= 0 {
             valor = df
                 .column(&params.nombre_col)
                 .unwrap()
-                .get(i - &params.shift)
+                .get(i - params.shift)
                 .unwrap()
                 .try_extract::<f64>()
                 .unwrap_or(0.0);
@@ -2456,13 +2454,13 @@ impl Backtest {
                             valor - params.valor
                         } else {
                             if LOGS_REGISTRO {
-                                self.add_registro(format!("limite de venta por pip no valido"));
+                                self.add_registro("limite de venta por pip no valido".to_string());
                             }
                             0.0
                         }
                     } else {
                         if LOGS_REGISTRO {
-                            self.add_registro(format!("limite de venta por pip no valido"));
+                            self.add_registro("limite de venta por pip no valido".to_string());
                         }
                         0.0
                     }
@@ -2487,13 +2485,13 @@ impl Backtest {
                             valor - params.valor
                         } else {
                             if LOGS_REGISTRO {
-                                self.add_registro(format!("limite de venta por tick no valido"));
+                                self.add_registro("limite de venta por tick no valido".to_string());
                             }
                             0.0
                         }
                     } else {
                         if LOGS_REGISTRO {
-                            self.add_registro(format!("limite de venta por tick no valido"));
+                            self.add_registro("limite de venta por tick no valido".to_string());
                         }
                         0.0
                     }
@@ -2518,13 +2516,15 @@ impl Backtest {
                             valor - params.valor
                         } else {
                             if LOGS_REGISTRO {
-                                self.add_registro(format!("limite de venta por punto no valido"));
+                                self.add_registro(
+                                    "limite de venta por punto no valido".to_string(),
+                                );
                             }
                             0.0
                         }
                     } else {
                         if LOGS_REGISTRO {
-                            self.add_registro(format!("limite de venta por punto no valido"));
+                            self.add_registro("limite de venta por punto no valido".to_string());
                         }
                         0.0
                     }
@@ -2549,15 +2549,17 @@ impl Backtest {
                             valor - (valor * params.valor)
                         } else {
                             if LOGS_REGISTRO {
-                                self.add_registro(format!(
-                                    "limite de venta por porcentaje no valido"
-                                ));
+                                self.add_registro(
+                                    "limite de venta por porcentaje no valido".to_string(),
+                                );
                             }
                             0.0
                         }
                     } else {
                         if LOGS_REGISTRO {
-                            self.add_registro(format!("limite de venta por porcentaje no valido"));
+                            self.add_registro(
+                                "limite de venta por porcentaje no valido".to_string(),
+                            );
                         }
                         0.0
                     }
@@ -2582,13 +2584,13 @@ impl Backtest {
                             precio_entrada - valor
                         } else {
                             if LOGS_REGISTRO {
-                                self.add_registro(format!("limite de atr no valido"));
+                                self.add_registro("limite de atr no valido".to_string());
                             }
                             0.0
                         }
                     } else {
                         if LOGS_REGISTRO {
-                            self.add_registro(format!("limite de atr no valido"));
+                            self.add_registro("limite de atr no valido".to_string());
                         }
                         0.0
                     }
@@ -2622,7 +2624,7 @@ impl Backtest {
         stoploss: Option<f64>,
         takeprofit: Option<f64>,
     ) -> Option<Trade> {
-        let mut trade: Trade = Trade::new(self.id.clone(), symbol.clone()).await;
+        let mut trade: Trade = Trade::new(self.id, symbol.clone()).await;
 
         let sl = stoploss.unwrap_or(0.0);
         let mut tp = takeprofit.unwrap_or(0.0);
@@ -2644,7 +2646,7 @@ impl Backtest {
                     &precio,
                     &self.gestion_strategy,
                     &self.parametros_gestion,
-                    &self,
+                    self,
                     Some(tp),
                     Some(sl),
                 );
@@ -2654,7 +2656,7 @@ impl Backtest {
                         t0, precio, tp, sl, spread
                     ));
                 }
-                return Some(trade);
+                Some(trade)
             }
             EntryDirection::Sell => {
                 trade.sell(
@@ -2662,7 +2664,7 @@ impl Backtest {
                     precio_entrada,
                     &self.gestion_strategy,
                     &self.parametros_gestion,
-                    &self,
+                    self,
                     Some(tp),
                     Some(sl),
                 );
@@ -2672,7 +2674,7 @@ impl Backtest {
                         t0, precio_entrada, tp, sl
                     ));
                 }
-                return Some(trade);
+                Some(trade)
             }
         }
     }
@@ -3292,7 +3294,7 @@ impl Backtest {
         for i in 0..df.height() {
             if !buy_limits.is_empty() {
                 if LOGS_REGISTRO {
-                    self.add_registro(format!("Recorriendo los buy limits..."));
+                    self.add_registro("Recorriendo los buy limits...".to_string());
                 }
 
                 let mut indices: Vec<usize> = Vec::new();
@@ -3305,15 +3307,15 @@ impl Backtest {
                 {
                     let timestamp = df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
-                    let tp: f64 = self.get_takeprofit(&limit, &df, i, &EntryDirection::Buy);
-                    let sl: f64 = self.get_stoploss(&limit, &df, i, &EntryDirection::Buy);
+                    let tp: f64 = self.get_takeprofit(limit, df, i, &EntryDirection::Buy);
+                    let sl: f64 = self.get_stoploss(limit, df, i, &EntryDirection::Buy);
 
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
                             timestamp,
-                            &symbol,
+                            symbol,
                             &EntryDirection::Buy,
-                            &limit,
+                            limit,
                             Some(sl),
                             Some(tp),
                         )
@@ -3323,7 +3325,7 @@ impl Backtest {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Buy limit activado en índice: {}. Trade ejecutado {:?}.",
-                                idx, &trade
+                                idx, trade
                             ));
                         }
                         open_trades.push(trade);
@@ -3342,7 +3344,7 @@ impl Backtest {
 
             if !buy_stops.is_empty() {
                 if LOGS_REGISTRO {
-                    self.add_registro(format!("Recorriendo los buy stops..."));
+                    self.add_registro("Recorriendo los buy stops...".to_string());
                 }
 
                 let mut indices: Vec<usize> = Vec::new();
@@ -3355,15 +3357,15 @@ impl Backtest {
                 {
                     let timestamp = df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
-                    let tp: f64 = self.get_takeprofit(&limit, &df, i, &EntryDirection::Buy);
-                    let sl: f64 = self.get_stoploss(&limit, &df, i, &EntryDirection::Buy);
+                    let tp: f64 = self.get_takeprofit(limit, df, i, &EntryDirection::Buy);
+                    let sl: f64 = self.get_stoploss(limit, df, i, &EntryDirection::Buy);
 
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
                             timestamp,
-                            &symbol,
+                            symbol,
                             &EntryDirection::Buy,
-                            &limit,
+                            limit,
                             Some(sl),
                             Some(tp),
                         )
@@ -3373,7 +3375,7 @@ impl Backtest {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Buy stop activado en índice: {}. Trade ejecutado {:?}.",
-                                idx, &trade
+                                idx, trade
                             ));
                         }
 
@@ -3394,7 +3396,7 @@ impl Backtest {
 
             if !sell_limits.is_empty() {
                 if LOGS_REGISTRO {
-                    self.add_registro(format!("Recorriendo los sell limits..."));
+                    self.add_registro("Recorriendo los sell limits...".to_string());
                 }
 
                 let mut indices: Vec<usize> = Vec::new();
@@ -3407,15 +3409,15 @@ impl Backtest {
                 {
                     let timestamp = df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
-                    let tp: f64 = self.get_takeprofit(&limit, &df, i, &EntryDirection::Sell);
-                    let sl: f64 = self.get_stoploss(&limit, &df, i, &EntryDirection::Sell);
+                    let tp: f64 = self.get_takeprofit(limit, df, i, &EntryDirection::Sell);
+                    let sl: f64 = self.get_stoploss(limit, df, i, &EntryDirection::Sell);
 
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
                             timestamp,
-                            &symbol,
+                            symbol,
                             &EntryDirection::Sell,
-                            &limit,
+                            limit,
                             Some(sl),
                             Some(tp),
                         )
@@ -3425,7 +3427,7 @@ impl Backtest {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Sell limit activado en índice: {}. Trade ejecutado {:?}.",
-                                idx, &trade
+                                idx, trade
                             ));
                         }
 
@@ -3446,7 +3448,7 @@ impl Backtest {
 
             if !sell_stops.is_empty() {
                 if LOGS_REGISTRO {
-                    self.add_registro(format!("Recorriendo los sell stops..."));
+                    self.add_registro("Recorriendo los sell stops...".to_string());
                 }
 
                 let mut indices: Vec<usize> = Vec::new();
@@ -3459,15 +3461,15 @@ impl Backtest {
                 {
                     let timestamp = df.column("time")?.get(i + 1)?.try_extract::<i64>()?;
 
-                    let tp: f64 = self.get_takeprofit(&limit, &df, i, &EntryDirection::Sell);
-                    let sl: f64 = self.get_stoploss(&limit, &df, i, &EntryDirection::Sell);
+                    let tp: f64 = self.get_takeprofit(limit, df, i, &EntryDirection::Sell);
+                    let sl: f64 = self.get_stoploss(limit, df, i, &EntryDirection::Sell);
 
                     let trade: Option<Trade> = self
                         .ejecutar_entry(
                             timestamp,
-                            &symbol,
+                            symbol,
                             &EntryDirection::Sell,
-                            &limit,
+                            limit,
                             Some(sl),
                             Some(tp),
                         )
@@ -3477,7 +3479,7 @@ impl Backtest {
                         if LOGS_REGISTRO {
                             self.add_registro(format!(
                                 "Sell stop activado en índice: {}. Trade ejecutado {:?}.",
-                                idx, &trade
+                                idx, trade
                             ));
                         }
 
@@ -3498,7 +3500,7 @@ impl Backtest {
 
             if !open_trades.is_empty() {
                 if LOGS_REGISTRO {
-                    self.add_registro(format!("Recorriendo los trades abiertos..."));
+                    self.add_registro("Recorriendo los trades abiertos...".to_string());
                 }
                 let precio_actual: f64 = df.column("close")?.get(i)?.try_extract::<f64>()?;
                 // Recorremos el vactor de operaciones abiertas(open_trades) y comprobamos si
@@ -3506,7 +3508,7 @@ impl Backtest {
                 let mut indices: Vec<usize> = Vec::new();
                 for (idx, trade) in open_trades.iter_mut().enumerate() {
                     if LOGS_REGISTRO {
-                        self.add_registro(format!("Procesando trade abierto: {:?}.", &trade));
+                        self.add_registro(format!("Procesando trade abierto: {:?}.", trade));
                     }
                     match trade.tipo {
                         EntryDirection::Buy => {
@@ -3523,7 +3525,7 @@ impl Backtest {
                                 if LOGS_REGISTRO {
                                     self.add_registro(format!(
                                         "Se ha ejecutado el Stop loss en : {}.",
-                                        &trade.sl
+                                        trade.sl
                                     ));
                                 }
                             }
@@ -3540,7 +3542,7 @@ impl Backtest {
                                 if LOGS_REGISTRO {
                                     self.add_registro(format!(
                                         "Se ha ejecutado el Take profit en : {}.",
-                                        &trade.tp
+                                        trade.tp
                                     ));
                                 }
                             }
@@ -3559,7 +3561,7 @@ impl Backtest {
                                 if LOGS_REGISTRO {
                                     self.add_registro(format!(
                                         "Se ha ejecutado el Stop loss en : {}.",
-                                        &trade.sl
+                                        trade.sl
                                     ));
                                 }
                             }
@@ -3576,7 +3578,7 @@ impl Backtest {
                                 if LOGS_REGISTRO {
                                     self.add_registro(format!(
                                         "Se ha ejecutado el Take profit en : {}.",
-                                        &trade.tp
+                                        trade.tp
                                     ));
                                 }
                             }
@@ -3594,7 +3596,7 @@ impl Backtest {
                         Action::ExitBuy => {
                             match &accion.conditions {
                                 Some(condition) => {
-                                    if self.check_conditions(&df, &condition, &i) {
+                                    if self.check_conditions(df, condition, &i) {
                                         let timestamp: i64 = df
                                             .column("time")
                                             .unwrap()
@@ -3616,22 +3618,19 @@ impl Backtest {
                                         let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
                                         for (idx, trade) in open_trades.iter_mut().enumerate() {
-                                            match trade.tipo {
-                                                EntryDirection::Buy => {
-                                                    self.balance += trade.close(t1.clone(), precio_cierre);
-                                                    indices.push(idx);
-                                                    if LOGS_REGISTRO {
-                                                        self.add_registro(format!("Condición de salida Exit Buy activada. Cerramos el trade: {:?}", &trade));
-                                                    }
+                                            if trade.tipo == EntryDirection::Buy {
+                                                self.balance += trade.close(t1.clone(), precio_cierre);
+                                                indices.push(idx);
+                                                if LOGS_REGISTRO {
+                                                    self.add_registro(format!("Condición de salida Exit Buy activada. Cerramos el trade: {:?}", trade));
                                                 }
-                                                _ => {}
                                             }
                                         }
                                     }
                                 }
                                 None => {
                                     if LOGS_REGISTRO {
-                                        self.add_registro(format!("No hay condiciones de salida en esta accion: {:?}", &accion));
+                                        self.add_registro(format!("No hay condiciones de salida en esta accion: {:?}", accion));
                                     }
                                 }
                             }
@@ -3639,7 +3638,7 @@ impl Backtest {
                         Action::ExitSell => {
                             match &accion.conditions {
                                 Some(condition) => {
-                                    if self.check_conditions(&df, &condition, &i) {
+                                    if self.check_conditions(df, condition, &i) {
                                         let timestamp: i64 = df
                                             .column("time")
                                             .unwrap()
@@ -3661,23 +3660,19 @@ impl Backtest {
                                         let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
                                         for (idx, trade) in open_trades.iter_mut().enumerate() {
-                                            match trade.tipo {
-                                                EntryDirection::Sell => {
-                                                    self.balance += trade.close(t1.clone(), precio_cierre);
-                                                    indices.push(idx);
-                                                    if LOGS_REGISTRO {
-                                                        self.add_registro(format!("Condición de salida Exit Sell activada. Cerramos el trade: {:?}", &trade));
-                                                    }
+                                            if trade.tipo == EntryDirection::Sell {
+                                                self.balance += trade.close(t1.clone(), precio_cierre);
+                                                indices.push(idx);
+                                                if LOGS_REGISTRO {
+                                                    self.add_registro(format!("Condición de salida Exit Sell activada. Cerramos el trade: {:?}", trade));
                                                 }
-
-                                                _ => {}
                                             }
                                         }
                                     }
                                 }
                                 None => {
                                     if LOGS_REGISTRO {
-                                        self.add_registro(format!("No hay condiciones de salida en esta accion: {:?}", &accion));
+                                        self.add_registro(format!("No hay condiciones de salida en esta accion: {:?}", accion));
                                     }
                                 }
                             }
@@ -3723,45 +3718,42 @@ impl Backtest {
                                     self.balance += trade.close(t1, precio_cierre);
                                     indices.push(idx);
                                     if LOGS_REGISTRO {
-                                        self.add_registro(format!("Condición de salida en NBars({}) activada. Cerramos el trade: {:?}", n_bars.valor.clone(), &trade));
+                                        self.add_registro(format!("Condición de salida en NBars({}) activada. Cerramos el trade: {:?}", n_bars.valor.clone(), trade));
                                     }
                                 }
                             }
                         }
                         Action::CloseAllRules => {
-                            match &accion.conditions{
-                                Some(condition) => {
-                                    if self.check_conditions(&df, &condition, &i) {
-                                        let timestamp: i64 = df
-                                            .column("time")
-                                            .unwrap()
-                                            .get(i + 1)
-                                            .unwrap()
-                                            .try_extract::<i64>()
-                                            .unwrap();
+                            if let Some(condition) = &accion.conditions {
+                                if self.check_conditions(df, condition, &i) {
+                                    let timestamp: i64 = df
+                                        .column("time")
+                                        .unwrap()
+                                        .get(i + 1)
+                                        .unwrap()
+                                        .try_extract::<i64>()
+                                        .unwrap();
 
-                                        let precio_cierre: f64 = df
-                                            .column("open")
-                                            .unwrap()
-                                            .get(i + 1)
-                                            .unwrap()
-                                            .try_extract::<f64>()
-                                            .unwrap();
+                                    let precio_cierre: f64 = df
+                                        .column("open")
+                                        .unwrap()
+                                        .get(i + 1)
+                                        .unwrap()
+                                        .try_extract::<f64>()
+                                        .unwrap();
 
-                                        let naive_time = DateTime::from_timestamp_millis(timestamp)
-                                            .expect("timestamp inválido");
-                                        let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
+                                    let naive_time = DateTime::from_timestamp_millis(timestamp)
+                                        .expect("timestamp inválido");
+                                    let t1 = naive_time.format("%Y-%m-%d %H:%M:%S").to_string();
 
-                                        for (idx, trade) in open_trades.iter_mut().enumerate() {
-                                            self.balance += trade.close(t1.clone(), precio_cierre);
-                                            indices.push(idx);
-                                            if LOGS_REGISTRO {
-                                                self.add_registro(format!("Condición de salida activada. Cerramos el trade: {:?}", &trade));
-                                            }
+                                    for (idx, trade) in open_trades.iter_mut().enumerate() {
+                                        self.balance += trade.close(t1.clone(), precio_cierre);
+                                        indices.push(idx);
+                                        if LOGS_REGISTRO {
+                                            self.add_registro(format!("Condición de salida activada. Cerramos el trade: {:?}", trade));
                                         }
                                     }
                                 }
-                                None => {}
                             }
                         }
                         _ => {}
@@ -3791,7 +3783,7 @@ impl Backtest {
                                             if self.colocar_be(
                                                 &EntryDirection::Buy,
                                                 &BeTipo::Tick,
-                                                &symbol,
+                                                symbol,
                                                 &parametros.valor,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
@@ -3802,7 +3794,7 @@ impl Backtest {
                                                     trade.sl = trade.precio_entrada
                                                         + self.calcular_be_plus(
                                                             &BeTipo::Tick,
-                                                            &symbol,
+                                                            symbol,
                                                             &parametros.be_plus,
                                                             &trade.precio_entrada,
                                                         );
@@ -3821,7 +3813,7 @@ impl Backtest {
                                             if self.colocar_be(
                                                 &EntryDirection::Sell,
                                                 &BeTipo::Tick,
-                                                &symbol,
+                                                symbol,
                                                 &parametros.valor,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
@@ -3832,7 +3824,7 @@ impl Backtest {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
                                                             &BeTipo::Tick,
-                                                            &symbol,
+                                                            symbol,
                                                             &parametros.be_plus,
                                                             &trade.precio_entrada,
                                                         );
@@ -3858,7 +3850,7 @@ impl Backtest {
                                             if self.colocar_be(
                                                 &EntryDirection::Buy,
                                                 &BeTipo::Pip,
-                                                &symbol,
+                                                symbol,
                                                 &parametros.valor,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
@@ -3869,7 +3861,7 @@ impl Backtest {
                                                     trade.sl = trade.precio_entrada
                                                         + self.calcular_be_plus(
                                                             &BeTipo::Pip,
-                                                            &symbol,
+                                                            symbol,
                                                             &parametros.be_plus,
                                                             &trade.precio_entrada,
                                                         );
@@ -3889,7 +3881,7 @@ impl Backtest {
                                             if self.colocar_be(
                                                 &EntryDirection::Sell,
                                                 &BeTipo::Pip,
-                                                &symbol,
+                                                symbol,
                                                 &parametros.valor,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
@@ -3900,7 +3892,7 @@ impl Backtest {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
                                                             &BeTipo::Pip,
-                                                            &symbol,
+                                                            symbol,
                                                             &parametros.be_plus,
                                                             &trade.precio_entrada,
                                                         );
@@ -3926,7 +3918,7 @@ impl Backtest {
                                             if self.colocar_be(
                                                 &EntryDirection::Buy,
                                                 &BeTipo::Punto,
-                                                &symbol,
+                                                symbol,
                                                 &parametros.valor,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
@@ -3937,7 +3929,7 @@ impl Backtest {
                                                     trade.sl = trade.precio_entrada
                                                         + self.calcular_be_plus(
                                                             &BeTipo::Punto,
-                                                            &symbol,
+                                                            symbol,
                                                             &parametros.be_plus,
                                                             &trade.precio_entrada,
                                                         );
@@ -3957,7 +3949,7 @@ impl Backtest {
                                             if self.colocar_be(
                                                 &EntryDirection::Sell,
                                                 &BeTipo::Punto,
-                                                &symbol,
+                                                symbol,
                                                 &parametros.valor,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
@@ -3968,7 +3960,7 @@ impl Backtest {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
                                                             &BeTipo::Punto,
-                                                            &symbol,
+                                                            symbol,
                                                             &parametros.be_plus,
                                                             &trade.precio_entrada,
                                                         );
@@ -3994,7 +3986,7 @@ impl Backtest {
                                             if self.colocar_be(
                                                 &EntryDirection::Buy,
                                                 &BeTipo::Porcentaje,
-                                                &symbol,
+                                                symbol,
                                                 &parametros.valor,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
@@ -4005,7 +3997,7 @@ impl Backtest {
                                                     trade.sl = trade.precio_entrada
                                                         + self.calcular_be_plus(
                                                             &BeTipo::Porcentaje,
-                                                            &symbol,
+                                                            symbol,
                                                             &parametros.be_plus,
                                                             &trade.precio_entrada,
                                                         );
@@ -4025,7 +4017,7 @@ impl Backtest {
                                             if self.colocar_be(
                                                 &EntryDirection::Sell,
                                                 &BeTipo::Porcentaje,
-                                                &symbol,
+                                                symbol,
                                                 &parametros.valor,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
@@ -4036,7 +4028,7 @@ impl Backtest {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
                                                             &BeTipo::Porcentaje,
-                                                            &symbol,
+                                                            symbol,
                                                             &parametros.be_plus,
                                                             &trade.precio_entrada,
                                                         );
@@ -4075,7 +4067,7 @@ impl Backtest {
                                                         trade.sl = trade.precio_entrada
                                                             + self.calcular_be_plus(
                                                                 &BeTipo::Tick,
-                                                                &symbol,
+                                                                symbol,
                                                                 &parametros.be_plus,
                                                                 &trade.precio_entrada,
                                                             );
@@ -4098,7 +4090,7 @@ impl Backtest {
                                                     trade.sl = trade.precio_entrada
                                                         - self.calcular_be_plus(
                                                             &BeTipo::Tick,
-                                                            &symbol,
+                                                            symbol,
                                                             &parametros.be_plus,
                                                             &trade.precio_entrada,
                                                         );
@@ -4143,11 +4135,11 @@ impl Backtest {
                                     match trade.tipo {
                                         EntryDirection::Buy => {
                                             if self.activar_tsl(
-                                                &df,
-                                                i.clone(),
+                                                df,
+                                                i,
                                                 &EntryDirection::Buy,
                                                 &parametros,
-                                                &symbol,
+                                                symbol,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
                                             ) {
@@ -4169,9 +4161,9 @@ impl Backtest {
 
                                                 trade.sl = self.calcular_tls(
                                                     &EntryDirection::Buy,
-                                                    &symbol,
+                                                    symbol,
                                                     &parametros,
-                                                    &trade,
+                                                    trade,
                                                     &precio_actual,
                                                     &precio_anterior,
                                                 );
@@ -4186,11 +4178,11 @@ impl Backtest {
                                         }
                                         EntryDirection::Sell => {
                                             if self.activar_tsl(
-                                                &df,
-                                                i.clone(),
+                                                df,
+                                                i,
                                                 &EntryDirection::Sell,
                                                 &parametros,
-                                                &symbol,
+                                                symbol,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
                                             ) {
@@ -4212,9 +4204,9 @@ impl Backtest {
 
                                                 trade.sl = self.calcular_tls(
                                                     &EntryDirection::Sell,
-                                                    &symbol,
+                                                    symbol,
                                                     &parametros,
-                                                    &trade,
+                                                    trade,
                                                     &precio_actual,
                                                     &precio_anterior,
                                                 );
@@ -4235,11 +4227,11 @@ impl Backtest {
                                     match trade.tipo {
                                         EntryDirection::Buy => {
                                             if self.activar_tsl(
-                                                &df,
-                                                i.clone(),
+                                                df,
+                                                i,
                                                 &EntryDirection::Buy,
                                                 &parametros,
-                                                &symbol,
+                                                symbol,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
                                             ) {
@@ -4261,9 +4253,9 @@ impl Backtest {
 
                                                 trade.sl = self.calcular_tls(
                                                     &EntryDirection::Buy,
-                                                    &symbol,
+                                                    symbol,
                                                     &parametros,
-                                                    &trade,
+                                                    trade,
                                                     &precio_actual,
                                                     &precio_anterior,
                                                 );
@@ -4278,11 +4270,11 @@ impl Backtest {
                                         }
                                         EntryDirection::Sell => {
                                             if self.activar_tsl(
-                                                &df,
-                                                i.clone(),
+                                                df,
+                                                i,
                                                 &EntryDirection::Sell,
                                                 &parametros,
-                                                &symbol,
+                                                symbol,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
                                             ) {
@@ -4304,9 +4296,9 @@ impl Backtest {
 
                                                 trade.sl = self.calcular_tls(
                                                     &EntryDirection::Sell,
-                                                    &symbol,
+                                                    symbol,
                                                     &parametros,
-                                                    &trade,
+                                                    trade,
                                                     &precio_actual,
                                                     &precio_anterior,
                                                 );
@@ -4327,11 +4319,11 @@ impl Backtest {
                                     match trade.tipo {
                                         EntryDirection::Buy => {
                                             if self.activar_tsl(
-                                                &df,
-                                                i.clone(),
+                                                df,
+                                                i,
                                                 &EntryDirection::Buy,
                                                 &parametros,
-                                                &symbol,
+                                                symbol,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
                                             ) {
@@ -4353,9 +4345,9 @@ impl Backtest {
 
                                                 trade.sl = self.calcular_tls(
                                                     &EntryDirection::Buy,
-                                                    &symbol,
+                                                    symbol,
                                                     &parametros,
-                                                    &trade,
+                                                    trade,
                                                     &precio_actual,
                                                     &precio_anterior,
                                                 );
@@ -4370,11 +4362,11 @@ impl Backtest {
                                         }
                                         EntryDirection::Sell => {
                                             if self.activar_tsl(
-                                                &df,
-                                                i.clone(),
+                                                df,
+                                                i,
                                                 &EntryDirection::Sell,
                                                 &parametros,
-                                                &symbol,
+                                                symbol,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
                                             ) {
@@ -4396,9 +4388,9 @@ impl Backtest {
 
                                                 trade.sl = self.calcular_tls(
                                                     &EntryDirection::Sell,
-                                                    &symbol,
+                                                    symbol,
                                                     &parametros,
-                                                    &trade,
+                                                    trade,
                                                     &precio_actual,
                                                     &precio_anterior,
                                                 );
@@ -4419,11 +4411,11 @@ impl Backtest {
                                     match trade.tipo {
                                         EntryDirection::Buy => {
                                             if self.activar_tsl(
-                                                &df,
-                                                i.clone(),
+                                                df,
+                                                i,
                                                 &EntryDirection::Buy,
                                                 &parametros,
-                                                &symbol,
+                                                symbol,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
                                             ) {
@@ -4445,9 +4437,9 @@ impl Backtest {
 
                                                 trade.sl = self.calcular_tls(
                                                     &EntryDirection::Buy,
-                                                    &symbol,
+                                                    symbol,
                                                     &parametros,
-                                                    &trade,
+                                                    trade,
                                                     &precio_actual,
                                                     &precio_anterior,
                                                 );
@@ -4462,11 +4454,11 @@ impl Backtest {
                                         }
                                         EntryDirection::Sell => {
                                             if self.activar_tsl(
-                                                &df,
-                                                i.clone(),
+                                                df,
+                                                i,
                                                 &EntryDirection::Sell,
                                                 &parametros,
-                                                &symbol,
+                                                symbol,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
                                             ) {
@@ -4488,9 +4480,9 @@ impl Backtest {
 
                                                 trade.sl = self.calcular_tls(
                                                     &EntryDirection::Sell,
-                                                    &symbol,
+                                                    symbol,
                                                     &parametros,
-                                                    &trade,
+                                                    trade,
                                                     &precio_actual,
                                                     &precio_anterior,
                                                 );
@@ -4511,11 +4503,11 @@ impl Backtest {
                                     match trade.tipo {
                                         EntryDirection::Buy => {
                                             if self.activar_tsl(
-                                                &df,
-                                                i.clone(),
+                                                df,
+                                                i,
                                                 &EntryDirection::Buy,
                                                 &parametros,
-                                                &symbol,
+                                                symbol,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
                                             ) {
@@ -4537,9 +4529,9 @@ impl Backtest {
 
                                                 trade.sl = self.calcular_tls(
                                                     &EntryDirection::Buy,
-                                                    &symbol,
+                                                    symbol,
                                                     &parametros,
-                                                    &trade,
+                                                    trade,
                                                     &precio_actual,
                                                     &precio_anterior,
                                                 );
@@ -4554,11 +4546,11 @@ impl Backtest {
                                         }
                                         EntryDirection::Sell => {
                                             if self.activar_tsl(
-                                                &df,
-                                                i.clone(),
+                                                df,
+                                                i,
                                                 &EntryDirection::Sell,
                                                 &parametros,
-                                                &symbol,
+                                                symbol,
                                                 &trade.precio_entrada,
                                                 &precio_cierre,
                                             ) {
@@ -4580,9 +4572,9 @@ impl Backtest {
 
                                                 trade.sl = self.calcular_tls(
                                                     &EntryDirection::Sell,
-                                                    &symbol,
+                                                    symbol,
                                                     &parametros,
-                                                    &trade,
+                                                    trade,
                                                     &precio_actual,
                                                     &precio_anterior,
                                                 );
@@ -4624,7 +4616,7 @@ impl Backtest {
                             Action::Buy => {
                                 if self.verificar_direccion(&EntryDirection::Buy)
                                     && self.entry_options(&open_trades)
-                                    && self.check_conditions(&df, &condition, &i)
+                                    && self.check_conditions(df, condition, &i)
                                 {
                                     let precio_entrada: f64 = df
                                         .column("open")
@@ -4644,13 +4636,13 @@ impl Backtest {
 
                                     let tp: f64 = self.get_takeprofit(
                                         &precio_entrada,
-                                        &df,
+                                        df,
                                         i,
                                         &EntryDirection::Buy,
                                     );
                                     let sl: f64 = self.get_stoploss(
                                         &precio_entrada,
-                                        &df,
+                                        df,
                                         i,
                                         &EntryDirection::Buy,
                                     );
@@ -4658,7 +4650,7 @@ impl Backtest {
                                     let trade: Option<Trade> = self
                                         .ejecutar_entry(
                                             timestamp,
-                                            &symbol,
+                                            symbol,
                                             &EntryDirection::Buy,
                                             &precio_entrada,
                                             Some(sl),
@@ -4675,7 +4667,7 @@ impl Backtest {
                             Action::Sell => {
                                 if self.verificar_direccion(&EntryDirection::Sell)
                                     && self.entry_options(&open_trades)
-                                    && self.check_conditions(&df, &condition, &i)
+                                    && self.check_conditions(df, condition, &i)
                                 {
                                     let precio_entrada: f64 = df
                                         .column("open")
@@ -4695,13 +4687,13 @@ impl Backtest {
 
                                     let tp: f64 = self.get_takeprofit(
                                         &precio_entrada,
-                                        &df,
+                                        df,
                                         i,
                                         &EntryDirection::Sell,
                                     );
                                     let sl: f64 = self.get_stoploss(
                                         &precio_entrada,
-                                        &df,
+                                        df,
                                         i,
                                         &EntryDirection::Sell,
                                     );
@@ -4709,7 +4701,7 @@ impl Backtest {
                                     let trade: Option<Trade> = self
                                         .ejecutar_entry(
                                             timestamp,
-                                            &symbol,
+                                            symbol,
                                             &EntryDirection::Sell,
                                             &precio_entrada,
                                             Some(sl),
@@ -4726,10 +4718,10 @@ impl Backtest {
                             Action::BuyLimit => {
                                 if self.verificar_direccion(&EntryDirection::Buy)
                                     && self.entry_options(&open_trades)
-                                    && self.check_conditions(&df, &condition, &i)
+                                    && self.check_conditions(df, condition, &i)
                                 {
                                     let precio_limite =
-                                        self.get_limit(&df, accion.parametros.to_string(), i)?;
+                                        self.get_limit(df, accion.parametros.to_string(), i)?;
                                     buy_limits.push(precio_limite);
                                     break;
                                 }
@@ -4737,10 +4729,10 @@ impl Backtest {
                             Action::SellLimit => {
                                 if self.verificar_direccion(&EntryDirection::Sell)
                                     && self.entry_options(&open_trades)
-                                    && self.check_conditions(&df, &condition, &i)
+                                    && self.check_conditions(df, condition, &i)
                                 {
                                     let precio_limite =
-                                        self.get_limit(&df, accion.parametros.to_string(), i)?;
+                                        self.get_limit(df, accion.parametros.to_string(), i)?;
                                     sell_limits.push(precio_limite);
                                     break;
                                 }
@@ -4748,24 +4740,23 @@ impl Backtest {
                             Action::BuyStop => {
                                 if self.verificar_direccion(&EntryDirection::Buy)
                                     && self.entry_options(&open_trades)
-                                    && self.check_conditions(&df, &condition, &i)
+                                    && self.check_conditions(df, condition, &i)
                                 {
                                     let precio_limite =
-                                        self.get_limit(&df, accion.parametros.to_string(), i)?;
+                                        self.get_limit(df, accion.parametros.to_string(), i)?;
                                     buy_stops.push(precio_limite);
                                     break;
                                 }
                             }
-                            Action::SellStop => {
+                            Action::SellStop
                                 if self.verificar_direccion(&EntryDirection::Sell)
                                     && self.entry_options(&open_trades)
-                                    && self.check_conditions(&df, &condition, &i)
-                                {
-                                    let precio_limite =
-                                        self.get_limit(&df, accion.parametros.to_string(), i)?;
-                                    sell_stops.push(precio_limite);
-                                    break;
-                                }
+                                    && self.check_conditions(df, condition, &i) =>
+                            {
+                                let precio_limite =
+                                    self.get_limit(df, accion.parametros.to_string(), i)?;
+                                sell_stops.push(precio_limite);
+                                break;
                             }
                             _ => {}
                         };
@@ -4837,7 +4828,7 @@ impl Backtest {
             }
             Err(e) => {
                 let error = format!("Error al obtener estrategia: {:?}", e);
-                return Err(Box::new(error)).unwrap();
+                panic!("{error}");
             }
         };
 
@@ -4870,7 +4861,7 @@ impl Backtest {
             .unwrap();
 
         if LOGS_REGISTRO {
-            self.add_registro(format!("{:?}", &df.head(Some(20))));
+            self.add_registro(format!("{:?}", df.head(Some(20))));
         }
 
         self.backtest(&mut df, &symbol).await.unwrap();
@@ -4892,7 +4883,7 @@ impl Backtest {
                 self.add_registro("Calculando los resultados.".to_string());
             }
 
-            resultados.calcular_resultados(self.trades.clone(), self.balance.clone());
+            resultados.calcular_resultados(self.trades.clone(), self.balance);
 
             if LOGS_REGISTRO {
                 self.add_registro(format!("Resultados calculados: {:?}", resultados));

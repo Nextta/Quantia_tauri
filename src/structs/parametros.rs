@@ -14,8 +14,7 @@ pub struct BeParams {
 
 impl TParametro for BeParams {
     fn to_json(&self) -> String {
-        let json = serde_json::to_string(self).unwrap();
-        json
+        serde_json::to_string(self).unwrap()
     }
 }
 
@@ -30,8 +29,7 @@ pub struct TlParams {
 
 impl TParametro for TlParams {
     fn to_json(&self) -> String {
-        let json = serde_json::to_string(self).unwrap();
-        json
+        serde_json::to_string(self).unwrap()
     }
 }
 
@@ -53,8 +51,7 @@ fn default_lotaje() -> f64 {
 
 impl TParametro for GestionParams {
     fn to_json(&self) -> String {
-        let json = serde_json::to_string(self).unwrap();
-        json
+        serde_json::to_string(self).unwrap()
     }
 }
 
@@ -69,7 +66,6 @@ pub struct LimitParams {
 
 impl TParametro for LimitParams {
     fn to_json(&self) -> String {
-        let json = serde_json::to_string(self).unwrap();
-        json
+        serde_json::to_string(self).unwrap()
     }
 }
