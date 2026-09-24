@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
@@ -6,14 +8,13 @@ pub enum EntryDirection {
     Sell,
 }
 
-impl EntryDirection {
-    pub fn to_string(&self) -> String {
-        match self {
-            EntryDirection::Buy => "Buy".to_string(),
-            EntryDirection::Sell => "Sell".to_string(),
-        }
+impl fmt::Display for EntryDirection {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.as_str())
     }
+}
 
+impl EntryDirection {
     pub fn as_str(&self) -> &str {
         match self {
             EntryDirection::Buy => "Buy",

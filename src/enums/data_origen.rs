@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
@@ -7,15 +9,13 @@ pub enum DataOrigen {
     Import,
 }
 
-impl DataOrigen {
-    pub fn to_string(&self) -> String {
-        match self {
-            DataOrigen::DukasCopy => "DukasCopy".to_string(),
-            DataOrigen::MT5 => "MT5".to_string(),
-            DataOrigen::Import => "Import".to_string(),
-        }
+impl fmt::Display for DataOrigen {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.as_str())
     }
+}
 
+impl DataOrigen {
     pub fn as_str(&self) -> &str {
         match self {
             DataOrigen::DukasCopy => "DukasCopy",

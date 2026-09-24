@@ -41,7 +41,7 @@ fn candle_color(open: f64, close: f64) -> i32 {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdl2crows(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdl2crows");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let close = close_s.f64().unwrap();
 
@@ -54,7 +54,7 @@ pub fn cdl2crows(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let c0 = close.get(i - 2).unwrap();
         let o1 = open.get(i - 1).unwrap();
@@ -79,7 +79,7 @@ pub fn cdl2crows(df: &mut DataFrame, output_col: Option<&str>) {
             && opens_inside_day2
             && closes_inside_day1
         {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -100,7 +100,7 @@ pub fn cdl2crows(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdl3blackcrows(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdl3blackcrows");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let close = close_s.f64().unwrap();
 
@@ -113,7 +113,7 @@ pub fn cdl3blackcrows(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let c0 = close.get(i - 2).unwrap();
         let o1 = open.get(i - 1).unwrap();
@@ -133,7 +133,7 @@ pub fn cdl3blackcrows(df: &mut DataFrame, output_col: Option<&str>) {
         let lower_closes = c1 < c0 && c2 < c1;
 
         if all_black && open_within_prev1 && open_within_prev2 && lower_closes {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -155,7 +155,7 @@ pub fn cdl3blackcrows(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdl3inside(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdl3inside");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let close = close_s.f64().unwrap();
 
@@ -168,7 +168,7 @@ pub fn cdl3inside(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let c0 = close.get(i - 2).unwrap();
         let o1 = open.get(i - 1).unwrap();
@@ -182,7 +182,7 @@ pub fn cdl3inside(df: &mut DataFrame, output_col: Option<&str>) {
 
         // Confirmation Bullish (Día 3)
         if is_harami_bullish && candle_color(o2, c2) == 1 && c2 > c1 {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
             continue;
         }
 
@@ -192,7 +192,7 @@ pub fn cdl3inside(df: &mut DataFrame, output_col: Option<&str>) {
 
         // Confirmation Bearish (Día 3)
         if is_harami_bearish && candle_color(o2, c2) == -1 && c2 < c1 {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -216,7 +216,7 @@ pub fn cdl3inside(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdl3linestrike(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdl3linestrike");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let close = close_s.f64().unwrap();
 
@@ -229,7 +229,7 @@ pub fn cdl3linestrike(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 3..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(3) {
         let o0 = open.get(i - 3).unwrap();
         let c0 = close.get(i - 3).unwrap();
         let o1 = open.get(i - 2).unwrap();
@@ -246,7 +246,7 @@ pub fn cdl3linestrike(df: &mut DataFrame, output_col: Option<&str>) {
         let strike_up = candle_color(o3, c3) == 1 && o3 <= c2 && c3 > o0;
 
         if three_black && descending && strike_up {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
             continue;
         }
 
@@ -257,7 +257,7 @@ pub fn cdl3linestrike(df: &mut DataFrame, output_col: Option<&str>) {
         let strike_down = candle_color(o3, c3) == -1 && o3 >= c2 && c3 < o0;
 
         if three_white && ascending && strike_down {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -279,7 +279,7 @@ pub fn cdl3linestrike(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdl3outside(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdl3outside");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let close = close_s.f64().unwrap();
 
@@ -292,7 +292,7 @@ pub fn cdl3outside(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let c0 = close.get(i - 2).unwrap();
         let o1 = open.get(i - 1).unwrap();
@@ -306,7 +306,7 @@ pub fn cdl3outside(df: &mut DataFrame, output_col: Option<&str>) {
 
         // Confirmation Bullish (Día 3)
         if is_engulfing_bullish && candle_color(o2, c2) == 1 && c2 > c1 {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
             continue;
         }
 
@@ -316,7 +316,7 @@ pub fn cdl3outside(df: &mut DataFrame, output_col: Option<&str>) {
 
         // Confirmation Bearish (Día 3)
         if is_engulfing_bearish && candle_color(o2, c2) == -1 && c2 < c1 {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -337,7 +337,7 @@ pub fn cdl3outside(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdl3starsinsouth(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdl3starsinsouth");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -352,7 +352,7 @@ pub fn cdl3starsinsouth(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let h0 = high.get(i - 2).unwrap();
         let l0 = low.get(i - 2).unwrap();
@@ -399,7 +399,7 @@ pub fn cdl3starsinsouth(df: &mut DataFrame, output_col: Option<&str>) {
             && no_shadows2
             && within_prev2
         {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -421,7 +421,7 @@ pub fn cdl3starsinsouth(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdl3whitesoldiers(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdl3whitesoldiers");
-    let (open_s, high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, _low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let close = close_s.f64().unwrap();
@@ -435,7 +435,7 @@ pub fn cdl3whitesoldiers(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let c0 = close.get(i - 2).unwrap();
         let o1 = open.get(i - 1).unwrap();
@@ -469,7 +469,7 @@ pub fn cdl3whitesoldiers(df: &mut DataFrame, output_col: Option<&str>) {
             && short_shadow1
             && short_shadow2
         {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -491,7 +491,7 @@ pub fn cdl3whitesoldiers(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlabandonedbaby(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlabandonedbaby");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -506,7 +506,7 @@ pub fn cdlabandonedbaby(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let h0 = high.get(i - 2).unwrap();
         let l0 = low.get(i - 2).unwrap();
@@ -539,7 +539,7 @@ pub fn cdlabandonedbaby(df: &mut DataFrame, output_col: Option<&str>) {
                       && l2 > h1; // Gap hacia arriba (incluye sombras)
 
         if is_bullish {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
             continue;
         }
 
@@ -551,7 +551,7 @@ pub fn cdlabandonedbaby(df: &mut DataFrame, output_col: Option<&str>) {
                       && h2 < l1; // Gap hacia abajo (incluye sombras)
 
         if is_bearish {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -573,7 +573,7 @@ pub fn cdlabandonedbaby(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdladvanceblock(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdladvanceblock");
-    let (open_s, high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, _low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let close = close_s.f64().unwrap();
@@ -587,7 +587,7 @@ pub fn cdladvanceblock(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let c0 = close.get(i - 2).unwrap();
         let o1 = open.get(i - 1).unwrap();
@@ -626,7 +626,7 @@ pub fn cdladvanceblock(df: &mut DataFrame, output_col: Option<&str>) {
             && shrinking_bodies
             && long_upper_shadows
         {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -648,7 +648,7 @@ pub fn cdladvanceblock(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlbelthold(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlbelthold");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -657,7 +657,7 @@ pub fn cdlbelthold(df: &mut DataFrame, output_col: Option<&str>) {
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
-    for i in 0..len {
+    for (i, slot) in result.iter_mut().enumerate() {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -679,7 +679,7 @@ pub fn cdlbelthold(df: &mut DataFrame, output_col: Option<&str>) {
                       && is_long_body;
 
         if is_bullish {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
             continue;
         }
 
@@ -689,7 +689,7 @@ pub fn cdlbelthold(df: &mut DataFrame, output_col: Option<&str>) {
                        && is_long_body;
 
         if is_bearish {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -713,7 +713,7 @@ pub fn cdlbelthold(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlbreakaway(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlbreakaway");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let close = close_s.f64().unwrap();
 
@@ -726,7 +726,7 @@ pub fn cdlbreakaway(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 4..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(4) {
         let o0 = open.get(i - 4).unwrap();
         let c0 = close.get(i - 4).unwrap();
         let o1 = open.get(i - 3).unwrap();
@@ -745,7 +745,7 @@ pub fn cdlbreakaway(df: &mut DataFrame, output_col: Option<&str>) {
                       && c4 > c1 && c4 < c0; // Cierra dentro del gap
 
         if is_bullish {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
             continue;
         }
 
@@ -758,7 +758,7 @@ pub fn cdlbreakaway(df: &mut DataFrame, output_col: Option<&str>) {
                        && c4 < c1 && c4 > c0; // Cierra dentro del gap
 
         if is_bearish {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -780,7 +780,7 @@ pub fn cdlbreakaway(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlclosingmarubuzo(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlclosingmarubozu");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -789,7 +789,7 @@ pub fn cdlclosingmarubuzo(df: &mut DataFrame, output_col: Option<&str>) {
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
-    for i in 0..len {
+    for (i, slot) in result.iter_mut().enumerate() {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -807,13 +807,13 @@ pub fn cdlclosingmarubuzo(df: &mut DataFrame, output_col: Option<&str>) {
 
         // Bullish: Blanco y Cierre = Máximo
         if candle_color(o, c) == 1 && (c - h).abs() < f64::EPSILON && is_long_body {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
             continue;
         }
 
         // Bearish: Negro y Cierre = Mínimo
         if candle_color(o, c) == -1 && (c - l).abs() < f64::EPSILON && is_long_body {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -836,7 +836,7 @@ pub fn cdlclosingmarubuzo(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlconcealbabyswall(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlconcealbabyswall");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -851,7 +851,7 @@ pub fn cdlconcealbabyswall(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 3..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(3) {
         let o0 = open.get(i - 3).unwrap();
         let c0 = close.get(i - 3).unwrap();
         let o1 = open.get(i - 2).unwrap();
@@ -877,7 +877,7 @@ pub fn cdlconcealbabyswall(df: &mut DataFrame, output_col: Option<&str>) {
         let day4 = candle_color(o3, c3) == -1 && o3 > h2 && c3 < l3 + (h3 - l3) * 0.1;
 
         if marubozu0 && marubozu1 && day3 && day4 {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -900,7 +900,7 @@ pub fn cdlconcealbabyswall(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlcounterattack(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlcounterattack");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let close = close_s.f64().unwrap();
 
@@ -913,7 +913,7 @@ pub fn cdlcounterattack(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 1..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(1) {
         let o0 = open.get(i - 1).unwrap();
         let c0 = close.get(i - 1).unwrap();
         let o1 = open.get(i).unwrap();
@@ -928,7 +928,7 @@ pub fn cdlcounterattack(df: &mut DataFrame, output_col: Option<&str>) {
             && (c1 - c0).abs() <= diff_limit
             && o1 < c0
         {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
             continue;
         }
 
@@ -938,7 +938,7 @@ pub fn cdlcounterattack(df: &mut DataFrame, output_col: Option<&str>) {
             && (c1 - c0).abs() <= diff_limit
             && o1 > c0
         {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -961,7 +961,7 @@ pub fn cdlcounterattack(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdldarkcloudcover(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdldarkcloudcover");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let close = close_s.f64().unwrap();
 
@@ -974,7 +974,7 @@ pub fn cdldarkcloudcover(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 1..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(1) {
         let o0 = open.get(i - 1).unwrap();
         let c0 = close.get(i - 1).unwrap();
         let o1 = open.get(i).unwrap();
@@ -993,7 +993,7 @@ pub fn cdldarkcloudcover(df: &mut DataFrame, output_col: Option<&str>) {
         let deep_penetration = c1 < mid_point && c1 > o0;
 
         if is_white0 && is_black1 && open_above && deep_penetration {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -1014,7 +1014,7 @@ pub fn cdldarkcloudcover(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdldoji(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdldoji");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -1023,7 +1023,7 @@ pub fn cdldoji(df: &mut DataFrame, output_col: Option<&str>) {
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
-    for i in 0..len {
+    for (i, slot) in result.iter_mut().enumerate() {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -1034,9 +1034,9 @@ pub fn cdldoji(df: &mut DataFrame, output_col: Option<&str>) {
 
         // Se considera Doji si el cuerpo es menor al 10% del rango total
         if range > 0.0 && body <= range * 0.1 {
-            result[i] = PATTERN_BULLISH; // TA-Lib suele usar 100 para Doji
+            *slot = PATTERN_BULLISH; // TA-Lib suele usar 100 para Doji
         } else if range == 0.0 && body == 0.0 {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -1058,7 +1058,7 @@ pub fn cdldoji(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdldojistar(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdldojistar");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -1073,7 +1073,7 @@ pub fn cdldojistar(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 1..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(1) {
         let o0 = open.get(i - 1).unwrap();
         let c0 = close.get(i - 1).unwrap();
         let o1 = open.get(i).unwrap();
@@ -1097,13 +1097,13 @@ pub fn cdldojistar(df: &mut DataFrame, output_col: Option<&str>) {
 
         // Bullish Doji Star
         if candle_color(o0, c0) == -1 && is_long0 && is_doji1 && o1 < c0 {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
             continue;
         }
 
         // Bearish Doji Star
         if candle_color(o0, c0) == 1 && is_long0 && is_doji1 && o1 > c0 {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -1125,7 +1125,7 @@ pub fn cdldojistar(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdldragonflydoji(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdldragonflydoji");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -1134,7 +1134,7 @@ pub fn cdldragonflydoji(df: &mut DataFrame, output_col: Option<&str>) {
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
-    for i in 0..len {
+    for (i, slot) in result.iter_mut().enumerate() {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -1152,7 +1152,7 @@ pub fn cdldragonflydoji(df: &mut DataFrame, output_col: Option<&str>) {
         let long_lower_shadow = (o.min(c) - l) > range * 0.6;
 
         if is_doji && small_upper_shadow && long_lower_shadow {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -1174,7 +1174,7 @@ pub fn cdldragonflydoji(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlengulfing(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlengulfing");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let close = close_s.f64().unwrap();
 
@@ -1187,7 +1187,7 @@ pub fn cdlengulfing(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 1..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(1) {
         let o0 = open.get(i - 1).unwrap();
         let c0 = close.get(i - 1).unwrap();
         let o1 = open.get(i).unwrap();
@@ -1195,13 +1195,13 @@ pub fn cdlengulfing(df: &mut DataFrame, output_col: Option<&str>) {
 
         // Bullish Engulfing
         if candle_color(o0, c0) == -1 && candle_color(o1, c1) == 1 && o1 < c0 && c1 > o0 {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
             continue;
         }
 
         // Bearish Engulfing
         if candle_color(o0, c0) == 1 && candle_color(o1, c1) == -1 && o1 > c0 && c1 < o0 {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -1225,7 +1225,7 @@ pub fn cdlengulfing(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdleveningdojistar(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdleveningdojistar");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -1240,7 +1240,7 @@ pub fn cdleveningdojistar(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let c0 = close.get(i - 2).unwrap();
         let o1 = open.get(i - 1).unwrap();
@@ -1268,7 +1268,7 @@ pub fn cdleveningdojistar(df: &mut DataFrame, output_col: Option<&str>) {
         let closes_deep = c2 < (o0 + c0) / 2.0 && c2 > o0;
 
         if is_white0 && is_doji1 && gap_up1 && is_black2 && closes_deep {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -1291,7 +1291,7 @@ pub fn cdleveningdojistar(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdleveningstar(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdleveningstar");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -1306,7 +1306,7 @@ pub fn cdleveningstar(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let c0 = close.get(i - 2).unwrap();
         let o1 = open.get(i - 1).unwrap();
@@ -1330,7 +1330,7 @@ pub fn cdleveningstar(df: &mut DataFrame, output_col: Option<&str>) {
         let closes_deep = c2 < (o0 + c0) / 2.0 && c2 > o0;
 
         if is_white0 && is_small1 && gap_up1 && is_black2 && closes_deep {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -1352,7 +1352,7 @@ pub fn cdleveningstar(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlgapsidesidewhite(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlgapsidesidewhite");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let close = close_s.f64().unwrap();
 
@@ -1365,7 +1365,7 @@ pub fn cdlgapsidesidewhite(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let c0 = close.get(i - 2).unwrap();
         let o1 = open.get(i - 1).unwrap();
@@ -1386,11 +1386,11 @@ pub fn cdlgapsidesidewhite(df: &mut DataFrame, output_col: Option<&str>) {
         if is_white1 && is_white2 && side_by_side && similar_bodies {
             // Escenario Alcista (Up-gap)
             if candle_color(o0, c0) == 1 && o1 > c0 {
-                result[i] = PATTERN_BULLISH;
+                *slot = PATTERN_BULLISH;
             }
             // Escenario Bajista (Down-gap)
             else if candle_color(o0, c0) == -1 && c1 < c0 {
-                result[i] = PATTERN_BEARISH;
+                *slot = PATTERN_BEARISH;
             }
         }
     }
@@ -1413,7 +1413,7 @@ pub fn cdlgapsidesidewhite(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlgravestonedoji(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlgravestonedoji");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -1422,7 +1422,7 @@ pub fn cdlgravestonedoji(df: &mut DataFrame, output_col: Option<&str>) {
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
-    for i in 0..len {
+    for (i, slot) in result.iter_mut().enumerate() {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -1440,7 +1440,7 @@ pub fn cdlgravestonedoji(df: &mut DataFrame, output_col: Option<&str>) {
         let long_upper_shadow = (h - o.max(c)) > range * 0.6;
 
         if is_doji && small_lower_shadow && long_upper_shadow {
-            result[i] = PATTERN_BULLISH; // TA-Lib usa 100 para marcar la presencia del patrón
+            *slot = PATTERN_BULLISH; // TA-Lib usa 100 para marcar la presencia del patrón
         }
     }
 
@@ -1461,7 +1461,7 @@ pub fn cdlgravestonedoji(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlhammer(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlhammer");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -1470,7 +1470,7 @@ pub fn cdlhammer(df: &mut DataFrame, output_col: Option<&str>) {
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
-    for i in 0..len {
+    for (i, slot) in result.iter_mut().enumerate() {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -1493,7 +1493,7 @@ pub fn cdlhammer(df: &mut DataFrame, output_col: Option<&str>) {
             && body < range * 0.3;
 
         if is_hammer {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -1514,7 +1514,7 @@ pub fn cdlhammer(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlhangingman(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlhangingman");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -1523,7 +1523,7 @@ pub fn cdlhangingman(df: &mut DataFrame, output_col: Option<&str>) {
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
-    for i in 0..len {
+    for (i, slot) in result.iter_mut().enumerate() {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -1547,7 +1547,7 @@ pub fn cdlhangingman(df: &mut DataFrame, output_col: Option<&str>) {
             && body < range * 0.3;
 
         if is_hanging_man {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -1570,7 +1570,7 @@ pub fn cdlhangingman(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlharami(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlharami");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let close = close_s.f64().unwrap();
 
@@ -1583,7 +1583,7 @@ pub fn cdlharami(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 1..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(1) {
         let o0 = open.get(i - 1).unwrap();
         let c0 = close.get(i - 1).unwrap();
         let o1 = open.get(i).unwrap();
@@ -1600,11 +1600,11 @@ pub fn cdlharami(df: &mut DataFrame, output_col: Option<&str>) {
         if is_inside {
             // Bullish: Negro -> Blanco
             if candle_color(o0, c0) == -1 && candle_color(o1, c1) == 1 {
-                result[i] = PATTERN_BULLISH;
+                *slot = PATTERN_BULLISH;
             }
             // Bearish: Blanco -> Negro
             else if candle_color(o0, c0) == 1 && candle_color(o1, c1) == -1 {
-                result[i] = PATTERN_BEARISH;
+                *slot = PATTERN_BEARISH;
             }
         }
     }
@@ -1628,7 +1628,7 @@ pub fn cdlharami(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlharamicross(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlharamicross");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -1643,7 +1643,7 @@ pub fn cdlharamicross(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 1..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(1) {
         let o0 = open.get(i - 1).unwrap();
         let c0 = close.get(i - 1).unwrap();
         let o1 = open.get(i).unwrap();
@@ -1671,11 +1671,11 @@ pub fn cdlharamicross(df: &mut DataFrame, output_col: Option<&str>) {
         if is_inside && is_doji1 {
             // Bullish: Negro -> Doji
             if candle_color(o0, c0) == -1 {
-                result[i] = PATTERN_BULLISH;
+                *slot = PATTERN_BULLISH;
             }
             // Bearish: Blanco -> Doji
             else if candle_color(o0, c0) == 1 {
-                result[i] = PATTERN_BEARISH;
+                *slot = PATTERN_BEARISH;
             }
         }
     }
@@ -1699,7 +1699,7 @@ pub fn cdlharamicross(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlhighwave(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlhighwave");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -1708,7 +1708,7 @@ pub fn cdlhighwave(df: &mut DataFrame, output_col: Option<&str>) {
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
-    for i in 0..len {
+    for (i, slot) in result.iter_mut().enumerate() {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -1728,11 +1728,11 @@ pub fn cdlhighwave(df: &mut DataFrame, output_col: Option<&str>) {
 
         if is_small_body && is_long_upper && is_long_lower {
             if candle_color(o, c) == 1 {
-                result[i] = PATTERN_BULLISH;
+                *slot = PATTERN_BULLISH;
             } else if candle_color(o, c) == -1 {
-                result[i] = PATTERN_BEARISH;
+                *slot = PATTERN_BEARISH;
             } else {
-                result[i] = 100; // Doji High-Wave
+                *slot = 100; // Doji High-Wave
             }
         }
     }
@@ -1755,7 +1755,7 @@ pub fn cdlhighwave(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlhikkake(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlhikkake");
-    let (_, high_s, low_s, _) = get_ohlc(&df).unwrap();
+    let (_, high_s, low_s, _) = get_ohlc(df).unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
 
@@ -1768,7 +1768,7 @@ pub fn cdlhikkake(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let h0 = high.get(i - 2).unwrap();
         let l0 = low.get(i - 2).unwrap();
         let h1 = high.get(i - 1).unwrap();
@@ -1784,11 +1784,11 @@ pub fn cdlhikkake(df: &mut DataFrame, output_col: Option<&str>) {
 
             // Bullish: Ruptura falsa hacia abajo (máximo y mínimo menor que la inside bar)
             if h2 < h1 && l2 < l1 {
-                result[i] = PATTERN_BULLISH;
+                *slot = PATTERN_BULLISH;
             }
             // Bearish: Ruptura falsa hacia arriba (máximo y mínimo mayor que la inside bar)
             else if h2 > h1 && l2 > l1 {
-                result[i] = PATTERN_BEARISH;
+                *slot = PATTERN_BEARISH;
             }
         }
     }
@@ -1820,7 +1820,7 @@ pub fn cdlhikkake(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlhikkakemod(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlhikkakemod");
-    let (_open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (_open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
     let close = close_s.f64().unwrap();
@@ -1837,7 +1837,7 @@ pub fn cdlhikkakemod(df: &mut DataFrame, output_col: Option<&str>) {
     let mut pattern_idx: i32 = -1;
     let mut pattern_res: i32 = 0;
 
-    for i in 3..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(3) {
         let h3 = high.get(i - 3).unwrap();
         let l3 = low.get(i - 3).unwrap();
         let h2 = high.get(i - 2).unwrap();
@@ -1860,17 +1860,17 @@ pub fn cdlhikkakemod(df: &mut DataFrame, output_col: Option<&str>) {
 
             // Bullish: close near low (i-2), fakeout (i) con HH y LL menor que i-1
             if h0 < h1 && l0 < l1 && c2 <= l2 + range2 * 0.25 {
-                result[i] = PATTERN_BULLISH;
+                *slot = PATTERN_BULLISH;
                 pattern_idx = i as i32;
                 pattern_res = PATTERN_BULLISH;
             }
             // Bearish: close near high (i-2), fakeout (i) con HH y LL mayor que i-1
             else if h0 > h1 && l0 > l1 && c2 >= h2 - range2 * 0.25 {
-                result[i] = PATTERN_BEARISH;
+                *slot = PATTERN_BEARISH;
                 pattern_idx = i as i32;
                 pattern_res = PATTERN_BEARISH;
             } else {
-                result[i] = 0;
+                *slot = 0;
             }
         } else {
             // Si no hay un nuevo patrón, buscamos confirmación de uno previo (máximo 3 velas atrás)
@@ -1879,16 +1879,16 @@ pub fn cdlhikkakemod(df: &mut DataFrame, output_col: Option<&str>) {
                 let l_trigger = low.get((pattern_idx - 1) as usize).unwrap();
 
                 if pattern_res == PATTERN_BULLISH && c0 > h_trigger {
-                    result[i] = 200;
+                    *slot = 200;
                     pattern_idx = -1;
                 } else if pattern_res == PATTERN_BEARISH && c0 < l_trigger {
-                    result[i] = -200;
+                    *slot = -200;
                     pattern_idx = -1;
                 } else {
-                    result[i] = 0;
+                    *slot = 0;
                 }
             } else {
-                result[i] = 0;
+                *slot = 0;
             }
         }
     }
@@ -1914,7 +1914,7 @@ pub fn cdlhikkakemod(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlhomingpigeon(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlhomingpigeon");
-    let (open_s, _high_s, _low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, _high_s, _low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let close = close_s.f64().unwrap();
 
@@ -1927,7 +1927,7 @@ pub fn cdlhomingpigeon(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 1..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(1) {
         let o0 = open.get(i - 1).unwrap();
         let c0 = close.get(i - 1).unwrap();
         let o1 = open.get(i).unwrap();
@@ -1945,7 +1945,7 @@ pub fn cdlhomingpigeon(df: &mut DataFrame, output_col: Option<&str>) {
         let is_inside = body1_top < body0_top && body1_bottom > body0_bottom;
 
         if is_black0 && is_black1 && is_inside {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -1966,7 +1966,7 @@ pub fn cdlhomingpigeon(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlidentical3crows(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlidentical3crows");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -1981,7 +1981,7 @@ pub fn cdlidentical3crows(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let h0 = high.get(i - 2).unwrap();
         let l0 = low.get(i - 2).unwrap();
@@ -2021,7 +2021,7 @@ pub fn cdlidentical3crows(df: &mut DataFrame, output_col: Option<&str>) {
         let lower_closes = c1 < c0 && c2 < c1;
 
         if is_long0 && is_long1 && is_long2 && identical_open1 && identical_open2 && lower_closes {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -2046,7 +2046,7 @@ pub fn cdlidentical3crows(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlinneck(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlinneck");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -2061,7 +2061,7 @@ pub fn cdlinneck(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 1..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(1) {
         let o0 = open.get(i - 1).unwrap();
         let h0 = high.get(i - 1).unwrap();
         let l0 = low.get(i - 1).unwrap();
@@ -2085,7 +2085,7 @@ pub fn cdlinneck(df: &mut DataFrame, output_col: Option<&str>) {
         let closes_at_neck = (c1 - c0).abs() <= tolerance;
 
         if is_black0 && is_long0 && is_white1 && opens_below0 && closes_at_neck {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -2107,7 +2107,7 @@ pub fn cdlinneck(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlinvertedhammer(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlinvertedhammer");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -2116,7 +2116,7 @@ pub fn cdlinvertedhammer(df: &mut DataFrame, output_col: Option<&str>) {
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
-    for i in 0..len {
+    for (i, slot) in result.iter_mut().enumerate() {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -2139,7 +2139,7 @@ pub fn cdlinvertedhammer(df: &mut DataFrame, output_col: Option<&str>) {
             && body < range * 0.3;
 
         if is_inverted_hammer {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -2167,7 +2167,7 @@ pub fn cdlinvertedhammer(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlkicking(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlkicking");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -2182,7 +2182,7 @@ pub fn cdlkicking(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 1..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(1) {
         let o0 = open.get(i - 1).unwrap();
         let h0 = high.get(i - 1).unwrap();
         let l0 = low.get(i - 1).unwrap();
@@ -2209,11 +2209,11 @@ pub fn cdlkicking(df: &mut DataFrame, output_col: Option<&str>) {
         if is_marubozu0 && is_marubozu1 {
             // Bullish: Negro seguido de Blanco con Gap alcista
             if candle_color(o0, c0) == -1 && candle_color(o1, c1) == 1 && o1 >= o0 {
-                result[i] = PATTERN_BULLISH;
+                *slot = PATTERN_BULLISH;
             }
             // Bearish: Blanco seguido de Negro con Gap bajista
             else if candle_color(o0, c0) == 1 && candle_color(o1, c1) == -1 && o1 <= o0 {
-                result[i] = PATTERN_BEARISH;
+                *slot = PATTERN_BEARISH;
             }
         }
     }
@@ -2240,7 +2240,7 @@ pub fn cdlkicking(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlkickingbylength(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlkickingbylength");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -2255,7 +2255,7 @@ pub fn cdlkickingbylength(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 1..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(1) {
         let o0 = open.get(i - 1).unwrap();
         let h0 = high.get(i - 1).unwrap();
         let l0 = low.get(i - 1).unwrap();
@@ -2287,9 +2287,9 @@ pub fn cdlkickingbylength(df: &mut DataFrame, output_col: Option<&str>) {
             if has_gap {
                 // El color de la vela más larga determina el resultado
                 if body1 > body0 {
-                    result[i] = candle_color(o1, c1) * 100;
+                    *slot = candle_color(o1, c1) * 100;
                 } else {
-                    result[i] = candle_color(o0, c0) * 100;
+                    *slot = candle_color(o0, c0) * 100;
                 }
             }
         }
@@ -2315,7 +2315,7 @@ pub fn cdlkickingbylength(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdladderbottom(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdladderbottom");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -2330,7 +2330,7 @@ pub fn cdladderbottom(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 4..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(4) {
         let o0 = open.get(i - 4).unwrap();
         let c0 = close.get(i - 4).unwrap();
         let h0 = high.get(i - 4).unwrap();
@@ -2369,7 +2369,7 @@ pub fn cdladderbottom(df: &mut DataFrame, output_col: Option<&str>) {
         let white4 = candle_color(o4, c4) == 1 && o4 > o3.max(c3);
 
         if black0 && black1 && black2 && black3 && white4 {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -2390,7 +2390,7 @@ pub fn cdladderbottom(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdllongleggeddoji(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdllongleggeddoji");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -2399,7 +2399,7 @@ pub fn cdllongleggeddoji(df: &mut DataFrame, output_col: Option<&str>) {
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
-    for i in 0..len {
+    for (i, slot) in result.iter_mut().enumerate() {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -2420,7 +2420,7 @@ pub fn cdllongleggeddoji(df: &mut DataFrame, output_col: Option<&str>) {
         let is_long_shadows = upper_shadow >= range * 0.3 && lower_shadow >= range * 0.3;
 
         if is_doji && is_long_shadows {
-            result[i] = 100;
+            *slot = 100;
         }
     }
 
@@ -2441,7 +2441,7 @@ pub fn cdllongleggeddoji(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdllongline(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdllongline");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -2450,7 +2450,7 @@ pub fn cdllongline(df: &mut DataFrame, output_col: Option<&str>) {
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
-    for i in 0..len {
+    for (i, slot) in result.iter_mut().enumerate() {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -2468,9 +2468,9 @@ pub fn cdllongline(df: &mut DataFrame, output_col: Option<&str>) {
 
         if is_long_body {
             if candle_color(o, c) == 1 {
-                result[i] = PATTERN_BULLISH;
+                *slot = PATTERN_BULLISH;
             } else if candle_color(o, c) == -1 {
-                result[i] = PATTERN_BEARISH;
+                *slot = PATTERN_BEARISH;
             }
         }
     }
@@ -2491,7 +2491,7 @@ pub fn cdllongline(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlmarubozu(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlmarubozu");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -2500,7 +2500,7 @@ pub fn cdlmarubozu(df: &mut DataFrame, output_col: Option<&str>) {
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
-    for i in 0..len {
+    for (i, slot) in result.iter_mut().enumerate() {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -2518,9 +2518,9 @@ pub fn cdlmarubozu(df: &mut DataFrame, output_col: Option<&str>) {
 
         if is_marubozu {
             if candle_color(o, c) == 1 {
-                result[i] = PATTERN_BULLISH;
+                *slot = PATTERN_BULLISH;
             } else if candle_color(o, c) == -1 {
-                result[i] = PATTERN_BEARISH;
+                *slot = PATTERN_BEARISH;
             }
         }
     }
@@ -2546,7 +2546,7 @@ pub fn cdlmarubozu(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlmatchinglow(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlmatchinglow");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -2561,7 +2561,7 @@ pub fn cdlmatchinglow(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 1..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(1) {
         let o0 = open.get(i - 1).unwrap();
         let c0 = close.get(i - 1).unwrap();
         let h0 = high.get(i - 1).unwrap();
@@ -2586,7 +2586,7 @@ pub fn cdlmatchinglow(df: &mut DataFrame, output_col: Option<&str>) {
         let equal_closes = (c0 - c1).abs() <= tolerance;
 
         if is_long0 && equal_closes {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -2600,7 +2600,8 @@ pub fn cdlmatchinglow(df: &mut DataFrame, output_col: Option<&str>) {
 /// Se compone de:
 /// 1. Una vela blanca larga.
 /// 2. Una vela negra pequeña que abre con un gap alcista.
-/// 3, 4. Dos velas pequeñas (normalmente negras) que continúan la consolidación pero se mantienen dentro del rango de la primera vela.
+/// 3. Una vela pequeña (normalmente negra) que continúa la consolidación dentro del rango de la primera vela.
+/// 4. Otra vela pequeña (normalmente negra) que sigue dentro de ese rango.
 /// 5. Una vela blanca larga que cierra por encima del máximo de la primera vela.
 ///
 /// A diferencia del "Rising Three Methods", el Mat Hold permite un gap en la segunda vela y es considerado más robusto.
@@ -2613,7 +2614,7 @@ pub fn cdlmatchinglow(df: &mut DataFrame, output_col: Option<&str>) {
 /// PolarsResult<DataFrame> con la columna del indicador añadida.
 pub fn cdlmathold(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlmathold");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -2628,7 +2629,7 @@ pub fn cdlmathold(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 4..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(4) {
         let o0 = open.get(i - 4).unwrap();
         let c0 = close.get(i - 4).unwrap();
         let h0 = high.get(i - 4).unwrap();
@@ -2663,7 +2664,7 @@ pub fn cdlmathold(df: &mut DataFrame, output_col: Option<&str>) {
         let white4 = candle_color(o4, c4) == 1 && c4 > h0;
 
         if white0 && black1 && consolidation && white4 {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -2692,7 +2693,7 @@ pub struct MorningDojiStar {
 pub fn cdlmorningdojistar(df: &mut DataFrame, penetration: Option<f64>, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlmorningdojistar");
     let penetration = penetration.unwrap_or(0.3);
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -2707,7 +2708,7 @@ pub fn cdlmorningdojistar(df: &mut DataFrame, penetration: Option<f64>, output_c
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let h0 = high.get(i - 2).unwrap();
         let l0 = low.get(i - 2).unwrap();
@@ -2760,7 +2761,7 @@ pub fn cdlmorningdojistar(df: &mut DataFrame, penetration: Option<f64>, output_c
             && gap_up2
             && deep_penetration
         {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -2789,7 +2790,7 @@ pub struct MorningStar {
 pub fn cdlmorningstar(df: &mut DataFrame, penetration: Option<f64>, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlmorningstar");
     let penetration = penetration.unwrap_or(0.3);
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -2804,7 +2805,7 @@ pub fn cdlmorningstar(df: &mut DataFrame, penetration: Option<f64>, output_col: 
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let h0 = high.get(i - 2).unwrap();
         let l0 = low.get(i - 2).unwrap();
@@ -2851,7 +2852,7 @@ pub fn cdlmorningstar(df: &mut DataFrame, penetration: Option<f64>, output_col: 
             && gap_up2
             && deep_penetration
         {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -2873,7 +2874,7 @@ pub fn cdlmorningstar(df: &mut DataFrame, penetration: Option<f64>, output_col: 
 /// * DataFrame con una nueva columna con los valores 0 (nada) o -100 (bajista).
 pub fn cdlonneck(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlonneck");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -2888,7 +2889,7 @@ pub fn cdlonneck(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 1..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(1) {
         let o0 = open.get(i - 1).unwrap();
         let h0 = high.get(i - 1).unwrap();
         let l0 = low.get(i - 1).unwrap();
@@ -2920,7 +2921,7 @@ pub fn cdlonneck(df: &mut DataFrame, output_col: Option<&str>) {
         let gap_down = o1 < c0;
 
         if is_black0 && is_long0 && is_white1 && on_neck && gap_down {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -2949,7 +2950,7 @@ pub struct Piercing {
 pub fn cdlpiercing(df: &mut DataFrame, penetration: Option<f64>, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlpiercing");
     let penetration = penetration.unwrap_or(0.5);
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -2964,7 +2965,7 @@ pub fn cdlpiercing(df: &mut DataFrame, penetration: Option<f64>, output_col: Opt
         return;
     }
 
-    for i in 1..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(1) {
         let o0 = open.get(i - 1).unwrap();
         let h0 = high.get(i - 1).unwrap();
         let l0 = low.get(i - 1).unwrap();
@@ -2993,7 +2994,7 @@ pub fn cdlpiercing(df: &mut DataFrame, penetration: Option<f64>, output_col: Opt
         let deep_penetration = c1 > target_level && c1 < o0;
 
         if is_black0 && is_long0 && is_white1 && open_below && deep_penetration {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -3014,7 +3015,7 @@ pub fn cdlpiercing(df: &mut DataFrame, penetration: Option<f64>, output_col: Opt
 /// * DataFrame con una nueva columna con los valores 0 (nada) o 100 (indecisión/neutral).
 pub fn cdlrickshawman(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlrickshawman");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -3023,7 +3024,7 @@ pub fn cdlrickshawman(df: &mut DataFrame, output_col: Option<&str>) {
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
-    for i in 0..len {
+    for (i, slot) in result.iter_mut().enumerate() {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -3045,7 +3046,7 @@ pub fn cdlrickshawman(df: &mut DataFrame, output_col: Option<&str>) {
         let is_centered = (body_mid - range_mid).abs() <= range * 0.1;
 
         if is_doji && is_centered {
-            result[i] = 100; // Usualmente se marca como 100 para indicar presencia del patrón
+            *slot = 100; // Usualmente se marca como 100 para indicar presencia del patrón
         }
     }
 
@@ -3075,7 +3076,7 @@ pub fn cdlrickshawman(df: &mut DataFrame, output_col: Option<&str>) {
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
 pub fn cdlrisefall3methods(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlrisefall3methods");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -3090,7 +3091,7 @@ pub fn cdlrisefall3methods(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 4..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(4) {
         let o0 = open.get(i - 4).unwrap();
         let h0 = high.get(i - 4).unwrap();
         let l0 = low.get(i - 4).unwrap();
@@ -3131,7 +3132,7 @@ pub fn cdlrisefall3methods(df: &mut DataFrame, output_col: Option<&str>) {
             }
 
             if all_inside && rising_continuation {
-                result[i] = PATTERN_BULLISH;
+                *slot = PATTERN_BULLISH;
                 continue;
             }
         }
@@ -3157,7 +3158,7 @@ pub fn cdlrisefall3methods(df: &mut DataFrame, output_col: Option<&str>) {
             }
 
             if all_inside && falling_continuation {
-                result[i] = PATTERN_BEARISH;
+                *slot = PATTERN_BEARISH;
             }
         }
     }
@@ -3186,7 +3187,7 @@ pub fn cdlrisefall3methods(df: &mut DataFrame, output_col: Option<&str>) {
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
 pub fn cdlseparatinglines(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlseparatinglines");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -3201,7 +3202,7 @@ pub fn cdlseparatinglines(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 1..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(1) {
         let o0 = open.get(i - 1).unwrap();
         let c0 = close.get(i - 1).unwrap();
         let h0 = high.get(i - 1).unwrap();
@@ -3220,7 +3221,7 @@ pub fn cdlseparatinglines(df: &mut DataFrame, output_col: Option<&str>) {
         let equal_open = (o1 - o0).abs() <= tolerance;
 
         if is_black0 && is_white1 && equal_open {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
             continue;
         }
 
@@ -3230,7 +3231,7 @@ pub fn cdlseparatinglines(df: &mut DataFrame, output_col: Option<&str>) {
         let is_black1 = candle_color(o1, c1) == -1;
 
         if is_white0 && is_black1 && equal_open {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -3253,7 +3254,7 @@ pub fn cdlseparatinglines(df: &mut DataFrame, output_col: Option<&str>) {
 /// * DataFrame con una nueva columna con los valores 0 o -100 (bajista).
 pub fn cdlshootingstar(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlshootingstar");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -3268,7 +3269,7 @@ pub fn cdlshootingstar(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 1..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(1) {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -3300,7 +3301,7 @@ pub fn cdlshootingstar(df: &mut DataFrame, output_col: Option<&str>) {
         let is_uptrend = o > c_prev || h > c_prev;
 
         if is_small_body && long_upper_shadow && short_lower_shadow && is_uptrend {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -3321,7 +3322,7 @@ pub fn cdlshootingstar(df: &mut DataFrame, output_col: Option<&str>) {
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
 pub fn cdlshortline(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlshortline");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -3330,7 +3331,7 @@ pub fn cdlshortline(df: &mut DataFrame, output_col: Option<&str>) {
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
-    for i in 0..len {
+    for (i, slot) in result.iter_mut().enumerate() {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -3353,7 +3354,7 @@ pub fn cdlshortline(df: &mut DataFrame, output_col: Option<&str>) {
         let short_shadows = upper_shadow <= range * 0.3 && lower_shadow <= range * 0.3;
 
         if is_short_body && short_shadows {
-            result[i] = if c > o {
+            *slot = if c > o {
                 PATTERN_BULLISH
             } else {
                 PATTERN_BEARISH
@@ -3379,7 +3380,7 @@ pub fn cdlshortline(df: &mut DataFrame, output_col: Option<&str>) {
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
 pub fn cdlspinningtop(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlspinningtop");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -3388,7 +3389,7 @@ pub fn cdlspinningtop(df: &mut DataFrame, output_col: Option<&str>) {
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
-    for i in 0..len {
+    for (i, slot) in result.iter_mut().enumerate() {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -3411,7 +3412,7 @@ pub fn cdlspinningtop(df: &mut DataFrame, output_col: Option<&str>) {
         let long_shadows = upper_shadow > body && lower_shadow > body;
 
         if is_small_body && long_shadows {
-            result[i] = if c > o {
+            *slot = if c > o {
                 PATTERN_BULLISH
             } else {
                 PATTERN_BEARISH
@@ -3439,7 +3440,7 @@ pub fn cdlspinningtop(df: &mut DataFrame, output_col: Option<&str>) {
 /// * DataFrame con una nueva columna con los valores 0 o -100 (bajista).
 pub fn cdlstalledpattern(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlstalledpattern");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -3454,7 +3455,7 @@ pub fn cdlstalledpattern(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let c0 = close.get(i - 2).unwrap();
         let h0 = high.get(i - 2).unwrap();
@@ -3493,7 +3494,7 @@ pub fn cdlstalledpattern(df: &mut DataFrame, output_col: Option<&str>) {
         let o1_near_c0 = (o1 - c0).abs() <= range0 * 0.2;
 
         if ascending && long_v0v1 && stalled && o1_near_c0 {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -3516,7 +3517,7 @@ pub fn cdlstalledpattern(df: &mut DataFrame, output_col: Option<&str>) {
 /// * DataFrame con una nueva columna con los valores 0 o 100 (alcista).
 pub fn cdlsticksandwich(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlsticksandwich");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -3531,7 +3532,7 @@ pub fn cdlsticksandwich(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let c0 = close.get(i - 2).unwrap();
         let h0 = high.get(i - 2).unwrap();
@@ -3560,7 +3561,7 @@ pub fn cdlsticksandwich(df: &mut DataFrame, output_col: Option<&str>) {
         let white_higher = c1 > c0 && c1 > c2;
 
         if equal_close && white_higher {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -3582,7 +3583,7 @@ pub fn cdlsticksandwich(df: &mut DataFrame, output_col: Option<&str>) {
 /// * DataFrame con una nueva columna con los valores 0 o 100 (alcista).
 pub fn cdltakuri(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdltakuri");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -3591,7 +3592,7 @@ pub fn cdltakuri(df: &mut DataFrame, output_col: Option<&str>) {
     let len = open.len();
     let mut result: Vec<i32> = vec![0; len];
 
-    for i in 0..len {
+    for (i, slot) in result.iter_mut().enumerate() {
         let o = open.get(i).unwrap();
         let h = high.get(i).unwrap();
         let l = low.get(i).unwrap();
@@ -3617,7 +3618,7 @@ pub fn cdltakuri(df: &mut DataFrame, output_col: Option<&str>) {
         let very_short_upper = upper_shadow <= range * 0.1;
 
         if is_doji && very_long_lower && very_short_upper {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -3647,7 +3648,7 @@ pub fn cdltakuri(df: &mut DataFrame, output_col: Option<&str>) {
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
 pub fn cdltasukigap(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdltasukigap");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let _ = high_s.f64().unwrap();
     let _ = low_s.f64().unwrap();
@@ -3662,7 +3663,7 @@ pub fn cdltasukigap(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let c0 = close.get(i - 2).unwrap();
         let o1 = open.get(i - 1).unwrap();
@@ -3679,7 +3680,7 @@ pub fn cdltasukigap(df: &mut DataFrame, output_col: Option<&str>) {
         let close_in_gap = c2 < o1 && c2 > c0;
 
         if is_white0 && is_white1 && gap_up && is_black2 && open_within1 && close_in_gap {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
             continue;
         }
 
@@ -3693,7 +3694,7 @@ pub fn cdltasukigap(df: &mut DataFrame, output_col: Option<&str>) {
 
         if is_black0 && is_black1 && gap_down && is_white2 && open_within1_down && close_in_gap_down
         {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -3716,7 +3717,7 @@ pub fn cdltasukigap(df: &mut DataFrame, output_col: Option<&str>) {
 /// * DataFrame con una nueva columna con los valores 0 o -100 (bajista).
 pub fn cdlthrusting(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlthrusting");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -3731,7 +3732,7 @@ pub fn cdlthrusting(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 1..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(1) {
         let o0 = open.get(i - 1).unwrap();
         let h0 = high.get(i - 1).unwrap();
         let l0 = low.get(i - 1).unwrap();
@@ -3760,7 +3761,7 @@ pub fn cdlthrusting(df: &mut DataFrame, output_col: Option<&str>) {
         let closes_into_body = c1 > c0 && c1 < mid_point;
 
         if is_black0 && is_long0 && is_white1 && open_below && closes_into_body {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -3789,7 +3790,7 @@ pub fn cdlthrusting(df: &mut DataFrame, output_col: Option<&str>) {
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
 pub fn cdltristar(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdltristar");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -3804,7 +3805,7 @@ pub fn cdltristar(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let h0 = high.get(i - 2).unwrap();
         let l0 = low.get(i - 2).unwrap();
@@ -3840,14 +3841,14 @@ pub fn cdltristar(df: &mut DataFrame, output_col: Option<&str>) {
             // --- BULLISH TRISTAR ---
             // Gap bajista del segundo Doji
             if o1 < o0.min(c0) && o1 < o2.min(c2) {
-                result[i] = PATTERN_BULLISH;
+                *slot = PATTERN_BULLISH;
                 continue;
             }
 
             // --- BEARISH TRISTAR ---
             // Gap alcista del segundo Doji
             if o1 > o0.max(c0) && o1 > o2.max(c2) {
-                result[i] = PATTERN_BEARISH;
+                *slot = PATTERN_BEARISH;
             }
         }
     }
@@ -3871,7 +3872,7 @@ pub fn cdltristar(df: &mut DataFrame, output_col: Option<&str>) {
 /// * DataFrame con una nueva columna con los valores 0 o 100 (alcista).
 pub fn cdlunique3river(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlunique3river");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -3886,7 +3887,7 @@ pub fn cdlunique3river(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let h0 = high.get(i - 2).unwrap();
         let l0 = low.get(i - 2).unwrap();
@@ -3925,7 +3926,7 @@ pub fn cdlunique3river(df: &mut DataFrame, output_col: Option<&str>) {
         let below_c1 = c2 < c1; // Simplificación habitual
 
         if is_black1 && body_inside0 && new_low1 && is_white2 && is_small2 && below_c1 {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
         }
     }
 
@@ -3950,7 +3951,7 @@ pub fn cdlunique3river(df: &mut DataFrame, output_col: Option<&str>) {
 /// * DataFrame con una nueva columna con los valores 0 o -100 (bajista).
 pub fn cdlupsidegap2crows(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlupsidegap2crows");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let high = high_s.f64().unwrap();
     let low = low_s.f64().unwrap();
@@ -3965,7 +3966,7 @@ pub fn cdlupsidegap2crows(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let h0 = high.get(i - 2).unwrap();
         let l0 = low.get(i - 2).unwrap();
@@ -4002,7 +4003,7 @@ pub fn cdlupsidegap2crows(df: &mut DataFrame, output_col: Option<&str>) {
         let above_c0 = c2 > c0;
 
         if is_black1 && gap_up1 && is_black2 && engulfs1 && above_c0 {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 
@@ -4031,7 +4032,7 @@ pub fn cdlupsidegap2crows(df: &mut DataFrame, output_col: Option<&str>) {
 /// * DataFrame con una nueva columna con los valores 100 (alcista), -100 (bajista) o 0.
 pub fn cdlxsidegap3methods(df: &mut DataFrame, output_col: Option<&str>) {
     let output_name = output_col.unwrap_or("cdlxsidegap3methods");
-    let (open_s, high_s, low_s, close_s) = get_ohlc(&df).unwrap();
+    let (open_s, high_s, low_s, close_s) = get_ohlc(df).unwrap();
     let open = open_s.f64().unwrap();
     let _ = high_s.f64().unwrap();
     let _ = low_s.f64().unwrap();
@@ -4046,7 +4047,7 @@ pub fn cdlxsidegap3methods(df: &mut DataFrame, output_col: Option<&str>) {
         return;
     }
 
-    for i in 2..len {
+    for (i, slot) in result.iter_mut().enumerate().skip(2) {
         let o0 = open.get(i - 2).unwrap();
         let c0 = close.get(i - 2).unwrap();
         let o1 = open.get(i - 1).unwrap();
@@ -4065,7 +4066,7 @@ pub fn cdlxsidegap3methods(df: &mut DataFrame, output_col: Option<&str>) {
         let close_within0 = c2 < o0.max(c0) && c2 > o0.min(c0);
 
         if is_white0 && is_white1 && gap_up && is_black2 && open_within1 && close_within0 {
-            result[i] = PATTERN_BULLISH;
+            *slot = PATTERN_BULLISH;
             continue;
         }
 
@@ -4085,7 +4086,7 @@ pub fn cdlxsidegap3methods(df: &mut DataFrame, output_col: Option<&str>) {
             && open_within1_down
             && close_within0_down
         {
-            result[i] = PATTERN_BEARISH;
+            *slot = PATTERN_BEARISH;
         }
     }
 

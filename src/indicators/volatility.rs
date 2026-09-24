@@ -1,11 +1,10 @@
 use polars::prelude::*;
 use serde::{Deserialize, Serialize};
 
-/// Lista de indicadores:
-/// ATR                  Average True Range
-/// NATR                 Normalized Average True Range
-/// TRANGE               True Range
-
+// Lista de indicadores:
+// ATR                  Average True Range
+// NATR                 Normalized Average True Range
+// TRANGE               True Range
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -121,9 +120,9 @@ fn rma_series(values: &Series, period: usize) -> PolarsResult<Series> {
 pub fn trange(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("trange");
 
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
 
     let mut tr_series = calc_true_range(&high, &low, &close).unwrap();
     tr_series.rename(output_col.into());
@@ -152,9 +151,9 @@ pub fn atr(
     let multiplier = multiplier.unwrap_or(1.0);
     let output_col = output_col.unwrap_or("atr");
 
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
 
     let tr_series = calc_true_range(&high, &low, &close).unwrap();
     let mut atr_series = rma_series(&tr_series, timeperiod).unwrap();
@@ -178,9 +177,9 @@ pub fn natr(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&s
     let timeperiod = timeperiod.unwrap_or(14);
     let output_col = output_col.unwrap_or("natr");
 
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
 
     let tr_series = calc_true_range(&high, &low, &close).unwrap();
     let atr_series = rma_series(&tr_series, timeperiod).unwrap();

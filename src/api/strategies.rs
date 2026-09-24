@@ -160,7 +160,7 @@ pub async fn get_strategies() -> Result<Vec<Strategy>, Error> {
             id_user: row.get::<i32>(1)?,
             nombre: row.get::<String>(2)?,
             descripcion: row.get::<Option<String>>(3)?,
-            activa: activa,
+            activa,
             creada_en: row.get::<String>(5)?,
             indicadores: str_indicators,
             acciones: str_actions,
@@ -243,7 +243,7 @@ pub async fn get_strategies_by_id(id: i32) -> Result<Strategy, Error> {
         id_user: row.get::<i32>(1)?,
         nombre: row.get::<String>(2)?,
         descripcion: row.get::<Option<String>>(3)?,
-        activa: activa,
+        activa,
         creada_en: row.get::<String>(5)?,
         indicadores: str_indicators,
         acciones: str_actions,
@@ -324,7 +324,7 @@ pub async fn get_strategies_by_id_user(id_user: i32) -> Result<Vec<Strategy>, Er
             id_user: row.get::<i32>(1)?,
             nombre: row.get::<String>(2)?,
             descripcion: row.get::<Option<String>>(3)?,
-            activa: activa,
+            activa,
             creada_en: row.get::<String>(5)?,
             indicadores: str_indicators,
             acciones: str_actions,
@@ -416,7 +416,7 @@ pub async fn get_strategies_by_nombre(nombre: String) -> Result<Vec<Strategy>, E
             id_user: row.get::<i32>(1)?,
             nombre: row.get::<String>(2)?,
             descripcion: row.get::<Option<String>>(3)?,
-            activa: activa,
+            activa,
             creada_en: row.get::<String>(5)?,
             indicadores: str_indicators,
             // condiciones: str_conditions,
@@ -509,7 +509,7 @@ pub async fn get_active_strategies_by_user(id_user: i32) -> Result<Vec<Strategy>
             id_user: row.get::<i32>(1)?,
             nombre: row.get::<String>(2)?,
             descripcion: row.get::<Option<String>>(3)?,
-            activa: activa,
+            activa,
             creada_en: row.get::<String>(5)?,
             indicadores: str_indicators,
             // condiciones: str_conditions,
@@ -599,7 +599,7 @@ pub async fn get_all_active_strategies() -> Result<Vec<Strategy>, Error> {
             id_user: row.get::<i32>(1)?,
             nombre: row.get::<String>(2)?,
             descripcion: row.get::<Option<String>>(3)?,
-            activa: activa,
+            activa,
             creada_en: row.get::<String>(5)?,
             indicadores: str_indicators,
             // condiciones: str_conditions,
@@ -692,7 +692,7 @@ pub async fn get_desactive_strategies_by_user(id_user: i32) -> Result<Vec<Strate
             id_user: row.get::<i32>(1)?,
             nombre: row.get::<String>(2)?,
             descripcion: row.get::<Option<String>>(3)?,
-            activa: activa,
+            activa,
             creada_en: row.get::<String>(5)?,
             indicadores: str_indicators,
             // condiciones: str_conditions,
@@ -782,7 +782,7 @@ pub async fn get_all_desactive_strategies() -> Result<Vec<Strategy>, Error> {
             id_user: row.get::<i32>(1)?,
             nombre: row.get::<String>(2)?,
             descripcion: row.get::<Option<String>>(3)?,
-            activa: activa,
+            activa,
             creada_en: row.get::<String>(5)?,
             indicadores: str_indicators,
             // condiciones: str_conditions,
@@ -875,7 +875,7 @@ pub async fn get_active_strategies_by_date(fecha: String) -> Result<Vec<Strategy
             id_user: row.get::<i32>(1)?,
             nombre: row.get::<String>(2)?,
             descripcion: row.get::<Option<String>>(3)?,
-            activa: activa,
+            activa,
             creada_en: row.get::<String>(5)?,
             indicadores: str_indicators,
             // condiciones: str_conditions,
@@ -1880,7 +1880,7 @@ pub async fn get_strategy_options_by_id(id: i32) -> Result<StrategyOptions, Erro
     let options = StrategyOptions {
         id: row.get::<i32>(0)?,
         strategy_id: row.get::<i32>(1)?,
-        multiples_trades: if row.get::<i32>(2)? == 1 { true } else { false },
+        multiples_trades: row.get::<i32>(2)? == 1,
         trading_direccion: if row.get::<String>(3)? == "long" {
             TradingDirection::Long
         } else if row.get::<String>(3)? == "short" {
@@ -1888,38 +1888,26 @@ pub async fn get_strategy_options_by_id(id: i32) -> Result<StrategyOptions, Erro
         } else {
             TradingDirection::Both
         },
-        operar_finde: if row.get::<i32>(4)? == 1 { true } else { false },
-        cerrar_fin_de_dia: if row.get::<i32>(5)? == 1 { true } else { false },
+        operar_finde: row.get::<i32>(4)? == 1,
+        cerrar_fin_de_dia: row.get::<i32>(5)? == 1,
         hora_fin_de_dia: DateTime::parse_from_rfc3339(&row.get::<String>(6)?)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
-        cerrar_viernes: if row.get::<i32>(7)? == 1 { true } else { false },
+        cerrar_viernes: row.get::<i32>(7)? == 1,
         hora_cierre_viernes: DateTime::parse_from_rfc3339(&row.get::<String>(8)?)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
-        rango_operativo: if row.get::<i32>(9)? == 1 { true } else { false },
+        rango_operativo: row.get::<i32>(9)? == 1,
         rango_operativo_inicio: DateTime::parse_from_rfc3339(&row.get::<String>(10)?)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
         rango_operativo_fin: DateTime::parse_from_rfc3339(&row.get::<String>(11)?)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
-        cerrar_fin_rango_operativo: if row.get::<i32>(12)? == 1 {
-            true
-        } else {
-            false
-        },
-        activar_cierre_numero_velas: if row.get::<i32>(13)? == 1 {
-            true
-        } else {
-            false
-        },
+        cerrar_fin_rango_operativo: row.get::<i32>(12)? == 1,
+        activar_cierre_numero_velas: row.get::<i32>(13)? == 1,
         numero_velas_cierre: row.get::<i32>(14)?,
-        cierre_limite_hora: if row.get::<i32>(15)? == 1 {
-            true
-        } else {
-            false
-        },
+        cierre_limite_hora: row.get::<i32>(15)? == 1,
         hora_cierre_limite: DateTime::parse_from_rfc3339(&row.get::<String>(16)?)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
@@ -1967,7 +1955,7 @@ pub async fn get_strategy_options_by_strategy_id(
     let options = StrategyOptions {
         id: row.get::<i32>(0)?,
         strategy_id: row.get::<i32>(1)?,
-        multiples_trades: if row.get::<i32>(2)? == 1 { true } else { false },
+        multiples_trades: row.get::<i32>(2)? == 1,
         trading_direccion: if row.get::<String>(3)? == "long" {
             TradingDirection::Long
         } else if row.get::<String>(3)? == "short" {
@@ -1975,38 +1963,26 @@ pub async fn get_strategy_options_by_strategy_id(
         } else {
             TradingDirection::Both
         },
-        operar_finde: if row.get::<i32>(4)? == 1 { true } else { false },
-        cerrar_fin_de_dia: if row.get::<i32>(5)? == 1 { true } else { false },
+        operar_finde: row.get::<i32>(4)? == 1,
+        cerrar_fin_de_dia: row.get::<i32>(5)? == 1,
         hora_fin_de_dia: DateTime::parse_from_rfc3339(&row.get::<String>(6)?)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
-        cerrar_viernes: if row.get::<i32>(7)? == 1 { true } else { false },
+        cerrar_viernes: row.get::<i32>(7)? == 1,
         hora_cierre_viernes: DateTime::parse_from_rfc3339(&row.get::<String>(8)?)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
-        rango_operativo: if row.get::<i32>(9)? == 1 { true } else { false },
+        rango_operativo: row.get::<i32>(9)? == 1,
         rango_operativo_inicio: DateTime::parse_from_rfc3339(&row.get::<String>(10)?)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
         rango_operativo_fin: DateTime::parse_from_rfc3339(&row.get::<String>(11)?)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),
-        cerrar_fin_rango_operativo: if row.get::<i32>(12)? == 1 {
-            true
-        } else {
-            false
-        },
-        activar_cierre_numero_velas: if row.get::<i32>(13)? == 1 {
-            true
-        } else {
-            false
-        },
+        cerrar_fin_rango_operativo: row.get::<i32>(12)? == 1,
+        activar_cierre_numero_velas: row.get::<i32>(13)? == 1,
         numero_velas_cierre: row.get::<i32>(14)?,
-        cierre_limite_hora: if row.get::<i32>(15)? == 1 {
-            true
-        } else {
-            false
-        },
+        cierre_limite_hora: row.get::<i32>(15)? == 1,
         hora_cierre_limite: DateTime::parse_from_rfc3339(&row.get::<String>(16)?)
             .map(|dt| dt.with_timezone(&Utc))
             .unwrap_or_else(|_| DateTime::<Utc>::MIN_UTC),

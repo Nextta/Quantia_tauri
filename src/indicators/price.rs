@@ -1,11 +1,10 @@
 use polars::prelude::*;
 
-/// Lista de indicadores:
-/// AVGPRICE             Average Price
-/// MEDPRICE             Median Price
-/// TYPPRICE             Typical Price
-/// WCLPRICE             Weighted Close Price
-
+// Lista de indicadores:
+// AVGPRICE             Average Price
+// MEDPRICE             Median Price
+// TYPPRICE             Typical Price
+// WCLPRICE             Weighted Close Price
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -83,10 +82,10 @@ fn get_open(df: &DataFrame) -> PolarsResult<Series> {
 pub fn avgprice(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("avgprice");
 
-    let open = get_open(&df).unwrap();
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
+    let open = get_open(df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
 
     let sum1 = (&open + &high).unwrap();
     let sum2 = (&sum1 + &low).unwrap();
@@ -137,8 +136,8 @@ pub fn avgprice(df: &mut DataFrame, output_col: Option<&str>) {
 pub fn medprice(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("medprice");
 
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
 
     let sum = (&high + &low).unwrap();
     let medprice_series = sum / 2.0;
@@ -188,9 +187,9 @@ pub fn medprice(df: &mut DataFrame, output_col: Option<&str>) {
 pub fn typprice(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("typprice");
 
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
 
     let sum1 = (&high + &low).unwrap();
     let sum2 = (&sum1 + &close).unwrap();
@@ -242,9 +241,9 @@ pub fn typprice(df: &mut DataFrame, output_col: Option<&str>) {
 pub fn wclprice(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("wclprice");
 
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
 
     let close_weighted = &close * 2.0;
     let sum1 = (&high + &low).unwrap();

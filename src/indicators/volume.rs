@@ -1,11 +1,10 @@
 use polars::prelude::*;
 use serde::{Deserialize, Serialize};
 
-/// Lista de indicadores:
-/// AD                   Chaikin A/D Line
-/// ADOSC                Chaikin A/D Oscillator
-/// OBV                  On Balance Volume
-
+// Lista de indicadores:
+// AD                   Chaikin A/D Line
+// ADOSC                Chaikin A/D Oscillator
+// OBV                  On Balance Volume
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -120,10 +119,10 @@ fn calc_ema(values: &[f64], period: usize) -> Vec<f64> {
 pub fn ad(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("ad");
 
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
-    let close = get_close(&df).unwrap();
-    let volume = get_volume(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
+    let close = get_close(df).unwrap();
+    let volume = get_volume(df).unwrap();
 
     let hl_range = (&high - &low).unwrap();
     let mut mfm = (&close + &close).unwrap();
@@ -135,8 +134,8 @@ pub fn ad(df: &mut DataFrame, output_col: Option<&str>) {
         .f64()
         .unwrap()
         .into_iter()
-        .zip(hl_range.f64().unwrap().into_iter())
-        .zip(volume.f64().unwrap().into_iter())
+        .zip(hl_range.f64().unwrap())
+        .zip(volume.f64().unwrap())
         .map(|((m, r), v)| match (m, r, v) {
             (Some(mv), Some(rv), Some(vv)) if rv > 0.0 => (mv / rv) * vv,
             _ => 0.0,
@@ -274,8 +273,8 @@ pub fn adosc(
 pub fn obv(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("obv");
 
-    let close = get_close(&df).unwrap();
-    let volume = get_volume(&df).unwrap();
+    let close = get_close(df).unwrap();
+    let volume = get_volume(df).unwrap();
 
     let close_vals: Vec<f64> = close
         .f64()

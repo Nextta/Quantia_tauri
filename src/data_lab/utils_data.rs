@@ -31,7 +31,6 @@ pub fn get_timeframe_data(
     let seconds = timeframe_to_seconds(timeframe);
     let duration_str = format!("{}i", seconds);
 
-    let df: DataFrame;
     let schema = lz
         .clone()
         .limit(0)
@@ -40,55 +39,53 @@ pub fn get_timeframe_data(
         .get("open")
         .is_some();
 
-    if schema {
-        df = lz
-            .group_by_dynamic(
-                col("time"),
-                [],
-                DynamicGroupOptions {
-                    every: Duration::parse(&duration_str),
-                    period: Duration::parse(&duration_str),
-                    offset: Duration::parse("0ms"),
-                    ..Default::default()
-                },
-            )
-            .agg([
-                col("open").first(),
-                col("high").max(),
-                col("low").min(),
-                col("close").last(),
-                col("volume").sum(),
-            ])
-            .collect()?;
+    let df: DataFrame = if schema {
+        lz.group_by_dynamic(
+            col("time"),
+            [],
+            DynamicGroupOptions {
+                every: Duration::parse(&duration_str),
+                period: Duration::parse(&duration_str),
+                offset: Duration::parse("0ms"),
+                ..Default::default()
+            },
+        )
+        .agg([
+            col("open").first(),
+            col("high").max(),
+            col("low").min(),
+            col("close").last(),
+            col("volume").sum(),
+        ])
+        .collect()?
     } else {
-        df = lz
-            .select([
-                col("time"),
-                col("bidPrice").alias("open"),
-                col("bidPrice").alias("high"),
-                col("bidPrice").alias("low"),
-                col("bidPrice").alias("close"),
-                (col("bidVolume") + col("askVolume")).alias("volume"),
-            ])
-            .group_by_dynamic(
-                col("time"),
-                [],
-                DynamicGroupOptions {
-                    every: Duration::parse(&duration_str),
-                    period: Duration::parse(&duration_str),
-                    offset: Duration::parse("0ms"),
-                    ..Default::default()
-                },
-            )
-            .agg([
-                col("open").first(),
-                col("high").max(),
-                col("low").min(),
-                col("close").last(),
-                col("volume").sum(),
-            ])
-            .collect()?;
-    }
+        lz.select([
+            col("time"),
+            col("bidPrice").alias("open"),
+            col("bidPrice").alias("high"),
+            col("bidPrice").alias("low"),
+            col("bidPrice").alias("close"),
+            (col("bidVolume") + col("askVolume")).alias("volume"),
+        ])
+        .group_by_dynamic(
+            col("time"),
+            [],
+            DynamicGroupOptions {
+                every: Duration::parse(&duration_str),
+                period: Duration::parse(&duration_str),
+                offset: Duration::parse("0ms"),
+                ..Default::default()
+            },
+        )
+        .agg([
+            col("open").first(),
+            col("high").max(),
+            col("low").min(),
+            col("close").last(),
+            col("volume").sum(),
+        ])
+        .collect()?
+    };
 
     Ok(df)
 }
@@ -136,7 +133,7 @@ pub fn join_datasets(parquet_ruta: &str, data_to_join: DataFrame) -> PolarsResul
     // Combinar solo los datos nuevos
     let final_result = concat([lz, new_data], UnionArgs::default())?;
 
-    Ok(final_result.collect()?)
+    final_result.collect()
 }
 
 /// Une los nuevos datos descargados al dataset ya exsitente para actualizarlos.
@@ -158,7 +155,7 @@ pub fn join_datasets_ticks(parquet_ruta: &str, data_to_join: DataFrame) -> Polar
     // Combinar solo los datos nuevos
     let final_result = concat([lz, new_data], UnionArgs::default())?;
 
-    Ok(final_result.collect()?)
+    final_result.collect()
 }
 
 pub fn to_dataframe_data(data: Vec<DataDukas>) -> DataFrame {

@@ -20,7 +20,7 @@ use std::path::Path;
 pub static BLOQUEO_RECURSOS: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
 pub fn create_test_data(format: &DataFormatSymbol) {
-    let ruta = format!("data/test.{}", format.to_string());
+    let ruta = format!("data/test.{}", format);
 
     if !Path::new(ruta.as_str()).exists() {
         let mut file = File::create("data/test.csv").unwrap();
@@ -162,7 +162,7 @@ pub fn create_test_data(format: &DataFormatSymbol) {
 }
 
 pub fn create_test_data_ticks(format: &DataFormatSymbol) {
-    let ruta = format!("data/test_ticks.{}", format.to_string());
+    let ruta = format!("data/test_ticks.{}", format);
 
     if !Path::new(ruta.as_str()).exists() {
         let mut file = File::create("data/test_ticks.csv").unwrap();

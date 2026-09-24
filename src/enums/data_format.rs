@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
@@ -7,15 +9,13 @@ pub enum DataFormatSymbol {
     Json,
 }
 
-impl DataFormatSymbol {
-    pub fn to_string(&self) -> String {
-        match self {
-            DataFormatSymbol::Parquet => "parquet".to_string(),
-            DataFormatSymbol::Csv => "csv".to_string(),
-            DataFormatSymbol::Json => "json".to_string(),
-        }
+impl fmt::Display for DataFormatSymbol {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.as_str())
     }
+}
 
+impl DataFormatSymbol {
     pub fn as_str(&self) -> &str {
         match self {
             DataFormatSymbol::Parquet => "parquet",

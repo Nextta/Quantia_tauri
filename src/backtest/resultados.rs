@@ -525,7 +525,7 @@ impl Resultados {
         {
             let mut sorted = returns.clone();
             sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
-            let idx_5 = ((0.05 * n) as usize).max(0);
+            let idx_5 = (0.05 * n) as usize;
             let idx_95 = ((0.95 * n) as usize).min(n_trades - 1);
             let p5 = sorted[idx_5].abs();
             let p95 = sorted[idx_95];
@@ -701,7 +701,7 @@ impl Resultados {
 
     //FUNCIONES
     pub async fn guardar_resultados(&self) {
-        let result = insert_resultados(&self).await;
+        let result = insert_resultados(self).await;
         match result {
             Ok(_) => {
                 if LOGS_REGISTRO {

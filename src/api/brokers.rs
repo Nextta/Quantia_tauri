@@ -104,7 +104,7 @@ pub async fn get_brokers_cfd() -> Result<Vec<BrokerCFD>, Error> {
         let broker: BrokerCFD = BrokerCFD {
             id: row.get::<i32>(0)?,
             name: row.get::<String>(1)?,
-            symbol_info: symbol_info,
+            symbol_info,
         };
 
         brokers.push(broker);
@@ -149,7 +149,7 @@ pub async fn get_brokers_cfd_by_name(name: &str) -> Result<Vec<BrokerCFD>, Error
         let broker: BrokerCFD = BrokerCFD {
             id: row.get::<i32>(0)?,
             name: row.get::<String>(1)?,
-            symbol_info: symbol_info,
+            symbol_info,
         };
         brokers.push(broker);
     }
@@ -191,7 +191,7 @@ pub async fn get_broker_cfd_by_id(id: i32) -> Result<BrokerCFD, Error> {
     let broker: BrokerCFD = BrokerCFD {
         id: row.get::<i32>(0)?,
         name: row.get::<String>(1)?,
-        symbol_info: symbol_info,
+        symbol_info,
     };
 
     Ok(broker)

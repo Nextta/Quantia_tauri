@@ -1,23 +1,22 @@
 use polars::prelude::*;
 use serde::{Deserialize, Serialize};
 
-/// Lista de indicadores:
-/// BBANDS               Bollinger Bands
-/// DEMA                 Double Exponential Moving Average
-/// EMA                  Exponential Moving Average
-/// KAMA                 Kaufman Adaptive Moving Average
-/// MA                   Moving average
-/// MAMA                 MESA Adaptive Moving Average
-/// MIDPOINT             MidPoint over period
-/// MIDPRICE             Midpoint Price over period
-/// SAR                  Parabolic SAR
-/// SAREXT               Parabolic SAR - Extended
-/// SMA                  Simple Moving Average
-/// T3                   Triple Exponential Moving Average (T3)
-/// TEMA                 Triple Exponential Moving Average
-/// TRIMA                Triangular Moving Average
-/// WMA                  Weighted Moving Average
-
+// Lista de indicadores:
+// BBANDS               Bollinger Bands
+// DEMA                 Double Exponential Moving Average
+// EMA                  Exponential Moving Average
+// KAMA                 Kaufman Adaptive Moving Average
+// MA                   Moving average
+// MAMA                 MESA Adaptive Moving Average
+// MIDPOINT             MidPoint over period
+// MIDPRICE             Midpoint Price over period
+// SAR                  Parabolic SAR
+// SAREXT               Parabolic SAR - Extended
+// SMA                  Simple Moving Average
+// T3                   Triple Exponential Moving Average (T3)
+// TEMA                 Triple Exponential Moving Average
+// TRIMA                Triangular Moving Average
+// WMA                  Weighted Moving Average
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -306,7 +305,7 @@ pub fn bbands(
     let output_col_bb_middle = output_col_bb_middle.unwrap_or("bb_middle");
     let output_col_bb_lower = output_col_bb_lower.unwrap_or("bb_lower");
 
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
     let n = close_vals.len();
@@ -374,7 +373,7 @@ pub fn dema(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&s
     let timeperiod = timeperiod.unwrap_or(30);
     let output_col = output_col.unwrap_or("dema");
 
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
@@ -426,7 +425,7 @@ pub fn ema(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&st
     let timeperiod = timeperiod.unwrap_or(30);
     let output_col = output_col.unwrap_or("ema");
 
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
@@ -467,7 +466,7 @@ pub fn kama(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&s
     let timeperiod = timeperiod.unwrap_or(30);
     let output_col = output_col.unwrap_or("kama");
 
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
@@ -510,7 +509,7 @@ pub fn ma(
     let matype = matype.unwrap_or(0);
     let output_col = output_col.unwrap_or("ma");
 
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
@@ -562,7 +561,7 @@ pub fn mama(
     let output_col_mama = output_col_mama.unwrap_or("mama");
     let output_col_fama = output_col_fama.unwrap_or("fama");
 
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
@@ -674,11 +673,11 @@ fn calc_mama(values: &[f64], fastlimit: f64, slowlimit: f64) -> (Vec<f64>, Vec<f
             };
 
             let mut bounded_period = if prev_period > 0.0 {
-                temp_period.max(0.67 * prev_period).min(1.5 * prev_period)
+                temp_period.clamp(0.67 * prev_period, 1.5 * prev_period)
             } else {
                 temp_period
             };
-            bounded_period = bounded_period.max(6.0).min(50.0);
+            bounded_period = bounded_period.clamp(6.0, 50.0);
 
             let period_filtered = 0.2 * bounded_period + 0.8 * prev_period;
             let smooth_period = 0.33 * period_filtered + 0.67 * prev_smooth_period;
@@ -758,7 +757,7 @@ pub fn midpoint(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Optio
     let timeperiod = timeperiod.unwrap_or(14);
     let output_col = output_col.unwrap_or("midpoint");
 
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
     let close_ca = close.f64().unwrap();
     // Maintain original length by including nulls as NaN
     let close_vals: Vec<f64> = close_ca
@@ -829,8 +828,8 @@ pub fn midprice(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Optio
     let timeperiod = timeperiod.unwrap_or(14);
     let output_col = output_col.unwrap_or("midprice");
 
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
 
     let high_ca = high.f64().unwrap();
     let low_ca = low.f64().unwrap();
@@ -920,8 +919,8 @@ pub fn sar(
     let maximum = maximum.unwrap_or(0.2);
     let output_col = output_col.unwrap_or("sar");
 
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
 
     let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
     let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
@@ -1045,8 +1044,8 @@ pub fn sarext(
     let _blockonshort = blockonshort.unwrap_or(0.0);
     let output_col = output_col.unwrap_or("sarext");
 
-    let high = get_high(&df).unwrap();
-    let low = get_low(&df).unwrap();
+    let high = get_high(df).unwrap();
+    let low = get_low(df).unwrap();
 
     let high_ca: ChunkedArray<Float64Type> = high.f64().unwrap().clone();
     let low_ca: ChunkedArray<Float64Type> = low.f64().unwrap().clone();
@@ -1154,7 +1153,7 @@ pub fn sma(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&st
     let timeperiod = timeperiod.unwrap_or(30);
     let output_col = output_col.unwrap_or("sma");
 
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
@@ -1214,7 +1213,7 @@ pub fn t3(
     let vfactor = vfactor.unwrap_or(0.7);
     let output_col = output_col.unwrap_or("t3");
 
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
@@ -1309,7 +1308,7 @@ pub fn tema(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&s
     let timeperiod = timeperiod.unwrap_or(30);
     let output_col = output_col.unwrap_or("tema");
 
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
@@ -1390,7 +1389,7 @@ pub fn trima(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&
     let timeperiod = timeperiod.unwrap_or(30);
     let output_col = output_col.unwrap_or("trima");
 
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 
@@ -1406,13 +1405,12 @@ fn calc_trima(values: &[f64], period: usize) -> Vec<f64> {
         return vec![f64::NAN; n];
     }
 
-    let half1 = (period + 1) / 2;
+    let half1 = period.div_ceil(2);
     let half2 = period / 2 + 1;
 
     let sma1 = calc_sma(values, half1);
-    let trima = calc_sma(&sma1, half2);
 
-    trima
+    calc_sma(&sma1, half2)
 }
 
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -1443,7 +1441,7 @@ pub fn wma(df: &mut DataFrame, timeperiod: Option<usize>, output_col: Option<&st
     let timeperiod = timeperiod.unwrap_or(30);
     let output_col = output_col.unwrap_or("wma");
 
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
 

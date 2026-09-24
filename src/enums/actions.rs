@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
@@ -15,23 +17,13 @@ pub enum Action {
     CloseAllRules,
 }
 
-impl Action {
-    pub fn to_string(&self) -> String {
-        match self {
-            Action::Buy => "Buy".to_string(),
-            Action::Sell => "Sell".to_string(),
-            Action::BuyLimit => "Buy Limit".to_string(),
-            Action::SellLimit => "Sell Limit".to_string(),
-            Action::BuyStop => "Buy Stop".to_string(),
-            Action::SellStop => "Sell Stop".to_string(),
-            Action::Close => "Close".to_string(),
-            Action::ExitBuy => "Exit Buy".to_string(),
-            Action::ExitSell => "Exit Sell".to_string(),
-            Action::Nbars => "Nbars".to_string(),
-            Action::CloseAllRules => "Close All Rules".to_string(),
-        }
+impl fmt::Display for Action {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.as_str())
     }
+}
 
+impl Action {
     pub fn as_str(&self) -> &str {
         match self {
             Action::Buy => "Buy",

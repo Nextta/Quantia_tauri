@@ -28,10 +28,10 @@ impl BrokerCFD {
     }
 
     pub async fn create_broker_cfd(&mut self) {
-        self.id = insert_broker_cfd(&self).await.unwrap();
+        self.id = insert_broker_cfd(self).await.unwrap();
     }
 
-    ///Funciones
+    // Funciones
 
     pub fn add_symbol_info(&mut self, symbol_info: SymbolInfoCFD) {
         self.symbol_info.push(symbol_info);

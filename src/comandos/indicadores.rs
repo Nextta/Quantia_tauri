@@ -97,15 +97,15 @@ pub async fn get_indicator_for_tv(
 
             let indicators: Vec<DataIndicator> = times
                 .into_iter()
-                .zip(values.into_iter())
+                .zip(values)
                 .map(|(t, v)| DataIndicator {
                     time: t.unwrap(),
                     value: v.unwrap(),
                 })
                 .collect();
 
-            return Ok(indicators);
+            Ok(indicators)
         }
-        Err(e) => return Err(e),
-    };
+        Err(e) => Err(e),
+    }
 }

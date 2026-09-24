@@ -1,3 +1,5 @@
+use std::fmt;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Clone, Copy, Debug, Deserialize, Serialize)]
@@ -11,16 +13,17 @@ pub enum Dias {
     Do,
 }
 
-impl Dias {
-    pub fn to_string(&self) -> String {
-        match self {
-            Dias::Lu => "Lu".to_string(),
-            Dias::Ma => "Ma".to_string(),
-            Dias::Mi => "Mi".to_string(),
-            Dias::Ju => "Ju".to_string(),
-            Dias::Vi => "Vi".to_string(),
-            Dias::Sa => "Sa".to_string(),
-            Dias::Do => "Do".to_string(),
-        }
+impl fmt::Display for Dias {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            Dias::Lu => "Lu",
+            Dias::Ma => "Ma",
+            Dias::Mi => "Mi",
+            Dias::Ju => "Ju",
+            Dias::Vi => "Vi",
+            Dias::Sa => "Sa",
+            Dias::Do => "Do",
+        };
+        write!(f, "{}", s)
     }
 }

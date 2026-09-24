@@ -96,13 +96,11 @@ impl Trade {
     /// Funciones
     pub fn random_spread(&self) -> f64 {
         let mut rng = rand::rng();
-        let spread = self.symbol.spread.clone();
+        let spread = self.symbol.spread;
         let mut numero: f64 = rng.random_range((spread / 2.0)..=spread);
 
-        let numero_truncado: Decimal = truncate_decimal(
-            numero.to_string().parse().unwrap(),
-            self.symbol.digitos as u32,
-        );
+        let numero_truncado: Decimal =
+            truncate_decimal(numero.to_string().parse().unwrap(), self.symbol.digitos);
         numero = numero_truncado.to_string().parse().unwrap();
         numero
     }
@@ -119,7 +117,7 @@ impl Trade {
     ) {
         self.tipo = EntryDirection::Buy;
         self.t0 = t0.to_string();
-        self.precio_entrada = precio_entrada.clone(); // + self.random_spread();
+        self.precio_entrada = *precio_entrada; // + self.random_spread();
         self.tp = tp.unwrap_or(0.0);
         self.sl = sl.unwrap_or(0.0);
 
@@ -127,7 +125,7 @@ impl Trade {
             GestionStrategy::Fijo => self.lotaje = parametros.lotaje_fijo,
             GestionStrategy::Formula => {
                 self.multiplicador = parametros.multiplicador;
-                self.lotaje_quantia(precio_entrada.clone(), backtest);
+                self.lotaje_quantia(*precio_entrada, backtest);
             }
             // GestionStrategy::Kelly => 0.0,
             // GestionStrategy::PocertajeEquity => 0.0,
@@ -148,7 +146,7 @@ impl Trade {
     ) {
         self.tipo = EntryDirection::Sell;
         self.t0 = t0.to_string();
-        self.precio_entrada = precio_entrada.clone();
+        self.precio_entrada = *precio_entrada;
         self.tp = tp.unwrap_or(0.0);
         self.sl = sl.unwrap_or(0.0);
 
@@ -156,7 +154,7 @@ impl Trade {
             GestionStrategy::Fijo => self.lotaje = parametros.lotaje_fijo,
             GestionStrategy::Formula => {
                 self.multiplicador = parametros.multiplicador;
-                self.lotaje_quantia(precio_entrada.clone(), backtest);
+                self.lotaje_quantia(*precio_entrada, backtest);
             }
             // GestionStrategy::Kelly => 0.0,
             // GestionStrategy::PocertajeEquity => 0.0,
@@ -225,7 +223,7 @@ impl Trade {
     fn calcular_comision_swap(&mut self) -> f64 {
         let mut comision_swap = 0.0;
 
-        if self.duracion_dias == "00".to_string() {
+        if self.duracion_dias == "00" {
             return 0.0;
         }
 

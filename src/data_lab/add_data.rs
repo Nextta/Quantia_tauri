@@ -16,12 +16,7 @@ use std::fs::File;
 pub fn add_data(mut data: DataFrame, data_info: &DataSymbol) -> PolarsResult<String> {
     let ruta = data_info.ruta.clone();
     let formato = data_info.formato.unwrap();
-    let parquet_path = format!(
-        "{}/{}.{}",
-        ruta,
-        data_info.name.clone(),
-        formato.to_string()
-    );
+    let parquet_path = format!("{}/{}.{}", ruta, data_info.name.clone(), formato);
 
     match formato {
         DataFormatSymbol::Parquet => {
@@ -38,7 +33,7 @@ pub fn add_data(mut data: DataFrame, data_info: &DataSymbol) -> PolarsResult<Str
         }
     }
 
-    Ok(format!("{} creado exitosamente", formato.to_string()))
+    Ok(format!("{} creado exitosamente", formato))
 }
 
 #[cfg(test)]

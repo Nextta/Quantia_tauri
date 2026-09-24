@@ -1,12 +1,11 @@
 use polars::prelude::*;
 
-/// Lista de indicadores:
-/// HT_DCPERIOD          Hilbert Transform - Dominant Cycle Period
-/// HT_DCPHASE           Hilbert Transform - Dominant Cycle Phase
-/// HT_PHASOR            Hilbert Transform - Phasor Components
-/// HT_SINE              Hilbert Transform - SineWave
-/// HT_TRENDMODE         Hilbert Transform - Trend vs Cycle Mode
-
+// Lista de indicadores:
+// HT_DCPERIOD          Hilbert Transform - Dominant Cycle Period
+// HT_DCPHASE           Hilbert Transform - Dominant Cycle Phase
+// HT_PHASOR            Hilbert Transform - Phasor Components
+// HT_SINE              Hilbert Transform - SineWave
+// HT_TRENDMODE         Hilbert Transform - Trend vs Cycle Mode
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -192,7 +191,7 @@ impl HTState {
         }
 
         // Range limiting
-        period = period.max(6.0).min(50.0);
+        period = period.clamp(6.0, 50.0);
 
         // Final smoothing (Double smoothing)
         let filtered_period = 0.2 * period + 0.8 * self.prev_period;
@@ -327,7 +326,7 @@ impl HTState {
 /// ```
 pub fn ht_dcperiod(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("ht_dcperiod");
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
@@ -381,7 +380,7 @@ pub fn ht_dcperiod(df: &mut DataFrame, output_col: Option<&str>) {
 /// ```
 pub fn ht_dcphase(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("ht_dcphase");
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
@@ -442,7 +441,7 @@ pub fn ht_phasor(
 ) {
     let output_col_in_phase = output_col_in_phase.unwrap_or("ht_phasor_inphase");
     let output_col_quadrature = output_col_quadrature.unwrap_or("ht_phasor_quadrature");
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
@@ -509,7 +508,7 @@ pub fn ht_sine(
 ) {
     let output_col_sine = output_col_sine.unwrap_or("ht_sine_sine");
     let output_col_lead_sine = output_col_lead_sine.unwrap_or("ht_sine_leadsine");
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();
@@ -573,7 +572,7 @@ pub fn ht_sine(
 /// ```
 pub fn ht_trendmode(df: &mut DataFrame, output_col: Option<&str>) {
     let output_col = output_col.unwrap_or("ht_trendmode");
-    let close = get_close(&df).unwrap();
+    let close = get_close(df).unwrap();
 
     let close_ca: ChunkedArray<Float64Type> = close.f64().unwrap().clone();
     let close_vals: Vec<f64> = close_ca.into_no_null_iter().collect();

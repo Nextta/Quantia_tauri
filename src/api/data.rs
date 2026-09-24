@@ -87,7 +87,7 @@ pub async fn insert_data(data_symbol: &DataSymbol) -> Result<u32, Error> {
             .await?;
 
             let row = rows.next().await?.ok_or_else(|| Error {
-                msg: format!("No se han insertado los dato.s"),
+                msg: "No se han insertado los dato.s".to_string(),
             })?;
 
             let id = row.get::<u32>(0)?;
@@ -131,7 +131,7 @@ pub async fn get_all_data() -> Result<Vec<DataSymbol>, Error> {
             formato: DataFormatSymbol::as_tf(row.get::<String>(4)?.as_str()),
             fecha_inicio: row.get::<String>(5)?,
             fecha_fin: row.get::<String>(6)?,
-            actualizado: if row.get::<i32>(7)? == 0 { false } else { true },
+            actualizado: row.get::<i32>(7)? != 0,
             n_data: row.get::<u32>(8)?,
             origen: DataOrigen::as_do(row.get::<String>(9)?.as_str()),
         };
@@ -178,7 +178,7 @@ pub async fn get_data(id: u32) -> Result<DataSymbol, Error> {
         formato: DataFormatSymbol::as_tf(row.get::<String>(4)?.as_str()),
         fecha_inicio: row.get::<String>(5)?,
         fecha_fin: row.get::<String>(6)?,
-        actualizado: if row.get::<i32>(7)? == 0 { false } else { true },
+        actualizado: row.get::<i32>(7)? != 0,
         n_data: row.get::<u32>(8)?,
         origen: DataOrigen::as_do(row.get::<String>(9)?.as_str()),
     };
